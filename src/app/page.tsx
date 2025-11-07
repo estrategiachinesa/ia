@@ -31,7 +31,7 @@ export default function LinksPage() {
           </div>
         </main>
         <footer className="w-full text-center text-[0.6rem] text-foreground/50 p-4">
-          <p>© 2025 TRADER CHINES. </p>
+          <p>© 2025 ESTRATÉGIA CHINESA. </p>
           <p>Todos os direitos reservados.</p>
         </footer>
       </div>

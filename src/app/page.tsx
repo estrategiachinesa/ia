@@ -1,10 +1,12 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Send } from 'lucide-react';
 import Link from 'next/link';
 
 export default function LinksPage() {
+  const telegramLink = 'https://t.me/seu_grupo_telegram'; // TODO: Replace with your Telegram link
+
   return (
     <>
       <div className="fixed inset-0 -z-10 h-full w-full bg-background"></div>
@@ -23,11 +25,17 @@ export default function LinksPage() {
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
+               <Button asChild size="lg" className="h-14 text-lg font-bold bg-sky-500 hover:bg-sky-600">
+                <a href={telegramLink} target="_blank" rel="noopener noreferrer">
+                  Sessão Chinesa
+                  <Send className="ml-2 h-5 w-5" />
+                </a>
+              </Button>
             </div>
           </div>
         </main>
         <footer className="w-full text-center text-[0.6rem] text-foreground/50 p-4">
-          <p>© 2025 Estratégia Chinesa. </p>
+          <p>© 2025 TRADER CHINES. </p>
           <p>Todos os direitos reservados.</p>
         </footer>
       </div>

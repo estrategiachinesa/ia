@@ -10,7 +10,7 @@ type CustomVideoPlayerProps = {
 };
 
 export function CustomVideoPlayer({ url }: CustomVideoPlayerProps) {
-  const [playing, setPlaying] = useState(true);
+  const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(true);
   const [isReady, setIsReady] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -36,6 +36,13 @@ export function CustomVideoPlayer({ url }: CustomVideoPlayerProps) {
   const handleUnmute = () => {
     if (muted) {
         setMuted(false);
+    }
+  }
+
+  const handleWrapperClick = () => {
+    handleUnmute();
+    if (isReady) {
+        handlePlayPause();
     }
   }
 
@@ -65,7 +72,7 @@ export function CustomVideoPlayer({ url }: CustomVideoPlayerProps) {
   }, []);
 
   return (
-    <div ref={playerWrapperRef} className="relative w-full h-full group" onClick={handleUnmute}>
+    <div ref={playerWrapperRef} className="relative w-full h-full group bg-black" onClick={handleWrapperClick}>
       <ReactPlayer
         ref={playerRef}
         url={url}
@@ -88,15 +95,15 @@ export function CustomVideoPlayer({ url }: CustomVideoPlayerProps) {
           },
         }}
       />
-      {isReady && muted && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 cursor-pointer text-white">
+      {isReady && muted && !playing && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 cursor-pointer text-white pointer-events-none">
            <VolumeX className="h-12 w-12 mb-2"/>
            <p className="text-lg font-semibold">Clique para ativar o som</p>
         </div>
       )}
-      {isReady && !muted && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <div className="flex items-center gap-2 sm:gap-4">
+      {isReady && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+          <div className="flex items-center gap-2 sm:gap-4 pointer-events-auto">
             <Button
               variant="ghost"
               size="icon"

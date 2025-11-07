@@ -25,10 +25,10 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import CountdownTimer from "@/components/countdown-timer";
-import YoutubePlayer from "@/components/youtube-player";
 import TestimonialCard from "@/components/testimonial-card";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
+import { CustomVideoPlayer } from "@/components/app/custom-video-player";
 
 const CTA_URL = "https://pay.hotmart.com/E101943327K?checkoutMode=2&off=cy5v5mrr";
 
@@ -135,7 +135,9 @@ const SolutionSection = () => (
       </div>
 
       <div className="mt-12 max-w-4xl mx-auto">
-        <YoutubePlayer videoId="O_R9k6Yh2b4" />
+        <div className="aspect-video w-full rounded-lg overflow-hidden">
+          <CustomVideoPlayer url="https://www.youtube.com/watch?v=O_R9k6Yh2b4" />
+        </div>
       </div>
 
       <div className="mt-16 grid md:grid-cols-3 gap-8 text-center">

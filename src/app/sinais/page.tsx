@@ -84,7 +84,7 @@ export default function SinaisPage() {
                     Instruções
                 </h2>
                 <div className="aspect-video w-full rounded-lg overflow-hidden">
-                    <CustomVideoPlayer url="https://youtube.com/shorts/PPak8eupMi8" />
+                    <CustomVideoPlayer url="https://www.youtube.com/watch?v=PPak8eupMi8" />
                 </div>
                 </div>
             )}

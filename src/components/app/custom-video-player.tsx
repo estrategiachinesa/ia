@@ -11,7 +11,7 @@ type CustomVideoPlayerProps = {
 
 export function CustomVideoPlayer({ url }: CustomVideoPlayerProps) {
   const [playing, setPlaying] = useState(false);
-  const [muted, setMuted] = useState(true);
+  const [muted, setMuted] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const playerRef = useRef<ReactPlayer>(null);

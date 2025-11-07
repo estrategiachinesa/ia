@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Send } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 export default function LinksPage() {
@@ -18,20 +18,9 @@ export default function LinksPage() {
             </h1>
             <div className="flex flex-col space-y-4">
               <Button asChild size="lg" className="h-14 text-lg font-bold">
-                <Link href="/sinais">
+                <Link href="/aviso">
                   Estratégia Chinesa
                   <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button
-                asChild
-                size="lg"
-                variant="outline"
-                className="h-14 text-lg font-bold"
-              >
-                <Link href="/aviso">
-                  Sessão Chinesa
-                  <Send className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
             </div>

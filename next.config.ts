@@ -18,6 +18,11 @@ const nextConfig: NextConfig = {
         destination: '/sinais',
         permanent: true,
       },
+      {
+        source: '/estrategiachinesa',
+        destination: '/sinais',
+        permanent: true,
+      },
     ]
   },
 };

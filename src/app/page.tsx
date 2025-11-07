@@ -5,8 +5,6 @@ import { ArrowRight, Send } from 'lucide-react';
 import Link from 'next/link';
 
 export default function LinksPage() {
-  const telegramLink = 'https://t.me/sessaoshighlights'; // Placeholder link
-
   return (
     <>
       <div className="fixed inset-0 -z-10 h-full w-full bg-background"></div>
@@ -31,10 +29,10 @@ export default function LinksPage() {
                 variant="outline"
                 className="h-14 text-lg font-bold"
               >
-                <a href={telegramLink} target="_blank" rel="noopener noreferrer">
+                <Link href="/aviso">
                   Sessão Chinesa
                   <Send className="ml-2 h-5 w-5" />
-                </a>
+                </Link>
               </Button>
             </div>
           </div>

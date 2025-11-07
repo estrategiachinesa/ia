@@ -12,9 +12,9 @@ export default function LinksPage() {
         <main className="flex-grow flex flex-col items-center justify-center text-center p-4">
           <div className="w-full max-w-xs space-y-8">
             <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl font-headline">
-              ESTRATÉGIA
+              TRADER
               <br />
-              CHINESA
+              CHINES
             </h1>
             <div className="flex flex-col space-y-4">
               <Button asChild size="lg" className="h-14 text-lg font-bold">

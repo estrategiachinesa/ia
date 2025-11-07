@@ -36,7 +36,7 @@ export default function AvisoPage() {
         <main className="flex-grow flex items-center justify-center text-center p-4">
           <div className="w-full max-w-lg space-y-6">
             <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl font-headline mb-4">
-              ESTRATÉGIA<br />CHINESA
+              TRADER<br />CHINES
             </h1>
             <div className="flex justify-center">
               <AlertTriangle className="h-12 w-12 text-blue-500" />

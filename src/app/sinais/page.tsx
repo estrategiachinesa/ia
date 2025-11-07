@@ -339,7 +339,7 @@ export default function SinaisPage() {
           {appState === 'result' && (
              <div className="text-center">
                 <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl font-headline">
-                    ESTRATÉGIA<br />CHINESA
+                    TRADER<br />CHINES
                 </h1>
              </div>
           )}

@@ -1,14 +1,13 @@
 import type {NextConfig} from 'next';
 
-const repo = 'traderchines';
-const assetPrefix = `/${repo}/`;
-const basePath = `/${repo}`;
+const repoName = 'traderchines';
 
 const nextConfig: NextConfig = {
   /* config options here */
   output: 'export',
-  assetPrefix: assetPrefix,
-  basePath: basePath,
+  // IMPORTANT: Replace <your-repo-name> with the name of your GitHub repository.
+  basePath: `/${repoName}`,
+  assetPrefix: `/${repoName}`,
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -17,6 +16,14 @@ const nextConfig: NextConfig = {
   },
   images: {
     unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+        port: '',
+        pathname: '/**',
+      },
+    ],
   },
 };
 

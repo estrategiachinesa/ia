@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import ReactPlayer from 'react-player/youtube';
 import { Play, Pause, RotateCcw, VolumeX, Volume2, Maximize, Minimize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ type CustomVideoPlayerProps = {
 };
 
 export function CustomVideoPlayer({ url }: CustomVideoPlayerProps) {
+  const [isClient, setIsClient] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
   const [isReady, setIsReady] = useState(false);
@@ -17,6 +18,9 @@ export function CustomVideoPlayer({ url }: CustomVideoPlayerProps) {
   const playerRef = useRef<ReactPlayer>(null);
   const playerWrapperRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handlePlayPause = () => {
     setPlaying(!playing);
@@ -63,13 +67,17 @@ export function CustomVideoPlayer({ url }: CustomVideoPlayerProps) {
     }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     const onFullScreenChange = () => {
         setIsFullScreen(!!document.fullscreenElement);
     }
     document.addEventListener('fullscreenchange', onFullScreenChange);
     return () => document.removeEventListener('fullscreenchange', onFullScreenChange);
   }, []);
+  
+  if (!isClient) {
+    return <div className="relative w-full h-full group bg-black" />;
+  }
 
   return (
     <div ref={playerWrapperRef} className="relative w-full h-full group bg-black" onClick={handleWrapperClick}>

@@ -1,10 +1,13 @@
 import type {NextConfig} from 'next';
 
+const repoName = 'traderchines';
+
 const nextConfig: NextConfig = {
   /* config options here */
   output: 'export',
-  basePath: '/traderchines',
-  assetPrefix: '/traderchines/',
+  // IMPORTANT: Replace <your-repo-name> with the name of your GitHub repository.
+  basePath: `/${repoName}`,
+  assetPrefix: `/${repoName}`,
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -21,20 +24,6 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
-  },
-  async redirects() {
-    return [
-      {
-        source: '/aviso',
-        destination: '/sinais',
-        permanent: true,
-      },
-      {
-        source: '/estrategiachinesa',
-        destination: '/sinais',
-        permanent: true,
-      },
-    ]
   },
 };
 

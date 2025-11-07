@@ -164,7 +164,7 @@ export default function SessaoChinesaPage() {
 
           <AlertDialogFooter>
             <AlertDialogCancel>Fechar</AlertDialogCancel>
-            <AlertDialogAction asChild>
+            <AlertDialogAction asChild className="bg-sky-500 hover:bg-sky-600">
               <a href={affiliateLinks.telegram} target="_blank" rel="noopener noreferrer">
                 <Send className="mr-2 h-4 w-4" />
                 Falar com Suporte

@@ -1,4 +1,4 @@
-import type { Asset } from '@/app/sinais/page';
+import type { Asset } from '@/app/analisador/page';
 
 // All times are in America/Sao_Paulo (UTC-3)
 type TimeRange = { start: number; end: number }; // Hour as a number (e.g., 21.5 for 9:30 PM)

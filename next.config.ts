@@ -22,7 +22,7 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
-        source: '/analisador',
+        source: '/aviso',
         destination: '/sinais',
         permanent: true,
       },

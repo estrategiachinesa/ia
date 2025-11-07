@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Estratégia Chinesa - Sinais',
-  description: 'Receba sinais gratuitos da Estratégia Chinesa em tempo real',
+  description: 'Aviso importante antes de prosseguir.',
 };
 
 export default function SinaisLayout({

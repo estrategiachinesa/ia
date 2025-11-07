@@ -16,7 +16,7 @@ export default function LinksPage() {
             
             <div className="flex flex-col space-y-4">
               <Button asChild size="lg" className="h-14 text-lg font-bold">
-                <Link href="/aviso">
+                <Link href="/sinais">
                   Estratégia Chinesa
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>

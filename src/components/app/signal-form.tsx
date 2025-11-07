@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { BarChart, Loader2, Lock } from 'lucide-react';
-import type { FormData, Asset } from '@/app/sinais/page';
+import type { FormData, Asset } from '@/app/analisador/page';
 import { CurrencyFlags } from './currency-flags';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';

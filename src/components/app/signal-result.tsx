@@ -3,7 +3,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
-import type { SignalData } from '@/app/sinais/page';
+import type { SignalData } from '@/app/analisador/page';
 import { CurrencyFlags } from './currency-flags';
 import { cn } from '@/lib/utils';
 

@@ -1,52 +1,37 @@
 {
   "entities": {
-    "UserProfile": {
+     "SharedAccess": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "User Profile",
-      "description": "Represents a user's profile in the application.",
+      "title": "Shared Access Credentials",
+      "description": "Stores the shared username and password for the application.",
       "type": "object",
       "properties": {
-        "uid": {
+        "user": {
           "type": "string",
-          "description": "The user's unique ID from Firebase Authentication."
+          "description": "The shared username."
         },
-        "email": {
+        "password": {
           "type": "string",
-          "format": "email",
-          "description": "The user's email address."
-        },
-        "displayName": {
-          "type": "string",
-          "description": "The user's public display name."
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time",
-          "description": "The timestamp when the user profile was created."
+          "description": "The shared password."
         }
       },
-      "required": ["uid", "email", "createdAt"]
+      "required": ["user", "password"]
     }
   },
   "auth": {
-    "providers": ["google.com"]
+    "providers": []
   },
   "firestore": {
     "structure": [
       {
-        "path": "/users/{userId}",
+        "path": "/shared-access/credentials",
         "definition": {
-          "entityName": "UserProfile",
+          "entityName": "SharedAccess",
           "schema": {
-            "$ref": "#/backend/entities/UserProfile"
+            "$ref": "#/backend/entities/SharedAccess"
           },
-          "description": "Collection to store user profile information. Each document corresponds to a registered user.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The user's UID."
-            }
-          ]
+          "description": "A single document that holds the current shared login credentials. This document should only be writable by an administrator.",
+          "isCollection": false
         }
       }
     ]

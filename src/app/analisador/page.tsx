@@ -15,11 +15,8 @@ import {
 
 import { SignalForm } from '@/components/app/signal-form';
 import { SignalResult } from '@/components/app/signal-result';
-import { useToast } from '@/hooks/use-toast';
 import { isMarketOpenForAsset } from '@/lib/market-hours';
-import { useUser, useAuth } from '@/firebase';
 import { Loader2 } from 'lucide-react';
-import { signOut, type IdTokenResult } from 'firebase/auth';
 
 export type Asset = 
   | 'EUR/USD' | 'EUR/USD (OTC)'
@@ -112,12 +109,9 @@ function generateClientSideSignal(asset: Asset, expirationTimeLabel: '1 minute' 
 
 export default function AnalisadorPage() {
   const router = useRouter();
-  const { user, isUserLoading } = useUser();
-  const auth = useAuth();
   const [accessState, setAccessState] = useState<AccessState>('checking');
   const [appState, setAppState] = useState<AppState>('idle');
   const [signalData, setSignalData] = useState<SignalData | null>(null);
-  const { toast } = useToast();
   const [showOTC, setShowOTC] = useState(false);
   const [isMarketOpen, setIsMarketOpen] = useState(true);
 
@@ -127,34 +121,14 @@ export default function AnalisadorPage() {
   });
   
   useEffect(() => {
-    // 1. Redirect to login if user is not loaded or does not exist
-    if (!isUserLoading && !user) {
+    // Check for access on component mount
+    const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+    if (isLoggedIn) {
+      setAccessState('granted');
+    } else {
       router.push('/');
-      return;
     }
-
-    // 2. Check for access claims if user exists
-    if (user) {
-      user.getIdTokenResult(true) // Force refresh the token to get latest claims
-        .then((idTokenResult: IdTokenResult) => {
-          const claims = idTokenResult.claims;
-          if (claims.hasAccess === true) {
-            setAccessState('granted');
-          } else {
-            setAccessState('denied');
-          }
-        })
-        .catch(error => {
-          console.error("Error getting user claims:", error);
-          setAccessState('denied');
-          toast({
-            variant: 'destructive',
-            title: 'Erro de Autenticação',
-            description: 'Não foi possível verificar suas permissões de acesso.',
-          });
-        });
-    }
-  }, [user, isUserLoading, router, toast]);
+  }, [router]);
 
 
   useEffect(() => {
@@ -274,14 +248,12 @@ export default function AnalisadorPage() {
   };
   
   const handleLogout = async () => {
-    if (auth) {
-        await signOut(auth);
-    }
+    sessionStorage.removeItem('isLoggedIn');
     router.push('/');
   }
 
   // Loading screen while checking user auth and claims
-  if (isUserLoading || accessState === 'checking') {
+  if (accessState === 'checking') {
       return (
           <div className="flex h-screen w-full items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin" />
@@ -298,12 +270,11 @@ export default function AnalisadorPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Acesso Negado</AlertDialogTitle>
             <AlertDialogDescription>
-              Você não tem uma assinatura ativa ou seu acesso expirou.
-              Por favor, verifique seu status de pagamento na Hotmart ou entre em contato com o suporte.
+              Você não tem uma sessão de login ativa. Por favor, retorne à página inicial para entrar.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={handleLogout}>Sair</AlertDialogAction>
+            <AlertDialogAction onClick={() => router.push('/')}>Ir para Login</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -316,7 +287,7 @@ export default function AnalisadorPage() {
       <div className="fixed inset-0 -z-10 h-full w-full bg-background"></div>
       <div className="flex flex-col min-h-screen">
         <header className="p-4 flex justify-between items-center">
-           <span className="text-sm text-foreground/70">{user?.email}</span>
+           <span className="text-sm text-foreground/70">Acesso compartilhado</span>
            <button onClick={handleLogout} className="text-sm text-foreground/70 hover:text-foreground">
             Sair
           </button>

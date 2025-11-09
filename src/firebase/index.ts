@@ -33,6 +33,7 @@ export function initializeFirebase() {
 }
 
 export function getSdks(firebaseApp: FirebaseApp) {
+  // Pass auth for compatibility, but it won't be used for user management
   return {
     firebaseApp,
     auth: getAuth(firebaseApp),
@@ -42,8 +43,9 @@ export function getSdks(firebaseApp: FirebaseApp) {
 
 export * from './provider';
 export * from './client-provider';
+// NOTE: The following exports are kept for potential future use or other parts of the app,
+// but are not actively used by the current shared login implementation.
 export * from './firestore/use-collection';
 export * from './firestore/use-doc';
 export * from './errors';
 export * from './error-emitter';
-

@@ -83,6 +83,7 @@ export function SignalForm({ formData, setFormData, onSubmit, isLoading, showOTC
               <Info className="h-4 w-4" />
               <AlertDescription className="text-xs text-foreground/80">
                 Sinais OTC são exclusivos para as corretoras:
+                <br />
                 <Link href="https://affiliate.iqoption.net/redir/?aff=198544&aff_model=revenue&afftrack=" target="_blank" className="font-bold underline hover:text-primary mx-1">
                   IQ Option
                 </Link>

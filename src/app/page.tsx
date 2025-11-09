@@ -49,17 +49,24 @@ export default function LoginPage() {
 
   useEffect(() => {
     // Check if user is already logged in via local storage
-    if (localStorage.getItem('isLoggedIn') === 'true') {
-       const loginTime = localStorage.getItem('loginTimestamp');
-       if (loginTime) {
-         const hoursSinceLogin = (Date.now() - parseInt(loginTime)) / (1000 * 60 * 60);
-         if (hoursSinceLogin < 1) {
-            router.push('/analisador');
-         } else {
-            localStorage.removeItem('isLoggedIn');
-            localStorage.removeItem('loginTimestamp');
-         }
-       }
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const loginTime = localStorage.getItem('loginTimestamp');
+    let sessionExpired = false;
+
+    if (loginTime) {
+      const hoursSinceLogin = (Date.now() - parseInt(loginTime)) / (1000 * 60 * 60);
+      if (hoursSinceLogin >= 1) {
+        sessionExpired = true;
+      }
+    } else {
+      sessionExpired = true;
+    }
+    
+    if (isLoggedIn && !sessionExpired) {
+        router.push('/analisador');
+    } else {
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('loginTimestamp');
     }
   }, [router]);
 
@@ -158,7 +165,7 @@ export default function LoginPage() {
                 id="user"
                 name="user"
                 type="text"
-                placeholder="Usuário (disponível no Telegram)"
+                placeholder="Compartilhado no Telegram"
                 value={credentials.user}
                 onChange={handleInputChange}
                 disabled={isLoading}

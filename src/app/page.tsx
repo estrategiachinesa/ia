@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -151,7 +152,7 @@ export default function LoginPage() {
                 id="user"
                 name="user"
                 type="text"
-                placeholder="usuariocompartilhado"
+                placeholder="Usuário (disponível no Telegram)"
                 value={credentials.user}
                 onChange={handleInputChange}
                 disabled={isLoading}

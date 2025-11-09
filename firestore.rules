@@ -7,11 +7,11 @@ service cloud.firestore {
       allow read, write: if false;
     }
     
-    // User profiles can be read by anyone.
+    // User profiles can be read by anyone if they are logged in.
     // A user can create their own profile upon signup.
     // A user can only update or delete their own profile.
     match /users/{userId} {
-      allow read: if true;
+      allow read: if request.auth != null;
       allow create: if request.auth != null && request.auth.uid == userId;
       allow update, delete: if request.auth != null && request.auth.uid == userId;
     }

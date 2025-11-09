@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import {
   AlertDialog,
   AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -20,7 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { isMarketOpenForAsset } from '@/lib/market-hours';
 import { useUser, useAuth } from '@/firebase';
 import { Loader2 } from 'lucide-react';
-import { signOut } from 'firebase/auth';
+import { signOut, type IdTokenResult } from 'firebase/auth';
 
 export type Asset = 
   | 'EUR/USD' | 'EUR/USD (OTC)'
@@ -46,6 +45,7 @@ export type SignalData = {
 };
 
 type AppState = 'idle' | 'loading' | 'result';
+type AccessState = 'checking' | 'granted' | 'denied';
 
 // Seeded pseudo-random number generator
 function seededRandom(seed: number) {
@@ -112,25 +112,49 @@ function generateClientSideSignal(asset: Asset, expirationTimeLabel: '1 minute' 
 
 export default function AnalisadorPage() {
   const router = useRouter();
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+  const [accessState, setAccessState] = useState<AccessState>('checking');
   const [appState, setAppState] = useState<AppState>('idle');
   const [signalData, setSignalData] = useState<SignalData | null>(null);
   const { toast } = useToast();
   const [showOTC, setShowOTC] = useState(false);
   const [isMarketOpen, setIsMarketOpen] = useState(true);
-  const { user, isUserLoading } = useUser();
-  const auth = useAuth();
-
 
   const [formData, setFormData] = useState<FormData>({
     asset: 'EUR/JPY',
     expirationTime: '1m',
   });
   
-   useEffect(() => {
+  useEffect(() => {
+    // 1. Redirect to login if user is not loaded or does not exist
     if (!isUserLoading && !user) {
       router.push('/');
+      return;
     }
-  }, [user, isUserLoading, router]);
+
+    // 2. Check for access claims if user exists
+    if (user) {
+      user.getIdTokenResult(true) // Force refresh the token to get latest claims
+        .then((idTokenResult: IdTokenResult) => {
+          const claims = idTokenResult.claims;
+          if (claims.hasAccess === true) {
+            setAccessState('granted');
+          } else {
+            setAccessState('denied');
+          }
+        })
+        .catch(error => {
+          console.error("Error getting user claims:", error);
+          setAccessState('denied');
+          toast({
+            variant: 'destructive',
+            title: 'Erro de Autenticação',
+            description: 'Não foi possível verificar suas permissões de acesso.',
+          });
+        });
+    }
+  }, [user, isUserLoading, router, toast]);
 
 
   useEffect(() => {
@@ -250,24 +274,50 @@ export default function AnalisadorPage() {
   };
   
   const handleLogout = async () => {
-    await signOut(auth);
-    // The useEffect hook will redirect to '/'
+    if (auth) {
+        await signOut(auth);
+    }
+    router.push('/');
   }
 
-  if (isUserLoading) {
+  // Loading screen while checking user auth and claims
+  if (isUserLoading || accessState === 'checking') {
       return (
           <div className="flex h-screen w-full items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin" />
+              <p className="ml-2">Verificando acesso...</p>
           </div>
       )
   }
 
+  // Access denied dialog
+  if (accessState === 'denied') {
+    return (
+      <AlertDialog open={true}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Acesso Negado</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você não tem uma assinatura ativa ou seu acesso expirou.
+              Por favor, verifique seu status de pagamento na Hotmart ou entre em contato com o suporte.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={handleLogout}>Sair</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    );
+  }
+
+  // Main content for granted access
   return (
     <>
       <div className="fixed inset-0 -z-10 h-full w-full bg-background"></div>
       <div className="flex flex-col min-h-screen">
-        <header className="p-4 flex justify-end">
-          <button onClick={handleLogout} className="text-sm text-foreground/70 hover:text-foreground">
+        <header className="p-4 flex justify-between items-center">
+           <span className="text-sm text-foreground/70">{user?.email}</span>
+           <button onClick={handleLogout} className="text-sm text-foreground/70 hover:text-foreground">
             Sair
           </button>
         </header>

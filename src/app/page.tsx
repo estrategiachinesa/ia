@@ -25,12 +25,13 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
   const auth = useAuth();
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
 
   useEffect(() => {
+    // If the user is loaded and exists, redirect them to the analyzer.
+    // The analyzer page will be responsible for checking access claims.
     if (!isUserLoading && user) {
       router.push('/analisador');
     }
@@ -39,6 +40,8 @@ export default function LoginPage() {
  const ensureUserProfile = async (user: User) => {
     if (!firestore) return;
     const userDocRef = doc(firestore, 'users', user.uid);
+    
+    // Use getDoc to prevent overwriting existing user data on re-login
     const userDoc = await getDoc(userDocRef);
 
     if (!userDoc.exists()) {
@@ -55,10 +58,8 @@ export default function LoginPage() {
   };
 
   const handleGoogleSignIn = async () => {
-    setIsLoading(true);
     if (!auth) {
         toast({ variant: 'destructive', title: 'Erro', description: 'Serviço de autenticação não está pronto.' });
-        setIsLoading(false);
         return;
     }
     const provider = new GoogleAuthProvider();
@@ -66,30 +67,39 @@ export default function LoginPage() {
         const result = await signInWithPopup(auth, provider);
         await ensureUserProfile(result.user);
         toast({
-            title: 'Login com Google bem-sucedido!',
-            description: 'Redirecionando para o analisador.',
+            title: 'Login bem-sucedido!',
+            description: 'Redirecionando para o analisador...',
         });
-        // useEffect will handle redirection
+        // The useEffect hook will handle redirection.
     } catch (error: any) {
         console.error("Google sign-in error:", error);
+         let description = 'Não foi possível fazer login com o Google. Tente novamente.';
+        if (error.code === 'auth/popup-closed-by-user') {
+            description = 'A janela de login foi fechada antes da conclusão.';
+        } else if (error.code === 'auth/cancelled-popup-request') {
+            description = 'Múltiplas tentativas de login. Por favor, tente novamente.';
+        } else if (error.code === 'auth/operation-not-allowed') {
+            description = 'Login com Google não está habilitado. Contate o suporte.';
+        }
+        
         toast({
             variant: 'destructive',
-            title: 'Falha no Login com Google',
-            description: 'Não foi possível fazer login. Tente novamente.',
+            title: 'Falha no Login',
+            description: description,
         });
-    } finally {
-        setIsLoading(false);
     }
   };
 
-  if (isUserLoading || user) {
+  // Show a loading spinner while checking for a user session
+  if (isUserLoading) {
       return (
           <div className="flex h-screen w-full items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin" />
           </div>
       )
   }
-
+  
+  // If user is not logged in, show the login page.
   return (
     <>
       <div className="fixed inset-0 -z-10 h-full w-full bg-background"></div>
@@ -105,8 +115,8 @@ export default function LoginPage() {
             <CardDescription>Acesse sua conta para continuar</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isLoading}>
-                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <GoogleIcon className="mr-2" />}
+            <Button variant="outline" className="w-full" onClick={handleGoogleSignIn}>
+                <GoogleIcon className="mr-2" />
                 Entrar com Google
             </Button>
           </CardContent>

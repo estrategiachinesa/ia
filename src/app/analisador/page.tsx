@@ -301,7 +301,14 @@ export default function AnalisadorPage() {
   // Main content for granted access
   return (
     <>
-      <div className="fixed inset-0 -z-10 h-full w-full bg-background"></div>
+      <div className="fixed inset-0 -z-20 h-full w-full grid-bg" />
+        <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/80 to-background" />
+
+        <div className="absolute inset-0 -z-20 h-full w-full overflow-hidden">
+            <div className="absolute -left-1/4 top-0 h-1/2 w-1/2 animate-[spin_20s_linear_infinite] rounded-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/20 via-primary/5 to-transparent"></div>
+            <div className="absolute -right-1/4 bottom-0 h-1/2 w-1/2 animate-[spin_20s_linear_infinite_reverse] rounded-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/20 via-primary/5 to-transparent"></div>
+        </div>
+
       <div className="flex flex-col min-h-screen">
         <header className="p-4 flex justify-end items-center">
            <button onClick={handleLogout} className="text-sm text-foreground/70 hover:text-foreground">
@@ -313,11 +320,11 @@ export default function AnalisadorPage() {
           {appState === 'result' && (
              <div className="text-center">
                 <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl font-headline">
-                    ESTRATÉGIA<br />CHINESA
+                    ESTRATÉGIA CHINESA
                 </h1>
              </div>
           )}
-          <div className="w-full max-w-md bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl shadow-lg p-8">
+          <div className="w-full max-w-md bg-background/50 backdrop-blur-sm border border-border/50 rounded-xl shadow-2xl shadow-primary/10 p-8">
              {appState !== 'result' ? (
               <SignalForm
                 formData={formData}

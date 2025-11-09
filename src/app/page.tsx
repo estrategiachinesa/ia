@@ -141,16 +141,19 @@ export default function LoginPage() {
 
   return (
     <>
-      <div className="fixed inset-0 -z-10 h-full w-full bg-background"></div>
+      <div className="fixed inset-0 -z-10 h-full w-full grid-bg">
+        <div className="absolute inset-0 -z-10 bg-gradient-to-br from-background via-background/80 to-background" />
+      </div>
+
       <div className="flex flex-col min-h-screen items-center justify-center p-4">
-        <Card className="w-full max-w-sm">
+        <Card className="w-full max-w-sm bg-background/50 backdrop-blur-sm border-border/50">
           <CardHeader className="text-center">
             <div className="flex justify-center items-center gap-2 mb-4">
-               <div className="p-2 bg-primary/10 rounded-full">
+               <div className="p-3 bg-primary/10 rounded-full border border-primary/20">
                   <LineChart className="h-8 w-8 text-primary" />
                </div>
             </div>
-            <CardTitle className="font-headline text-2xl">Estratégia Chinesa</CardTitle>
+            <CardTitle className="font-headline text-3xl">Estratégia Chinesa</CardTitle>
             <CardDescription>Acesse com as credenciais compartilhadas</CardDescription>
              <Button variant="link" size="sm" className="w-full text-blue-400" asChild>
                 <Link href="https://t.me/Trader_Chines" target="_blank">
@@ -183,7 +186,7 @@ export default function LoginPage() {
                 disabled={isLoading}
               />
             </div>
-            <Button onClick={handleLogin} disabled={isLoading} className="w-full">
+            <Button onClick={handleLogin} disabled={isLoading} className="w-full bg-primary/90 hover:bg-primary text-primary-foreground font-bold">
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Entrar
             </Button>

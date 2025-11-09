@@ -55,14 +55,14 @@ export function SignalForm({ formData, setFormData, onSubmit, isLoading, showOTC
     <div className="w-full space-y-8 text-center">
       <div>
         <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl font-headline">
-          ESTRATÉGIA<br />CHINESA
+          ESTRATÉGIA CHINESA
         </h1>
         <p className="mt-4 text-lg text-foreground/80">
           Escolha o ativo e o tempo de expiração para receber sinais automáticos em tempo real.
         </p>
       </div>
 
-      <div className="space-y-4 text-left">
+      <div className="space-y-6 text-left">
         <div className="space-y-2">
           <div className="flex justify-between items-center">
             <Label htmlFor="asset-select">Ativo:</Label>
@@ -78,23 +78,6 @@ export function SignalForm({ formData, setFormData, onSubmit, isLoading, showOTC
               />
             </div>
           </div>
-          {showOTC && (
-            <Alert className="mt-2 mb-4">
-              <Info className="h-4 w-4" />
-              <AlertDescription className="text-xs text-foreground/80">
-                Sinais OTC são exclusivos para as corretoras:
-                <br />
-                <Link href="https://affiliate.iqoption.net/redir/?aff=198544&aff_model=revenue&afftrack=" target="_blank" className="font-bold underline hover:text-primary mx-1">
-                  IQ Option
-                </Link>
-                e
-                <Link href="https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=" target="_blank" className="font-bold underline hover:text-primary ml-1">
-                  Exnova
-                </Link>
-                .
-              </AlertDescription>
-            </Alert>
-          )}
           <Select
             value={formData.asset}
             onValueChange={(value) => setFormData({ ...formData, asset: value as Asset })}
@@ -119,6 +102,22 @@ export function SignalForm({ formData, setFormData, onSubmit, isLoading, showOTC
               ))}
             </SelectContent>
           </Select>
+           {showOTC && (
+            <Alert className="mt-4 border-primary/20 bg-primary/10">
+              <Info className="h-4 w-4 text-primary" />
+              <AlertDescription className="text-xs text-primary/80">
+                Sinais OTC são para as corretoras 
+                <Link href="https://affiliate.iqoption.net/redir/?aff=198544&aff_model=revenue&afftrack=" target="_blank" className="font-bold underline hover:text-primary mx-1">
+                  IQ Option
+                </Link>
+                e
+                <Link href="https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=" target="_blank" className="font-bold underline hover:text-primary ml-1">
+                  Exnova
+                </Link>
+                .
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -141,7 +140,7 @@ export function SignalForm({ formData, setFormData, onSubmit, isLoading, showOTC
 
       <Button
         size="lg"
-        className="w-full h-14 text-lg font-bold bg-blue-600 hover:bg-blue-700 text-white"
+        className="w-full h-14 text-lg font-bold bg-gradient-to-r from-primary/80 to-primary hover:from-primary/90 hover:to-primary text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-300 transform hover:scale-105"
         onClick={onSubmit}
         disabled={isLoading || !isMarketOpen}
       >

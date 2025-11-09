@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,25 +13,11 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 
-
-import { OnlineTraders } from '@/components/app/online-traders';
 import { SignalForm } from '@/components/app/signal-form';
 import { SignalResult } from '@/components/app/signal-result';
 import { useToast } from '@/hooks/use-toast';
 import { isMarketOpenForAsset } from '@/lib/market-hours';
-import { Button } from '@/components/ui/button';
-import { Download, ExternalLink } from 'lucide-react';
-import Link from 'next/link';
-
 
 export type Asset = 
   | 'EUR/USD' | 'EUR/USD (OTC)'
@@ -67,36 +54,28 @@ function seededRandom(seed: number) {
 function generateClientSideSignal(asset: Asset, expirationTimeLabel: '1 minute' | '5 minutes') {
     const now = new Date();
     
-    // 1. Define a semente principal para o minuto atual (consistente para todos)
     const minuteSeed = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes()).getTime();
 
-    // 2. Determina a "tendência geral do mercado" para este minuto
-    const marketTrendSeed = minuteSeed; // Usa a semente do minuto
+    const marketTrendSeed = minuteSeed;
     const marketTrendRandom = seededRandom(marketTrendSeed);
     const generalMarketSignal = marketTrendRandom < 0.5 ? 'CALL 🔼' : 'PUT 🔽';
 
-    // 3. Gera um sinal independente para o ativo específico
-    // Adiciona uma string do ativo para criar uma semente única para o par
     const assetSpecificSeed = minuteSeed + asset.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
     const assetRandom = seededRandom(assetSpecificSeed);
     const independentSignal = assetRandom < 0.5 ? 'CALL 🔼' : 'PUT 🔽';
 
-    // 4. Decide se o ativo seguirá a tendência do mercado ou seu sinal independente
-    const correlationSeed = minuteSeed + 1; // Semente ligeiramente diferente para a decisão de correlação
+    const correlationSeed = minuteSeed + 1;
     const correlationRandom = seededRandom(correlationSeed);
     
     let finalSignal: 'CALL 🔼' | 'PUT 🔽';
-    const correlationChance = 0.3; // 30% de chance de seguir a tendência do mercado
+    const correlationChance = 0.3; 
 
     if (correlationRandom < correlationChance) {
-        // Segue a tendência geral do mercado
         finalSignal = generalMarketSignal;
     } else {
-        // Segue a análise independente (70% de chance)
         finalSignal = independentSignal;
     }
 
-    // 5. Calcula o tempo de expiração
     let targetTime: Date;
     if (expirationTimeLabel === '1 minute') {
         const nextMinute = new Date(now);
@@ -129,34 +108,26 @@ function generateClientSideSignal(asset: Asset, expirationTimeLabel: '1 minute' 
 
 
 export default function AnalisadorPage() {
+  const router = useRouter();
   const [appState, setAppState] = useState<AppState>('idle');
   const [signalData, setSignalData] = useState<SignalData | null>(null);
   const { toast } = useToast();
   const [showOTC, setShowOTC] = useState(false);
   const [isMarketOpen, setIsMarketOpen] = useState(true);
-  const [showLimitDialog, setShowLimitDialog] = useState(false);
-  const [showSecretActivationDialog, setShowSecretActivationDialog] = useState(false);
-  const [isSecretActivated, setIsSecretActivated] = useState(false);
-  const [nextSignalCountdown, setNextSignalCountdown] = useState('');
-
 
   const [formData, setFormData] = useState<FormData>({
     asset: 'EUR/JPY',
     expirationTime: '1m',
   });
-  const indicatorLink = '/vip';
-  const affiliateLink = 'https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=';
   
-  useEffect(() => {
-    const savedState = localStorage.getItem('isSecretActivated');
-    if (savedState) {
-      setIsSecretActivated(JSON.parse(savedState));
+   useEffect(() => {
+    // On component mount, check if the user is logged in.
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    if (isLoggedIn !== 'true') {
+      router.push('/'); // Redirect to login page if not logged in
     }
-  }, []);
+  }, [router]);
 
-  useEffect(() => {
-    localStorage.setItem('isSecretActivated', JSON.stringify(isSecretActivated));
-  }, [isSecretActivated]);
 
   useEffect(() => {
     // Check market status whenever the selected asset changes
@@ -237,53 +208,7 @@ export default function AnalisadorPage() {
     return () => clearInterval(timer);
   }, [appState, signalData?.operationStatus]);
   
-  useEffect(() => {
-    let interval: NodeJS.Timeout | undefined;
-
-    if (showLimitDialog) {
-      const calculateCountdown = () => {
-        const now = new Date();
-        const tomorrow = new Date(now);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        tomorrow.setHours(0, 0, 0, 0);
-
-        const diff = tomorrow.getTime() - now.getTime();
-
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-        setNextSignalCountdown(
-          `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
-        );
-      };
-
-      calculateCountdown();
-      interval = setInterval(calculateCountdown, 1000);
-    }
-
-    return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
-    };
-  }, [showLimitDialog]);
-
-
  const handleAnalyze = async () => {
-    if (!isSecretActivated) {
-        setShowSecretActivationDialog(true);
-        return;
-    }
-
-    const today = new Date().toDateString();
-    const lastSignalDate = localStorage.getItem('ultimoSinal');
-
-    if (lastSignalDate === today) {
-      setShowLimitDialog(true);
-      return;
-    }
-    
     setAppState('loading');
     const expirationTimeLabel = formData.expirationTime === '1m' ? '1 minute' : '5 minutes';
     
@@ -312,7 +237,6 @@ export default function AnalisadorPage() {
       operationStatus: 'pending'
     });
 
-    localStorage.setItem('ultimoSinal', today);
     setAppState('result');
   };
 
@@ -321,19 +245,20 @@ export default function AnalisadorPage() {
     setSignalData(null);
   };
   
-  const handleSecretToggle = () => {
-    setIsSecretActivated(prev => !prev);
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn');
+    router.push('/');
   }
+
 
   return (
     <>
       <div className="fixed inset-0 -z-10 h-full w-full bg-background"></div>
       <div className="flex flex-col min-h-screen">
-        <header className="p-4 flex justify-center">
-          <OnlineTraders 
-             isActivated={isSecretActivated}
-             onToggle={handleSecretToggle}
-          />
+        <header className="p-4 flex justify-end">
+          <button onClick={handleLogout} className="text-sm text-foreground/70 hover:text-foreground">
+            Sair
+          </button>
         </header>
 
         <main className="flex-grow flex flex-col items-center justify-center p-4 space-y-6">
@@ -367,55 +292,6 @@ export default function AnalisadorPage() {
           <p className="max-w-xl mx-auto">Aviso Legal: Todas as estratégias e investimentos envolvem risco de perda. Nenhuma informação contida neste produto deve ser interpretada como uma garantia de resultados.</p>
         </footer>
       </div>
-
-       <AlertDialog open={showLimitDialog} onOpenChange={setShowLimitDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Limite diário atingido</AlertDialogTitle>
-            <AlertDialogDescription>
-               Você já recebeu o sinal gratuito de hoje. Volte amanhã ou
-              ative o Indicador para ter acesso ilimitado.
-              <br />
-              <br />
-              Próximo sinal em:{' '}
-              <span className="font-bold text-yellow-500">{nextSignalCountdown}</span>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Fechar</AlertDialogCancel>
-            <AlertDialogAction asChild>
-                <a href={indicatorLink} target="_blank" rel="noopener noreferrer">
-                    Quero o Indicador
-                </a>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <Dialog open={showSecretActivationDialog} onOpenChange={setShowSecretActivationDialog}>
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>Falha ao analisar ❌</DialogTitle>
-                <DialogDescription>
-                Não encontramos seu cadastro no sistema. É preciso se cadastrar e realizar um depósito de qualquer valor para gerar os sinais.
-                </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="flex-col !space-x-0 gap-2 sm:!flex-col sm:!space-x-0 sm:gap-2">
-                 <Button asChild className='w-full bg-blue-600 hover:bg-blue-700 text-white'>
-                    <a href={affiliateLink} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="mr-2 h-4 w-4" />
-                        Cadastrar agora
-                    </a>
-                </Button>
-                <Button asChild className='w-full bg-green-600 hover:bg-green-700 text-white'>
-                    <Link href={indicatorLink}>
-                       <Download className="mr-2 h-4 w-4" />
-                       Baixar o indicador
-                    </Link>
-                </Button>
-            </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

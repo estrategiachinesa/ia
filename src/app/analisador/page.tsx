@@ -122,10 +122,26 @@ export default function AnalisadorPage() {
   
   useEffect(() => {
     // Check for access on component mount
-    const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
-    if (isLoggedIn) {
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const loginTime = localStorage.getItem('loginTimestamp');
+    let sessionExpired = false;
+
+    if (loginTime) {
+      const hoursSinceLogin = (Date.now() - parseInt(loginTime)) / (1000 * 60 * 60);
+      if (hoursSinceLogin >= 24) {
+        sessionExpired = true;
+      }
+    } else {
+      // If there's no timestamp, treat as invalid session
+      sessionExpired = true;
+    }
+
+
+    if (isLoggedIn && !sessionExpired) {
       setAccessState('granted');
     } else {
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('loginTimestamp');
       router.push('/');
     }
   }, [router]);
@@ -248,7 +264,8 @@ export default function AnalisadorPage() {
   };
   
   const handleLogout = async () => {
-    sessionStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('loginTimestamp');
     router.push('/');
   }
 
@@ -270,7 +287,7 @@ export default function AnalisadorPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Acesso Negado</AlertDialogTitle>
             <AlertDialogDescription>
-              Você não tem uma sessão de login ativa. Por favor, retorne à página inicial para entrar.
+              Sua sessão expirou ou não é válida. Por favor, retorne à página inicial para entrar novamente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

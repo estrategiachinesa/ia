@@ -46,9 +46,18 @@ export default function LoginPage() {
 
 
   useEffect(() => {
-    // Check if user is already logged in via session storage
-    if (sessionStorage.getItem('isLoggedIn') === 'true') {
-      router.push('/analisador');
+    // Check if user is already logged in via local storage
+    if (localStorage.getItem('isLoggedIn') === 'true') {
+       const loginTime = localStorage.getItem('loginTimestamp');
+       if (loginTime) {
+         const hoursSinceLogin = (Date.now() - parseInt(loginTime)) / (1000 * 60 * 60);
+         if (hoursSinceLogin < 24) {
+            router.push('/analisador');
+         } else {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('loginTimestamp');
+         }
+       }
     }
   }, [router]);
 
@@ -94,7 +103,8 @@ export default function LoginPage() {
       // 2. Compare with the entered credentials
       if (credentials.user === correctUser && credentials.password === correctPassword) {
         // 3. On success, set a session flag and redirect
-        sessionStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('loginTimestamp', Date.now().toString());
         toast({
           title: 'Login bem-sucedido!',
           description: 'Redirecionando para o analisador...',

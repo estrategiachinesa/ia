@@ -145,13 +145,13 @@ export default function LoginPage() {
             </div>
             <CardTitle className="font-headline text-2xl">Estratégia Chinesa</CardTitle>
             <CardDescription>Acesse com as credenciais compartilhadas</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
              <Button variant="link" size="sm" className="w-full text-blue-400" asChild>
                 <Link href="https://t.me/Trader_Chines" target="_blank">
                   solicite acesso pelo Telegram
                 </Link>
               </Button>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="user">Usuário</Label>
               <Input

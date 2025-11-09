@@ -1,31 +1,16 @@
-/**
- * @file Firestore Security Rules
- * @description This ruleset defines access control for the Chinese trading strategies database.
- *
- * Core Philosophy:
- * This ruleset provides public read access to trading strategies, but restricts write access to prevent unauthorized modifications.
- *
- * Data Structure:
- * The database contains a single top-level collection, `chineseStrategies`, where each document represents a trading strategy.
- *
- * Key Security Decisions:
- * - Public read access is allowed for all strategies.
- * - Write operations (create, update, delete) are denied to all clients by default.
- */
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    /**
-     * @description Grants public read access to Chinese trading strategies while restricting write access.
-     * @path /chineseStrategies/{chineseStrategyId}
-     * @allow (get, list) Any user can read a trading strategy.
-     * @deny (create, update, delete) No user can create, update, or delete a trading strategy.
-     * @principle Public read, restricted write.
-     */
-    match /chineseStrategies/{chineseStrategyId} {
-      allow get, list: if true;
-      allow create, update, delete: if false;
+    // By default, deny all reads and writes
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    // User profiles can be read by anyone, but only the owner can write.
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }

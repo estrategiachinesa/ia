@@ -62,7 +62,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   auth,
 }) => {
   const [userAuthState, setUserAuthState] = useState<UserAuthState>({
-    user: null,
+    user: auth?.currentUser || null,
     isUserLoading: true, // Start loading until first auth event
     userError: null,
   });
@@ -74,7 +74,8 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       return;
     }
 
-    setUserAuthState({ user: null, isUserLoading: true, userError: null }); // Reset on auth instance change
+    // Immediately set loading to true when starting to listen
+    setUserAuthState(prevState => ({ ...prevState, isUserLoading: true, userError: null }));
 
     const unsubscribe = onAuthStateChanged(
       auth,

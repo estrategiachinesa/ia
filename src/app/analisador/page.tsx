@@ -18,6 +18,9 @@ import { SignalForm } from '@/components/app/signal-form';
 import { SignalResult } from '@/components/app/signal-result';
 import { useToast } from '@/hooks/use-toast';
 import { isMarketOpenForAsset } from '@/lib/market-hours';
+import { useUser, useAuth } from '@/firebase';
+import { Loader2 } from 'lucide-react';
+import { signOut } from 'firebase/auth';
 
 export type Asset = 
   | 'EUR/USD' | 'EUR/USD (OTC)'
@@ -114,6 +117,9 @@ export default function AnalisadorPage() {
   const { toast } = useToast();
   const [showOTC, setShowOTC] = useState(false);
   const [isMarketOpen, setIsMarketOpen] = useState(true);
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+
 
   const [formData, setFormData] = useState<FormData>({
     asset: 'EUR/JPY',
@@ -121,12 +127,10 @@ export default function AnalisadorPage() {
   });
   
    useEffect(() => {
-    // On component mount, check if the user is logged in.
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
-    if (isLoggedIn !== 'true') {
-      router.push('/'); // Redirect to login page if not logged in
+    if (!isUserLoading && !user) {
+      router.push('/');
     }
-  }, [router]);
+  }, [user, isUserLoading, router]);
 
 
   useEffect(() => {
@@ -245,11 +249,18 @@ export default function AnalisadorPage() {
     setSignalData(null);
   };
   
-  const handleLogout = () => {
-    localStorage.removeItem('isLoggedIn');
-    router.push('/');
+  const handleLogout = async () => {
+    await signOut(auth);
+    // The useEffect hook will redirect to '/'
   }
 
+  if (isUserLoading) {
+      return (
+          <div className="flex h-screen w-full items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+      )
+  }
 
   return (
     <>

@@ -1,61 +1,54 @@
 {
   "entities": {
-    "ChineseStrategy": {
+    "UserProfile": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "ChineseStrategy",
+      "title": "User Profile",
+      "description": "Represents a user's profile in the application.",
       "type": "object",
-      "description": "Represents a Chinese trading strategy page content.",
       "properties": {
-        "id": {
+        "uid": {
           "type": "string",
-          "description": "Unique identifier for the Chinese Strategy page."
+          "description": "The user's unique ID from Firebase Authentication."
         },
-        "title": {
+        "email": {
           "type": "string",
-          "description": "Title of the trading strategy."
+          "format": "email",
+          "description": "The user's email address."
         },
-        "content": {
+        "displayName": {
           "type": "string",
-          "description": "The main text or HTML content describing the trading strategy."
+          "description": "The user's public display name."
         },
-        "lastUpdated": {
+        "createdAt": {
           "type": "string",
-          "description": "Date and time when the strategy content was last updated.",
-          "format": "date-time"
+          "format": "date-time",
+          "description": "The timestamp when the user profile was created."
         }
       },
-      "required": [
-        "id",
-        "title",
-        "content"
-      ]
+      "required": ["uid", "email", "createdAt"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["password"]
   },
   "firestore": {
     "structure": [
       {
-        "path": "/chineseStrategies/{chineseStrategyId}",
+        "path": "/users/{userId}",
         "definition": {
-          "entityName": "ChineseStrategy",
+          "entityName": "UserProfile",
           "schema": {
-            "$ref": "#/backend/entities/ChineseStrategy"
+            "$ref": "#/backend/entities/UserProfile"
           },
-          "description": "Collection to store Chinese trading strategies.  Each document represents a single strategy page content.",
+          "description": "Collection to store user profile information. Each document corresponds to a registered user.",
           "params": [
             {
-              "name": "chineseStrategyId",
-              "description": "Unique identifier for the Chinese Strategy document."
+              "name": "userId",
+              "description": "The user's UID."
             }
           ]
         }
       }
-    ],
-    "reasoning": "Based on the application requirements, specifically the need to manage Chinese trading strategy pages, I recommend the following Firestore structure. The primary collection will be `chineseStrategies` to store the trading strategies. This structure is designed to be simple, secure, and scalable, prioritizing Authorization Independence and enabling secure list operations (QAPs). Since there are no user-specific roles or access controls specified, this structure assumes that all strategies are managed globally by administrators or through some backend process.\n\n**Authorization Independence and QAPs:**\nThe `chineseStrategies` collection does not require any hierarchical authorization since the documents are globally managed. This means that the security rules will be straightforward and will not depend on `get()` calls to parent documents, achieving Authorization Independence. The homogeneous nature of the data within the `chineseStrategies` collection means all strategies have the same security posture and simplifies list operations.\n\n**Simplicity:**\nThis data structure focuses on simplicity. It only contains one collection given the straightforward requirements of the application."
+    ]
   }
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,37 +8,84 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Loader2 } from 'lucide-react';
+import { useForm, SubmitHandler } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useAuth, useUser } from '@/firebase';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+
+const formSchema = z.object({
+  email: z.string().email({ message: 'Por favor, insira um e-mail válido.' }),
+  password: z.string().min(6, { message: 'A senha deve ter pelo menos 6 caracteres.' }),
+});
+
+type FormFields = z.infer<typeof formSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const auth = useAuth();
+  const { user, isUserLoading } = useUser();
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormFields>({
+    resolver: zodResolver(formSchema),
+  });
+
+  useEffect(() => {
+    if (!isUserLoading && user) {
+      router.push('/analisador');
+    }
+  }, [user, isUserLoading, router]);
+
+  const handleAuthAction: SubmitHandler<FormFields> = async ({ email, password }) => {
     setIsLoading(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      if (username === 'admin' && password === 'admin') {
+    try {
+      if (isRegistering) {
+        await createUserWithEmailAndPassword(auth, email, password);
+        toast({
+          title: 'Cadastro bem-sucedido!',
+          description: 'Você agora pode fazer login.',
+        });
+        setIsRegistering(false); // Switch back to login view
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
         toast({
           title: 'Login bem-sucedido!',
           description: 'Redirecionando para o analisador.',
         });
-        localStorage.setItem('isLoggedIn', 'true');
-        router.push('/analisador');
-      } else {
-        toast({
-          variant: 'destructive',
-          title: 'Falha no Login',
-          description: 'Usuário ou senha incorretos.',
-        });
-        setIsLoading(false);
+        // The useEffect will handle the redirect
       }
-    }, 1500);
+    } catch (error: any) {
+      console.error("Firebase auth error:", error);
+      let description = 'Ocorreu um erro. Tente novamente.';
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        description = 'E-mail ou senha incorretos.';
+      } else if (error.code === 'auth/email-already-in-use') {
+        description = 'Este e-mail já está em uso.';
+      }
+      toast({
+        variant: 'destructive',
+        title: isRegistering ? 'Falha no Cadastro' : 'Falha no Login',
+        description,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  if (isUserLoading || user) {
+      return (
+          <div className="flex h-screen w-full items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+      )
+  }
 
   return (
     <>
@@ -52,21 +99,20 @@ export default function LoginPage() {
                </div>
             </div>
             <CardTitle className="font-headline text-2xl">Estratégia Chinesa</CardTitle>
-            <CardDescription>Acesse sua conta para continuar</CardDescription>
+            <CardDescription>{isRegistering ? 'Crie sua conta para continuar' : 'Acesse sua conta para continuar'}</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleSubmit(handleAuthAction)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">Usuário</Label>
+                <Label htmlFor="email">E-mail</Label>
                 <Input
-                  id="username"
-                  type="text"
-                  placeholder="Seu usuário"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  required
+                  id="email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  {...register('email')}
                   disabled={isLoading}
                 />
+                {errors.email && <p className="text-destructive text-xs">{errors.email.message}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Senha</Label>
@@ -74,17 +120,22 @@ export default function LoginPage() {
                   id="password"
                   type="password"
                   placeholder="Sua senha"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
+                  {...register('password')}
                   disabled={isLoading}
                 />
+                {errors.password && <p className="text-destructive text-xs">{errors.password.message}</p>}
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Entrar
+                {isRegistering ? 'Cadastrar' : 'Entrar'}
               </Button>
             </form>
+            <div className="mt-4 text-center text-sm">
+              {isRegistering ? 'Já tem uma conta?' : 'Não tem uma conta?'}
+              <Button variant="link" onClick={() => setIsRegistering(!isRegistering)} className="pl-1">
+                {isRegistering ? 'Faça login' : 'Cadastre-se'}
+              </Button>
+            </div>
           </CardContent>
         </Card>
         <footer className="w-full text-center text-[0.6rem] text-foreground/50 p-4 mt-8">

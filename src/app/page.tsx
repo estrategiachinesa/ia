@@ -13,6 +13,8 @@ import Link from 'next/link';
 import { useFirebase } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 
+const USER_DOMAIN = 'estrategiachinesa.app';
+
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -47,13 +49,15 @@ export default function LoginPage() {
     }
     
     try {
-        await signInWithEmailAndPassword(auth, credentials.user, credentials.password);
-        // The useEffect hook will handle the redirection on successful login
+        const email = `${credentials.user.toLowerCase()}@${USER_DOMAIN}`;
+        await signInWithEmailAndPassword(auth, email, credentials.password);
+        
         localStorage.setItem('loginTimestamp', Date.now().toString());
         toast({
           title: 'Login bem-sucedido!',
           description: 'Redirecionando para o analisador...',
         });
+        // The useEffect hook will handle the redirection on successful login
     } catch (error: any) {
       console.error("Login error:", error);
       let description = 'Ocorreu um erro inesperado.';
@@ -110,12 +114,12 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="user">Email</Label>
+              <Label htmlFor="user">Usuário</Label>
               <Input
                 id="user"
                 name="user"
-                type="email"
-                placeholder="seu@email.com"
+                type="text"
+                placeholder="seu.usuario"
                 value={credentials.user}
                 onChange={handleInputChange}
                 disabled={isLoading}

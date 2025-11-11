@@ -119,7 +119,7 @@ export default function LoginPage() {
                 id="user"
                 name="user"
                 type="text"
-                placeholder="seu.usuario"
+                placeholder="Usuário (disponível no Telegram)"
                 value={credentials.user}
                 onChange={handleInputChange}
                 disabled={isLoading}

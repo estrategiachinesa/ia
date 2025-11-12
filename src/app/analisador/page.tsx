@@ -172,17 +172,18 @@ export default function AnalisadorPage() {
   useEffect(() => {
     const usageString = localStorage.getItem('signalUsage');
     if (usageString) {
-      const usage: SignalUsage = JSON.parse(usageString);
+      const usage: Partial<SignalUsage> = JSON.parse(usageString);
       const oneHourAgo = Date.now() - 60 * 60 * 1000;
       
-      const recentTimestamps = usage.timestamps.filter(ts => ts > oneHourAgo);
+      // Ensure usage.timestamps is an array before filtering
+      const recentTimestamps = (usage.timestamps || []).filter(ts => ts > oneHourAgo);
       
-      if (usage.timestamps.length !== recentTimestamps.length) {
+      if (usage.timestamps && usage.timestamps.length !== recentTimestamps.length) {
           const newUsage = { timestamps: recentTimestamps };
           localStorage.setItem('signalUsage', JSON.stringify(newUsage));
           setSignalUsage(newUsage);
       } else {
-          setSignalUsage(usage);
+          setSignalUsage({ timestamps: recentTimestamps });
       }
       
       setHasReachedLimit(recentTimestamps.length >= HOURLY_SIGNAL_LIMIT);

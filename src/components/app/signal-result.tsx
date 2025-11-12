@@ -54,11 +54,12 @@ export function SignalResult({ data, onReset }: SignalResultProps) {
   return (
     <div className="w-full max-w-md space-y-6 text-center">
       <Card
-        className={
+        className={cn(
+          'border',
           isCall
             ? 'border-success/50 bg-success/10'
             : 'border-destructive/50 bg-destructive/10'
-        }
+        )}
       >
         <CardHeader>
           <CardTitle className="text-2xl flex items-center justify-between">

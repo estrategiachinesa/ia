@@ -180,9 +180,14 @@ export default function AnalisadorPage() {
    useEffect(() => {
     if (vipData && (vipData as any).status === 'APPROVED') {
       setIsPremium(true);
+      document.documentElement.classList.add('theme-premium');
     } else {
       setIsPremium(false);
+      document.documentElement.classList.remove('theme-premium');
     }
+     return () => {
+      document.documentElement.classList.remove('theme-premium');
+    };
   }, [vipData]);
 
   // Effect for checking and updating signal usage limit
@@ -375,6 +380,11 @@ export default function AnalisadorPage() {
 
       <div className="flex flex-col min-h-screen">
         <header className="p-4 flex justify-end items-center">
+          {isPremium && (
+            <div className="absolute left-4 top-4 px-3 py-1 text-sm font-bold bg-primary text-primary-foreground rounded-full shadow-lg">
+              PREMIUM
+            </div>
+          )}
            <button onClick={handleLogout} className="text-sm text-foreground/70 hover:text-foreground">
             Sair
           </button>

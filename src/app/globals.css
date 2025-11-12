@@ -44,6 +44,7 @@ body {
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
   .dark {
     --background: 224 71% 4%;
     --foreground: 0 0% 98%;
@@ -79,6 +80,14 @@ body {
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .theme-premium {
+    --primary: 260 85% 65%;
+    --primary-foreground: 0 0% 98%;
+    --accent: 260 85% 65%;
+    --accent-foreground: 0 0% 98%;
+    --ring: 260 85% 65%;
   }
 }
 

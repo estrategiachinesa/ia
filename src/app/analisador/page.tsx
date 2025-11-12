@@ -18,8 +18,9 @@ import { SignalForm } from '@/components/app/signal-form';
 import { SignalResult } from '@/components/app/signal-result';
 import { isMarketOpenForAsset } from '@/lib/market-hours';
 import { Loader2 } from 'lucide-react';
-import { useFirebase } from '@/firebase';
+import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { Button } from '@/components/ui/button';
+import { doc } from 'firebase/firestore';
 
 export type Asset = 
   | 'EUR/USD' | 'EUR/USD (OTC)'
@@ -120,7 +121,7 @@ function generateClientSideSignal(asset: Asset, expirationTime: '1m' | '5m') {
 
 export default function AnalisadorPage() {
   const router = useRouter();
-  const { auth, user, isUserLoading } = useFirebase();
+  const { auth, user, isUserLoading, firestore } = useFirebase();
   const [accessState, setAccessState] = useState<AccessState>('checking');
   const [appState, setAppState] = useState<AppState>('idle');
   const [signalData, setSignalData] = useState<SignalData | null>(null);
@@ -128,7 +129,15 @@ export default function AnalisadorPage() {
   const [isMarketOpen, setIsMarketOpen] = useState(true);
   const [signalUsage, setSignalUsage] = useState<SignalUsage>({ timestamps: [] });
   const [hasReachedLimit, setHasReachedLimit] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
 
+
+  const vipRequestRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'vipRequests', user.uid);
+  }, [firestore, user]);
+
+  const { data: vipData, isLoading: isVipLoading } = useDoc(vipRequestRef);
 
   const [formData, setFormData] = useState<FormData>({
     asset: 'EUR/JPY',
@@ -168,8 +177,20 @@ export default function AnalisadorPage() {
     }
   }, [user, isUserLoading, auth]);
 
+   useEffect(() => {
+    if (vipData && (vipData as any).status === 'APPROVED') {
+      setIsPremium(true);
+    } else {
+      setIsPremium(false);
+    }
+  }, [vipData]);
+
   // Effect for checking and updating signal usage limit
   useEffect(() => {
+    if (isPremium) {
+      setHasReachedLimit(false);
+      return;
+    }
     const usageString = localStorage.getItem('signalUsage');
     if (usageString) {
       const usage: Partial<SignalUsage> = JSON.parse(usageString);
@@ -189,7 +210,7 @@ export default function AnalisadorPage() {
       setHasReachedLimit(recentTimestamps.length >= HOURLY_SIGNAL_LIMIT);
 
     }
-  }, [appState]);
+  }, [appState, isPremium]);
 
 
   useEffect(() => {
@@ -254,15 +275,17 @@ export default function AnalisadorPage() {
   }, [appState, signalData?.operationStatus]);
   
  const handleAnalyze = async () => {
-    const usageString = localStorage.getItem('signalUsage') || '{ "timestamps": [] }';
-    const currentUsage: SignalUsage = JSON.parse(usageString);
-    const oneHourAgo = Date.now() - 60 * 60 * 1000;
-    const recentTimestamps = currentUsage.timestamps.filter(ts => ts > oneHourAgo);
+    if (!isPremium) {
+      const usageString = localStorage.getItem('signalUsage') || '{ "timestamps": [] }';
+      const currentUsage: SignalUsage = JSON.parse(usageString);
+      const oneHourAgo = Date.now() - 60 * 60 * 1000;
+      const recentTimestamps = currentUsage.timestamps.filter(ts => ts > oneHourAgo);
 
-    if (recentTimestamps.length >= HOURLY_SIGNAL_LIMIT) {
-        setHasReachedLimit(true);
-        // The SignalForm component will handle showing the modal
-        return;
+      if (recentTimestamps.length >= HOURLY_SIGNAL_LIMIT) {
+          setHasReachedLimit(true);
+          // The SignalForm component will handle showing the modal
+          return;
+      }
     }
 
 
@@ -284,15 +307,21 @@ export default function AnalisadorPage() {
       operationStatus: 'pending'
     });
     
-    // Update usage stats
-    const newTimestamps = [...recentTimestamps, Date.now()];
-    const newUsage = { timestamps: newTimestamps };
-    localStorage.setItem('signalUsage', JSON.stringify(newUsage));
-    setSignalUsage(newUsage);
-    if(newUsage.timestamps.length >= HOURLY_SIGNAL_LIMIT){
-        setHasReachedLimit(true);
-    }
+    if (!isPremium) {
+      // Update usage stats
+      const usageString = localStorage.getItem('signalUsage') || '{ "timestamps": [] }';
+      const currentUsage: SignalUsage = JSON.parse(usageString);
+      const oneHourAgo = Date.now() - 60 * 60 * 1000;
+      const recentTimestamps = (currentUsage.timestamps || []).filter(ts => ts > oneHourAgo);
 
+      const newTimestamps = [...recentTimestamps, Date.now()];
+      const newUsage = { timestamps: newTimestamps };
+      localStorage.setItem('signalUsage', JSON.stringify(newUsage));
+      setSignalUsage(newUsage);
+      if(newUsage.timestamps.length >= HOURLY_SIGNAL_LIMIT){
+          setHasReachedLimit(true);
+      }
+    }
 
     setAppState('result');
   };
@@ -310,7 +339,7 @@ export default function AnalisadorPage() {
   }
 
   // Loading screen while checking user auth
-  if (accessState === 'checking') {
+  if (accessState === 'checking' || isVipLoading) {
       return (
           <div className="flex h-screen w-full items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin" />
@@ -372,6 +401,8 @@ export default function AnalisadorPage() {
                 hasReachedLimit={hasReachedLimit}
                 user={user}
                 firestore={useFirebase().firestore}
+                isPremium={isPremium}
+                vipStatus={(vipData as any)?.status}
               />
              ) : (
               signalData && <SignalResult data={signalData} onReset={handleReset} />

@@ -22,6 +22,7 @@ import { Input } from '../ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { User } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp, Firestore } from 'firebase/firestore';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 
 type SignalFormProps = {
@@ -35,6 +36,8 @@ type SignalFormProps = {
   hasReachedLimit: boolean;
   user: User | null;
   firestore: Firestore;
+  isPremium: boolean;
+  vipStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
 };
 
 const allAssets: Asset[] = [
@@ -54,6 +57,8 @@ export function SignalForm({
   hasReachedLimit,
   user,
   firestore,
+  isPremium,
+  vipStatus,
 }: SignalFormProps) {
   const { toast } = useToast();
   const [isPremiumModalOpen, setPremiumModalOpen] = useState(false);
@@ -64,10 +69,11 @@ export function SignalForm({
   const assets = showOTC ? allAssets : allAssets.filter(a => !a.includes('(OTC)'));
 
   useEffect(() => {
-    if (hasReachedLimit) {
+    // Open the modal if the limit is reached, the user is not premium, and their status is not pending.
+    if (hasReachedLimit && !isPremium && vipStatus !== 'PENDING') {
       setPremiumModalOpen(true);
     }
-  }, [hasReachedLimit]);
+  }, [hasReachedLimit, isPremium, vipStatus]);
 
   useEffect(() => {
     // If OTC is turned off and an OTC asset is selected, reset to a default non-OTC asset
@@ -78,6 +84,7 @@ export function SignalForm({
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
+    // Show waiting message if limit is reached but modal is not (or cannot be) open
     if (hasReachedLimit && !isPremiumModalOpen) {
         let queuePosition = 5;
         const messages = [
@@ -93,14 +100,19 @@ export function SignalForm({
             setWaitingMessage(`Estamos na fila, aguardando o melhor momento... (Posição: #${queuePosition})`);
         };
         
-        setWaitingMessage(messages[0]);
-        interval = setInterval(updateMessage, 8000);
+        // Show a specific message if their request is pending
+        if(vipStatus === 'PENDING') {
+            setWaitingMessage('Seu acesso PREMIUM está em análise. Enquanto isso, aguarde na fila.');
+        } else {
+            setWaitingMessage(messages[0]);
+            interval = setInterval(updateMessage, 8000);
+        }
 
     } else {
         setWaitingMessage('');
     }
     return () => clearInterval(interval);
-  }, [hasReachedLimit, isPremiumModalOpen]);
+  }, [hasReachedLimit, isPremiumModalOpen, vipStatus]);
 
   const handleIdSubmit = async () => {
     if (!/^\d{8,}$/.test(brokerId)) {
@@ -123,14 +135,16 @@ export function SignalForm({
 
     setIsSubmittingId(true);
     try {
-      const premiumRequestRef = doc(firestore, 'vipRequests', user.uid); // Still using 'vipRequests' collection
-      await setDoc(premiumRequestRef, {
+      const premiumRequestRef = doc(firestore, 'vipRequests', user.uid);
+      
+      setDocumentNonBlocking(premiumRequestRef, {
         brokerId: brokerId,
         userId: user.uid,
         userEmail: user.email,
         status: 'PENDING',
         submittedAt: serverTimestamp(),
-      });
+      }, { merge: true });
+
 
       toast({
         title: 'Solicitação Enviada!',

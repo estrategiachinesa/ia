@@ -382,7 +382,7 @@ export default function AnalisadorPage() {
         <header className="p-4 flex justify-end items-center">
           {isVip && (
             <div className="absolute left-4 top-4 px-3 py-1 text-sm font-bold bg-primary text-primary-foreground rounded-full shadow-lg">
-              VIP
+              PREMIUM
             </div>
           )}
            <button onClick={handleLogout} className="text-sm text-foreground/70 hover:text-foreground">

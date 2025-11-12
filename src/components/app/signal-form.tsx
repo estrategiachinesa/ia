@@ -100,7 +100,7 @@ export function SignalForm({
         
         // Show a specific message if their request is pending
         if(vipStatus === 'PENDING') {
-            setWaitingMessage('Seu acesso VIP está em análise. Enquanto isso, aguarde na fila.');
+            setWaitingMessage('Seu acesso PREMIUM está em análise. Enquanto isso, aguarde na fila.');
         } else {
             setWaitingMessage(`Estamos na fila, aguardando o melhor momento... (Posição: #${queuePosition})`);
             interval = setInterval(updateMessage, 8000);
@@ -146,7 +146,7 @@ export function SignalForm({
 
       toast({
         title: 'Solicitação Enviada!',
-        description: 'Seu ID foi recebido e está em análise. A liberação do acesso VIP pode levar algumas horas.',
+        description: 'Seu ID foi recebido e está em análise. A liberação do acesso PREMIUM pode levar algumas horas.',
       });
       setVipModalOpen(false);
       setBrokerId('');
@@ -281,8 +281,8 @@ export function SignalForm({
               {isLoading ? 'Analisando...' : !isMarketOpen ? 'Mercado Fechado' : hasReachedLimit ? 'Aguardando...' : 'Analisar Mercado'}
             </Button>
             {!isVip && (
-                <Button variant="link" className="w-full text-primary" onClick={() => setVipModalOpen(true)}>
-                    <Crown className="mr-2 h-4 w-4" />
+                <Button variant="link" className="w-full flex-col h-auto text-purple-400 hover:text-purple-300" onClick={() => setVipModalOpen(true)}>
+                    <Crown className="h-5 w-5 mb-1" />
                     Seja PREMIUM
                 </Button>
             )}
@@ -292,9 +292,9 @@ export function SignalForm({
       <Dialog open={isVipModalOpen} onOpenChange={setVipModalOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-headline text-primary">Acesso VIP Ilimitado</DialogTitle>
+            <DialogTitle className="text-2xl font-headline text-primary">Acesso PREMIUM Ilimitado</DialogTitle>
             <DialogDescription>
-              Nossos servidores estão ocupados para garantir a melhor análise. Obtenha acesso prioritário e ilimitado com o Acesso VIP.
+              Nossos servidores estão ocupados para garantir a melhor análise. Obtenha acesso prioritário e ilimitado com o Acesso PREMIUM.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

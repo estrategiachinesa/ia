@@ -19,6 +19,7 @@ import { SignalResult } from '@/components/app/signal-result';
 import { isMarketOpenForAsset } from '@/lib/market-hours';
 import { Loader2 } from 'lucide-react';
 import { useFirebase } from '@/firebase';
+import { Button } from '@/components/ui/button';
 
 export type Asset = 
   | 'EUR/USD' | 'EUR/USD (OTC)'
@@ -43,8 +44,15 @@ export type SignalData = {
   operationStatus: OperationStatus;
 };
 
-type AppState = 'idle' | 'loading' | 'result';
+type AppState = 'idle' | 'loading' | 'result' | 'waiting';
 type AccessState = 'checking' | 'granted' | 'denied';
+
+type SignalUsage = {
+  count: number;
+  timestamp: number | null;
+}
+
+const DAILY_SIGNAL_LIMIT = 3;
 
 // Seeded pseudo-random number generator
 function seededRandom(seed: number) {
@@ -53,8 +61,9 @@ function seededRandom(seed: number) {
 }
 
 // Client-side signal generation with market correlation
-function generateClientSideSignal(asset: Asset, expirationTimeLabel: '1 minute' | '5 minutes') {
+function generateClientSideSignal(asset: Asset, expirationTime: '1m' | '5m') {
     const now = new Date();
+    const expirationTimeLabel = expirationTime === '1m' ? '1 minute' : '5 minutes';
     
     const minuteSeed = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes()).getTime();
 
@@ -105,6 +114,7 @@ function generateClientSideSignal(asset: Asset, expirationTimeLabel: '1 minute' 
         signal: finalSignal,
         targetTime: targetTimeString,
         source: 'Aleatório' as const,
+        targetDate: targetTime,
     };
 }
 
@@ -117,12 +127,15 @@ export default function AnalisadorPage() {
   const [signalData, setSignalData] = useState<SignalData | null>(null);
   const [showOTC, setShowOTC] = useState(false);
   const [isMarketOpen, setIsMarketOpen] = useState(true);
+  const [signalUsage, setSignalUsage] = useState<SignalUsage>({ count: 0, timestamp: null });
+  const [limitResetTime, setLimitResetTime] = useState<string>('');
 
   const [formData, setFormData] = useState<FormData>({
     asset: 'EUR/JPY',
     expirationTime: '1m',
   });
-  
+
+  // Effect for checking user session
   useEffect(() => {
     if (isUserLoading) {
         setAccessState('checking');
@@ -130,12 +143,10 @@ export default function AnalisadorPage() {
     }
 
     if (!user) {
-        // If no user is logged in after checks, deny access
         setAccessState('denied');
         return;
     }
 
-    // Check for session expiry from local storage
     const loginTime = localStorage.getItem('loginTimestamp');
     let sessionExpired = false;
 
@@ -145,12 +156,11 @@ export default function AnalisadorPage() {
         sessionExpired = true;
       }
     } else {
-      // If there's no timestamp, treat as invalid session
       sessionExpired = true;
     }
 
     if (sessionExpired) {
-        auth.signOut(); // Sign out the user from Firebase
+        auth.signOut();
         localStorage.removeItem('loginTimestamp');
         setAccessState('denied');
     } else {
@@ -158,14 +168,50 @@ export default function AnalisadorPage() {
     }
   }, [user, isUserLoading, auth]);
 
+  // Effect for checking and updating signal usage limit
+  useEffect(() => {
+    const usageString = localStorage.getItem('signalUsage');
+    if (usageString) {
+      const usage: SignalUsage = JSON.parse(usageString);
+      if (usage.timestamp && (Date.now() - usage.timestamp > 24 * 60 * 60 * 1000)) {
+        // 24 hours have passed, reset the limit
+        const newUsage = { count: 0, timestamp: null };
+        localStorage.setItem('signalUsage', JSON.stringify(newUsage));
+        setSignalUsage(newUsage);
+      } else {
+        setSignalUsage(usage);
+        if(usage.count >= DAILY_SIGNAL_LIMIT && usage.timestamp) {
+            const resetDate = new Date(usage.timestamp + 24 * 60 * 60 * 1000);
+            const updateTimer = () => {
+                const now = new Date();
+                const diff = resetDate.getTime() - now.getTime();
+                if(diff <= 0) {
+                    setLimitResetTime('');
+                    // Recalculate usage
+                     const newUsage = { count: 0, timestamp: null };
+                     localStorage.setItem('signalUsage', JSON.stringify(newUsage));
+                     setSignalUsage(newUsage);
+                    return;
+                }
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                setLimitResetTime(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+            }
+            updateTimer();
+            const interval = setInterval(updateTimer, 1000);
+            return () => clearInterval(interval);
+        }
+      }
+    }
+  }, [appState]);
+
 
   useEffect(() => {
-    // Check market status whenever the selected asset changes
     const checkMarketStatus = () => {
         setIsMarketOpen(isMarketOpenForAsset(formData.asset));
     };
     checkMarketStatus();
-    // Re-check every 10 seconds
     const interval = setInterval(checkMarketStatus, 10000); 
     return () => clearInterval(interval);
   }, [formData.asset]);
@@ -180,8 +226,8 @@ export default function AnalisadorPage() {
       }
     };
     
-    checkAndSetOTC(); // Check on mount
-    const interval = setInterval(checkAndSetOTC, 60000); // Re-check every minute
+    checkAndSetOTC();
+    const interval = setInterval(checkAndSetOTC, 60000);
 
     return () => clearInterval(interval);
   }, []);
@@ -193,79 +239,68 @@ export default function AnalisadorPage() {
       const updateCountdowns = () => {
         setSignalData(prevData => {
           if (!prevData) return null;
-
           const now = Date.now();
-          
           if (prevData.operationStatus === 'pending') {
             const newCountdown = Math.max(0, Math.floor((prevData.targetDate.getTime() - now) / 1000));
-            
             if (newCountdown > 0) {
               return { ...prevData, countdown: newCountdown };
             } else {
-              // Transition to active
               const operationDuration = prevData.expirationTime === '1m' ? 60 : 300;
-              return {
-                ...prevData,
-                countdown: 0,
-                operationStatus: 'active',
-                operationCountdown: operationDuration
-              };
+              return { ...prevData, countdown: 0, operationStatus: 'active', operationCountdown: operationDuration };
             }
           }
-
           if (prevData.operationStatus === 'active') {
               const operationDuration = prevData.expirationTime === '1m' ? 60 : 300;
               const operationEndTime = prevData.targetDate.getTime() + (operationDuration * 1000);
               const newOperationCountdown = Math.max(0, Math.floor((operationEndTime - now) / 1000));
-
               if (newOperationCountdown > 0) {
                   return { ...prevData, operationCountdown: newOperationCountdown };
               } else {
-                  // Transition to finished
                   return { ...prevData, operationCountdown: 0, operationStatus: 'finished' };
               }
           }
-
           return prevData;
         });
       };
-      
       updateCountdowns(); 
-      
       timer = setInterval(updateCountdowns, 1000);
-
     }
     return () => clearInterval(timer);
   }, [appState, signalData?.operationStatus]);
   
  const handleAnalyze = async () => {
+    
+    // Check limit before proceeding
+    if (signalUsage.count >= DAILY_SIGNAL_LIMIT) {
+        // Optionally show a toast or alert
+        console.log("Daily limit reached");
+        return;
+    }
+
     setAppState('loading');
-    const expirationTimeLabel = formData.expirationTime === '1m' ? '1 minute' : '5 minutes';
     
     // Simulate loading
     await new Promise(resolve => setTimeout(resolve, 1500));
 
-    const result = generateClientSideSignal(formData.asset, expirationTimeLabel);
-    
-    const [hours, minutes] = result.targetTime.split(':');
-    let targetDate = new Date();
-    targetDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
-
-    // Handle case where target time is in the past (e.g., just after midnight)
-    if (targetDate.getTime() < Date.now()) {
-        targetDate.setDate(targetDate.getDate() + 1);
-    }
+    const result = generateClientSideSignal(formData.asset, formData.expirationTime);
     
     setSignalData({
       ...formData,
       signal: result.signal,
       targetTime: result.targetTime,
       source: result.source,
-      targetDate: targetDate,
+      targetDate: result.targetDate,
       countdown: null,
       operationCountdown: null,
       operationStatus: 'pending'
     });
+    
+    // Update usage stats
+    const newCount = signalUsage.count + 1;
+    const newTimestamp = signalUsage.timestamp || Date.now();
+    const newUsage = { count: newCount, timestamp: newTimestamp };
+    localStorage.setItem('signalUsage', JSON.stringify(newUsage));
+    setSignalUsage(newUsage);
 
     setAppState('result');
   };
@@ -278,10 +313,11 @@ export default function AnalisadorPage() {
   const handleLogout = async () => {
     await auth.signOut();
     localStorage.removeItem('loginTimestamp');
+    localStorage.removeItem('signalUsage'); // Clear usage on logout
     router.push('/');
   }
 
-  // Loading screen while checking user auth and claims
+  // Loading screen while checking user auth
   if (accessState === 'checking') {
       return (
           <div className="flex h-screen w-full items-center justify-center">
@@ -309,6 +345,10 @@ export default function AnalisadorPage() {
       </AlertDialog>
     );
   }
+
+  const signalsLeft = DAILY_SIGNAL_LIMIT - signalUsage.count;
+  const hasReachedLimit = signalsLeft <= 0;
+
 
   // Main content for granted access
   return (
@@ -341,6 +381,9 @@ export default function AnalisadorPage() {
                 showOTC={showOTC}
                 setShowOTC={setShowOTC}
                 isMarketOpen={isMarketOpen}
+                signalsLeft={signalsLeft}
+                limitResetTime={limitResetTime}
+                hasReachedLimit={hasReachedLimit}
               />
              ) : (
               signalData && <SignalResult data={signalData} onReset={handleReset} />

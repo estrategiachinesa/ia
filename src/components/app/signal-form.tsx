@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { BarChart, Info, Loader2, Lock, Send, Timer } from 'lucide-react';
+import { BarChart, Info, Loader2, Lock, Send, Timer, Crown } from 'lucide-react';
 import type { FormData, Asset } from '@/app/analisador/page';
 import { CurrencyFlags } from './currency-flags';
 import { Label } from '@/components/ui/label';
@@ -36,8 +36,10 @@ type SignalFormProps = {
   hasReachedLimit: boolean;
   user: User | null;
   firestore: Firestore;
-  isPremium: boolean;
+  isVip: boolean;
   vipStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
+  isVipModalOpen: boolean;
+  setVipModalOpen: (isOpen: boolean) => void;
 };
 
 const allAssets: Asset[] = [
@@ -57,11 +59,12 @@ export function SignalForm({
   hasReachedLimit,
   user,
   firestore,
-  isPremium,
+  isVip,
   vipStatus,
+  isVipModalOpen,
+  setVipModalOpen,
 }: SignalFormProps) {
   const { toast } = useToast();
-  const [isPremiumModalOpen, setPremiumModalOpen] = useState(false);
   const [brokerId, setBrokerId] = useState('');
   const [isSubmittingId, setIsSubmittingId] = useState(false);
   const [waitingMessage, setWaitingMessage] = useState('');
@@ -69,11 +72,11 @@ export function SignalForm({
   const assets = showOTC ? allAssets : allAssets.filter(a => !a.includes('(OTC)'));
 
   useEffect(() => {
-    // Open the modal if the limit is reached, the user is not premium, and their status is not pending.
-    if (hasReachedLimit && !isPremium && vipStatus !== 'PENDING') {
-      setPremiumModalOpen(true);
+    // Open the modal if the limit is reached, the user is not vip, and their status is not pending.
+    if (hasReachedLimit && !isVip && vipStatus !== 'PENDING') {
+      setVipModalOpen(true);
     }
-  }, [hasReachedLimit, isPremium, vipStatus]);
+  }, [hasReachedLimit, isVip, vipStatus, setVipModalOpen]);
 
   useEffect(() => {
     // If OTC is turned off and an OTC asset is selected, reset to a default non-OTC asset
@@ -85,13 +88,8 @@ export function SignalForm({
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
     // Show waiting message if limit is reached but modal is not (or cannot be) open
-    if (hasReachedLimit && !isPremiumModalOpen) {
+    if (hasReachedLimit && !isVipModalOpen) {
         let queuePosition = 5;
-        const messages = [
-            `Estamos na fila, aguardando o melhor momento... (Posição: #${queuePosition})`,
-            "Analisando volatilidade do mercado...",
-            "Servidores com alto tráfego, aguarde um instante.",
-        ];
         
         const updateMessage = () => {
             if (queuePosition > 1) {
@@ -102,9 +100,9 @@ export function SignalForm({
         
         // Show a specific message if their request is pending
         if(vipStatus === 'PENDING') {
-            setWaitingMessage('Seu acesso PREMIUM está em análise. Enquanto isso, aguarde na fila.');
+            setWaitingMessage('Seu acesso VIP está em análise. Enquanto isso, aguarde na fila.');
         } else {
-            setWaitingMessage(messages[0]);
+            setWaitingMessage(`Estamos na fila, aguardando o melhor momento... (Posição: #${queuePosition})`);
             interval = setInterval(updateMessage, 8000);
         }
 
@@ -112,7 +110,7 @@ export function SignalForm({
         setWaitingMessage('');
     }
     return () => clearInterval(interval);
-  }, [hasReachedLimit, isPremiumModalOpen, vipStatus]);
+  }, [hasReachedLimit, isVipModalOpen, vipStatus]);
 
   const handleIdSubmit = async () => {
     if (!/^\d{8,}$/.test(brokerId)) {
@@ -135,9 +133,9 @@ export function SignalForm({
 
     setIsSubmittingId(true);
     try {
-      const premiumRequestRef = doc(firestore, 'vipRequests', user.uid);
+      const vipRequestRef = doc(firestore, 'vipRequests', user.uid);
       
-      setDocumentNonBlocking(premiumRequestRef, {
+      setDocumentNonBlocking(vipRequestRef, {
         brokerId: brokerId,
         userId: user.uid,
         userEmail: user.email,
@@ -148,13 +146,13 @@ export function SignalForm({
 
       toast({
         title: 'Solicitação Enviada!',
-        description: 'Seu ID foi recebido e está em análise. A liberação do acesso PREMIUM pode levar algumas horas.',
+        description: 'Seu ID foi recebido e está em análise. A liberação do acesso VIP pode levar algumas horas.',
       });
-      setPremiumModalOpen(false);
+      setVipModalOpen(false);
       setBrokerId('');
 
     } catch (error) {
-      console.error("Error submitting Premium ID:", error);
+      console.error("Error submitting VIP ID:", error);
       toast({
         variant: 'destructive',
         title: 'Erro ao Enviar',
@@ -169,7 +167,7 @@ export function SignalForm({
 
   return (
     <>
-      <div className="w-full space-y-8 text-center">
+      <div className="w-full space-y-6 text-center">
         <div>
           <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl font-headline">
             ESTRATÉGIA CHINESA
@@ -264,31 +262,39 @@ export function SignalForm({
           </div>
         </div>
 
-        <Button
-          size="lg"
-          className="w-full h-14 text-lg font-bold bg-gradient-to-r from-primary/80 to-primary hover:from-primary/90 hover:to-primary text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-300 transform hover:scale-105"
-          onClick={onSubmit}
-          disabled={buttonDisabled}
-        >
-          {isLoading ? (
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-          ) : !isMarketOpen ? (
-            <Lock className="mr-2 h-5 w-5" />
-          ) : hasReachedLimit ? (
-             <Timer className="mr-2 h-5 w-5" />
-          ) : (
-            <BarChart className="mr-2 h-5 w-5" />
-          )}
-          {isLoading ? 'Analisando...' : !isMarketOpen ? 'Mercado Fechado' : hasReachedLimit ? 'Aguardando...' : 'Analisar Mercado'}
-        </Button>
+        <div className="w-full space-y-2">
+            <Button
+              size="lg"
+              className="w-full h-14 text-lg font-bold bg-gradient-to-r from-primary/80 to-primary hover:from-primary/90 hover:to-primary text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-300 transform hover:scale-105"
+              onClick={onSubmit}
+              disabled={buttonDisabled}
+            >
+              {isLoading ? (
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              ) : !isMarketOpen ? (
+                <Lock className="mr-2 h-5 w-5" />
+              ) : hasReachedLimit ? (
+                 <Timer className="mr-2 h-5 w-5" />
+              ) : (
+                <BarChart className="mr-2 h-5 w-5" />
+              )}
+              {isLoading ? 'Analisando...' : !isMarketOpen ? 'Mercado Fechado' : hasReachedLimit ? 'Aguardando...' : 'Analisar Mercado'}
+            </Button>
+            {!isVip && (
+                <Button variant="link" className="w-full text-primary" onClick={() => setVipModalOpen(true)}>
+                    <Crown className="mr-2 h-4 w-4" />
+                    Seja VIP
+                </Button>
+            )}
+        </div>
       </div>
 
-      <Dialog open={isPremiumModalOpen} onOpenChange={setPremiumModalOpen}>
+      <Dialog open={isVipModalOpen} onOpenChange={setVipModalOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-headline text-primary">Acesso PREMIUM Ilimitado</DialogTitle>
+            <DialogTitle className="text-2xl font-headline text-primary">Acesso VIP Ilimitado</DialogTitle>
             <DialogDescription>
-              Nossos servidores estão ocupados para garantir a melhor análise. Obtenha acesso prioritário e ilimitado com o Acesso PREMIUM.
+              Nossos servidores estão ocupados para garantir a melhor análise. Obtenha acesso prioritário e ilimitado com o Acesso VIP.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -332,7 +338,7 @@ export function SignalForm({
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPremiumModalOpen(false)}>
+            <Button variant="outline" onClick={() => setVipModalOpen(false)}>
               Continuar na Fila
             </Button>
           </DialogFooter>
@@ -341,5 +347,3 @@ export function SignalForm({
     </>
   );
 }
-
-    

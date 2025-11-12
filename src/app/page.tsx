@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { LineChart, Loader2 } from 'lucide-react';
+import { LineChart, Loader2, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { useFirebase } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -20,12 +20,11 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [credentials, setCredentials] = useState({ user: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const { auth, isUserLoading, user } = useFirebase();
 
   useEffect(() => {
-    // Redirect if user is already logged in
     if (!isUserLoading && user) {
-        // We can also add session validation logic here if needed
         router.push('/analisador');
     }
   }, [user, isUserLoading, router]);
@@ -57,7 +56,6 @@ export default function LoginPage() {
           title: 'Login bem-sucedido!',
           description: 'Redirecionando para o analisador...',
         });
-        // The useEffect hook will handle the redirection on successful login
     } catch (error: any) {
       console.error("Login error:", error);
       let description = 'Ocorreu um erro inesperado.';
@@ -74,7 +72,6 @@ export default function LoginPage() {
     }
   };
   
-   // While checking user auth, show a loader
   if (isUserLoading) {
       return (
           <div className="flex h-screen w-full items-center justify-center">
@@ -84,8 +81,6 @@ export default function LoginPage() {
       )
   }
   
-  // If user is logged in, this page will redirect, so we can render null or a loader.
-  // This prevents the login form from flashing briefly for an already logged-in user.
   if(user) {
       return null;
   }
@@ -125,17 +120,27 @@ export default function LoginPage() {
                 disabled={isLoading}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 relative">
               <Label htmlFor="password">Senha</Label>
               <Input
                 id="password"
                 name="password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 placeholder="********"
                 value={credentials.password}
                 onChange={handleInputChange}
                 disabled={isLoading}
+                className="pr-10"
               />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-7 h-7 w-7 text-muted-foreground"
+                onClick={() => setShowPassword(prev => !prev)}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
             </div>
             <Button onClick={handleLogin} disabled={isLoading} className="w-full bg-primary/90 hover:bg-primary text-primary-foreground font-bold">
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

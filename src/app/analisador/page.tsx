@@ -129,7 +129,8 @@ export default function AnalisadorPage() {
   const [isMarketOpen, setIsMarketOpen] = useState(true);
   const [signalUsage, setSignalUsage] = useState<SignalUsage>({ timestamps: [] });
   const [hasReachedLimit, setHasReachedLimit] = useState(false);
-  const [isPremium, setIsPremium] = useState(false);
+  const [isVip, setIsVip] = useState(false);
+  const [isVipModalOpen, setVipModalOpen] = useState(false);
 
 
   const vipRequestRef = useMemoFirebase(() => {
@@ -179,10 +180,10 @@ export default function AnalisadorPage() {
 
    useEffect(() => {
     if (vipData && (vipData as any).status === 'APPROVED') {
-      setIsPremium(true);
+      setIsVip(true);
       document.documentElement.classList.add('theme-premium');
     } else {
-      setIsPremium(false);
+      setIsVip(false);
       document.documentElement.classList.remove('theme-premium');
     }
      return () => {
@@ -192,7 +193,7 @@ export default function AnalisadorPage() {
 
   // Effect for checking and updating signal usage limit
   useEffect(() => {
-    if (isPremium) {
+    if (isVip) {
       setHasReachedLimit(false);
       return;
     }
@@ -201,7 +202,6 @@ export default function AnalisadorPage() {
       const usage: Partial<SignalUsage> = JSON.parse(usageString);
       const oneHourAgo = Date.now() - 60 * 60 * 1000;
       
-      // Ensure usage.timestamps is an array before filtering
       const recentTimestamps = (usage.timestamps || []).filter(ts => ts > oneHourAgo);
       
       if (usage.timestamps && usage.timestamps.length !== recentTimestamps.length) {
@@ -215,7 +215,7 @@ export default function AnalisadorPage() {
       setHasReachedLimit(recentTimestamps.length >= HOURLY_SIGNAL_LIMIT);
 
     }
-  }, [appState, isPremium]);
+  }, [appState, isVip]);
 
 
   useEffect(() => {
@@ -280,15 +280,15 @@ export default function AnalisadorPage() {
   }, [appState, signalData?.operationStatus]);
   
  const handleAnalyze = async () => {
-    if (!isPremium) {
+    if (!isVip) {
       const usageString = localStorage.getItem('signalUsage') || '{ "timestamps": [] }';
       const currentUsage: SignalUsage = JSON.parse(usageString);
       const oneHourAgo = Date.now() - 60 * 60 * 1000;
-      const recentTimestamps = currentUsage.timestamps.filter(ts => ts > oneHourAgo);
+      const recentTimestamps = (currentUsage.timestamps || []).filter(ts => ts > oneHourAgo);
 
       if (recentTimestamps.length >= HOURLY_SIGNAL_LIMIT) {
           setHasReachedLimit(true);
-          // The SignalForm component will handle showing the modal
+          setVipModalOpen(true);
           return;
       }
     }
@@ -312,7 +312,7 @@ export default function AnalisadorPage() {
       operationStatus: 'pending'
     });
     
-    if (!isPremium) {
+    if (!isVip) {
       // Update usage stats
       const usageString = localStorage.getItem('signalUsage') || '{ "timestamps": [] }';
       const currentUsage: SignalUsage = JSON.parse(usageString);
@@ -380,9 +380,9 @@ export default function AnalisadorPage() {
 
       <div className="flex flex-col min-h-screen">
         <header className="p-4 flex justify-end items-center">
-          {isPremium && (
+          {isVip && (
             <div className="absolute left-4 top-4 px-3 py-1 text-sm font-bold bg-primary text-primary-foreground rounded-full shadow-lg">
-              PREMIUM
+              VIP
             </div>
           )}
            <button onClick={handleLogout} className="text-sm text-foreground/70 hover:text-foreground">
@@ -411,8 +411,10 @@ export default function AnalisadorPage() {
                 hasReachedLimit={hasReachedLimit}
                 user={user}
                 firestore={useFirebase().firestore}
-                isPremium={isPremium}
+                isVip={isVip}
                 vipStatus={(vipData as any)?.status}
+                isVipModalOpen={isVipModalOpen}
+                setVipModalOpen={setVipModalOpen}
               />
              ) : (
               signalData && <SignalResult data={signalData} onReset={handleReset} />
@@ -429,5 +431,3 @@ export default function AnalisadorPage() {
     </>
   );
 }
-
-    

@@ -400,7 +400,10 @@ export default function AnalisadorPage() {
               VIP
             </div>
           )}
-           <button onClick={handleLogout} className="text-sm text-foreground/70 hover:text-foreground">
+           <button
+            onClick={handleLogout}
+            className="text-sm bg-destructive text-destructive-foreground hover:bg-destructive/90 px-3 py-1.5 rounded-md font-semibold"
+          >
             Sair
           </button>
         </header>

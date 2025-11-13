@@ -48,7 +48,7 @@ service cloud.firestore {
        *   - The document ID must match the user's UID.
        *   - The brokerId must be a string with at least 8 digits.
        *   - The status can only be set to 'PENDING' by the user on create.
-       *   - The status can be set to 'DEPOSIT_PENDING' on update.
+       *   - The status can be set to 'DEPOSIT_PENDING' on update only if the previous status was 'AWAITING_DEPOSIT'.
        */
       allow get: if isSignedIn() && isOwner(userId);
       allow write: if isSignedIn() && isOwner(userId) && isValidVipRequest();
@@ -64,19 +64,19 @@ service cloud.firestore {
     }
 
     function isValidVipRequest() {
-      // Ensure brokerId is a string of at least 8 digits when creating.
+      // Ensure brokerId is a string of at least 8 digits. This should be validated on create/update.
       let isBrokerIdValid = request.resource.data.brokerId is string &&
                            request.resource.data.brokerId.matches("^[0-9]{8,}$");
       
       // On create, user must set status to PENDING
       let isCreating = request.method == 'create' && request.resource.data.status == 'PENDING';
       
-      // On update, user can only change status to DEPOSIT_PENDING
-      let isUpdating = request.method == 'update' && 
+      // On update, user can only change status to DEPOSIT_PENDING if the previous state was AWAITING_DEPOSIT
+      let isUpdatingToDepositPending = request.method == 'update' && 
                        request.resource.data.status == 'DEPOSIT_PENDING' &&
                        resource.data.status == 'AWAITING_DEPOSIT';
 
-      return isBrokerIdValid && (isCreating || isUpdating);
+      return (isCreating && isBrokerIdValid) || isUpdatingToDepositPending;
     }
   }
 }

@@ -21,6 +21,7 @@ import { Loader2 } from 'lucide-react';
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { doc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 export type Asset = 
   | 'EUR/USD' | 'EUR/USD (OTC)'
@@ -131,6 +132,7 @@ export default function AnalisadorPage() {
   const [hasReachedLimit, setHasReachedLimit] = useState(false);
   const [isVip, setIsVip] = useState(false);
   const [isVipModalOpen, setVipModalOpen] = useState(false);
+  const { toast } = useToast();
 
 
   const vipRequestRef = useMemoFirebase(() => {
@@ -179,9 +181,20 @@ export default function AnalisadorPage() {
   }, [user, isUserLoading, auth]);
 
    useEffect(() => {
-    if (vipData && (vipData as any).status === 'APPROVED') {
+    const isApproved = vipData && (vipData as any).status === 'APPROVED';
+    
+    if (isApproved) {
       setIsVip(true);
       document.documentElement.classList.add('theme-premium');
+
+      const hasSeenWelcome = localStorage.getItem('hasSeenPremiumWelcome');
+      if (!hasSeenWelcome) {
+        toast({
+          title: '🎉 Parabéns! Acesso PREMIUM Liberado!',
+          description: 'Você agora tem acesso prioritário e ilimitado a todos os sinais. Aproveite!',
+        });
+        localStorage.setItem('hasSeenPremiumWelcome', 'true');
+      }
     } else {
       setIsVip(false);
       document.documentElement.classList.remove('theme-premium');
@@ -189,7 +202,7 @@ export default function AnalisadorPage() {
      return () => {
       document.documentElement.classList.remove('theme-premium');
     };
-  }, [vipData]);
+  }, [vipData, toast]);
 
   // Effect for checking and updating signal usage limit
   useEffect(() => {
@@ -340,6 +353,7 @@ export default function AnalisadorPage() {
     await auth.signOut();
     localStorage.removeItem('loginTimestamp');
     localStorage.removeItem('signalUsage'); // Clear usage on logout
+    localStorage.removeItem('hasSeenPremiumWelcome'); // Clear welcome message flag on logout
     router.push('/');
   }
 
@@ -431,3 +445,5 @@ export default function AnalisadorPage() {
     </>
   );
 }
+
+    

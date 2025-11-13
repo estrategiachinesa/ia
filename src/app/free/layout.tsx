@@ -7,7 +7,6 @@ export const metadata: Metadata = {
   description: 'Receba um sinal gratuito da Estratégia Chinesa',
 };
 
-// This is a new layout file for the free analyzer page
 export default function FreeLayout({
   children,
 }: Readonly<{

@@ -17,10 +17,14 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { OnlineServer } from '@/components/app/OnlineServer';
+
+const DAILY_LIMIT_KEY = 'daily_free_signal_timestamp';
 
 export default function FreePage() {
   const router = useRouter();
   const [appState, setAppState] = useState<'form' | 'loading' | 'result'>('form');
+  const [signalData, setSignalData] = useState<SignalData | null>(null);
   const [formData, setFormData] = useState<FormData>({
     asset: 'EUR/JPY',
     expirationTime: '1m',
@@ -29,16 +33,11 @@ export default function FreePage() {
   const [isFailureModalOpen, setFailureModalOpen] = useState(false);
   const [isWelcomeModalOpen, setWelcomeModalOpen] = useState(true);
   const [isPlayerModalOpen, setPlayerModalOpen] = useState(false);
+  const [isMarketModeActive, setMarketModeActive] = useState(false);
+  const [isLimitModalOpen, setLimitModalOpen] = useState(false);
+  const [nextSignalCountdown, setNextSignalCountdown] = useState('');
 
   const isMarketOpen = isMarketOpenForAsset(formData.asset);
-  
-  useEffect(() => {
-    if (appState === 'result') {
-      setFailureModalOpen(true);
-    } else {
-      setFailureModalOpen(false);
-    }
-  }, [appState]);
 
   // Seeded pseudo-random number generator to have some consistency
   function seededRandom(seed: number) {
@@ -46,50 +45,154 @@ export default function FreePage() {
     return x - Math.floor(x);
   }
 
-  const generateFakeSignalTime = (expirationTime: '1m' | '5m') => {
-      const now = new Date();
-      let targetTime: Date;
+  const generateSignalData = (isRealSignal: boolean) => {
+    const now = new Date();
+    let targetTime: Date;
 
-      if (expirationTime === '1m') {
-          const nextMinute = new Date(now);
-          nextMinute.setSeconds(0, 0);
-          nextMinute.setMinutes(nextMinute.getMinutes() + 1);
-          targetTime = nextMinute;
-      } else { // 5 minutes
-          const minutes = now.getMinutes();
-          const remainder = minutes % 5;
-          const minutesToAdd = 5 - remainder;
-          targetTime = new Date(now.getTime());
-          targetTime.setMinutes(minutes + minutesToAdd, 0, 0);
-          if (targetTime.getTime() < now.getTime()) {
-              targetTime.setMinutes(targetTime.getMinutes() + 5);
-          }
+    if (formData.expirationTime === '1m') {
+      const nextMinute = new Date(now);
+      nextMinute.setSeconds(0, 0);
+      nextMinute.setMinutes(nextMinute.getMinutes() + 1);
+      targetTime = nextMinute;
+    } else {
+      const minutes = now.getMinutes();
+      const remainder = minutes % 5;
+      const minutesToAdd = 5 - remainder;
+      targetTime = new Date(now.getTime());
+      targetTime.setMinutes(minutes + minutesToAdd, 0, 0);
+      if (targetTime.getTime() < now.getTime()) {
+        targetTime.setMinutes(targetTime.getMinutes() + 5);
       }
-      
-      return {
-        targetTime: targetTime.toLocaleTimeString('en-US', {
-            hour12: false,
-            hour: '2-digit',
-            minute: '2-digit',
-        }),
-      };
-  }
+    }
+    
+    const targetTimeString = targetTime.toLocaleTimeString('en-US', {
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+
+    if (isRealSignal) {
+        // Generate a real, random signal for market mode
+        const minuteSeed = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes()).getTime();
+        const assetSpecificSeed = minuteSeed + formData.asset.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const assetRandom = seededRandom(assetSpecificSeed);
+        const realSignal = assetRandom < 0.5 ? 'CALL 🔼' : 'PUT 🔽';
+
+        return {
+            ...formData,
+            signal: realSignal,
+            targetTime: targetTimeString,
+            source: 'Aleatório',
+            targetDate: targetTime,
+            countdown: null,
+            operationCountdown: null,
+            operationStatus: 'pending'
+        } as SignalData;
+    }
+
+    // Return placeholder data for the standard free mode
+    return {
+        asset: formData.asset,
+        expirationTime: formData.expirationTime,
+        targetTime: targetTimeString,
+    };
+  };
 
   const handleAnalyze = async () => {
+    if (isMarketModeActive) {
+      const lastSignalTimestamp = localStorage.getItem(DAILY_LIMIT_KEY);
+      if (lastSignalTimestamp) {
+        const lastSignalDate = new Date(parseInt(lastSignalTimestamp));
+        const now = new Date();
+        if (lastSignalDate.toDateString() === now.toDateString()) {
+          setLimitModalOpen(true);
+          return;
+        }
+      }
+    }
+
     setAppState('loading');
     await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    if (isMarketModeActive) {
+        const realSignal = generateSignalData(true);
+        setSignalData(realSignal as SignalData);
+        localStorage.setItem(DAILY_LIMIT_KEY, Date.now().toString());
+    } else {
+        const placeholderSignal = generateSignalData(false);
+        setSignalData({ ...placeholderSignal, signal: '?' } as any); // Set fake signalData
+        setFailureModalOpen(true);
+    }
     setAppState('result');
   };
   
+  useEffect(() => {
+    let timer: NodeJS.Timeout | undefined;
+    if (appState === 'result' && signalData && signalData.operationStatus === 'finished') {
+       // logic for when signal is finished in market mode
+    } else if (appState === 'result' && signalData && signalData.operationStatus) {
+        const updateCountdowns = () => {
+        setSignalData(prevData => {
+          if (!prevData) return null;
+          const now = Date.now();
+          if (prevData.operationStatus === 'pending') {
+            const newCountdown = Math.max(0, Math.floor((prevData.targetDate.getTime() - now) / 1000));
+            if (newCountdown > 0) {
+              return { ...prevData, countdown: newCountdown };
+            } else {
+              const operationDuration = prevData.expirationTime === '1m' ? 60 : 300;
+              return { ...prevData, countdown: 0, operationStatus: 'active', operationCountdown: operationDuration };
+            }
+          }
+          if (prevData.operationStatus === 'active') {
+              const operationDuration = prevData.expirationTime === '1m' ? 60 : 300;
+              const operationEndTime = prevData.targetDate.getTime() + (operationDuration * 1000);
+              const newOperationCountdown = Math.max(0, Math.floor((operationEndTime - now) / 1000));
+              if (newOperationCountdown > 0) {
+                  return { ...prevData, operationCountdown: newOperationCountdown };
+              } else {
+                  return { ...prevData, operationStatus: 'finished' };
+              }
+          }
+          return prevData;
+        });
+      };
+      updateCountdowns(); 
+      timer = setInterval(updateCountdowns, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [appState, signalData]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isLimitModalOpen) {
+      const updateCountdown = () => {
+        const now = new Date();
+        const tomorrow = new Date();
+        tomorrow.setDate(now.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+        const diff = tomorrow.getTime() - now.getTime();
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        setNextSignalCountdown(`${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`);
+      };
+      updateCountdown();
+      interval = setInterval(updateCountdown, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isLimitModalOpen]);
+
   const handleReset = () => {
     setAppState('form');
+    setSignalData(null);
   };
 
   const handleBackToHome = () => {
     router.push('/');
   }
 
-  const { targetTime } = generateFakeSignalTime(formData.expirationTime);
+  const isSignalFinished = signalData?.operationStatus === 'finished';
 
   return (
     <>
@@ -98,9 +201,12 @@ export default function FreePage() {
 
       <div className="flex flex-col min-h-screen">
         <header className="p-4 flex justify-between items-center">
-          <div className="px-3 py-1 text-sm font-bold bg-primary text-primary-foreground rounded-full shadow-lg">
-            FREE
-          </div>
+            <div className="flex items-center gap-4">
+                 <div className="px-3 py-1 text-sm font-bold bg-primary text-primary-foreground rounded-full shadow-lg">
+                    FREE
+                </div>
+                <OnlineServer isActivated={isMarketModeActive} onToggle={() => setMarketModeActive(!isMarketModeActive)} />
+            </div>
           <button
             onClick={handleBackToHome}
             className="text-sm bg-destructive text-destructive-foreground hover:bg-destructive/90 px-3 py-1.5 rounded-md font-semibold"
@@ -110,7 +216,7 @@ export default function FreePage() {
         </header>
 
         <main className="flex-grow flex flex-col items-center justify-center p-4 space-y-6">
-          {appState === 'result' && (
+          {(appState === 'result' && signalData) && (
              <div className="text-center">
                 <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl font-headline">
                     ESTRATÉGIA CHINESA
@@ -127,7 +233,6 @@ export default function FreePage() {
                 showOTC={showOTC}
                 setShowOTC={setShowOTC}
                 isMarketOpen={isMarketOpen}
-                // These props are for the premium version, so we pass down dummy/default values
                 hasReachedLimit={false}
                 user={null}
                 firestore={undefined as any}
@@ -137,12 +242,14 @@ export default function FreePage() {
                 isFreeSignalPage={true}
               />
             ) : (
-              <FreeSignalResult
-                asset={formData.asset}
-                expirationTime={formData.expirationTime}
-                targetTime={targetTime}
-                onReset={handleReset}
-              />
+              signalData && (
+                <FreeSignalResult
+                    data={signalData}
+                    onReset={handleReset}
+                    isMarketMode={isMarketModeActive}
+                    isSignalFinished={isSignalFinished}
+                />
+              )
             )}
           </div>
         </main>
@@ -192,7 +299,7 @@ export default function FreePage() {
                   Abrir a Corretora
                 </Link>
               </Button>
-              <Button variant="outline" onClick={() => setPlayerModalOpen(true)}>
+              <Button variant="outline" onClick={() => { setWelcomeModalOpen(false); setPlayerModalOpen(true);}}>
                 Instruções
               </Button>
           </DialogFooter>
@@ -209,6 +316,30 @@ export default function FreePage() {
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               allowFullScreen
             ></iframe>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isLimitModalOpen} onOpenChange={setLimitModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Limite diário atingido</DialogTitle>
+            <DialogDescription>
+              Você já recebeu o sinal gratuito de hoje. Volte amanhã ou ative o Indicador para ter acesso ilimitado.
+            </DialogDescription>
+          </DialogHeader>
+            <div className="text-center text-muted-foreground text-sm">
+                Próximo sinal em: <span className="font-bold text-foreground">{nextSignalCountdown}</span>
+            </div>
+          <DialogFooter className="grid grid-cols-2 gap-2">
+            <Button variant="outline" onClick={() => setLimitModalOpen(false)}>
+                Fechar
+            </Button>
+            <Button asChild>
+                <Link href="https://pay.hotmart.com/E101943327K" target="_blank">
+                    Quero o Indicador
+                </Link>
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

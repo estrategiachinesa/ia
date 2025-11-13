@@ -201,18 +201,22 @@ export default function FreePage() {
 
       <div className="flex flex-col min-h-screen">
         <header className="p-4 flex justify-between items-center">
-            <div className="flex items-center gap-4">
-                 <div className="px-3 py-1 text-sm font-bold bg-primary text-primary-foreground rounded-full shadow-lg">
+            <div className="flex-1">
+                 <div className="px-3 py-1 text-sm font-bold bg-primary text-primary-foreground rounded-full shadow-lg w-fit">
                     FREE
                 </div>
-                <OnlineServer isActivated={isMarketModeActive} onToggle={() => setMarketModeActive(!isMarketModeActive)} />
             </div>
-          <button
-            onClick={handleBackToHome}
-            className="text-sm bg-destructive text-destructive-foreground hover:bg-destructive/90 px-3 py-1.5 rounded-md font-semibold"
-          >
-            Sair
-          </button>
+            <div className="flex-1 flex justify-center">
+                 <OnlineServer isActivated={isMarketModeActive} onToggle={() => setMarketModeActive(!isMarketModeActive)} />
+            </div>
+          <div className="flex-1 flex justify-end">
+            <button
+              onClick={handleBackToHome}
+              className="text-sm bg-destructive text-destructive-foreground hover:bg-destructive/90 px-3 py-1.5 rounded-md font-semibold"
+            >
+              Sair
+            </button>
+          </div>
         </header>
 
         <main className="flex-grow flex flex-col items-center justify-center p-4 space-y-6">

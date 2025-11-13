@@ -39,7 +39,7 @@ function seededRandom(seed: number) {
 }
 
 // Client-side signal generation with market correlation
-function generateClientSideSignal(input: { asset: Asset; expirationTime: ExpirationTime; }): Omit<SignalData, 'countdown' | 'operationCountdown' | 'operationStatus' | 'asset' | 'expirationTime'> {
+function generateClientSideSignal(input: { asset: Asset; expirationTime: ExpirationTime; }, correlationChance: number): Omit<SignalData, 'countdown' | 'operationCountdown' | 'operationStatus' | 'asset' | 'expirationTime'> {
     const { asset, expirationTime } = input;
     const now = new Date(); // Executed on the client
     
@@ -59,7 +59,6 @@ function generateClientSideSignal(input: { asset: Asset; expirationTime: Expirat
     const correlationRandom = seededRandom(correlationSeed);
     
     let finalSignal: 'CALL 🔼' | 'PUT 🔽';
-    const correlationChance = 0.3; 
 
     if (correlationRandom < correlationChance) {
         finalSignal = generalMarketSignal;
@@ -195,7 +194,7 @@ export default function FreePage() {
 
     if (isMarketModeActive) {
         try {
-            const realSignal = generateClientSideSignal(formData);
+            const realSignal = generateClientSideSignal(formData, config?.correlationChance || 0.3);
             setSignalData({
                 ...formData,
                 ...realSignal,

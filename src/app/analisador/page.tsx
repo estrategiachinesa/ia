@@ -62,7 +62,7 @@ function seededRandom(seed: number) {
 }
 
 // Client-side signal generation with market correlation
-function generateClientSideSignal(input: FormData): Omit<SignalData, 'countdown' | 'operationCountdown' | 'operationStatus' | 'asset' | 'expirationTime'> {
+function generateClientSideSignal(input: FormData, correlationChance: number): Omit<SignalData, 'countdown' | 'operationCountdown' | 'operationStatus' | 'asset' | 'expirationTime'> {
     const { asset, expirationTime } = input;
     const now = new Date(); // Executed on the client
     
@@ -82,7 +82,6 @@ function generateClientSideSignal(input: FormData): Omit<SignalData, 'countdown'
     const correlationRandom = seededRandom(correlationSeed);
     
     let finalSignal: 'CALL 🔼' | 'PUT 🔽';
-    const correlationChance = 0.3; 
 
     if (correlationRandom < correlationChance) {
         finalSignal = generalMarketSignal;
@@ -295,7 +294,15 @@ export default function AnalisadorPage() {
   }, [appState, signalData?.operationStatus]);
   
  const handleAnalyze = async () => {
-    if (!isPremium && usageStorageKey && config) {
+    if (!config) {
+        toast({
+            variant: 'destructive',
+            title: 'Erro de Configuração',
+            description: 'A configuração da aplicação não foi carregada. Tente novamente.',
+        });
+        return;
+    }
+    if (!isPremium && usageStorageKey) {
       const usageString = localStorage.getItem(usageStorageKey) || '{ "timestamps": [] }';
       const currentUsage: SignalUsage = JSON.parse(usageString);
       const oneHourAgo = Date.now() - 60 * 60 * 1000;
@@ -316,7 +323,7 @@ export default function AnalisadorPage() {
     
     try {
       // Logic is now client-side but consistent
-      const result = generateClientSideSignal(formData);
+      const result = generateClientSideSignal(formData, config.correlationChance);
       
       setSignalData({
         ...formData,
@@ -329,7 +336,7 @@ export default function AnalisadorPage() {
         operationStatus: 'pending'
       });
       
-      if (!isPremium && usageStorageKey && config) {
+      if (!isPremium && usageStorageKey) {
         // Update usage stats
         const usageString = localStorage.getItem(usageStorageKey) || '{ "timestamps": [] }';
         const currentUsage: SignalUsage = JSON.parse(usageString);

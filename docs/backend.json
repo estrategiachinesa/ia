@@ -48,6 +48,19 @@
         },
         "required": ["hourlySignalLimit"]
     },
+    "StrategyConfig": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "StrategyConfig",
+        "type": "object",
+        "description": "Stores parameters for the signal generation strategy.",
+        "properties": {
+            "correlationChance": {
+                "type": "number",
+                "description": "The probability (0 to 1) that a signal will follow the general market trend."
+            }
+        },
+        "required": ["correlationChance"]
+    },
     "ChineseStrategy": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "ChineseStrategy",
@@ -163,6 +176,16 @@
         }
       },
       {
+        "path": "/appConfig/strategy",
+        "definition": {
+          "entityName": "StrategyConfig",
+          "schema": {
+            "$ref": "#/backend/entities/StrategyConfig"
+          },
+          "description": "Stores global strategy parameters. This is a single document."
+        }
+      },
+      {
         "path": "/chineseStrategies/{chineseStrategyId}",
         "definition": {
           "entityName": "ChineseStrategy",
@@ -195,6 +218,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to store Chinese trading strategies and VIP access requests. The design prioritizes simplicity. All Chinese Strategy documents are stored in a single collection, `/chineseStrategies`. VIP requests are stored in `/vipRequests`, with the document ID being the user's UID to ensure each user can only have one request, simplifying management and validation. A new `/appConfig/links` document has been added to store global configuration like affiliate links, allowing them to be updated dynamically without code changes. This supports secure operations as rules can be applied based on user authentication state and document ownership."
+    "reasoning": "The Firestore structure is designed to store Chinese trading strategies and VIP access requests. The design prioritizes simplicity. All Chinese Strategy documents are stored in a single collection, `/chineseStrategies`. VIP requests are stored in `/vipRequests`, with the document ID being the user's UID to ensure each user can only have one request, simplifying management and validation. The `/appConfig` collection now holds multiple singleton documents (`links`, `limitation`, `strategy`) for different types of global configuration, allowing them to be updated dynamically without code changes. This supports secure operations as rules can be applied based on user authentication state and document ownership."
   }
 }

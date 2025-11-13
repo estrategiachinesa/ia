@@ -430,6 +430,7 @@ export default function AnalisadorPage() {
                 vipStatus={(premiumData as any)?.status}
                 isVipModalOpen={isPremiumModalOpen}
                 setVipModalOpen={setPremiumModalOpen}
+                rejectedBrokerId={(premiumData as any)?.brokerId}
               />
              ) : (
               signalData && <SignalResult data={signalData} onReset={handleReset} />

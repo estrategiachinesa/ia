@@ -42,6 +42,7 @@ type SignalFormProps = {
   vipStatus?: VipStatus;
   isVipModalOpen: boolean;
   setVipModalOpen: (isOpen: boolean) => void;
+  rejectedBrokerId?: string;
 };
 
 const allAssets: Asset[] = [
@@ -65,6 +66,7 @@ export function SignalForm({
   vipStatus,
   isVipModalOpen,
   setVipModalOpen,
+  rejectedBrokerId,
 }: SignalFormProps) {
   const { toast } = useToast();
   const [brokerId, setBrokerId] = useState('');
@@ -128,6 +130,16 @@ export function SignalForm({
         variant: 'destructive',
         title: 'ID Inválido',
         description: 'O ID da corretora deve conter apenas números e ter no mínimo 8 dígitos.',
+      });
+      return;
+    }
+    
+    // Check if user is re-submitting a rejected ID
+    if (vipStatus === 'REJECTED' && rejectedBrokerId && brokerId === rejectedBrokerId) {
+      toast({
+        variant: 'destructive',
+        title: 'ID já recusado',
+        description: 'Este ID já foi analisado e recusado. Por favor, insira um novo ID válido.',
       });
       return;
     }

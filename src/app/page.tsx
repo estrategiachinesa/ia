@@ -14,6 +14,7 @@ import { useFirebase } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 
 const USER_DOMAIN = 'estrategiachinesa.app';
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 
 export default function LoginPage() {
   const router = useRouter();

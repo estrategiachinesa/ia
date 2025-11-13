@@ -20,6 +20,7 @@ import Link from 'next/link';
 import { OnlineServer } from '@/components/app/OnlineServer';
 
 const DAILY_LIMIT_KEY = 'daily_free_signal_timestamp';
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 
 export default function FreePage() {
   const router = useRouter();

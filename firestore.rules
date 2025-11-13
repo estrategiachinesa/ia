@@ -1,30 +1,21 @@
 
 /**
- * @fileoverview Firestore Security Rules for Chinese Trading Strategies.
+ * @fileoverview Firestore Security Rules for Estratégia Chinesa.
  *
  * Core Philosophy:
- * This ruleset enforces access control for trading strategies, VIP requests, and app configuration.
+ * This ruleset enforces access control for VIP requests and app configuration.
  *
  * Data Structure:
  * - `/appConfig/links`: Stores global app configuration like affiliate URLs.
  * - `/appConfig/limitation`: Stores global app configuration like usage limits.
- * - `/chineseStrategies/{chineseStrategyId}`: Stores trading strategies.
  * - `/vipRequests/{userId}`: Stores VIP access requests.
  *
  * Key Security Decisions:
- * - Public read access for app configuration and strategies.
- * - Writes to app configuration and strategies require authentication.
+ * - Public read access for app configuration.
+ * - Writes to app configuration require authentication.
  * - Users can create or update their own VIP request document in `/vipRequests/{userId}`
  *   if they are authenticated and the document ID matches their `request.auth.uid`.
  * - Reading of VIP requests is restricted to the user who owns the document.
- *
- * Denormalization for Authorization:
- * No denormalization is needed as authorization is based on authentication state and UID matching.
- *
- * Structural Segregation:
- * - `/appConfig`: For public configuration data.
- * - `/chineseStrategies`: For public strategy data.
- * - `/vipRequests`: For private, user-specific VIP requests.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -52,15 +43,6 @@ service cloud.firestore {
       allow read: if true;
       allow create: if true;
       allow update: if isSignedIn();
-    }
-
-    /**
-     * @description Grants public read access to Chinese strategies, but restricts writes to authenticated users.
-     * @path /chineseStrategies/{chineseStrategyId}
-     */
-    match /chineseStrategies/{chineseStrategyId} {
-      allow read: if true;
-      allow write: if isSignedIn();
     }
 
     /**
@@ -98,8 +80,6 @@ service cloud.firestore {
                        req.resource.data.status == 'PENDING' &&
                        isBrokerIdValid;
       
-      // On update, the user can only change status to DEPOSIT_PENDING if previous state was AWAITING_DEPOSIT
-      // Or they can submit a new brokerId if the request was REJECTED.
       let isUpdatingToDepositPending = req.method == 'update' && 
                                        req.resource.data.status == 'DEPOSIT_PENDING' &&
                                        res.data.status == 'AWAITING_DEPOSIT';

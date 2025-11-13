@@ -48,48 +48,6 @@
         },
         "required": ["hourlySignalLimit"]
     },
-    "ChineseStrategy": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "ChineseStrategy",
-      "type": "object",
-      "description": "Represents a Chinese trading strategy.  This entity stores the details of a specific trading strategy, including its name, description, and rules.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the Chinese Strategy entity."
-        },
-        "name": {
-          "type": "string",
-          "description": "The name of the trading strategy."
-        },
-        "description": {
-          "type": "string",
-          "description": "A detailed explanation of the strategy, including its principles and rules."
-        },
-        "rules": {
-          "type": "string",
-          "description": "The specific rules that define the strategy. Includes entry and exit criteria"
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "The date and time when the strategy was created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "The date and time when the strategy was last updated.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "description",
-        "rules",
-        "createdAt",
-        "updatedAt"
-      ]
-    },
     "VipRequest": {
       "title": "VIP Access Request",
       "description": "Stores a user's request for VIP access after signing up through an affiliate link.",
@@ -163,22 +121,6 @@
         }
       },
       {
-        "path": "/chineseStrategies/{chineseStrategyId}",
-        "definition": {
-          "entityName": "ChineseStrategy",
-          "schema": {
-            "$ref": "#/backend/entities/ChineseStrategy"
-          },
-          "description": "Stores all Chinese strategy documents.",
-          "params": [
-            {
-              "name": "chineseStrategyId",
-              "description": "The unique identifier for a Chinese strategy document."
-            }
-          ]
-        }
-      },
-      {
         "path": "/vipRequests/{userId}",
         "definition": {
           "entityName": "VipRequest",
@@ -195,6 +137,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to store Chinese trading strategies and VIP access requests. The design prioritizes simplicity. All Chinese Strategy documents are stored in a single collection, `/chineseStrategies`. VIP requests are stored in `/vipRequests`, with the document ID being the user's UID to ensure each user can only have one request, simplifying management and validation. A new `/appConfig/links` document has been added to store global configuration like affiliate links, allowing them to be updated dynamically without code changes. This supports secure operations as rules can be applied based on user authentication state and document ownership."
+    "reasoning": "The Firestore structure is designed to handle VIP access requests and global app configurations for links and usage limits. It prioritizes simplicity and security. VIP requests are stored per user, using their UID as the document ID to prevent duplicate requests. Global configurations are stored in single documents under `/appConfig` for easy public access and authenticated-only updates. This design supports secure operations, as rules can be applied based on user authentication state and document ownership for VIP requests, while allowing public read access for necessary app settings."
   }
 }

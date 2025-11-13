@@ -65,7 +65,7 @@ service cloud.firestore {
        *   - The status can be set to 'DEPOSIT_PENDING' on update only if the previous status was 'AWAITING_DEPOSIT'.
        */
       allow get: if isSignedIn() && isOwner(userId);
-      allow write: if isSignedIn() && isOwner(userId) && isValidVipRequest();
+      allow write: if isSignedIn() && isOwner(userId) && isValidVipRequest(request, resource);
     }
 
     // Helper functions.
@@ -77,20 +77,27 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
 
-    function isValidVipRequest() {
-      // Ensure brokerId is a string of at least 8 digits. This should be validated on create/update.
-      let isBrokerIdValid = request.resource.data.brokerId is string &&
-                           request.resource.data.brokerId.matches("^[0-9]{8,}$");
+    function isValidVipRequest(req, res) {
+      let isBrokerIdValid = req.resource.data.brokerId is string &&
+                           req.resource.data.brokerId.matches("^[0-9]{8,}$");
       
-      // On create, user must set status to PENDING
-      let isCreating = request.method == 'create' && request.resource.data.status == 'PENDING';
+      let isCreating = req.method == 'create' && 
+                       req.resource.data.status == 'PENDING' &&
+                       isBrokerIdValid;
       
-      // On update, user can only change status to DEPOSIT_PENDING if the previous state was AWAITING_DEPOSIT
-      let isUpdatingToDepositPending = request.method == 'update' && 
-                       request.resource.data.status == 'DEPOSIT_PENDING' &&
-                       resource.data.status == 'AWAITING_DEPOSIT';
+      // On update, the user can only change status to DEPOSIT_PENDING if previous state was AWAITING_DEPOSIT
+      // Or they can submit a new brokerId if the request was REJECTED.
+      let isUpdatingToDepositPending = req.method == 'update' && 
+                                       req.resource.data.status == 'DEPOSIT_PENDING' &&
+                                       res.data.status == 'AWAITING_DEPOSIT';
+                                       
+      let isResubmittingRejected = req.method == 'update' &&
+                                   res.data.status == 'REJECTED' &&
+                                   req.resource.data.status == 'PENDING' &&
+                                   isBrokerIdValid;
 
-      return (isCreating && isBrokerIdValid) || isUpdatingToDepositPending;
+
+      return isCreating || isUpdatingToDepositPending || isResubmittingRejected;
     }
   }
 }

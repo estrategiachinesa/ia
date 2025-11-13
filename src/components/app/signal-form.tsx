@@ -265,7 +265,7 @@ export function SignalForm({
               <div className="p-4 bg-secondary/50 rounded-lg">
                 <h3 className="font-bold mb-2">PASSO 1: Cadastre-se na Corretora</h3>
                 <p className="text-sm text-muted-foreground mb-3">
-                  Use um dos nossos links para garantir seu acesso. Deposite o valor mínimo para ativar sua conta.
+                  Use um dos nossos links para se cadastrar na corretora. É crucial que você use um e-mail novo, que nunca tenha sido usado na corretora antes, para garantir que seu cadastro seja vinculado corretamente.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <Button className="w-full" asChild>

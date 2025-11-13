@@ -22,7 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import { User } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp, Firestore } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { Asset, ExpirationTime } from '@/app/analisador/actions';
+import { Asset, ExpirationTime } from '@/app/analisador/page';
 
 
 type VipStatus = 'PENDING' | 'AWAITING_DEPOSIT' | 'DEPOSIT_PENDING' | 'APPROVED' | 'REJECTED';
@@ -606,3 +606,5 @@ export function SignalForm({
     </>
   );
 }
+
+    

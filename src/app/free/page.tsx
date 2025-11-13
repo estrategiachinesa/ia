@@ -17,7 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { OnlineServer } from '@/components/app/OnlineServer';
-import { Asset, ExpirationTime, generateSignal, GenerateSignalOutput } from '@/app/analisador/actions';
+import { Asset, ExpirationTime } from '@/app/analisador/page';
 
 export type SignalData = {
   asset: Asset;
@@ -30,6 +30,74 @@ export type SignalData = {
   operationCountdown: number | null;
   operationStatus: 'pending' | 'active' | 'finished';
 };
+
+// Seeded pseudo-random number generator
+function seededRandom(seed: number) {
+    const x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+}
+
+// Client-side signal generation with market correlation
+function generateClientSideSignal(input: { asset: Asset; expirationTime: ExpirationTime; }): Omit<SignalData, 'countdown' | 'operationCountdown' | 'operationStatus' | 'asset' | 'expirationTime'> {
+    const { asset, expirationTime } = input;
+    const now = new Date(); // Executed on the client
+    
+    // The seed is based on the current minute, making the signal consistent for all users within that same minute.
+    const minuteSeed = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes()).getTime();
+
+    // --- Signal Generation Logic ---
+    const marketTrendSeed = minuteSeed;
+    const marketTrendRandom = seededRandom(marketTrendSeed);
+    const generalMarketSignal = marketTrendRandom < 0.5 ? 'CALL 🔼' : 'PUT 🔽';
+
+    const assetSpecificSeed = minuteSeed + asset.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const assetRandom = seededRandom(assetSpecificSeed);
+    const independentSignal = assetRandom < 0.5 ? 'CALL 🔼' : 'PUT 🔽';
+
+    const correlationSeed = minuteSeed + 1;
+    const correlationRandom = seededRandom(correlationSeed);
+    
+    let finalSignal: 'CALL 🔼' | 'PUT 🔽';
+    const correlationChance = 0.3; 
+
+    if (correlationRandom < correlationChance) {
+        finalSignal = generalMarketSignal;
+    } else {
+        finalSignal = independentSignal;
+    }
+
+    // --- Target Time Calculation ---
+    let targetTime: Date;
+    if (expirationTime === '1m') {
+        const nextMinute = new Date(now);
+        nextMinute.setSeconds(0, 0);
+        nextMinute.setMinutes(nextMinute.getMinutes() + 1);
+        targetTime = nextMinute;
+    } else { // 5m
+        const minutes = now.getMinutes();
+        const remainder = minutes % 5;
+        const minutesToAdd = 5 - remainder;
+        targetTime = new Date(now.getTime());
+        targetTime.setMinutes(minutes + minutesToAdd, 0, 0);
+        if (targetTime.getTime() < now.getTime()) {
+            targetTime.setMinutes(targetTime.getMinutes() + 5);
+        }
+    }
+
+    const targetTimeString = targetTime.toLocaleTimeString('en-US', {
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+
+    return {
+        signal: finalSignal,
+        targetTime: targetTimeString,
+        source: 'Aleatório' as const,
+        targetDate: targetTime,
+    };
+}
+
 
 const DAILY_LIMIT_KEY = 'daily_free_signal_timestamp';
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
@@ -102,12 +170,16 @@ export default function FreePage() {
 
     setAppState('loading');
     
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
     if (isMarketModeActive) {
         try {
-            const realSignal: GenerateSignalOutput = await generateSignal(formData);
+            const realSignal = generateClientSideSignal(formData);
             setSignalData({
                 ...formData,
                 ...realSignal,
+                signal: realSignal.signal, // Ensure signal is correctly typed
                 countdown: null,
                 operationCountdown: null,
                 operationStatus: 'pending'
@@ -120,7 +192,6 @@ export default function FreePage() {
             return;
         }
     } else {
-        await new Promise(resolve => setTimeout(resolve, 1500));
         const { targetDate, targetTimeString } = getPlaceholderTargetTime();
         setSignalData({ 
             ...formData, 
@@ -357,3 +428,5 @@ export default function FreePage() {
     </>
   );
 }
+
+    

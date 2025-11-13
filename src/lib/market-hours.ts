@@ -1,4 +1,5 @@
-import { Asset } from '@/app/analisador/actions';
+
+import { Asset } from '@/app/analisador/page';
 
 // All times are in America/Sao_Paulo (UTC-3)
 type TimeRange = { start: number; end: number }; // Hour as a number (e.g., 21.5 for 9:30 PM)
@@ -87,3 +88,5 @@ export function isMarketOpenForAsset(asset: Asset): boolean {
 
   return false; // Current time is not in any open range
 }
+
+    

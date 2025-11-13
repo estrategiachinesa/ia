@@ -8,7 +8,7 @@ import { CurrencyFlags } from './currency-flags';
 import Link from 'next/link';
 import { SignalData } from '@/app/free/page';
 import { cn } from '@/lib/utils';
-import { Asset } from '@/app/analisador/actions';
+import { Asset } from '@/app/analisador/page';
 
 type FreeSignalResultProps = {
   data: SignalData;
@@ -146,3 +146,5 @@ export function FreeSignalResult({ data, onReset, isMarketMode, isSignalFinished
     </div>
   );
 }
+
+    

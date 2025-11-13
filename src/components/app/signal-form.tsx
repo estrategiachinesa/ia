@@ -54,7 +54,6 @@ type SignalFormProps = {
 const allAssets: Asset[] = [
   'EUR/JPY', 'EUR/JPY (OTC)',
   'EUR/USD', 'EUR/USD (OTC)',
-  'EUR/GBP', 'EUR/GBP (OTC)',
 ];
 
 

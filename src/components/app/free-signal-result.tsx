@@ -3,7 +3,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Lock, Star } from 'lucide-react';
+import { RefreshCw, Lock, Star, HelpCircle } from 'lucide-react';
 import { CurrencyFlags } from './currency-flags';
 import Link from 'next/link';
 
@@ -20,8 +20,7 @@ export function FreeSignalResult({ asset, expirationTime, targetTime, onReset }:
       <Card className="border-primary/30 bg-background/50">
         <CardHeader>
           <CardTitle className="text-2xl flex items-center justify-between">
-            <span>Sinal VIP Gerado!</span>
-            <Lock className="h-6 w-6 text-primary" />
+            <span>Sinal Gerado!</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 text-lg">
@@ -41,15 +40,9 @@ export function FreeSignalResult({ asset, expirationTime, targetTime, onReset }:
             <span className="font-bold">{targetTime}</span>
           </div>
 
-          {/* This is the blurred, locked action. It's a static placeholder. */}
-          <div className="relative flex justify-between items-center text-2xl font-bold p-3 rounded-lg bg-muted/50 text-foreground">
+          <div className="flex justify-between items-center text-2xl font-bold p-3 rounded-lg bg-muted/50 text-foreground">
             <span>Ação:</span>
-            <span className="blur-sm select-none pointer-events-none">
-              CALL 🔼
-            </span>
-            <div className="absolute inset-0 flex items-center justify-center bg-background/30 backdrop-blur-[2px]">
-              <Lock className="h-8 w-8 text-primary animate-pulse" />
-            </div>
+             <HelpCircle className="h-8 w-8 text-primary animate-pulse" />
           </div>
         
           <div className="pt-4 space-y-2">

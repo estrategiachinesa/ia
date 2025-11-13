@@ -7,6 +7,16 @@ import { SignalForm } from '@/components/app/signal-form';
 import { isMarketOpenForAsset } from '@/lib/market-hours';
 import type { Asset, FormData, SignalData } from '@/app/analisador/page';
 import { FreeSignalResult } from '@/components/app/free-signal-result';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function AnalisadorGratuitoPage() {
   const router = useRouter();
@@ -16,8 +26,17 @@ export default function AnalisadorGratuitoPage() {
     expirationTime: '1m',
   });
   const [showOTC, setShowOTC] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const isMarketOpen = isMarketOpenForAsset(formData.asset);
   
+  useEffect(() => {
+    if (appState === 'result') {
+      setIsModalOpen(true);
+    } else {
+      setIsModalOpen(false);
+    }
+  }, [appState]);
+
   // Seeded pseudo-random number generator to have some consistency
   function seededRandom(seed: number) {
     const x = Math.sin(seed) * 10000;
@@ -133,6 +152,29 @@ export default function AnalisadorGratuitoPage() {
           <p className="max-w-xl mx-auto">Aviso Legal: Todas as estratégias e investimentos envolvem risco de perda. Nenhuma informação contida neste produto deve ser interpretada como uma garantia de resultados.</p>
         </footer>
       </div>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Falha ao analisar ❌</DialogTitle>
+            <DialogDescription>
+              Não encontramos seu cadastro no sistema. É preciso se cadastrar e realizar um depósito de qualquer valor para gerar os sinais.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-col sm:space-x-0 gap-2">
+              <Button asChild>
+                <Link href="https://pay.hotmart.com/E101943327K" target="_blank">
+                  Adquirir uma Licença
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link href="https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=" target="_blank">
+                  Cadastrar agora
+                </Link>
+              </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

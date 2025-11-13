@@ -2,7 +2,7 @@
 'use client';
 
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, getDocs, collection, writeBatch } from 'firebase/firestore';
 import { useFirestore } from './provider';
 
 // Define the shape of the configuration object
@@ -25,18 +25,26 @@ interface ConfigContextState {
 const ConfigContext = createContext<ConfigContextState | undefined>(undefined);
 
 // Default config to be used as a fallback and for initial creation
-const defaultConfig: AppConfig = {
+const defaultLinkConfig = {
     hotmartUrl: "https://pay.hotmart.com/E101943327K",
     exnovaUrl: "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=",
     iqOptionUrl: "https://affiliate.iqoption.net/redir/?aff=198544&aff_model=revenue&afftrack=",
     telegramUrl: "https://t.me/Trader_Chines",
+};
+
+const defaultLimitConfig = {
     hourlySignalLimit: 3
+};
+
+const defaultConfig: AppConfig = {
+    ...defaultLinkConfig,
+    ...defaultLimitConfig
 };
 
 
 // Create the provider component
 export const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const firestore = useFirestore(); // Use the hook to get Firestore instance
+  const firestore = useFirestore();
 
   const [configState, setConfigState] = useState<ConfigContextState>({
     config: null,
@@ -55,40 +63,46 @@ export const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
 
     const fetchConfig = async () => {
-      const configRef = doc(firestore, 'appConfig', 'links');
+      const linksRef = doc(firestore, 'appConfig', 'links');
+      const limitationRef = doc(firestore, 'appConfig', 'limitation');
+
       try {
-        const docSnap = await getDoc(configRef);
-        if (docSnap.exists()) {
-          const remoteData = docSnap.data() as Partial<AppConfig>;
-          
-          // Merge remote data with defaults to ensure all fields are present
-          const mergedConfig: AppConfig = { ...defaultConfig, ...remoteData };
+        const [linksSnap, limitationSnap] = await Promise.all([
+            getDoc(linksRef),
+            getDoc(limitationRef)
+        ]);
+        
+        let linkData = defaultLinkConfig;
+        let limitData = defaultLimitConfig;
+        let needsWrite = false;
+        const batch = writeBatch(firestore);
 
-          // Check if any default field was missing from the remote data
-          const missingFields = !('hourlySignalLimit' in remoteData);
-
-          if (missingFields) {
-            // If fields are missing, update the document in Firestore without overwriting user changes.
-            console.warn("Some configuration fields were missing. Updating document with default values for missing fields...");
-            await setDoc(configRef, { hourlySignalLimit: defaultConfig.hourlySignalLimit }, { merge: true });
-          }
-
-          setConfigState({
-            config: mergedConfig,
-            isConfigLoading: false,
-            configError: null,
-          });
-
+        if (linksSnap.exists()) {
+          linkData = { ...defaultLinkConfig, ...linksSnap.data() };
         } else {
-          // Document does not exist, so let's create it with the full default values.
-          console.warn("Configuration document not found. Creating it with default config...");
-          await setDoc(configRef, defaultConfig);
-          setConfigState({
-            config: defaultConfig,
-            isConfigLoading: false,
-            configError: null,
-          });
+          console.warn("Links config document not found. Creating it with defaults.");
+          batch.set(linksRef, defaultLinkConfig);
+          needsWrite = true;
         }
+
+        if (limitationSnap.exists()) {
+          limitData = { ...defaultLimitConfig, ...limitationSnap.data() };
+        } else {
+          console.warn("Limitation config document not found. Creating it with defaults.");
+          batch.set(limitationRef, defaultLimitConfig);
+          needsWrite = true;
+        }
+
+        if (needsWrite) {
+          await batch.commit();
+        }
+
+        setConfigState({
+          config: { ...linkData, ...limitData },
+          isConfigLoading: false,
+          configError: null,
+        });
+
       } catch (error) {
         console.error("Error fetching or creating remote config, using defaults:", error);
         setConfigState({
@@ -100,7 +114,7 @@ export const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     };
 
     fetchConfig();
-  }, [firestore]); // Re-fetch if the firestore instance changes
+  }, [firestore]);
 
   return (
     <ConfigContext.Provider value={configState}>

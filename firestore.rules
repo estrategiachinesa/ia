@@ -7,6 +7,7 @@
  *
  * Data Structure:
  * - `/appConfig/links`: Stores global app configuration like affiliate URLs.
+ * - `/appConfig/limitation`: Stores global app configuration like usage limits.
  * - `/chineseStrategies/{chineseStrategyId}`: Stores trading strategies.
  * - `/vipRequests/{userId}`: Stores VIP access requests.
  *
@@ -36,6 +37,18 @@ service cloud.firestore {
      * @path /appConfig/links
      */
     match /appConfig/links {
+      allow read: if true;
+      allow create: if true;
+      allow update: if isSignedIn();
+    }
+    
+    /**
+     * @description Grants public read access to app configuration.
+     * @description Allows any user to create the document if it doesn't exist.
+     * @description Restricts updates to authenticated users.
+     * @path /appConfig/limitation
+     */
+    match /appConfig/limitation {
       allow read: if true;
       allow create: if true;
       allow update: if isSignedIn();

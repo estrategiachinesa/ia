@@ -140,3 +140,6 @@
     "reasoning": "The Firestore structure is designed to handle VIP access requests and global app configurations for links and usage limits. It prioritizes simplicity and security. VIP requests are stored per user, using their UID as the document ID to prevent duplicate requests. Global configurations are stored in single documents under `/appConfig` for easy public access and authenticated-only updates. This design supports secure operations, as rules can be applied based on user authentication state and document ownership for VIP requests, while allowing public read access for necessary app settings."
   }
 }
+
+    
+    

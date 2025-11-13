@@ -62,7 +62,7 @@ service cloud.firestore {
       allow get: if isSignedIn() && isOwner(userId);
       allow write: if isSignedIn() && isOwner(userId) && isValidVipRequest(request, resource);
     }
-
+    
     // Helper functions.
     function isSignedIn() {
       return request.auth != null;
@@ -94,3 +94,6 @@ service cloud.firestore {
     }
   }
 }
+
+    
+    

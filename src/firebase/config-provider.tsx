@@ -2,7 +2,7 @@
 'use client';
 
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
-import { doc, getDoc, setDoc, getDocs, collection, writeBatch } from 'firebase/firestore';
+import { doc, getDoc, setDoc, writeBatch } from 'firebase/firestore';
 import { useFirestore } from './provider';
 
 // Define the shape of the configuration object
@@ -12,6 +12,7 @@ export interface AppConfig {
   iqOptionUrl: string;
   telegramUrl: string;
   hourlySignalLimit: number;
+  correlationChance: number; // This will now be a fixed value
 }
 
 // Define the state for the config context
@@ -24,7 +25,7 @@ interface ConfigContextState {
 // Create the context with an initial undefined value
 const ConfigContext = createContext<ConfigContextState | undefined>(undefined);
 
-// Default config to be used as a fallback and for initial creation
+// Default configs to be used as a fallback and for initial creation
 const defaultLinkConfig = {
     hotmartUrl: "https://pay.hotmart.com/E101943327K",
     exnovaUrl: "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=",
@@ -38,9 +39,9 @@ const defaultLimitConfig = {
 
 const defaultConfig: AppConfig = {
     ...defaultLinkConfig,
-    ...defaultLimitConfig
+    ...defaultLimitConfig,
+    correlationChance: 0.3 // Reverted to a fixed value
 };
-
 
 // Create the provider component
 export const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -69,24 +70,25 @@ export const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       try {
         const [linksSnap, limitationSnap] = await Promise.all([
             getDoc(linksRef),
-            getDoc(limitationRef)
+            getDoc(limitationRef),
         ]);
         
-        let linkData = defaultLinkConfig;
-        let limitData = defaultLimitConfig;
-        let needsWrite = false;
+        let mergedConfig = {...defaultConfig};
         const batch = writeBatch(firestore);
+        let needsWrite = false;
 
+        // Process Links
         if (linksSnap.exists()) {
-          linkData = { ...defaultLinkConfig, ...linksSnap.data() };
+          mergedConfig = { ...mergedConfig, ...linksSnap.data() };
         } else {
           console.warn("Links config document not found. Creating it with defaults.");
           batch.set(linksRef, defaultLinkConfig);
           needsWrite = true;
         }
 
+        // Process Limitation
         if (limitationSnap.exists()) {
-          limitData = { ...defaultLimitConfig, ...limitationSnap.data() };
+          mergedConfig = { ...mergedConfig, ...limitationSnap.data() };
         } else {
           console.warn("Limitation config document not found. Creating it with defaults.");
           batch.set(limitationRef, defaultLimitConfig);
@@ -98,7 +100,7 @@ export const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
 
         setConfigState({
-          config: { ...linkData, ...limitData },
+          config: mergedConfig,
           isConfigLoading: false,
           configError: null,
         });
@@ -131,3 +133,5 @@ export const useAppConfig = (): ConfigContextState => {
   }
   return context;
 };
+
+    

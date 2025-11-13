@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -23,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { generateSignal } from './actions';
+import Link from 'next/link';
 
 
 export type Asset = 
@@ -56,7 +58,6 @@ type AccessState = 'checking' | 'granted' | 'denied';
 type SignalUsage = {
   timestamps: number[];
 }
-
 
 export default function AnalisadorPage() {
   const router = useRouter();
@@ -230,7 +231,23 @@ export default function AnalisadorPage() {
   }, [appState, signalData?.operationStatus]);
   
  const handleAnalyze = async () => {
-    if (!isPremium && usageStorageKey && config) {
+    if (!config) {
+        toast({
+            variant: 'destructive',
+            title: 'Erro de Configuração',
+            description: 'A configuração da aplicação não foi carregada. Tente novamente.',
+        });
+        return;
+    }
+    if (!user || !firestore) {
+      toast({
+            variant: 'destructive',
+            title: 'Erro de Autenticação',
+            description: 'Não foi possível identificar o usuário. Tente fazer login novamente.',
+        });
+        return;
+    }
+    if (!isPremium && usageStorageKey) {
       const usageString = localStorage.getItem(usageStorageKey) || '{ "timestamps": [] }';
       const currentUsage: SignalUsage = JSON.parse(usageString);
       const oneHourAgo = Date.now() - 60 * 60 * 1000;
@@ -243,7 +260,6 @@ export default function AnalisadorPage() {
       }
     }
 
-
     setAppState('loading');
     
     // Simulate network delay
@@ -252,7 +268,7 @@ export default function AnalisadorPage() {
     try {
       const result = await generateSignal(formData);
       
-      setSignalData({
+      const newSignalData: SignalData = {
         ...formData,
         signal: result.signal,
         targetTime: result.targetTime,
@@ -261,9 +277,11 @@ export default function AnalisadorPage() {
         countdown: null,
         operationCountdown: null,
         operationStatus: 'pending'
-      });
+      };
       
-      if (!isPremium && usageStorageKey && config) {
+      setSignalData(newSignalData);
+
+      if (!isPremium && usageStorageKey) {
         // Update usage stats
         const usageString = localStorage.getItem(usageStorageKey) || '{ "timestamps": [] }';
         const currentUsage: SignalUsage = JSON.parse(usageString);
@@ -340,15 +358,17 @@ export default function AnalisadorPage() {
 
       <div className="flex flex-col min-h-screen">
         <header className="p-4 flex justify-between items-center">
-          {isPremium ? (
-             <div className="px-3 py-1 text-sm font-bold bg-primary text-primary-foreground rounded-full shadow-lg">
-              PREMIUM
-            </div>
-          ) : (
-             <div className="px-3 py-1 text-sm font-bold bg-primary text-primary-foreground rounded-full shadow-lg">
-              VIP
-            </div>
-          )}
+          <div className='flex items-center gap-4'>
+            {isPremium ? (
+              <div className="px-3 py-1 text-sm font-bold bg-primary text-primary-foreground rounded-full shadow-lg">
+                PREMIUM
+              </div>
+            ) : (
+              <div className="px-3 py-1 text-sm font-bold bg-primary text-primary-foreground rounded-full shadow-lg">
+                VIP
+              </div>
+            )}
+          </div>
            <button
             onClick={handleLogout}
             className="text-sm bg-destructive text-destructive-foreground hover:bg-destructive/90 px-3 py-1.5 rounded-md font-semibold"
@@ -399,3 +419,6 @@ export default function AnalisadorPage() {
     </>
   );
 }
+
+    
+    

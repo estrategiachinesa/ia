@@ -18,7 +18,7 @@ import { SignalForm } from '@/components/app/signal-form';
 import { SignalResult } from '@/components/app/signal-result';
 import { isMarketOpenForAsset } from '@/lib/market-hours';
 import { Loader2 } from 'lucide-react';
-import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
+import { useFirebase, useDoc, useMemoFirebase, useAppConfig } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -123,12 +123,10 @@ function generateClientSideSignal(input: FormData): Omit<SignalData, 'countdown'
 }
 
 
-const HOURLY_SIGNAL_LIMIT = 3;
-
-
 export default function AnalisadorPage() {
   const router = useRouter();
   const { auth, user, isUserLoading, firestore } = useFirebase();
+  const { config, isConfigLoading } = useAppConfig();
   const [accessState, setAccessState] = useState<AccessState>('checking');
   const [appState, setAppState] = useState<AppState>('idle');
   const [signalData, setSignalData] = useState<SignalData | null>(null);
@@ -210,7 +208,7 @@ export default function AnalisadorPage() {
 
   // Effect for checking and updating signal usage limit
   useEffect(() => {
-    if (isPremium || !usageStorageKey) {
+    if (isPremium || !usageStorageKey || !config) {
       setHasReachedLimit(false);
       return;
     }
@@ -229,10 +227,10 @@ export default function AnalisadorPage() {
           setSignalUsage({ timestamps: recentTimestamps });
       }
       
-      setHasReachedLimit(recentTimestamps.length >= HOURLY_SIGNAL_LIMIT);
+      setHasReachedLimit(recentTimestamps.length >= config.hourlySignalLimit);
 
     }
-  }, [appState, isPremium, usageStorageKey]);
+  }, [appState, isPremium, usageStorageKey, config]);
 
 
   useEffect(() => {
@@ -297,13 +295,13 @@ export default function AnalisadorPage() {
   }, [appState, signalData?.operationStatus]);
   
  const handleAnalyze = async () => {
-    if (!isPremium && usageStorageKey) {
+    if (!isPremium && usageStorageKey && config) {
       const usageString = localStorage.getItem(usageStorageKey) || '{ "timestamps": [] }';
       const currentUsage: SignalUsage = JSON.parse(usageString);
       const oneHourAgo = Date.now() - 60 * 60 * 1000;
       const recentTimestamps = (currentUsage.timestamps || []).filter(ts => ts > oneHourAgo);
 
-      if (recentTimestamps.length >= HOURLY_SIGNAL_LIMIT) {
+      if (recentTimestamps.length >= config.hourlySignalLimit) {
           setHasReachedLimit(true);
           setPremiumModalOpen(true);
           return;
@@ -331,7 +329,7 @@ export default function AnalisadorPage() {
         operationStatus: 'pending'
       });
       
-      if (!isPremium && usageStorageKey) {
+      if (!isPremium && usageStorageKey && config) {
         // Update usage stats
         const usageString = localStorage.getItem(usageStorageKey) || '{ "timestamps": [] }';
         const currentUsage: SignalUsage = JSON.parse(usageString);
@@ -342,7 +340,7 @@ export default function AnalisadorPage() {
         const newUsage = { timestamps: newTimestamps };
         localStorage.setItem(usageStorageKey, JSON.stringify(newUsage));
         setSignalUsage(newUsage);
-        if(newUsage.timestamps.length >= HOURLY_SIGNAL_LIMIT){
+        if(newUsage.timestamps.length >= config.hourlySignalLimit){
             setHasReachedLimit(true);
         }
       }
@@ -372,7 +370,7 @@ export default function AnalisadorPage() {
   }
 
   // Loading screen while checking user auth
-  if (accessState === 'checking' || isPremiumLoading) {
+  if (accessState === 'checking' || isPremiumLoading || isConfigLoading) {
       return (
           <div className="flex h-screen w-full items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin" />

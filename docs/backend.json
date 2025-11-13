@@ -5,7 +5,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "AppConfig",
       "type": "object",
-      "description": "Stores global application configuration, such as affiliate links.",
+      "description": "Stores global application configuration, such as affiliate links and usage limits.",
       "properties": {
         "hotmartUrl": {
           "type": "string",
@@ -26,13 +26,18 @@
           "type": "string",
           "format": "uri",
           "description": "The link to the support group on Telegram."
+        },
+        "hourlySignalLimit": {
+            "type": "number",
+            "description": "The number of signals a non-premium user can generate per hour."
         }
       },
       "required": [
         "hotmartUrl",
         "exnovaUrl",
         "iqOptionUrl",
-        "telegramUrl"
+        "telegramUrl",
+        "hourlySignalLimit"
       ]
     },
     "ChineseStrategy": {
@@ -136,7 +141,7 @@
           "schema": {
             "$ref": "#/backend/entities/AppConfig"
           },
-          "description": "Stores global application configuration, such as affiliate links. This is a single document."
+          "description": "Stores global application configuration, such as affiliate links and usage limits. This is a single document."
         }
       },
       {

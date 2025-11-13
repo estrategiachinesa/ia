@@ -11,6 +11,7 @@ export interface AppConfig {
   exnovaUrl: string;
   iqOptionUrl: string;
   telegramUrl: string;
+  hourlySignalLimit: number;
 }
 
 // Define the state for the config context
@@ -28,7 +29,8 @@ const defaultConfig: AppConfig = {
     hotmartUrl: "https://pay.hotmart.com/E101943327K",
     exnovaUrl: "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=",
     iqOptionUrl: "https://affiliate.iqoption.net/redir/?aff=198544&aff_model=revenue&afftrack=",
-    telegramUrl: "https://t.me/Trader_Chines"
+    telegramUrl: "https://t.me/Trader_Chines",
+    hourlySignalLimit: 3
 };
 
 

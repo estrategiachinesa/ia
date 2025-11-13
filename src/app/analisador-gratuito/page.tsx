@@ -26,14 +26,17 @@ export default function AnalisadorGratuitoPage() {
     expirationTime: '1m',
   });
   const [showOTC, setShowOTC] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFailureModalOpen, setFailureModalOpen] = useState(false);
+  const [isWelcomeModalOpen, setWelcomeModalOpen] = useState(true);
+  const [isPlayerModalOpen, setPlayerModalOpen] = useState(false);
+
   const isMarketOpen = isMarketOpenForAsset(formData.asset);
   
   useEffect(() => {
     if (appState === 'result') {
-      setIsModalOpen(true);
+      setFailureModalOpen(true);
     } else {
-      setIsModalOpen(false);
+      setFailureModalOpen(false);
     }
   }, [appState]);
 
@@ -43,8 +46,6 @@ export default function AnalisadorGratuitoPage() {
     return x - Math.floor(x);
   }
 
-  // This function generates a *fake* target time to show on the result page.
-  // The actual signal (CALL/PUT) is never generated or sent to the client.
   const generateFakeSignalTime = (expirationTime: '1m' | '5m') => {
       const now = new Date();
       let targetTime: Date;
@@ -153,7 +154,7 @@ export default function AnalisadorGratuitoPage() {
         </footer>
       </div>
 
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+      <Dialog open={isFailureModalOpen} onOpenChange={setFailureModalOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Falha ao analisar ❌</DialogTitle>
@@ -173,6 +174,41 @@ export default function AnalisadorGratuitoPage() {
                 </Link>
               </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+       <Dialog open={isWelcomeModalOpen} onOpenChange={setWelcomeModalOpen}>
+        <DialogContent>
+          <DialogHeader className="text-center items-center">
+            <DialogTitle className="text-2xl font-headline">ESTRATÉGIA CHINESA</DialogTitle>
+            <h3 className="text-lg font-bold text-primary">Atenção!</h3>
+            <DialogDescription className="text-base">
+              Para gerar os sinais da Estratégia Chinesa, você deve se cadastrar na plataforma e realizar um depósito de qualquer valor.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-col sm:space-x-0 gap-2 pt-4">
+              <Button asChild>
+                <Link href="https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=" target="_blank">
+                  Abrir a Corretora
+                </Link>
+              </Button>
+              <Button variant="outline" onClick={() => setPlayerModalOpen(true)}>
+                Instruções
+              </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isPlayerModalOpen} onOpenChange={setPlayerModalOpen}>
+        <DialogContent className="max-w-3xl aspect-video p-0 border-0">
+           <iframe
+              className="w-full h-full rounded-lg"
+              src="https://www.youtube.com/embed/PPak8eupMi8?autoplay=1"
+              title="YouTube video player"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            ></iframe>
         </DialogContent>
       </Dialog>
     </>

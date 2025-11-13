@@ -133,6 +133,8 @@ export default function AnalisadorPage() {
   const [isPremium, setIsPremium] = useState(false);
   const [isPremiumModalOpen, setPremiumModalOpen] = useState(false);
   const { toast } = useToast();
+  
+  const usageStorageKey = user ? `signalUsage_${user.uid}` : null;
 
 
   const vipRequestRef = useMemoFirebase(() => {
@@ -189,7 +191,6 @@ export default function AnalisadorPage() {
 
       const hasSeenWelcome = localStorage.getItem('hasSeenPremiumWelcome');
       if (!hasSeenWelcome) {
-        // Instead of a toast, we now open the modal for the welcome message
         setPremiumModalOpen(true);
       }
     } else {
@@ -203,11 +204,11 @@ export default function AnalisadorPage() {
 
   // Effect for checking and updating signal usage limit
   useEffect(() => {
-    if (isPremium) {
+    if (isPremium || !usageStorageKey) {
       setHasReachedLimit(false);
       return;
     }
-    const usageString = localStorage.getItem('signalUsage');
+    const usageString = localStorage.getItem(usageStorageKey);
     if (usageString) {
       const usage: Partial<SignalUsage> = JSON.parse(usageString);
       const oneHourAgo = Date.now() - 60 * 60 * 1000;
@@ -216,7 +217,7 @@ export default function AnalisadorPage() {
       
       if (usage.timestamps && usage.timestamps.length !== recentTimestamps.length) {
           const newUsage = { timestamps: recentTimestamps };
-          localStorage.setItem('signalUsage', JSON.stringify(newUsage));
+          localStorage.setItem(usageStorageKey, JSON.stringify(newUsage));
           setSignalUsage(newUsage);
       } else {
           setSignalUsage({ timestamps: recentTimestamps });
@@ -225,7 +226,7 @@ export default function AnalisadorPage() {
       setHasReachedLimit(recentTimestamps.length >= HOURLY_SIGNAL_LIMIT);
 
     }
-  }, [appState, isPremium]);
+  }, [appState, isPremium, usageStorageKey]);
 
 
   useEffect(() => {
@@ -290,8 +291,8 @@ export default function AnalisadorPage() {
   }, [appState, signalData?.operationStatus]);
   
  const handleAnalyze = async () => {
-    if (!isPremium) {
-      const usageString = localStorage.getItem('signalUsage') || '{ "timestamps": [] }';
+    if (!isPremium && usageStorageKey) {
+      const usageString = localStorage.getItem(usageStorageKey) || '{ "timestamps": [] }';
       const currentUsage: SignalUsage = JSON.parse(usageString);
       const oneHourAgo = Date.now() - 60 * 60 * 1000;
       const recentTimestamps = (currentUsage.timestamps || []).filter(ts => ts > oneHourAgo);
@@ -322,16 +323,16 @@ export default function AnalisadorPage() {
       operationStatus: 'pending'
     });
     
-    if (!isPremium) {
+    if (!isPremium && usageStorageKey) {
       // Update usage stats
-      const usageString = localStorage.getItem('signalUsage') || '{ "timestamps": [] }';
+      const usageString = localStorage.getItem(usageStorageKey) || '{ "timestamps": [] }';
       const currentUsage: SignalUsage = JSON.parse(usageString);
       const oneHourAgo = Date.now() - 60 * 60 * 1000;
       const recentTimestamps = (currentUsage.timestamps || []).filter(ts => ts > oneHourAgo);
 
       const newTimestamps = [...recentTimestamps, Date.now()];
       const newUsage = { timestamps: newTimestamps };
-      localStorage.setItem('signalUsage', JSON.stringify(newUsage));
+      localStorage.setItem(usageStorageKey, JSON.stringify(newUsage));
       setSignalUsage(newUsage);
       if(newUsage.timestamps.length >= HOURLY_SIGNAL_LIMIT){
           setHasReachedLimit(true);
@@ -349,7 +350,6 @@ export default function AnalisadorPage() {
   const handleLogout = async () => {
     await auth.signOut();
     localStorage.removeItem('loginTimestamp');
-    localStorage.removeItem('signalUsage'); // Clear usage on logout
     localStorage.removeItem('hasSeenPremiumWelcome'); // Clear welcome message flag on logout
     router.push('/');
   }

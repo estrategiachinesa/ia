@@ -2,7 +2,7 @@
 'use client';
 
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useFirestore } from './provider';
 
 // Define the shape of the configuration object
@@ -23,7 +23,7 @@ interface ConfigContextState {
 // Create the context with an initial undefined value
 const ConfigContext = createContext<ConfigContextState | undefined>(undefined);
 
-// Default config to be used as a fallback
+// Default config to be used as a fallback and for initial creation
 const defaultConfig: AppConfig = {
     hotmartUrl: "https://pay.hotmart.com/E101943327K",
     exnovaUrl: "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=",
@@ -44,8 +44,6 @@ export const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
   useEffect(() => {
     if (!firestore) {
-      // If firestore is not available, stop loading and maybe set an error
-      // or use default config
       setConfigState({
         config: defaultConfig,
         isConfigLoading: false,
@@ -65,16 +63,17 @@ export const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             configError: null,
           });
         } else {
-          // Document does not exist, use default config and log a warning
-          console.warn("Configuration document not found. Using default links. Create 'appConfig/links' in Firestore.");
+          // Document does not exist, so let's create it with the default values.
+          console.warn("Configuration document not found. Creating it with default links...");
+          await setDoc(configRef, defaultConfig);
           setConfigState({
             config: defaultConfig,
             isConfigLoading: false,
-            configError: null, // Not a hard error, we have fallbacks
+            configError: null,
           });
         }
       } catch (error) {
-        console.error("Error fetching remote config, using defaults:", error);
+        console.error("Error fetching or creating remote config, using defaults:", error);
         setConfigState({
           config: defaultConfig,
           isConfigLoading: false,

@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { SignalForm } from '@/components/app/signal-form';
 import { isMarketOpenForAsset } from '@/lib/market-hours';
-import type { Asset, FormData, SignalData } from '@/app/analisador/page';
 import { FreeSignalResult } from '@/components/app/free-signal-result';
 import {
   Dialog,
@@ -18,9 +17,27 @@ import {
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { OnlineServer } from '@/components/app/OnlineServer';
+import { Asset, ExpirationTime, generateSignal, GenerateSignalOutput } from '@/app/analisador/actions';
+
+export type SignalData = {
+  asset: Asset;
+  expirationTime: ExpirationTime;
+  signal: 'CALL 🔼' | 'PUT 🔽' | '?';
+  targetTime: string;
+  source?: 'Aleatório';
+  targetDate: Date;
+  countdown: number | null;
+  operationCountdown: number | null;
+  operationStatus: 'pending' | 'active' | 'finished';
+};
 
 const DAILY_LIMIT_KEY = 'daily_free_signal_timestamp';
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+
+type FormData = {
+  asset: Asset;
+  expirationTime: ExpirationTime;
+};
 
 export default function FreePage() {
   const router = useRouter();
@@ -40,13 +57,7 @@ export default function FreePage() {
 
   const isMarketOpen = isMarketOpenForAsset(formData.asset);
 
-  // Seeded pseudo-random number generator to have some consistency
-  function seededRandom(seed: number) {
-    const x = Math.sin(seed) * 10000;
-    return x - Math.floor(x);
-  }
-
-  const generateSignalData = (isRealSignal: boolean) => {
+  const getPlaceholderTargetTime = () => {
     const now = new Date();
     let targetTime: Date;
 
@@ -66,36 +77,13 @@ export default function FreePage() {
       }
     }
     
-    const targetTimeString = targetTime.toLocaleTimeString('en-US', {
-        hour12: false,
-        hour: '2-digit',
-        minute: '2-digit',
-    });
-
-    if (isRealSignal) {
-        // Generate a real, random signal for market mode
-        const minuteSeed = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes()).getTime();
-        const assetSpecificSeed = minuteSeed + formData.asset.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-        const assetRandom = seededRandom(assetSpecificSeed);
-        const realSignal = assetRandom < 0.5 ? 'CALL 🔼' : 'PUT 🔽';
-
-        return {
-            ...formData,
-            signal: realSignal,
-            targetTime: targetTimeString,
-            source: 'Aleatório',
-            targetDate: targetTime,
-            countdown: null,
-            operationCountdown: null,
-            operationStatus: 'pending'
-        } as SignalData;
-    }
-
-    // Return placeholder data for the standard free mode
     return {
-        asset: formData.asset,
-        expirationTime: formData.expirationTime,
-        targetTime: targetTimeString,
+        targetDate: targetTime,
+        targetTimeString: targetTime.toLocaleTimeString('en-US', {
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit',
+        })
     };
   };
 
@@ -113,15 +101,36 @@ export default function FreePage() {
     }
 
     setAppState('loading');
-    await new Promise(resolve => setTimeout(resolve, 1500));
     
     if (isMarketModeActive) {
-        const realSignal = generateSignalData(true);
-        setSignalData(realSignal as SignalData);
-        localStorage.setItem(DAILY_LIMIT_KEY, Date.now().toString());
+        try {
+            const realSignal: GenerateSignalOutput = await generateSignal(formData);
+            setSignalData({
+                ...formData,
+                ...realSignal,
+                countdown: null,
+                operationCountdown: null,
+                operationStatus: 'pending'
+            });
+            localStorage.setItem(DAILY_LIMIT_KEY, Date.now().toString());
+        } catch (error) {
+            console.error("Failed to generate real signal", error);
+            setFailureModalOpen(true);
+            setAppState('form');
+            return;
+        }
     } else {
-        const placeholderSignal = generateSignalData(false);
-        setSignalData({ ...placeholderSignal, signal: '?' } as any); // Set fake signalData
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        const { targetDate, targetTimeString } = getPlaceholderTargetTime();
+        setSignalData({ 
+            ...formData, 
+            signal: '?',
+            targetTime: targetTimeString,
+            targetDate: targetDate,
+            countdown: null,
+            operationCountdown: null,
+            operationStatus: 'finished' // To prevent countdowns
+        });
         setFailureModalOpen(true);
     }
     setAppState('result');
@@ -129,9 +138,7 @@ export default function FreePage() {
   
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined;
-    if (appState === 'result' && signalData && signalData.operationStatus === 'finished') {
-       // logic for when signal is finished in market mode
-    } else if (appState === 'result' && signalData && signalData.operationStatus) {
+    if (appState === 'result' && signalData && signalData.operationStatus && signalData.operationStatus !== 'finished') {
         const updateCountdowns = () => {
         setSignalData(prevData => {
           if (!prevData) return null;

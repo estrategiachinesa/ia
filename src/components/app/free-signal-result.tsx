@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw, HelpCircle } from 'lucide-react';
 import { CurrencyFlags } from './currency-flags';
 import Link from 'next/link';
-import { SignalData } from '@/app/analisador/page';
+import { SignalData } from '@/app/free/page';
 import { cn } from '@/lib/utils';
+import { Asset } from '@/app/analisador/actions';
 
 type FreeSignalResultProps = {
-  data: Partial<SignalData>;
+  data: SignalData;
   onReset: () => void;
   isMarketMode: boolean;
   isSignalFinished: boolean;
@@ -22,15 +23,13 @@ const formatTime = (seconds: number) => {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 }
 
-const renderStatus = (data: Partial<SignalData>) => {
+const renderStatus = (data: SignalData) => {
     if (data.operationStatus === 'pending' && data.countdown !== null && data.countdown > 0) {
       return <p>Iniciar em: <span className="text-yellow-400">{formatTime(data.countdown)}</span></p>;
     }
     if (data.operationStatus === 'active' && data.operationCountdown !== null && data.operationCountdown > 0) {
         
-        // Purchase time is over when countdown is <= 29 seconds for both 1m and 5m signals.
         const isPurchaseTimeOver = data.operationCountdown <= 29;
-
         const isBlinking = data.operationCountdown <= 3;
 
         return (
@@ -56,7 +55,7 @@ export function FreeSignalResult({ data, onReset, isMarketMode, isSignalFinished
   const isCall = signal?.includes('CALL');
 
   const actionContent = () => {
-    if (isMarketMode && signal) {
+    if (isMarketMode && signal && signal !== '?') {
       return (
         <div
             className={`flex justify-between items-center text-2xl font-bold p-3 rounded-lg ${
@@ -110,7 +109,7 @@ export function FreeSignalResult({ data, onReset, isMarketMode, isSignalFinished
           <div className="flex justify-between items-center text-left">
             <span className="text-muted-foreground">Ativo:</span>
             <span className="font-bold flex items-center gap-2">
-                <CurrencyFlags asset={asset!} />
+                <CurrencyFlags asset={asset as Asset} />
                 {asset}
             </span>
           </div>

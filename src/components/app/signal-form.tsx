@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { BarChart, Info, Loader2, Lock, Send, Timer, Crown, Trophy } from 'lucide-react';
-import type { FormData, Asset } from '@/app/analisador/page';
 import { CurrencyFlags } from './currency-flags';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -23,9 +22,15 @@ import { useToast } from '@/hooks/use-toast';
 import { User } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp, Firestore } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { Asset, ExpirationTime } from '@/app/analisador/actions';
 
 
 type VipStatus = 'PENDING' | 'AWAITING_DEPOSIT' | 'DEPOSIT_PENDING' | 'APPROVED' | 'REJECTED';
+
+type FormData = {
+  asset: Asset;
+  expirationTime: ExpirationTime;
+};
 
 type SignalFormProps = {
   formData: FormData;
@@ -49,6 +54,7 @@ type SignalFormProps = {
 const allAssets: Asset[] = [
   'EUR/JPY', 'EUR/JPY (OTC)',
   'EUR/USD', 'EUR/USD (OTC)',
+  'EUR/GBP', 'EUR/GBP (OTC)',
 ];
 
 

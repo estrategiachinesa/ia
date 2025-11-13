@@ -1,3 +1,8 @@
+<<<<<<< HEAD:src/lib/signal-generator.ts
+=======
+
+'use server';
+>>>>>>> e23a176 (nao deu o push):src/app/analisador/actions.ts
 
 'use client';
 

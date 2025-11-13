@@ -36,6 +36,7 @@
       ]
     },
     "LimitConfig": {
+<<<<<<< HEAD
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "LimitConfig",
       "type": "object",
@@ -64,6 +65,19 @@
       "required": [
         "registrationSecret"
       ]
+=======
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "title": "LimitConfig",
+        "type": "object",
+        "description": "Stores usage limits for the application.",
+        "properties": {
+            "hourlySignalLimit": {
+                "type": "number",
+                "description": "The number of signals a non-premium user can generate per hour."
+            }
+        },
+        "required": ["hourlySignalLimit"]
+>>>>>>> e23a176 (nao deu o push)
     },
     "VipRequest": {
       "title": "VIP Access Request",
@@ -138,6 +152,7 @@
         }
       },
       {
+<<<<<<< HEAD
         "path": "/appConfig/registration",
         "definition": {
           "entityName": "RegistrationConfig",
@@ -148,6 +163,8 @@
         }
       },
       {
+=======
+>>>>>>> e23a176 (nao deu o push)
         "path": "/vipRequests/{userId}",
         "definition": {
           "entityName": "VipRequest",
@@ -164,6 +181,10 @@
         }
       }
     ],
+<<<<<<< HEAD
     "reasoning": "The Firestore structure is designed to handle VIP access requests and global app configurations for links, usage limits, and a new secret registration key. It prioritizes simplicity and security. VIP requests are stored per user, using their UID as the document ID to prevent duplicate requests. Global configurations are stored in single documents under `/appConfig` for easy public access and authenticated-only updates. This design supports secure operations, as rules can be applied based on user authentication state and document ownership for VIP requests, while allowing public read access for necessary app settings like the registration key."
+=======
+    "reasoning": "The Firestore structure is designed to handle VIP access requests and global app configurations for links and usage limits. It prioritizes simplicity and security. VIP requests are stored per user, using their UID as the document ID to prevent duplicate requests. Global configurations are stored in single documents under `/appConfig` for easy public access and authenticated-only updates. This design supports secure operations, as rules can be applied based on user authentication state and document ownership for VIP requests, while allowing public read access for necessary app settings."
+>>>>>>> e23a176 (nao deu o push)
   }
 }

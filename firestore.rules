@@ -3,6 +3,7 @@
  * @fileoverview Firestore Security Rules for Estratégia Chinesa.
  *
  * Core Philosophy:
+<<<<<<< HEAD
  * This ruleset enforces access control for VIP requests and app configuration. 
  * The default state is to deny all access, with explicit permissions granted 
  * for specific paths and operations.
@@ -17,6 +18,20 @@
  * - Writes to app configuration and IP blacklist require authentication (admin only recommended).
  * - Users can create or update their own VIP request document in /vipRequests/{userId}
  *   if they are authenticated and the document ID matches their request.auth.uid.
+=======
+ * This ruleset enforces access control for VIP requests and app configuration.
+ *
+ * Data Structure:
+ * - `/appConfig/links`: Stores global app configuration like affiliate URLs.
+ * - `/appConfig/limitation`: Stores global app configuration like usage limits.
+ * - `/vipRequests/{userId}`: Stores VIP access requests.
+ *
+ * Key Security Decisions:
+ * - Public read access for app configuration.
+ * - Writes to app configuration require authentication.
+ * - Users can create or update their own VIP request document in `/vipRequests/{userId}`
+ *   if they are authenticated and the document ID matches their `request.auth.uid`.
+>>>>>>> e23a176 (nao deu o push)
  * - Reading of VIP requests is restricted to the user who owns the document.
  */
 rules_version = '2';

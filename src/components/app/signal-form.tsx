@@ -252,7 +252,63 @@ export function SignalForm({
             </DialogFooter>
           </>
         );
-      default: // No status, or REJECTED
+      case 'REJECTED':
+        return (
+           <>
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-headline text-destructive">Solicitação Rejeitada</DialogTitle>
+              <DialogDescription>
+                Sua solicitação de acesso PREMIUM foi rejeitada. Isso geralmente ocorre se o cadastro não foi feito através do nosso link de afiliado ou se o e-mail já estava registrado na corretora.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+               <Alert variant="destructive">
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  Por favor, crie uma nova conta na corretora usando nosso link de afiliado e um e-mail diferente, depois envie seu novo ID abaixo.
+                </AlertDescription>
+              </Alert>
+              <div className="p-4 bg-secondary/50 rounded-lg">
+                <h3 className="font-bold mb-2">PASSO 1: Cadastre-se (Novamente)</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Button className="w-full" asChild>
+                    <Link href="https://affiliate.iqoption.net/redir/?aff=198544&aff_model=revenue&afftrack=" target="_blank">
+                      Cadastrar na IQ Option
+                    </Link>
+                  </Button>
+                   <Button className="w-full" asChild>
+                    <Link href="https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=" target="_blank">
+                      Cadastrar na Exnova
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+              <div className="p-4 bg-secondary/50 rounded-lg">
+                <h3 className="font-bold mb-2">PASSO 2: Valide seu Novo Acesso</h3>
+                <div className="flex w-full items-center space-x-2">
+                  <Input
+                    type="text"
+                    placeholder="Seu NOVO ID da Corretora"
+                    value={brokerId}
+                    onChange={(e) => setBrokerId(e.target.value.replace(/\D/g, ''))}
+                    pattern="[0-9]*"
+                    minLength={8}
+                    disabled={isSubmittingId}
+                  />
+                  <Button type="submit" size="icon" onClick={handleIdSubmit} disabled={isSubmittingId || brokerId.length < 8}>
+                    {isSubmittingId ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setVipModalOpen(false)}>
+                Fechar
+              </Button>
+            </DialogFooter>
+          </>
+        )
+      default: // No status
         return (
           <>
             <DialogHeader>
@@ -444,3 +500,5 @@ export function SignalForm({
     </>
   );
 }
+
+    

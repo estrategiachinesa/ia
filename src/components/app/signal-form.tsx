@@ -74,9 +74,16 @@ export function SignalForm({
   const assets = showOTC ? allAssets : allAssets.filter(a => !a.includes('(OTC)'));
 
   useEffect(() => {
-    // Open the modal if the limit is reached, the user is not vip
+    // Open the modal if the limit is reached, the user is not vip, and the status is not APPROVED
     if (hasReachedLimit && !isVip) {
       setVipModalOpen(true);
+    }
+     // Also open modal if user becomes approved and hasn't seen the welcome message
+     if (vipStatus === 'APPROVED') {
+        const hasSeenWelcome = localStorage.getItem('hasSeenPremiumWelcome');
+        if (!hasSeenWelcome) {
+            setVipModalOpen(true);
+        }
     }
   }, [hasReachedLimit, isVip, vipStatus, setVipModalOpen]);
 
@@ -170,6 +177,28 @@ export function SignalForm({
 
   const getPremiumModalContent = () => {
     switch (vipStatus) {
+      case 'APPROVED':
+        return (
+             <>
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-headline text-primary">🎉 Parabéns! Acesso PREMIUM Liberado!</DialogTitle>
+              <DialogDescription>
+                Você agora tem acesso prioritário e ilimitado a todos os sinais. Toque em "Começar" e aproveite ao máximo!
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 text-center">
+              <Crown className="h-16 w-16 mx-auto text-primary animate-pulse" />
+            </div>
+            <DialogFooter>
+              <Button onClick={() => {
+                localStorage.setItem('hasSeenPremiumWelcome', 'true');
+                setVipModalOpen(false);
+              }}>
+                Começar a Usar
+              </Button>
+            </DialogFooter>
+          </>
+        );
       case 'PENDING':
         return (
           <>

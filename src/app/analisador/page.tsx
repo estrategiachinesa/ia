@@ -189,11 +189,8 @@ export default function AnalisadorPage() {
 
       const hasSeenWelcome = localStorage.getItem('hasSeenPremiumWelcome');
       if (!hasSeenWelcome) {
-        toast({
-          title: '🎉 Parabéns! Acesso PREMIUM Liberado!',
-          description: 'Você agora tem acesso prioritário e ilimitado a todos os sinais. Aproveite!',
-        });
-        localStorage.setItem('hasSeenPremiumWelcome', 'true');
+        // Instead of a toast, we now open the modal for the welcome message
+        setPremiumModalOpen(true);
       }
     } else {
       setIsPremium(false);
@@ -202,7 +199,7 @@ export default function AnalisadorPage() {
      return () => {
       document.documentElement.classList.remove('theme-premium');
     };
-  }, [premiumData, toast]);
+  }, [premiumData]);
 
   // Effect for checking and updating signal usage limit
   useEffect(() => {

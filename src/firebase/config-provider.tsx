@@ -59,14 +59,29 @@ export const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       try {
         const docSnap = await getDoc(configRef);
         if (docSnap.exists()) {
+          const remoteData = docSnap.data() as Partial<AppConfig>;
+          
+          // Merge remote data with defaults to ensure all fields are present
+          const mergedConfig: AppConfig = { ...defaultConfig, ...remoteData };
+
+          // Check if any default field was missing from the remote data
+          const missingFields = !('hourlySignalLimit' in remoteData);
+
+          if (missingFields) {
+            // If fields are missing, update the document in Firestore without overwriting user changes.
+            console.warn("Some configuration fields were missing. Updating document with default values for missing fields...");
+            await setDoc(configRef, { hourlySignalLimit: defaultConfig.hourlySignalLimit }, { merge: true });
+          }
+
           setConfigState({
-            config: docSnap.data() as AppConfig,
+            config: mergedConfig,
             isConfigLoading: false,
             configError: null,
           });
+
         } else {
-          // Document does not exist, so let's create it with the default values.
-          console.warn("Configuration document not found. Creating it with default links...");
+          // Document does not exist, so let's create it with the full default values.
+          console.warn("Configuration document not found. Creating it with default config...");
           await setDoc(configRef, defaultConfig);
           setConfigState({
             config: defaultConfig,

@@ -148,6 +148,25 @@ export default function LoginPage() {
                   </Link>
                 </Button>
             </div>
+
+            <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                    ou
+                    </span>
+                </div>
+            </div>
+
+             <div className="text-center">
+                <p className="text-sm text-muted-foreground mb-2">Não tem uma conta? Cadastre-se</p>
+                <a onClick={(e) => { e.preventDefault(); (window as any).Hotmart.checkout.run({ producerToken: 'E101943327K', checkoutMode: '2' }); }} href="https://pay.hotmart.com/E101943327K?checkoutMode=2" className="hotmart-fb hotmart__button-checkout inline-block">
+                    <img src='https://static.hotmart.com/img/btn-buy-green.png' alt="Comprar agora" />
+                </a>
+            </div>
+
           </CardContent>
         </Card>
         <footer className="w-full text-center text-[0.6rem] text-foreground/50 p-4 mt-8">

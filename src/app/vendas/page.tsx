@@ -4,7 +4,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useAppConfig } from '@/firebase';
-import { Check, ShieldCheck, Zap, BarChart, Clock, Users, Gift } from 'lucide-react';
+import { Check, ShieldCheck, Zap, BarChart, Clock, Users, Gift, Timer } from 'lucide-react';
 import Link from 'next/link';
 
 const Feature = ({ icon: Icon, title, description }: { icon: React.ElementType; title: string; description: string }) => (
@@ -43,9 +43,24 @@ export default function SalesPage() {
             <div className="space-y-6">
               <h3 className="text-xl font-bold text-foreground mb-4">O que você vai receber:</h3>
               <Feature
+                icon={Clock}
+                title="Análise 24/7"
+                description="Analise ativos quando quiser, 24 horas por dia, 7 dias por semana."
+              />
+               <Feature
+                icon={ShieldCheck}
+                title="Sinais sem Martingale"
+                description="Estratégia segura e direta, sem a necessidade de aumentar sua exposição ao risco."
+              />
+              <Feature
                 icon={BarChart}
-                title="Sinais Ilimitados"
-                description="Analise quantos ativos quiser, 24/7."
+                title="Mercado Aberto e OTC"
+                description="Funciona tanto no mercado tradicional quanto em OTC, para você operar a qualquer momento."
+              />
+               <Feature
+                icon={Timer}
+                title="Expiração em 1m e 5m"
+                description="Opere nos tempos de expiração mais populares e lucrativos do mercado."
               />
               <Feature
                 icon={Users}

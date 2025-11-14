@@ -27,7 +27,7 @@ export default function SalesPage() {
       <main className="w-full max-w-4xl mx-auto">
         <div className="text-center mb-10">
           <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline">
-            Sua Chance de Ser um Trader Profissional
+            Domine o Mercado com a Inteligência Artificial da Estratégia Chinesa
           </h1>
           <p className="mt-4 text-lg md:text-xl text-foreground/80 max-w-2xl mx-auto">
             Você está a um passo de desbloquear o acesso ilimitado à ferramenta que está revolucionando o mercado de opções binárias.

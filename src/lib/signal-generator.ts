@@ -1,7 +1,5 @@
 
-'use server';
-
-import { isMarketOpenForAsset } from '@/lib/market-hours';
+'use client';
 
 export type Asset = 
   | 'EUR/USD' | 'EUR/USD (OTC)'
@@ -27,17 +25,17 @@ function seededRandom(seed: number) {
     return x - Math.floor(x);
 }
 
-// Server-side signal generation with market correlation
-export async function generateSignal(input: GenerateSignalInput): Promise<GenerateSignalOutput> {
+// Client-side signal generation with market correlation
+export function generateSignal(input: GenerateSignalInput): GenerateSignalOutput {
     const { asset, expirationTime } = input;
 
-    // IMPORTANT: new Date() is now executed on the server, ensuring a single source of truth for time.
+    // IMPORTANT: new Date() is now executed on the client.
     const now = new Date();
     
     // The seed is based on the current minute, making the signal consistent for all users within that same minute.
     const minuteSeed = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes()).getTime();
 
-    // --- Signal Generation Logic (same as before, but now on the server) ---
+    // --- Signal Generation Logic ---
     const marketTrendSeed = minuteSeed;
     const marketTrendRandom = seededRandom(marketTrendSeed);
     const generalMarketSignal = marketTrendRandom < 0.5 ? 'CALL 🔼' : 'PUT 🔽';
@@ -58,7 +56,7 @@ export async function generateSignal(input: GenerateSignalInput): Promise<Genera
         finalSignal = independentSignal;
     }
 
-    // --- Target Time Calculation (same as before) ---
+    // --- Target Time Calculation ---
     let targetTime: Date;
     if (expirationTime === '1m') {
         const nextMinute = new Date(now);

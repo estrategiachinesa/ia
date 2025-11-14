@@ -19,7 +19,7 @@ import Link from 'next/link';
 import { OnlineServer } from '@/components/app/OnlineServer';
 import { Asset, ExpirationTime } from '@/app/analisador/page';
 import { useAppConfig } from '@/firebase';
-import { generateSignal } from '@/app/analisador/actions';
+import { generateSignal } from '@/lib/signal-generator';
 
 export type SignalData = {
   asset: Asset;
@@ -128,7 +128,7 @@ export default function FreePage() {
 
     if (isMarketModeActive) {
         try {
-            const realSignal = await generateSignal(formData);
+            const realSignal = generateSignal(formData);
             setSignalData({
                 ...formData,
                 ...realSignal,
@@ -381,5 +381,3 @@ export default function FreePage() {
     </>
   );
 }
-
-    

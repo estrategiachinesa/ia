@@ -23,7 +23,7 @@ import { useFirebase, useDoc, useMemoFirebase, useAppConfig } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { generateSignal } from './actions';
+import { generateSignal } from '@/lib/signal-generator';
 import Link from 'next/link';
 
 
@@ -266,7 +266,7 @@ export default function AnalisadorPage() {
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     try {
-      const result = await generateSignal(formData);
+      const result = generateSignal(formData);
       
       const newSignalData: SignalData = {
         ...formData,

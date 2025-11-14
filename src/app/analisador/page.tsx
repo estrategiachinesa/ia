@@ -23,7 +23,6 @@ import { useFirebase, useDoc, useMemoFirebase, useAppConfig } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import Link from 'next/link';
 import { generateSignal as generateClientSideSignal } from '@/lib/signal-generator';
 
@@ -230,25 +229,6 @@ export default function AnalisadorPage() {
     return () => clearInterval(timer);
   }, [appState, signalData?.operationStatus]);
 
-  const saveSignalToHistory = useCallback((signal: SignalData) => {
-    if (!user || !firestore) return;
-    
-    try {
-      const historyCollection = collection(firestore, `users/${user.uid}/history`);
-      addDocumentNonBlocking(historyCollection, {
-        asset: signal.asset,
-        expirationTime: signal.expirationTime,
-        signal: signal.signal,
-        targetTime: signal.targetTime,
-        source: signal.source,
-        generatedAt: new Date()
-      });
-    } catch (error) {
-      console.error("Error saving signal to history:", error);
-      // We don't show a toast here to not bother the user with background errors
-    }
-  }, [user, firestore]);
-  
  const handleAnalyze = async () => {
     if (!config) {
         toast({
@@ -303,7 +283,6 @@ export default function AnalisadorPage() {
       };
       
       setSignalData(newSignalData);
-      saveSignalToHistory(newSignalData);
 
       if (!isPremium && usageStorageKey) {
         // Update usage stats
@@ -392,11 +371,6 @@ export default function AnalisadorPage() {
                 VIP
               </div>
             )}
-            <Button variant="ghost" size="sm" asChild>
-                <Link href="/historico">
-                    Histórico
-                </Link>
-            </Button>
           </div>
            <button
             onClick={handleLogout}

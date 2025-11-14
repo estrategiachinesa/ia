@@ -3,18 +3,15 @@
  * @fileoverview Firestore Security Rules for Estratégia Chinesa.
  *
  * Core Philosophy:
- * This ruleset enforces access control for user data (history), VIP requests,
- * and app configuration. The default state is to deny all access, with explicit
- * permissions granted for specific paths and operations.
+ * This ruleset enforces access control for VIP requests and app configuration. 
+ * The default state is to deny all access, with explicit permissions granted 
+ * for specific paths and operations.
  *
  * Data Structure:
- * - /users/{userId}/history/{docId}: Stores signal history for each user.
  * - /appConfig/{configDoc}: Stores global app configuration like affiliate URLs.
  * - /vipRequests/{userId}: Stores VIP access requests.
  *
  * Key Security Decisions:
- * - User data (history) is private. Users can only read and write to their own
- *   history subcollection.
  * - Public read access for app configuration.
  * - Writes to app configuration require authentication.
  * - Users can create or update their own VIP request document in /vipRequests/{userId}
@@ -24,30 +21,6 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    /**
-     * @description Rules for the 'users' collection.
-     * @path /users/{userId}
-     */
-    match /users/{userId} {
-      // By default, deny read/write to the user document itself.
-      // Permissions are granted on subcollections below.
-      allow read, write: if false;
-
-      /**
-       * @description Rules for the 'history' subcollection.
-       * @path /users/{userId}/history/{historyId}
-       */
-      match /history/{historyId} {
-        /**
-         * @allow (list, create): A user can list their own history and create new entries.
-         *   - The user must be signed in.
-         *   - The userId in the path must match the user's UID.
-         *   - The data being written must be valid.
-         */
-        allow list, create: if isSignedIn() && isOwner(userId) && isValidHistoryEntry(request.resource.data);
-      }
-    }
     
     /**
      * @description Grants public read access to app configuration.
@@ -86,15 +59,6 @@ service cloud.firestore {
 
     function isOwner(userId) {
       return request.auth.uid == userId;
-    }
-
-    function isValidHistoryEntry(data) {
-      return data.asset is string &&
-             data.expirationTime is string &&
-             data.signal is string &&
-             data.targetTime is string &&
-             data.source is string &&
-             data.generatedAt == request.time;
     }
 
     function isValidVipRequest(req, res) {

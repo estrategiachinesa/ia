@@ -357,16 +357,16 @@ export default function FreePage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-col sm:space-x-0 gap-2">
+              <Button asChild variant="secondary">
+                <Link href={config?.exnovaUrl || '#'} target="_blank" onClick={() => setWelcomeModalOpen(false)}>
+                  Abrir a Corretora
+                </Link>
+              </Button>
               <Button onClick={() => {
                 setWelcomeModalOpen(false);
                 setPlayerModalOpen(true);
               }}>
                 Instruções
-              </Button>
-              <Button asChild variant="secondary">
-                <Link href={config?.exnovaUrl || '#'} target="_blank" onClick={() => setWelcomeModalOpen(false)}>
-                  Abrir a Corretora
-                </Link>
               </Button>
           </DialogFooter>
         </DialogContent>

@@ -333,7 +333,7 @@ export function SignalForm({
             <DialogHeader>
               <DialogTitle className="text-2xl font-headline text-primary">Verificação Final</DialogTitle>
               <DialogDescription>
-                Recebemos a confirmação do seu depósito. Estamos fazendo a última verificação e seu acesso VIP será liberado em breve.
+                Recebemos a confirmação do seu depósito. Estamos fazendo a última verificação e seu acesso PREMIUM será liberado em breve.
               </DialogDescription>
             </DialogHeader>
             <div className="py-4 text-center">

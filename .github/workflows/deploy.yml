@@ -10,12 +10,12 @@ on:
     branches:
       - main # The branch to deploy from
 
-permissions:
-  contents: read
-
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Required for authentication with Firebase
     steps:
       - uses: actions/checkout@v4
 

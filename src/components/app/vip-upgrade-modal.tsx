@@ -121,9 +121,9 @@ export function VipUpgradeModal({
   const renderMemberStep = () => (
      <>
       <DialogHeader>
-        <DialogTitle className="text-2xl font-headline text-primary">Torne-se MEMBRO</DialogTitle>
+        <DialogTitle className="text-2xl font-headline text-primary">Torne-se PREMIUM</DialogTitle>
         <DialogDescription>
-            Cadastre-se na corretora por nosso link para se tornar um membro, resgatar seu bônus e reduzir a fila de espera.
+            Cadastre-se na corretora pelo nosso link para se tornar PREMIUM, resgatar seu bônus, evitar a fila de espera e ter sinais ilimitados.
         </DialogDescription>
       </DialogHeader>
       <div className="space-y-4 py-4">
@@ -147,14 +147,9 @@ export function VipUpgradeModal({
             </Button>
         </div>
       </div>
-      <DialogFooter className='sm:justify-between'>
+      <DialogFooter className='sm:justify-start'>
         <Button variant="ghost" onClick={handleClose}>
             Resgatar Depois
-        </Button>
-        <Button className="w-full sm:w-auto" asChild>
-            <Link href="/vip">
-              <Crown className="mr-2" /> Quero o Acesso VIP (Via Pagamento)
-            </Link>
         </Button>
       </DialogFooter>
     </>

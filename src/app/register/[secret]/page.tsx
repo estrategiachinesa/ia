@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Eye, EyeOff, ShieldAlert, KeyRound, Info } from 'lucide-react';
+import { Loader2, Eye, EyeOff, ShieldAlert, KeyRound, Info, CheckCircle } from 'lucide-react';
 import { useFirebase, useAppConfig } from '@/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -32,6 +32,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isInfoModalOpen, setInfoModalOpen] = useState(true);
+  const [isSuccessModalOpen, setSuccessModalOpen] = useState(false);
   const [hasAgreed, setHasAgreed] = useState(false);
 
   const secret = params.secret as string;
@@ -75,11 +76,7 @@ export default function RegisterPage() {
     try {
       const email = `${credentials.user.toLowerCase()}@${USER_DOMAIN}`;
       await createUserWithEmailAndPassword(auth, email, credentials.password);
-      toast({
-        title: 'Conta Criada com Sucesso!',
-        description: 'Parabéns! Por favor, faça o login com suas novas credenciais.',
-      });
-      router.push('/');
+      setSuccessModalOpen(true);
     } catch (error: any) {
       console.error("Registration error:", error);
       let description = 'Ocorreu um erro inesperado ao criar sua conta.';
@@ -96,6 +93,10 @@ export default function RegisterPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  const handleRedirectToLogin = () => {
+    router.push('/');
   };
 
   if (pageState === 'validating' || isConfigLoading) {
@@ -155,6 +156,26 @@ export default function RegisterPage() {
             <DialogFooter>
               <Button onClick={() => setInfoModalOpen(false)} disabled={!hasAgreed}>Entendi</Button>
             </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isSuccessModalOpen} onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          handleRedirectToLogin();
+        }
+        setSuccessModalOpen(isOpen);
+      }}>
+        <DialogContent>
+          <DialogHeader className="items-center text-center">
+            <CheckCircle className="h-16 w-16 text-success mb-4" />
+            <DialogTitle className="text-2xl font-headline">Conta Criada com Sucesso!</DialogTitle>
+            <DialogDescription>
+              Parabéns! Seja bem-vindo à Estratégia Chinesa. Agora você já pode acessar o analisador com suas novas credenciais.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={handleRedirectToLogin} className="w-full">Fazer Login</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     

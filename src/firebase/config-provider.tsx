@@ -35,7 +35,7 @@ const defaultLinkConfig = {
 };
 
 const defaultLimitConfig = {
-    hourlySignalLimit: 3
+    hourlySignalLimit: 5
 };
 
 // New remote config for correlation

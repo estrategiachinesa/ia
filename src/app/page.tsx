@@ -88,17 +88,18 @@ export default function LoginPage() {
     };
   }, [handleLogin]);
   
-  if (isUserLoading || isConfigLoading) {
+  // This is the main change: we no longer show a global loading screen.
+  // The page renders immediately. The redirection logic for already logged-in
+  // users is handled by the useEffect above.
+  if (user) {
+      // If the user object is already available, they will be redirected by the useEffect.
+      // We can show a loading indicator just for this brief moment.
       return (
           <div className="flex h-screen w-full items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin" />
-              <p className="ml-2">Carregando...</p>
+              <p className="ml-2">Redirecionando...</p>
           </div>
       )
-  }
-  
-  if(user) {
-      return null;
   }
 
   return (

@@ -13,13 +13,11 @@ import Link from 'next/link';
 import { useFirebase, useAppConfig } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 
-const USER_DOMAIN = 'estrategiachinesa.app';
-
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [credentials, setCredentials] = useState({ user: '', password: '' });
+  const [credentials, setCredentials] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const { auth, isUserLoading, user } = useFirebase();
   const { config, isConfigLoading } = useAppConfig();
@@ -40,19 +38,18 @@ export default function LoginPage() {
 
     setIsLoading(true);
 
-    if (!credentials.user || !credentials.password) {
+    if (!credentials.email || !credentials.password) {
         toast({
             variant: 'destructive',
             title: 'Campos Vazios',
-            description: 'Por favor, preencha o usuário e a senha.',
+            description: 'Por favor, preencha o e-mail e a senha.',
         });
         setIsLoading(false);
         return;
     }
     
     try {
-        const email = `${credentials.user.toLowerCase()}@${USER_DOMAIN}`;
-        await signInWithEmailAndPassword(auth, email, credentials.password);
+        await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
         
         localStorage.setItem('loginTimestamp', Date.now().toString());
         toast({
@@ -64,7 +61,7 @@ export default function LoginPage() {
       console.error("Login error:", error);
       let description = 'Ocorreu um erro inesperado.';
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-          description = 'Usuário ou senha incorretos.';
+          description = 'E-mail ou senha incorretos.';
       }
       toast({
         variant: 'destructive',
@@ -123,13 +120,13 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="user">Usuário</Label>
+              <Label htmlFor="email">E-mail</Label>
               <Input
-                id="user"
-                name="user"
-                type="text"
-                placeholder="Usuário"
-                value={credentials.user}
+                id="email"
+                name="email"
+                type="email"
+                placeholder="seu@email.com"
+                value={credentials.email}
                 onChange={handleInputChange}
                 disabled={isLoading}
               />

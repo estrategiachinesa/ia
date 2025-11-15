@@ -8,14 +8,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Eye, EyeOff, ShieldAlert, KeyRound, Info, CheckCircle } from 'lucide-react';
+import { Loader2, Eye, EyeOff, ShieldAlert, KeyRound, CheckCircle } from 'lucide-react';
 import { useFirebase, useAppConfig } from '@/firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import Link from 'next/link';
-import { Checkbox } from '@/components/ui/checkbox';
-
-const USER_DOMAIN = 'estrategiachinesa.app';
 
 type PageState = 'validating' | 'valid' | 'invalid';
 
@@ -28,12 +24,10 @@ export default function RegisterPage() {
 
   const [pageState, setPageState] = useState<PageState>('validating');
   const [isLoading, setIsLoading] = useState(false);
-  const [credentials, setCredentials] = useState({ user: '', password: '', confirmPassword: '' });
+  const [credentials, setCredentials] = useState({ email: '', password: '', confirmPassword: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isInfoModalOpen, setInfoModalOpen] = useState(true);
   const [isSuccessModalOpen, setSuccessModalOpen] = useState(false);
-  const [hasAgreed, setHasAgreed] = useState(false);
 
   const secret = params.secret as string;
 
@@ -55,7 +49,7 @@ export default function RegisterPage() {
   const handleRegister = async () => {
     setIsLoading(true);
 
-    if (!credentials.user || !credentials.password || !credentials.confirmPassword) {
+    if (!credentials.email || !credentials.password || !credentials.confirmPassword) {
       toast({ variant: 'destructive', title: 'Campos Vazios', description: 'Por favor, preencha todos os campos.' });
       setIsLoading(false);
       return;
@@ -74,11 +68,10 @@ export default function RegisterPage() {
     }
 
     try {
-      const email = `${credentials.user.toLowerCase()}@${USER_DOMAIN}`;
-      await createUserWithEmailAndPassword(auth, email, credentials.password);
+      await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
       
       // Explicitly sign in to ensure session is active before redirect
-      await signInWithEmailAndPassword(auth, email, credentials.password);
+      await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
       localStorage.setItem('loginTimestamp', Date.now().toString());
 
       setSuccessModalOpen(true);
@@ -86,9 +79,9 @@ export default function RegisterPage() {
       console.error("Registration error:", error);
       let description = 'Ocorreu um erro inesperado ao criar sua conta.';
       if (error.code === 'auth/email-already-in-use') {
-        description = 'Este nome de usuário já está em uso. Por favor, escolha outro.';
+        description = 'Este e-mail já está em uso. Por favor, faça login ou use outro e-mail.';
       } else if (error.code === 'auth/invalid-email') {
-        description = 'O nome de usuário não é válido.';
+        description = 'O e-mail fornecido não é válido.';
       }
       toast({
         variant: 'destructive',
@@ -136,34 +129,6 @@ export default function RegisterPage() {
 
   return (
     <>
-      <Dialog open={isInfoModalOpen} onOpenChange={setInfoModalOpen}>
-        <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Info className="text-primary" />
-                Atenção!
-              </DialogTitle>
-              <DialogDescription className="pt-2 text-base">
-                Para evitar problemas, seu nome de usuário deve ser a parte do seu e-mail que vem antes do "@".
-                <div className="mt-4 p-3 bg-muted rounded-md text-sm">
-                  <p className="font-semibold">Por exemplo:</p>
-                  <p>Se seu e-mail é <span className="font-bold text-primary">seunome@email.com</span></p>
-                  <p>Seu usuário deve ser: <span className="font-bold text-primary">seunome</span></p>
-                </div>
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex items-center space-x-2 pt-4">
-                <Checkbox id="terms" onCheckedChange={(checked) => setHasAgreed(checked as boolean)} />
-                <Label htmlFor="terms" className="text-sm leading-normal">
-                    Li e concordo que meu usuário deve seguir o exemplo acima.
-                </Label>
-            </div>
-            <DialogFooter>
-              <Button onClick={() => setInfoModalOpen(false)} disabled={!hasAgreed}>Entendi</Button>
-            </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       <Dialog open={isSuccessModalOpen} onOpenChange={(isOpen) => {
         if (!isOpen) {
           handleRedirectToAnalyzer();
@@ -196,13 +161,13 @@ export default function RegisterPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="user">Usuário</Label>
+            <Label htmlFor="email">E-mail</Label>
             <Input
-              id="user"
-              name="user"
-              type="text"
-              placeholder="Escolha seu nome de usuário"
-              value={credentials.user}
+              id="email"
+              name="email"
+              type="email"
+              placeholder="seu@email.com"
+              value={credentials.email}
               onChange={handleInputChange}
               disabled={isLoading}
             />

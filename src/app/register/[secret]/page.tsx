@@ -8,10 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Eye, EyeOff, ShieldAlert, KeyRound, CheckCircle } from 'lucide-react';
+import { Loader2, Eye, EyeOff, ShieldAlert, KeyRound, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useFirebase, useAppConfig } from '@/firebase';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 
 type PageState = 'validating' | 'valid' | 'invalid';
 
@@ -28,6 +29,8 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSuccessModalOpen, setSuccessModalOpen] = useState(false);
+  const [isWarningModalOpen, setWarningModalOpen] = useState(true);
+  const [hasAgreed, setHasAgreed] = useState(false);
 
   const secret = params.secret as string;
 
@@ -129,6 +132,36 @@ export default function RegisterPage() {
 
   return (
     <>
+      <Dialog open={isWarningModalOpen} onOpenChange={setWarningModalOpen}>
+        <DialogContent>
+          <DialogHeader className="items-center text-center">
+            <AlertTriangle className="h-16 w-16 text-primary mb-4" />
+            <DialogTitle className="text-2xl font-headline">Atenção!</DialogTitle>
+            <DialogDescription className="text-base px-4">
+              Para validar seu acesso, utilize no cadastro o <strong>mesmo e-mail</strong> que você usou ao realizar a compra na Hotmart.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center space-x-2 justify-center pt-4">
+            <Checkbox id="terms" checked={hasAgreed} onCheckedChange={(checked) => setHasAgreed(checked as boolean)} />
+            <label
+              htmlFor="terms"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Li e concordo com a instrução acima.
+            </label>
+          </div>
+          <DialogFooter className="pt-4">
+            <Button 
+              onClick={() => setWarningModalOpen(false)} 
+              disabled={!hasAgreed}
+              className="w-full"
+            >
+              Entendi
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
       <Dialog open={isSuccessModalOpen} onOpenChange={(isOpen) => {
         if (!isOpen) {
           handleRedirectToAnalyzer();

@@ -59,6 +59,7 @@ export default function LoginPage() {
           title: 'Login bem-sucedido!',
           description: 'Redirecionando para o analisador...',
         });
+        // The useEffect hook will handle the redirect
     } catch (error: any) {
       console.error("Login error:", error);
       let description = 'Ocorreu um erro inesperado.';

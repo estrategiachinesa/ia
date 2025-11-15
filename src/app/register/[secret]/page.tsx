@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Eye, EyeOff, ShieldAlert, KeyRound, Info, CheckCircle } from 'lucide-react';
 import { useFirebase, useAppConfig } from '@/firebase';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import Link from 'next/link';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -76,6 +76,11 @@ export default function RegisterPage() {
     try {
       const email = `${credentials.user.toLowerCase()}@${USER_DOMAIN}`;
       await createUserWithEmailAndPassword(auth, email, credentials.password);
+      
+      // Explicitly sign in to ensure session is active before redirect
+      await signInWithEmailAndPassword(auth, email, credentials.password);
+      localStorage.setItem('loginTimestamp', Date.now().toString());
+
       setSuccessModalOpen(true);
     } catch (error: any) {
       console.error("Registration error:", error);
@@ -95,8 +100,8 @@ export default function RegisterPage() {
     }
   };
   
-  const handleRedirectToLogin = () => {
-    router.push('/');
+  const handleRedirectToAnalyzer = () => {
+    router.push('/analisador');
   };
 
   if (pageState === 'validating' || isConfigLoading) {
@@ -161,7 +166,7 @@ export default function RegisterPage() {
 
       <Dialog open={isSuccessModalOpen} onOpenChange={(isOpen) => {
         if (!isOpen) {
-          handleRedirectToLogin();
+          handleRedirectToAnalyzer();
         }
         setSuccessModalOpen(isOpen);
       }}>
@@ -170,11 +175,11 @@ export default function RegisterPage() {
             <CheckCircle className="h-16 w-16 text-success mb-4" />
             <DialogTitle className="text-2xl font-headline">Conta Criada com Sucesso!</DialogTitle>
             <DialogDescription>
-              Parabéns! Seja bem-vindo à Estratégia Chinesa. Agora você já pode acessar o analisador com suas novas credenciais.
+              Parabéns! Seja bem-vindo à Estratégia Chinesa. Você será redirecionado para o analisador.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button onClick={handleRedirectToLogin} className="w-full">Fazer Login</Button>
+            <Button onClick={handleRedirectToAnalyzer} className="w-full">Ir para o Analisador</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -257,5 +262,3 @@ export default function RegisterPage() {
     </>
   );
 }
-
-    

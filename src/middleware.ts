@@ -1,18 +1,18 @@
 
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, doc, getDoc, collection } from 'firebase/firestore';
-import { firebaseConfig } from './firebase/config';
+// import { initializeApp, getApps, getApp } from 'firebase/app';
+// import { getFirestore, doc, getDoc, collection } from 'firebase/firestore';
+// import { firebaseConfig } from './firebase/config';
 
 // Initialize Firebase Admin SDK
 // Use a function to ensure it's initialized only once
-const getDb = () => {
-  if (!getApps().length) {
-    initializeApp(firebaseConfig);
-  }
-  return getFirestore(getApp());
-};
+// const getDb = () => {
+//   if (!getApps().length) {
+//     initializeApp(firebaseConfig);
+//   }
+//   return getFirestore(getApp());
+// };
 
 
 export async function middleware(request: NextRequest) {
@@ -27,25 +27,25 @@ export async function middleware(request: NextRequest) {
   }
 
   // Get IP address
-  const ip = request.ip ?? request.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? '127.0.0.1';
+  // const ip = request.ip ?? request.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? '127.0.0.1';
 
-  try {
-    const db = getDb();
-    const blacklistCol = collection(db, 'ipBlacklist');
-    const ipRef = doc(blacklistCol, ip);
-    const ipDoc = await getDoc(ipRef);
+  // try {
+  //   const db = getDb();
+  //   const blacklistCol = collection(db, 'ipBlacklist');
+  //   const ipRef = doc(blacklistCol, ip);
+  //   const ipDoc = await getDoc(ipRef);
 
-    if (ipDoc.exists()) {
-      // If the IP is in the blacklist, rewrite to a 'blocked' page
-      console.log(`[Middleware] Blocked IP: ${ip}`);
-      return NextResponse.rewrite(new URL('/blocked', request.url));
-    }
+  //   if (ipDoc.exists()) {
+  //     // If the IP is in the blacklist, rewrite to a 'blocked' page
+  //     console.log(`[Middleware] Blocked IP: ${ip}`);
+  //     return NextResponse.rewrite(new URL('/blocked', request.url));
+  //   }
 
-  } catch (error) {
-    console.error('[Middleware] Error checking IP blacklist:', error);
-    // In case of an error, it's safer to let the request through
-    // than to block a legitimate user.
-  }
+  // } catch (error) {
+  //   console.error('[Middleware] Error checking IP blacklist:', error);
+  //   // In case of an error, it's safer to let the request through
+  //   // than to block a legitimate user.
+  // }
   
   // If IP is not in the blacklist, proceed
   return NextResponse.next();

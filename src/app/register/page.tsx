@@ -197,7 +197,7 @@ export default function RegisterPage() {
         </Card>
       </div>
 
-       <Dialog open={isWelcomeModalOpen} onOpenChange={setWelcomeModalOpen}>
+       <Dialog open={isWelcomeModalOpen}>
         <DialogContent hideCloseButton={true}>
           <DialogHeader className="text-center items-center">
             <DialogTitle className="text-2xl font-headline">Atenção!</DialogTitle>

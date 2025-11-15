@@ -112,34 +112,18 @@ export function SignalForm({
   }, [showOTC, formData, setFormData]);
 
   useEffect(() => {
-    let interval: NodeJS.Timeout | undefined;
-    // Show waiting message if limit is reached but modal is not (or cannot be) open
-    if (hasReachedLimit && !isVipModalOpen) {
-        let queuePosition = 5;
-        
-        const updateMessage = () => {
-            if (queuePosition > 1) {
-                queuePosition--;
-            }
-            setWaitingMessage(`Estamos na fila, aguardando o melhor momento... (Posição: #${queuePosition})`);
-        };
-        
-        if (vipStatus === 'PENDING') {
-            setWaitingMessage('Seu acesso de MEMBRO está em análise. Enquanto isso, aguarde na fila.');
-        } else if (vipStatus === 'AWAITING_DEPOSIT') {
-            setWaitingMessage('Cadastro verificado! Aguardando depósito para liberar seu acesso VIP.');
-        } else if (vipStatus === 'DEPOSIT_PENDING') {
-            setWaitingMessage('Confirmação de depósito em análise. Em breve seu acesso VIP será liberado.');
-        } else {
-            setWaitingMessage(`Estamos na fila, aguardando o melhor momento... (Posição: #${queuePosition})`);
-            interval = setInterval(updateMessage, 8000);
-        }
-
+    // This effect shows a contextual waiting message directly on the dashboard.
+    // It's clearer than only showing status inside a modal.
+    if (vipStatus === 'PENDING') {
+      setWaitingMessage('Analisando seu cadastro para ser PREMIUM e ter acesso prioritário, e evitar filas.');
+    } else if (vipStatus === 'AWAITING_DEPOSIT') {
+      setWaitingMessage('Cadastro verificado! Aguardando depósito para liberar seu acesso PREMIUM.');
+    } else if (vipStatus === 'DEPOSIT_PENDING') {
+      setWaitingMessage('Confirmação de depósito em análise. Em breve seu acesso PREMIUM será liberado.');
     } else {
-        setWaitingMessage('');
+      setWaitingMessage('');
     }
-    return () => clearInterval(interval);
-  }, [hasReachedLimit, isVipModalOpen, vipStatus]);
+  }, [vipStatus]);
   
   useEffect(() => {
     // Reset showDepositLinks state when modal is closed or vipStatus changes
@@ -240,7 +224,7 @@ export function SignalForm({
     }
   }
 
-  const buttonDisabled = isLoading || !isMarketOpen || (hasReachedLimit && !waitingMessage);
+  const buttonDisabled = isLoading || !isMarketOpen || (hasReachedLimit && !waitingMessage && !isPremium);
 
   const getVipModalContent = () => {
     if (!config) {
@@ -421,43 +405,44 @@ export function SignalForm({
       default: // No status or limit reached
         return (
           <div className="theme-premium">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-headline text-primary">Torne-se PREMIUM</DialogTitle>
-              <DialogDescription>
-                No momento, nosso sistema está sobrecarregado e analisando a melhor operação para você. Para evitar filas, torne-se PREMIUM e tenha acesso prioritário.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="p-4 bg-secondary/50 rounded-lg space-y-3">
-                 <p className="text-sm text-muted-foreground">
-                  Cadastre-se na corretora pelo nosso link para se tornar PREMIUM, resgatar seu bônus, evitar a fila de espera e ter sinais ilimitados.
-                </p>
-                <Button className="w-full" asChild>
-                  <Link href={config.exnovaUrl} target="_blank">
-                    Cadastrar na Corretora
-                  </Link>
-                </Button>
-                <div className="flex w-full items-center space-x-2">
-                  <Input
-                    type="text"
-                    placeholder="ID da Corretora"
-                    value={brokerId}
-                    onChange={(e) => setBrokerId(e.target.value.replace(/\D/g, ''))}
-                    pattern="[0-9]*"
-                    disabled={isSubmittingId}
-                  />
-                  <Button type="submit" size="icon" onClick={handleIdSubmit} disabled={isSubmittingId || brokerId.length < 8}>
-                    {isSubmittingId ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-headline text-primary">Torne-se PREMIUM</DialogTitle>
+                <DialogDescription>
+                  No momento, nosso sistema está sobrecarregado e analisando a melhor operação para você. Para evitar filas, torne-se PREMIUM e tenha acesso prioritário.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="p-4 bg-secondary/50 rounded-lg space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Cadastre-se na corretora pelo nosso link para se tornar PREMIUM, resgatar seu bônus, evitar a fila de espera e ter sinais ilimitados.
+                  </p>
+                  <Button className="w-full" asChild>
+                    <Link href={config.exnovaUrl} target="_blank">
+                      Cadastrar na Corretora
+                    </Link>
                   </Button>
+                  <div className="flex w-full items-center space-x-2">
+                    <Input
+                      type="text"
+                      placeholder="ID da Corretora"
+                      value={brokerId}
+                      onChange={(e) => setBrokerId(e.target.value.replace(/\D/g, ''))}
+                      pattern="[0-9]*"
+                      disabled={isSubmittingId}
+                    />
+                    <Button type="submit" size="icon" onClick={handleIdSubmit} disabled={isSubmittingId || brokerId.length < 8}>
+                      {isSubmittingId ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    </Button>
+                  </div>
                 </div>
               </div>
-
-            </div>
-            <DialogFooter>
-              <Button variant="ghost" onClick={() => setVipModalOpen(false)}>
-                Resgatar Depois
-              </Button>
-            </DialogFooter>
+              <DialogFooter>
+                <Button variant="ghost" onClick={() => setVipModalOpen(false)}>
+                  Resgatar Depois
+                </Button>
+              </DialogFooter>
+            </DialogContent>
           </div>
         );
     }
@@ -572,12 +557,12 @@ export function SignalForm({
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
               ) : !isMarketOpen ? (
                 <Lock className="mr-2 h-5 w-5" />
-              ) : hasReachedLimit ? (
+              ) : (hasReachedLimit && !isPremium) || waitingMessage ? (
                  <Timer className="mr-2 h-5 w-5" />
               ) : (
                 <BarChart className="mr-2 h-5 w-5" />
               )}
-              {isLoading ? 'Analisando...' : !isMarketOpen ? 'Mercado Fechado' : hasReachedLimit ? 'Aguardando...' : 'Analisar Mercado'}
+              {isLoading ? 'Analisando...' : !isMarketOpen ? 'Mercado Fechado' : (hasReachedLimit && !isPremium) || waitingMessage ? 'Aguardando...' : 'Analisar Mercado'}
             </Button>
             {!isPremium && (
               isFreeSignalPage ? (
@@ -588,7 +573,13 @@ export function SignalForm({
                   </Link>
                 </Button>
               ) : (
-                <Button variant="link" className="w-full flex-col h-auto text-purple-400 hover:text-purple-300" onClick={() => setUpgradeModalOpen(true)}>
+                <Button variant="link" className="w-full flex-col h-auto text-purple-400 hover:text-purple-300" onClick={() => {
+                  if (vipStatus) {
+                    setVipModalOpen(true);
+                  } else {
+                    setUpgradeModalOpen(true);
+                  }
+                }}>
                     <Crown className="h-5 w-5 mb-0.5" />
                     SEJA PREMIUM
                 </Button>
@@ -605,3 +596,5 @@ export function SignalForm({
     </>
   );
 }
+
+    

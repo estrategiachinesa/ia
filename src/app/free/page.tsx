@@ -21,6 +21,7 @@ import { OnlineServer } from '@/components/app/OnlineServer';
 import { Asset, ExpirationTime } from '@/app/analisador/page';
 import { useAppConfig } from '@/firebase';
 import { generateSignal as generateClientSideSignal } from '@/lib/signal-generator';
+import { Trophy } from 'lucide-react';
 
 export type SignalData = {
   asset: Asset;

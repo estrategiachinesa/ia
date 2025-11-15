@@ -266,7 +266,7 @@ export function SignalForm({
             <DialogHeader>
               <DialogTitle className="text-2xl font-headline text-primary">Análise em Andamento</DialogTitle>
               <DialogDescription>
-                Sua solicitação de acesso MEMBRO foi recebida. Estamos verificando seu ID e seu acesso será liberado em breve.
+                Sua solicitação de acesso PREMIUM foi recebida. Estamos verificando seu ID e seu acesso será liberado em breve.
               </DialogDescription>
             </DialogHeader>
             <div className="py-4 text-center">

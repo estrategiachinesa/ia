@@ -1,0 +1,32 @@
+# Workflow for building and deploying a Next.js site to Firebase App Hosting.
+#
+# To get started with Firebase App Hosting, see the documentation at:
+# https://firebase.google.com/docs/app-hosting
+
+name: Deploy to Firebase App Hosting
+
+on:
+  push:
+    branches:
+      - main # The branch to deploy from
+
+permissions:
+  contents: read
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+          projectId: 'gerador-de-sinais-158130-b1a02'

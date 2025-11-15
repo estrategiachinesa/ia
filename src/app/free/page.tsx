@@ -353,7 +353,7 @@ export default function FreePage() {
           <DialogHeader>
             <DialogTitle>Bem-vindo à Demonstração!</DialogTitle>
             <DialogDescription>
-              Para ter acesso aos sinais da Estratégia Chinesa e começar a operar no mercado real, siga os passos abaixo.
+              Para gerar os sinais gratuitos da Estratégia Chinesa, você deve se cadastrar na plataforma e realizar um depósito de qualquer valor.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-col sm:space-x-0 gap-2">
@@ -361,11 +361,11 @@ export default function FreePage() {
                 setWelcomeModalOpen(false);
                 setPlayerModalOpen(true);
               }}>
-                Ver Instruções
+                Instruções
               </Button>
               <Button asChild variant="secondary">
                 <Link href={config?.exnovaUrl || '#'} target="_blank" onClick={() => setWelcomeModalOpen(false)}>
-                  Ir para a Corretora
+                  Abrir a Corretora
                 </Link>
               </Button>
           </DialogFooter>
@@ -411,3 +411,5 @@ export default function FreePage() {
     </>
   );
 }
+
+    

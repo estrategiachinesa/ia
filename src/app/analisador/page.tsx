@@ -24,6 +24,7 @@ import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { generateSignal as generateClientSideSignal } from '@/lib/signal-generator';
+import { BonusModal } from '@/components/app/bonus-modal';
 
 export type Asset = 
   | 'EUR/USD' | 'EUR/USD (OTC)'
@@ -70,6 +71,7 @@ export default function AnalisadorPage() {
   const [hasReachedLimit, setHasReachedLimit] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
   const [isVipModalOpen, setVipModalOpen] = useState(false);
+  const [isBonusModalOpen, setBonusModalOpen] = useState(false);
   const { toast } = useToast();
   
   const usageStorageKey = user ? `signalUsage_${user.uid}` : null;
@@ -399,6 +401,7 @@ export default function AnalisadorPage() {
                 vipStatus={(vipData as any)?.status}
                 isVipModalOpen={isVipModalOpen}
                 setVipModalOpen={setVipModalOpen}
+                setBonusModalOpen={setBonusModalOpen}
                 rejectedBrokerId={(vipData as any)?.brokerId}
               />
              ) : (
@@ -415,8 +418,7 @@ export default function AnalisadorPage() {
           <p className="max-w-xl mx-auto text-[0.6rem] mt-2">Aviso Legal: Todas as estratégias e investimentos envolvem risco de perda. Nenhuma informação contida neste produto deve ser interpretada como uma garantia de resultados.</p>
         </footer>
       </div>
+      <BonusModal isOpen={isBonusModalOpen} onOpenChange={setBonusModalOpen} />
     </>
   );
 }
-
-    

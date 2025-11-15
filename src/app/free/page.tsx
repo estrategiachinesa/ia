@@ -21,7 +21,7 @@ import { OnlineServer } from '@/components/app/OnlineServer';
 import { Asset, ExpirationTime } from '@/app/analisador/page';
 import { useAppConfig } from '@/firebase';
 import { generateSignal as generateClientSideSignal } from '@/lib/signal-generator';
-import { Gift } from 'lucide-react';
+import { BonusModal } from '@/components/app/bonus-modal';
 
 
 export type SignalData = {
@@ -302,6 +302,7 @@ export default function FreePage() {
                 isPremium={false}
                 isVipModalOpen={false}
                 setVipModalOpen={() => {}}
+                setBonusModalOpen={() => {}}
                 isFreeSignalPage={true}
               />
             ) : (
@@ -349,27 +350,15 @@ export default function FreePage() {
         </DialogContent>
       </Dialog>
       
-       <Dialog open={isWelcomeModalOpen} onOpenChange={setWelcomeModalOpen}>
-        <DialogContent>
-          <DialogHeader className="text-center items-center">
-            <Gift className="h-12 w-12 text-primary" />
-            <DialogTitle className="text-2xl font-headline">Você ganhou $10.000 para treinar!</DialogTitle>
-            <DialogDescription className="text-base">
-             Para ter acesso aos sinais da Estratégia Chinesa e começar a operar, resgate seu bônus de treinamento agora.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex-col sm:flex-col sm:space-x-0 gap-2 pt-4">
-              <Button asChild className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-black shadow-lg hover:to-yellow-600">
-                <Link href={config?.exnovaUrl || '#'} target="_blank" onClick={() => setWelcomeModalOpen(false)}>
-                  RESGATAR BÔNUS AGORA
-                </Link>
-              </Button>
-              <Button variant="outline" onClick={() => { setWelcomeModalOpen(false); setPlayerModalOpen(true);}}>
-                Ver Instruções
-              </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <BonusModal 
+        isOpen={isWelcomeModalOpen} 
+        onOpenChange={setWelcomeModalOpen}
+        onShowInstructions={() => {
+            setWelcomeModalOpen(false);
+            setPlayerModalOpen(true);
+        }}
+      />
+
 
       <Dialog open={isPlayerModalOpen} onOpenChange={setPlayerModalOpen}>
         <DialogContent className="max-w-3xl aspect-video p-0 border-0">

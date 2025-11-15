@@ -48,6 +48,7 @@ type SignalFormProps = {
   vipStatus?: VipStatus;
   isVipModalOpen: boolean;
   setVipModalOpen: (isOpen: boolean) => void;
+  setBonusModalOpen: (isOpen: boolean) => void;
   rejectedBrokerId?: string;
   isFreeSignalPage?: boolean;
 };
@@ -73,6 +74,7 @@ export function SignalForm({
   vipStatus,
   isVipModalOpen,
   setVipModalOpen,
+  setBonusModalOpen,
   rejectedBrokerId,
   isFreeSignalPage = false,
 }: SignalFormProps) {
@@ -607,7 +609,7 @@ export function SignalForm({
                   </Link>
                 </Button>
               ) : (
-                <Button variant="link" className="w-full flex-col h-auto text-purple-400 hover:text-purple-300" onClick={() => setVipModalOpen(true)}>
+                <Button variant="link" className="w-full flex-col h-auto text-purple-400 hover:text-purple-300" onClick={() => setBonusModalOpen(true)}>
                     <Crown className="h-5 w-5 mb-0.5" />
                     SEJA PREMIUM
                 </Button>
@@ -624,5 +626,3 @@ export function SignalForm({
     </>
   );
 }
-
-    

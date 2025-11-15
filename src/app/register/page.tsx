@@ -93,6 +93,7 @@ export default function RegisterPage() {
         await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
         
         localStorage.setItem('loginTimestamp', Date.now().toString());
+        localStorage.setItem('showPremiumUpgradeOnLoad', 'true'); // Flag to show modal
         localStorage.removeItem('activationCodeValidated'); // Clean up
 
         toast({

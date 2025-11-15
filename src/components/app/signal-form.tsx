@@ -422,37 +422,21 @@ export function SignalForm({
         return (
           <>
             <DialogHeader>
-              <DialogTitle className="text-2xl font-headline text-primary">Desbloqueie o Acesso Ilimitado</DialogTitle>
+              <DialogTitle className="text-2xl font-headline text-primary">Torne-se PREMIUM</DialogTitle>
               <DialogDescription>
-                {hasReachedLimit 
-                  ? "Você atingiu o limite de sinais por hora. Para continuar analisando sem limites, adquira o plano VIP ou libere seu acesso via cadastro."
-                  : "Tenha acesso prioritário e ilimitado aos sinais, sem filas ou limites. Adquira o plano VIP ou libere seu acesso via cadastro."
-                }
+                No momento nosso sistema esta sobrecarregado e estamos analisando a melhor operação para voce. Para evitar filas, resgate seu bonus e se Torne-se PREMIUM.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <Button className="w-full h-12 text-base" asChild>
-                  <Link href="/vip">
-                    <Crown className="mr-2" /> Quero o Acesso VIP (Via Pagamento)
-                  </Link>
-              </Button>
-
-              <div className="relative my-2">
-                  <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">
-                      OU
-                      </span>
-                  </div>
-              </div>
-
               <div className="p-4 bg-secondary/50 rounded-lg space-y-3">
-                <h3 className="font-bold">Torne-se MEMBRO (Acesso com limites)</h3>
-                <p className="text-sm text-muted-foreground">
-                  Cadastre-se na corretora por nosso link para se tornar um membro e reduzir a fila de espera.
+                 <p className="text-sm text-muted-foreground">
+                  Cadastre-se na corretora pelo nosso link para se tornar PREMIUM, resgatar seu bônus, evitar a fila de espera e ter sinais ilimitados.
                 </p>
+                <Button className="w-full" asChild variant="secondary">
+                  <Link href={config.exnovaUrl} target="_blank">
+                    Cadastrar na Corretora
+                  </Link>
+                </Button>
                 <div className="flex w-full items-center space-x-2">
                   <Input
                     type="text"
@@ -467,17 +451,12 @@ export function SignalForm({
                     {isSubmittingId ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                   </Button>
                 </div>
-                 <Button className="w-full" asChild variant="secondary">
-                    <Link href={config.exnovaUrl} target="_blank">
-                      Cadastrar na Corretora
-                    </Link>
-                  </Button>
               </div>
 
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setVipModalOpen(false)}>
-                Continuar com Limites
+                Resgatar Depois
               </Button>
             </DialogFooter>
           </>

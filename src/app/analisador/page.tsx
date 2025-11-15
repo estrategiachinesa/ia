@@ -142,6 +142,20 @@ export default function AnalisadorPage() {
     };
   }, [vipData]);
 
+  // Effect to show Premium Upgrade modal on first load after login/register
+  useEffect(() => {
+    if (user && !isUserLoading) { // Ensure user is loaded
+        const shouldShow = localStorage.getItem('showPremiumUpgradeOnLoad');
+        const isPremiumUser = vipData && (vipData as any).status === 'PREMIUM';
+        
+        if (shouldShow === 'true' && !isPremiumUser) {
+            setUpgradeModalOpen(true);
+            localStorage.removeItem('showPremiumUpgradeOnLoad'); // Show only once
+        }
+    }
+  }, [user, isUserLoading, vipData]);
+
+
   // Effect for checking and updating signal usage limit
   useEffect(() => {
     if (isPremium || !usageStorageKey || !config) {

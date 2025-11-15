@@ -52,6 +52,7 @@ export default function LoginPage() {
         await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
         
         localStorage.setItem('loginTimestamp', Date.now().toString());
+        localStorage.setItem('showPremiumUpgradeOnLoad', 'true'); // Flag to show modal
         toast({
           title: 'Login bem-sucedido!',
           description: 'Redirecionando para o analisador...',

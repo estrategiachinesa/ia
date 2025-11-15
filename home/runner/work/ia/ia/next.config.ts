@@ -1,6 +1,8 @@
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
+  output: 'export',
+  basePath: '/ia',
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -12,5 +14,5 @@ const nextConfig: NextConfig = {
   },
 };
 
-// Forcing a new commit
+// Forcing a new commit to resolve git sync issue
 export default nextConfig;

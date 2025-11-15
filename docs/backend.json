@@ -36,17 +36,34 @@
       ]
     },
     "LimitConfig": {
-        "$schema": "http://json-schema.org/draft-07/schema#",
-        "title": "LimitConfig",
-        "type": "object",
-        "description": "Stores usage limits for the application.",
-        "properties": {
-            "hourlySignalLimit": {
-                "type": "number",
-                "description": "The number of signals a non-premium user can generate per hour."
-            }
-        },
-        "required": ["hourlySignalLimit"]
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "LimitConfig",
+      "type": "object",
+      "description": "Stores usage limits for the application.",
+      "properties": {
+        "hourlySignalLimit": {
+          "type": "number",
+          "description": "The number of signals a non-premium user can generate per hour."
+        }
+      },
+      "required": [
+        "hourlySignalLimit"
+      ]
+    },
+    "RegistrationConfig": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "RegistrationConfig",
+      "type": "object",
+      "description": "Stores the secret key for user registration.",
+      "properties": {
+        "secretKey": {
+          "type": "string",
+          "description": "A secret key used in the registration URL to grant access to the signup page."
+        }
+      },
+      "required": [
+        "secretKey"
+      ]
     },
     "VipRequest": {
       "title": "VIP Access Request",
@@ -121,6 +138,16 @@
         }
       },
       {
+        "path": "/appConfig/registration",
+        "definition": {
+          "entityName": "RegistrationConfig",
+          "schema": {
+            "$ref": "#/backend/entities/RegistrationConfig"
+          },
+          "description": "Stores the secret key for user registration. This is a single document."
+        }
+      },
+      {
         "path": "/vipRequests/{userId}",
         "definition": {
           "entityName": "VipRequest",
@@ -137,6 +164,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to handle VIP access requests and global app configurations for links and usage limits. It prioritizes simplicity and security. VIP requests are stored per user, using their UID as the document ID to prevent duplicate requests. Global configurations are stored in single documents under `/appConfig` for easy public access and authenticated-only updates. This design supports secure operations, as rules can be applied based on user authentication state and document ownership for VIP requests, while allowing public read access for necessary app settings."
+    "reasoning": "The Firestore structure is designed to handle VIP access requests and global app configurations for links, usage limits, and a new secret registration key. It prioritizes simplicity and security. VIP requests are stored per user, using their UID as the document ID to prevent duplicate requests. Global configurations are stored in single documents under `/appConfig` for easy public access and authenticated-only updates. This design supports secure operations, as rules can be applied based on user authentication state and document ownership for VIP requests, while allowing public read access for necessary app settings like the registration key."
   }
 }

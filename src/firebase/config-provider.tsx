@@ -14,6 +14,7 @@ export interface AppConfig {
   telegramUrl: string;
   hourlySignalLimit: number;
   correlationChance: number;
+  registrationSecret: string;
 }
 
 // Define the state for the config context
@@ -35,7 +36,7 @@ const defaultLinkConfig = {
 };
 
 const defaultLimitConfig = {
-    hourlySignalLimit: 5
+    hourlySignalLimit: 3
 };
 
 // New remote config for correlation
@@ -43,10 +44,16 @@ const defaultRemoteValuesConfig = {
     correlationChance: 0.7
 };
 
+const defaultRegistrationConfig = {
+    registrationSecret: "changeme"
+};
+
+
 const defaultConfig: AppConfig = {
     ...defaultLinkConfig,
     ...defaultLimitConfig,
-    ...defaultRemoteValuesConfig
+    ...defaultRemoteValuesConfig,
+    ...defaultRegistrationConfig
 };
 
 // Create the provider component
@@ -75,12 +82,15 @@ export const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       const linksRef = doc(firestore, 'appConfig', 'links');
       const limitationRef = doc(firestore, 'appConfig', 'limitation');
       const remoteValuesRef = doc(firestore, 'appConfig', 'remoteValues');
+      const registrationRef = doc(firestore, 'appConfig', 'registration');
+
 
       try {
-        const [linksSnap, limitationSnap, remoteValuesSnap] = await Promise.all([
+        const [linksSnap, limitationSnap, remoteValuesSnap, registrationSnap] = await Promise.all([
             getDoc(linksRef),
             getDoc(limitationRef),
             getDoc(remoteValuesRef),
+            getDoc(registrationRef),
         ]);
         
         let mergedConfig = {...defaultConfig};
@@ -112,6 +122,15 @@ export const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             console.warn("Remote values config document not found. Creating it with defaults.");
             batch.set(remoteValuesRef, defaultRemoteValuesConfig);
 needsWrite = true;
+        }
+
+        // Process Registration Secret
+        if (registrationSnap.exists()) {
+            mergedConfig = { ...mergedConfig, secretKey: registrationSnap.data().secretKey };
+        } else {
+            console.warn("Registration config document not found. Creating it with defaults.");
+            batch.set(registrationRef, defaultRegistrationConfig);
+            needsWrite = true;
         }
 
         if (needsWrite) {

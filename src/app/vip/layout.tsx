@@ -1,10 +1,5 @@
-import { cn } from '@/lib/utils';
-import type { Metadata } from 'next';
 
-export const metadata: Metadata = {
-  title: 'Oferta VIP - Estratégia Chinesa',
-  description: 'Desbloqueie seu acesso ilimitado à Estratégia Chinesa.',
-};
+import { cn } from '@/lib/utils';
 
 export default function VipLayout({
   children,

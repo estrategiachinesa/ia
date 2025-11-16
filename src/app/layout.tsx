@@ -1,9 +1,14 @@
-'use client';
+
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from '@/lib/utils';
-import Script from 'next/script';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Estrategia Chinesa | Sinais por IA',
+  description: 'Analisador de mercado em tempo real com sinais gerados por Inteligência Artificial.',
+};
 
 export default function RootLayout({
   children,

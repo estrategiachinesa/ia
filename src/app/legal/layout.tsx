@@ -1,12 +1,7 @@
-import type { Metadata } from 'next';
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-
-export const metadata: Metadata = {
-  title: 'Termos e Políticas - Estratégia Chinesa',
-  description: 'Leia nossos Termos de Uso, Política de Privacidade e Política de Cookies.',
-};
 
 export default function LegalLayout({
   children,

@@ -514,7 +514,8 @@ export function SignalForm({
               <Alert className="mt-4 border-primary/20 bg-primary/10">
                 <Info className="h-4 w-4 text-primary" />
                 <AlertDescription className="text-xs text-primary/80">
-                  Sinais OTC são para as corretoras
+                  <span className="sm:inline">Sinais OTC são para as corretoras</span>
+                  <br className="sm:hidden" />
                   <Link href={config.iqOptionUrl} target="_blank" className="font-bold underline hover:text-primary mx-1">
                     IQ Option
                   </Link>

@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { doc, getDoc, writeBatch } from 'firebase/firestore';
-import { Loader2, ShieldCheck, XCircle } from 'lucide-react';
+import { Loader2, ShieldCheck, XCircle, CheckCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -35,6 +35,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useFirebase, useDoc, useMemoFirebase, useAppConfig } from '@/firebase';
 import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
 
 // Schema for form validation
 const formSchema = z.object({
@@ -43,7 +44,7 @@ const formSchema = z.object({
     message: 'O ID do usuário é obrigatório.',
   })
   .max(8, {
-    message: 'O ID do usuário deve ter no máximo 8 caracteres.',
+    message: 'O ID do usuário não pode ter mais de 8 caracteres.',
   })
   .regex(/^\d+$/, {
     message: "O ID deve conter apenas números."
@@ -96,9 +97,11 @@ function Scoreboard({ wins, losses, isLoading }: { wins: number | undefined, los
 export default function SessaoChinesaPage() {
     const { firestore } = useFirebase();
     const { config } = useAppConfig();
+    const { toast } = useToast();
 
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [isFailureAlertOpen, setFailureAlertOpen] = React.useState(false);
+    const [isIdConfirmed, setIsIdConfirmed] = React.useState(false);
     
     // Firebase real-time data subscriptions
     const statusRef = useMemoFirebase(() => firestore ? doc(firestore, 'session', 'status') : null, [firestore]);
@@ -165,9 +168,30 @@ export default function SessaoChinesaPage() {
         // Simulate API call
         setTimeout(() => {
             setIsSubmitting(false);
-            setFailureAlertOpen(true);
-            form.reset();
+
+            // Simulate success if ID is '12345678'
+            if (values.userId === '12345678') {
+                setIsIdConfirmed(true);
+                toast({
+                    title: 'ID Confirmado!',
+                    description: 'Seu acesso foi verificado. Clique em "Entrar na Sessão".',
+                    className: 'bg-green-600 border-green-600 text-white',
+                    icon: <CheckCircle className="h-5 w-5 text-white" />,
+                })
+            } else {
+                setFailureAlertOpen(true);
+                form.reset();
+            }
         }, 1500);
+    }
+    
+    function handleEnterSession() {
+        // Here you would add the logic to redirect the user to the session page
+        toast({
+            title: 'Entrando na Sessão...',
+            description: 'Você será redirecionado em breve.',
+        })
+        // Exemplo: router.push('/caminho-da-sessao-real');
     }
 
     return (
@@ -215,9 +239,10 @@ export default function SessaoChinesaPage() {
                                                     type="text"
                                                     pattern="[0-9]*"
                                                     inputMode="numeric"
+                                                    disabled={isIdConfirmed}
                                                     onChange={(e) => {
                                                         const val = e.target.value;
-                                                        if (/^\d*$/.test(val) && val.length <= 8) {
+                                                        if (/^\d{0,8}$/.test(val)) {
                                                             field.onChange(val);
                                                         }
                                                     }}
@@ -227,12 +252,20 @@ export default function SessaoChinesaPage() {
                                         </FormItem>
                                     )}
                                 />
-                                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                                <Button type="submit" className="w-full" disabled={isSubmitting || isIdConfirmed}>
                                     {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    Confirmar ID
+                                    {isIdConfirmed ? 'ID Confirmado' : 'Confirmar ID'}
                                 </Button>
                             </form>
                         </Form>
+                         <Button
+                            onClick={handleEnterSession}
+                            className="w-full"
+                            disabled={!isIdConfirmed}
+                            variant={isIdConfirmed ? 'default' : 'outline'}
+                        >
+                            Entrar na Sessão
+                        </Button>
                     </CardContent>
                 </Card>
                 <footer className="w-full text-center text-xs text-foreground/50 p-4 mt-8">

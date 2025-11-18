@@ -247,7 +247,7 @@ export default function DemoPage() {
   };
 
   const handleBackToHome = () => {
-    router.push('/');
+    router.push('/login');
   }
 
   const isSignalFinished = signalData?.operationStatus === 'finished';

@@ -26,7 +26,7 @@ export default function VipPage() {
     <div className="flex flex-col items-center justify-center min-h-screen">
        <header className="p-4 w-full max-w-4xl mx-auto flex justify-start items-center">
           <Button variant="ghost" asChild>
-            <Link href="/">
+            <Link href="/login">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar
             </Link>

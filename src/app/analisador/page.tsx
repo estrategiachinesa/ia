@@ -323,7 +323,7 @@ export default function AnalisadorPage() {
     await auth.signOut();
     localStorage.removeItem('loginTimestamp');
     localStorage.removeItem('hasSeenVipWelcome'); // Clear welcome message flag on logout
-    router.push('/');
+    router.push('/login');
   }
 
   // Loading screen while checking user auth
@@ -348,7 +348,7 @@ export default function AnalisadorPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={() => router.push('/')}>Ir para Login</AlertDialogAction>
+            <AlertDialogAction onClick={() => router.push('/login')}>Ir para Login</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

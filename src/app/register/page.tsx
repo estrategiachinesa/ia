@@ -148,7 +148,7 @@ export default function RegisterPage() {
   }
 
   const renderCodeValidation = () => (
-      <Dialog open={true} onOpenChange={(isOpen) => !isOpen && router.push('/')}>
+      <Dialog open={true} onOpenChange={(isOpen) => !isOpen && router.push('/login')}>
         <DialogContent hideCloseButton={false}>
           <DialogHeader className="text-center items-center">
             <DialogTitle className="text-2xl font-headline">Ativação de Licença</DialogTitle>
@@ -289,7 +289,7 @@ export default function RegisterPage() {
 
              <div className="text-center">
                  <Button variant="outline" asChild>
-                    <Link href="/">
+                    <Link href="/login">
                       Fazer Login
                     </Link>
                  </Button>

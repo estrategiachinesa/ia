@@ -5,8 +5,8 @@ import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { doc } from 'firebase/firestore';
-import { Loader2, ShieldCheck, CheckCircle, XCircle } from 'lucide-react';
+import { doc, getDoc, writeBatch } from 'firebase/firestore';
+import { Loader2, ShieldCheck, XCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -26,7 +26,6 @@ import {
 } from '@/components/ui/form';
 import {
     AlertDialog,
-    AlertDialogAction,
     AlertDialogContent,
     AlertDialogDescription,
     AlertDialogFooter,
@@ -106,6 +105,45 @@ export default function SessaoChinesaPage() {
     const isOnline = (statusData as { isOnline: boolean } | null)?.isOnline;
     const wins = (scoreData as { wins: number } | null)?.wins;
     const losses = (scoreData as { losses: number } | null)?.losses;
+    
+    // Effect to initialize documents if they don't exist
+    React.useEffect(() => {
+        const initializeSessionDocs = async () => {
+            if (!firestore) return;
+
+            const statusDoc = await getDoc(statusRef!);
+            const scoreDoc = await getDoc(scoreRef!);
+
+            const batch = writeBatch(firestore);
+            let needsCommit = false;
+
+            if (!statusDoc.exists()) {
+                batch.set(statusRef!, { isOnline: true });
+                needsCommit = true;
+            }
+
+            if (!scoreDoc.exists()) {
+                batch.set(scoreRef!, { wins: 0, losses: 0 });
+                needsCommit = true;
+            }
+
+            if (needsCommit) {
+                try {
+                    await batch.commit();
+                    console.log("Sessão inicializada no Firestore.");
+                } catch (error) {
+                    console.error("Erro ao inicializar documentos da sessão:", error);
+                }
+            }
+        };
+
+        // We only run this check once when firestore is available
+        if (firestore && !isStatusLoading && !isScoreLoading) {
+            initializeSessionDocs();
+        }
+
+    }, [firestore, isStatusLoading, isScoreLoading, statusRef, scoreRef]);
+
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),

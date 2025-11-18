@@ -44,7 +44,8 @@ service cloud.firestore {
      */
     match /session/{docId} {
       allow read: if true;
-      allow write: if false; // Nobody can write from the client-side
+      allow create: if true; // Allow creation if docs don't exist
+      allow update, delete: if false; // Nobody can write from the client-side after creation
     }
 
     // Helper functions.

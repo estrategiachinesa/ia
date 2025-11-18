@@ -5,9 +5,6 @@ const repoName = 'vip';
 const nextConfig: NextConfig = {
   /* config options here */
   output: 'export',
-  // IMPORTANT: Replace <your-repo-name> with the name of your GitHub repository.
-  basePath: `/${repoName}`,
-  assetPrefix: `/${repoName}`,
   typescript: {
     ignoreBuildErrors: true,
   },

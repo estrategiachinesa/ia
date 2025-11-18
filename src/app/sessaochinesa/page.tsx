@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -37,9 +38,14 @@ import Link from 'next/link';
 
 // Schema for form validation
 const formSchema = z.object({
-  userId: z.string().min(6, {
-    message: 'O ID do usuário deve ter pelo menos 6 dígitos.',
-  }).regex(/^\d+$/, {
+  userId: z.string()
+  .min(1, {
+    message: 'O ID do usuário é obrigatório.',
+  })
+  .max(8, {
+    message: 'O ID do usuário deve ter no máximo 8 caracteres.',
+  })
+  .regex(/^\d+$/, {
     message: "O ID deve conter apenas números."
   })
 });
@@ -211,7 +217,7 @@ export default function SessaoChinesaPage() {
                                                     inputMode="numeric"
                                                     onChange={(e) => {
                                                         const val = e.target.value;
-                                                        if (/^\d*$/.test(val)) {
+                                                        if (/^\d*$/.test(val) && val.length <= 8) {
                                                             field.onChange(val);
                                                         }
                                                     }}

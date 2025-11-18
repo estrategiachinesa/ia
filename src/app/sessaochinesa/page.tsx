@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -186,11 +187,6 @@ export default function SessaoChinesaPage() {
                                 </Button>
                             </form>
                         </Form>
-                         <Button variant="link" size="sm" className="w-full text-blue-400 text-xs h-auto pt-2" asChild>
-                            <Link href="/login">
-                                Já é membro? Faça login
-                            </Link>
-                        </Button>
                     </CardContent>
                 </Card>
                 <footer className="w-full text-center text-xs text-foreground/50 p-4 mt-8">

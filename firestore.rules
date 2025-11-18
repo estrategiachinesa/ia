@@ -8,12 +8,6 @@
  * Data Structure:
  * - `/appConfig/{doc}`: Stores global app configurations. Publicly readable.
  * - `/vipRequests/{userId}`: Stores VIP access requests. Restricted to owner.
- *
- * Key Security Decisions:
- * - Public read access for app configuration for all users.
- * - Writes to app configuration require authentication (ideally admin).
- * - Users can create or update their own VIP request document.
- * - Reading of VIP requests is restricted to the owner.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -44,6 +38,15 @@ service cloud.firestore {
       allow write: if isSignedIn() && isOwner(userId) && isValidVipRequest(request, resource);
     }
     
+    /**
+     * @description Grants public read access to the session status and score.
+     * @path /session/{docId}
+     */
+    match /session/{docId} {
+      allow read: if true;
+      allow write: if false; // Nobody can write from the client-side
+    }
+
     // Helper functions.
     function isSignedIn() {
       return request.auth != null;

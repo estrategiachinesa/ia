@@ -30,7 +30,7 @@ const ConfigContext = createContext<ConfigContextState | undefined>(undefined);
 
 // Default configs to be used as a fallback and for initial creation
 const defaultLinkConfig = {
-    hotmartUrl: "https://pay.hotmart.com/E101943327K",
+    hotmartUrl: "https://pay.hotmart.com/G102999657C",
     exnovaUrl: "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=",
     iqOptionUrl: "https://affiliate.iqoption.net/redir/?aff=198544&aff_model=revenue&afftrack=",
     telegramUrl: "https://t.me/Trader_Chines",

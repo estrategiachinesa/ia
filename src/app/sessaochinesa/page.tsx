@@ -40,8 +40,8 @@ import { useToast } from '@/hooks/use-toast';
 // Schema for form validation
 const formSchema = z.object({
   userId: z.string()
-  .min(1, {
-    message: 'O ID do usuário é obrigatório.',
+  .min(8, {
+    message: 'O ID do usuário deve ter no mínimo 8 caracteres.',
   })
   .max(8, {
     message: 'O ID do usuário não pode ter mais de 8 caracteres.',

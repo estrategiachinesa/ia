@@ -1,4 +1,5 @@
 
+import { FirebaseClientProvider } from '@/firebase';
 import { cn } from '@/lib/utils';
 
 export default function DemoLayout({
@@ -6,5 +7,9 @@ export default function DemoLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <div className="theme-free">{children}</div>;
+  return (
+    <FirebaseClientProvider>
+      <div className="theme-free">{children}</div>
+    </FirebaseClientProvider>
+  );
 }

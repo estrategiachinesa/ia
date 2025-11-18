@@ -1,7 +1,7 @@
 
 import { FirebaseClientProvider } from '@/firebase';
 
-export default function LoginLayout({
+export default function RegisterLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

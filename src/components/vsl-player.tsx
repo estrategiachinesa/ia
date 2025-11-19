@@ -1,10 +1,11 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
 import { VolumeX, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getAnalytics, logEvent } from 'firebase/analytics';
-import { useFirebase }s from '@/firebase/provider';
+import { useFirebase } from '@/firebase/provider';
 
 const VSL_CTA_TIMESTAMP = 167; // 2 minutos e 47 segundos
 

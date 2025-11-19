@@ -1,6 +1,7 @@
 
 import { FirebaseClientProvider } from '@/firebase';
 import Script from 'next/script';
+import { DevToolsBlocker } from '@/components/app/dev-tools-blocker';
 
 export default function DescubraLayout({
   children,
@@ -10,6 +11,7 @@ export default function DescubraLayout({
   return (
     <FirebaseClientProvider>
       <div className="dark font-headline bg-[#0e0e0e] text-white">
+        <DevToolsBlocker />
         {children}
         <Script id="hotmart-script" strategy="afterInteractive">
           {`

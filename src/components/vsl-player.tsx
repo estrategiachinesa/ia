@@ -25,6 +25,7 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
   const progressIntervalRef = useRef<NodeJS.Timeout>();
   
   const [playerState, setPlayerState] = useState<number>(-1);
+  const [isReady, setIsReady] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [hasInteracted, setHasInteracted] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -63,10 +64,10 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
           document.head.appendChild(tag);
 
           (window as any).onYouTubeIframeAPIReady = () => {
-              createPlayer(false, storedTime); // Always create with autoplay false initially
+              createPlayer(storedTime);
           };
           if ((window as any).YT) {
-            createPlayer(false, storedTime);
+            createPlayer(storedTime);
           }
       }
     }
@@ -79,7 +80,21 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
         playerRef.current.destroy();
       }
     };
-  }, []);
+  }, [videoId]);
+  
+  useEffect(() => {
+    // This effect controls playback after the player is ready.
+    if (isReady && playerRef.current) {
+        if (!hasInteracted && !showReturnDialog) {
+            // First time user, autoplay muted
+            playerRef.current.mute();
+            playerRef.current.playVideo();
+        }
+        // If showReturnDialog is true, we do nothing. It will wait for user input.
+        // If hasInteracted is true and showReturnDialog is false, it means the user clicked play.
+    }
+  }, [isReady, hasInteracted, showReturnDialog]);
+
 
   useEffect(() => {
     if (showCta) {
@@ -89,13 +104,13 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
   }, [showCta, firebaseApp]);
 
 
-  const createPlayer = (shouldAutoplay: boolean, startTime: number = 0) => {
+  const createPlayer = (startTime: number = 0) => {
     if (playerRef.current) return;
 
     playerRef.current = new (window as any).YT.Player('youtube-player', {
       videoId: videoId,
       playerVars: {
-        autoplay: shouldAutoplay ? 1 : 0,
+        autoplay: 0, // Always start with autoplay off. useEffect will handle playback.
         controls: 0,
         showinfo: 0,
         rel: 0,
@@ -104,7 +119,6 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
         disablekb: 1,
         playsinline: 1,
         start: Math.floor(startTime),
-        mute: shouldAutoplay ? 1 : 0, // Only mute if we intend to autoplay initially
       },
       events: {
         'onReady': onPlayerReady,
@@ -115,20 +129,7 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
 
   const onPlayerReady = (event: any) => {
     setDuration(event.target.getDuration());
-    
-    // Logic for initial load (not returning user)
-    if (!showReturnDialog && !hasInteracted) {
-      event.target.mute();
-      event.target.playVideo();
-    } else if (!showReturnDialog && hasInteracted) {
-       // Returning user, no dialog, just play with sound
-      const storedTime = parseFloat(localStorage.getItem(`vsl_currentTime_${videoId}`) || '0');
-      event.target.seekTo(storedTime, true);
-      event.target.unMute();
-      event.target.playVideo();
-      setIsMuted(false);
-    }
-    // If showReturnDialog is true, do nothing. The video is already loaded and paused at the correct time.
+    setIsReady(true); // Signal that the player is ready to be controlled
   };
 
   const onPlayerStateChange = (event: any) => {
@@ -217,6 +218,8 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
         playerRef.current.unMute();
         playerRef.current.playVideo();
         setIsMuted(false);
+        setHasInteracted(true);
+        localStorage.setItem('vsl_hasInteracted', 'true');
     }
   }
 
@@ -228,6 +231,8 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
         playerRef.current.unMute();
         playerRef.current.playVideo();
         setIsMuted(false);
+        setHasInteracted(true);
+        localStorage.setItem('vsl_hasInteracted', 'true');
     }
   }
 
@@ -348,5 +353,3 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
 };
 
 export default VslPlayer;
-
-    

@@ -6,6 +6,59 @@ import { VolumeX, Play } from 'lucide-react';
 
 const VSL_CTA_TIMESTAMP = 167; // 2 minutos e 47 segundos
 
+const ScarcityCounter = () => {
+    const [licenses, setLicenses] = useState(11);
+    const [licenseColor, setLicenseColor] = useState('text-green-500');
+
+    useEffect(() => {
+        const videoEndTime = parseInt(localStorage.getItem('vsl_videoEndTime') || '0');
+        if (!videoEndTime) return;
+
+        const updateLicenses = () => {
+            const now = Date.now();
+            const elapsedSeconds = Math.floor((now - videoEndTime) / 1000);
+
+            if (elapsedSeconds >= 12 && elapsedSeconds < 42) {
+                setLicenses(10);
+                setLicenseColor('text-red-500');
+            } else if (elapsedSeconds >= 42) {
+                setLicenses(9);
+                setLicenseColor('text-red-500');
+            } else {
+                setLicenses(11);
+                setLicenseColor('text-green-500');
+            }
+        };
+
+        updateLicenses();
+        const interval = setInterval(updateLicenses, 1000);
+
+        return () => clearInterval(interval);
+    }, []);
+
+
+    return (
+        <div className="w-full max-w-4xl text-center p-8 bg-black/50 rounded-lg border border-primary/50">
+            <h2 className="text-2xl sm:text-3xl font-bold uppercase text-white mb-4">
+                Atenção: Seu Acesso Exclusivo Está Prestes a Expirar!
+            </h2>
+            <p className="text-lg text-gray-300 mb-6">
+                Devido à alta demanda, restam pouquíssimas licenças com o desconto especial.
+            </p>
+            <div className="mb-8">
+                <p className="text-xl text-white">Licenças Disponíveis:</p>
+                <p className={`text-6xl sm:text-8xl font-extrabold my-2 transition-colors duration-500 ${licenseColor} animate-pulse`}>
+                    {licenses}
+                </p>
+            </div>
+            <a href="https://pay.hotmart.com/E101943327K?checkoutMode=2" className="hotmart-fb hotmart__button-checkout font-headline text-lg sm:text-xl font-bold uppercase">
+                GARANTIR MINHA VAGA AGORA
+            </a>
+        </div>
+    );
+};
+
+
 const VslPlayer = ({ videoId }: { videoId: string }) => {
   const playerRef = useRef<any>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout>();
@@ -21,9 +74,17 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
 
   const currentTimeKey = `vsl_currentTime_${videoId}`;
   const hasInteractedKey = 'vsl_hasInteracted';
+  const videoEndedKey = 'vsl_videoEnded';
+  const videoEndTimeKey = 'vsl_videoEndTime';
 
   useEffect(() => {
     // Check localStorage on mount
+    const storedVideoEnded = localStorage.getItem(videoEndedKey) === 'true';
+    if (storedVideoEnded) {
+      setVideoEnded(true);
+      return; // Do not load the player if video has already ended
+    }
+
     const storedInteraction = localStorage.getItem(hasInteractedKey) === 'true';
     setHasInteracted(storedInteraction);
     if(storedInteraction){
@@ -100,6 +161,17 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
     });
   };
 
+  const handleVideoEnd = () => {
+    if (playerRef.current && typeof playerRef.current.destroy === 'function') {
+      playerRef.current.destroy();
+      playerRef.current = null;
+    }
+    localStorage.setItem(videoEndedKey, 'true');
+    localStorage.setItem(videoEndTimeKey, String(Date.now()));
+    localStorage.removeItem(currentTimeKey);
+    setVideoEnded(true);
+  };
+
   const onPlayerReady = (event: any) => {
     setIsReady(true);
     setDuration(event.target.getDuration());
@@ -113,7 +185,6 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
 
     if (storedInteraction && storedTime > 0) {
       event.target.seekTo(storedTime, true);
-      // Don't auto-play on reload, just seek and pause
       event.target.pauseVideo();
     } else {
        setIsMuted(true); 
@@ -128,14 +199,12 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
     }
 
     if (event.data === (window as any).YT.PlayerState.ENDED) {
-      setVideoEnded(true);
-      setShowCta(true);
-      localStorage.removeItem(currentTimeKey);
+       handleVideoEnd();
     }
   };
 
   const handleInteraction = () => {
-    if (!isReady) return;
+    if (!isReady || videoEnded) return;
 
     if (isMuted) {
       // First interaction: unmute, restart, and play.
@@ -156,6 +225,10 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
   };
 
   const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
+
+  if (videoEnded) {
+    return <ScarcityCounter />;
+  }
 
   return (
     <>
@@ -188,7 +261,7 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
         </div>
       </div>
 
-      {showCta && (
+      {showCta && !videoEnded && (
         <div className="mt-8 flex justify-center text-center animate-pulse">
             <a href="https://pay.hotmart.com/E101943327K?checkoutMode=2" className="hotmart-fb hotmart__button-checkout font-headline text-lg sm:text-xl font-bold uppercase">
                 QUERO ACESSAR AGORA
@@ -201,3 +274,5 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
 };
 
 export default VslPlayer;
+
+    

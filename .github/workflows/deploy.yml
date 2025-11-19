@@ -1,5 +1,9 @@
 # Workflow para construir e implantar um site Next.js no GitHub Pages
+<<<<<<< HEAD
 # Forçando novo build - Tentativa de commit para push
+=======
+# Forçando novo build - Tentativa 2
+>>>>>>> 529ef678101d0c7261fb0a0d1ed8f8db002117de
 name: Deploy Next.js site to Pages
 
 on:

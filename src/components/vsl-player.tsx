@@ -2,15 +2,11 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { VolumeX, Play, Pause } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { getAnalytics, logEvent } from 'firebase/analytics';
-import { useFirebase } from '@/firebase/provider';
+import { VolumeX, Play } from 'lucide-react';
 
 const VSL_CTA_TIMESTAMP = 167; // 2 minutos e 47 segundos
 
 const VslPlayer = ({ videoId }: { videoId: string }) => {
-  const { firebaseApp } = useFirebase();
   const playerRef = useRef<any>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout>();
 
@@ -22,9 +18,6 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
   const [duration, setDuration] = useState(0);
   const [showCta, setShowCta] = useState(false);
   const [videoEnded, setVideoEnded] = useState(false);
-  
-  const [hasTrackedStart, setHasTrackedStart] = useState(false);
-  const [trackedProgress, setTrackedProgress] = useState<Set<number>>(new Set());
 
   const currentTimeKey = `vsl_currentTime_${videoId}`;
   const hasInteractedKey = 'vsl_hasInteracted';
@@ -33,6 +26,9 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
     // Check localStorage on mount
     const storedInteraction = localStorage.getItem(hasInteractedKey) === 'true';
     setHasInteracted(storedInteraction);
+    if(storedInteraction){
+        setIsMuted(false);
+    }
 
     const tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
@@ -68,20 +64,6 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
           if (currentTime >= VSL_CTA_TIMESTAMP && !showCta) {
             setShowCta(true);
           }
-          
-          // Analytics
-          if (duration > 0) {
-            const analytics = getAnalytics(firebaseApp);
-            const percentage = (currentTime / duration) * 100;
-            const milestones = [25, 50, 75];
-            
-            milestones.forEach(milestone => {
-                if (percentage >= milestone && !trackedProgress.has(milestone)) {
-                    logEvent(analytics, 'video_progress', { progress_percent: milestone });
-                    setTrackedProgress(prev => new Set(prev).add(milestone));
-                }
-            });
-          }
         }
       }, 1000);
     } else {
@@ -89,25 +71,18 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
     }
 
     return () => clearInterval(progressIntervalRef.current);
-  }, [isPlaying, duration, firebaseApp, trackedProgress]);
-
-   useEffect(() => {
-    if (showCta) {
-        const analytics = getAnalytics(firebaseApp);
-        logEvent(analytics, 'cta_shown');
-    }
-  }, [showCta, firebaseApp]);
-
+  }, [isPlaying]);
 
   const createPlayer = () => {
     if (playerRef.current) return;
+    
     const storedTime = parseFloat(localStorage.getItem(currentTimeKey) || '0');
     const storedInteraction = localStorage.getItem(hasInteractedKey) === 'true';
     
     playerRef.current = new (window as any).YT.Player('youtube-player', {
       videoId: videoId,
       playerVars: {
-        autoplay: storedInteraction ? 0 : 1, // Autoplay only if NO previous interaction
+        autoplay: storedInteraction ? 0 : 1, 
         mute: storedInteraction ? 0 : 1,
         controls: 0,
         showinfo: 0,
@@ -133,11 +108,9 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
     const storedInteraction = localStorage.getItem(hasInteractedKey) === 'true';
 
     if (storedInteraction && storedTime > 0) {
-      // If user has interacted and there's saved time, just seek and pause.
       event.target.seekTo(storedTime, true);
       event.target.pauseVideo();
     } else {
-       // On first load, it will autoplay muted.
        setIsMuted(true); 
     }
   };
@@ -153,22 +126,14 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
       setVideoEnded(true);
       setShowCta(true);
       localStorage.removeItem(currentTimeKey);
-      const analytics = getAnalytics(firebaseApp);
-      logEvent(analytics, 'video_complete');
     }
   };
 
-  const handlePlayerClick = () => {
+  const handleInteraction = () => {
     if (!isReady) return;
 
-    if (!hasInteracted) {
+    if (isMuted) {
       // First interaction: unmute, restart, and play.
-      const analytics = getAnalytics(firebaseApp);
-       if(!hasTrackedStart){
-            logEvent(analytics, 'video_start');
-            setHasTrackedStart(true);
-        }
-      
       playerRef.current.unMute();
       playerRef.current.seekTo(0, true);
       playerRef.current.playVideo();
@@ -185,11 +150,6 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
     }
   };
 
-  const handleCtaClick = () => {
-    const analytics = getAnalytics(firebaseApp);
-    logEvent(analytics, 'cta_click');
-  }
-
   const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
 
   return (
@@ -197,11 +157,11 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
     <div className="relative w-full aspect-video">
       <div 
         className="group relative w-full h-full cursor-pointer"
-        onClick={handlePlayerClick}
+        onClick={handleInteraction}
       >
         <div id="youtube-player" className="w-full h-full rounded-lg overflow-hidden pointer-events-none" />
         
-        {isMuted && !hasInteracted && (
+        {isMuted && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm pointer-events-none">
               <VolumeX className="h-16 w-16 text-white" />
               <p className="mt-4 text-xl font-bold uppercase text-white">Clique para ativar o som</p>
@@ -223,8 +183,8 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
       </div>
 
       {showCta && (
-         <div className="mt-8 flex justify-center animate-pulse">
-            <a href="https://pay.hotmart.com/E101943327K?checkoutMode=2" onClick={handleCtaClick} className="hotmart-fb hotmart__button-checkout text-base sm:text-lg font-headline font-bold uppercase text-center">
+        <div className="mt-8 flex justify-center text-center animate-pulse">
+            <a href="https://pay.hotmart.com/E101943327K?checkoutMode=2" className="hotmart-fb hotmart__button-checkout font-headline text-lg sm:text-xl font-bold uppercase">
                 QUERO ACESSAR AGORA
             </a>
         </div>

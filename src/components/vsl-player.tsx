@@ -54,15 +54,16 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
         setEndTime(parseInt(storedEndTime, 10));
         setShowCta(true); 
       } else {
-          if (storedInteraction && storedTime > 1) {
-              setShowReturnDialog(true);
-          }
+          // Determine if the return dialog should be shown BEFORE creating the player
+          const shouldShowReturnDialog = storedInteraction && storedTime > 1;
+          setShowReturnDialog(shouldShowReturnDialog);
+
           const tag = document.createElement('script');
           tag.src = "https://www.youtube.com/iframe_api";
           document.head.appendChild(tag);
 
           (window as any).onYouTubeIframeAPIReady = () => {
-              createPlayer(false, storedTime); // Don't autoplay, but seek to stored time
+              createPlayer(false, storedTime); // Always create with autoplay false initially
           };
           if ((window as any).YT) {
             createPlayer(false, storedTime);
@@ -103,7 +104,7 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
         disablekb: 1,
         playsinline: 1,
         start: Math.floor(startTime),
-        mute: 1,
+        mute: shouldAutoplay ? 1 : 0, // Only mute if we intend to autoplay initially
       },
       events: {
         'onReady': onPlayerReady,
@@ -114,33 +115,28 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
 
   const onPlayerReady = (event: any) => {
     setDuration(event.target.getDuration());
-    // If the return dialog is going to be shown, we don't want to play.
-    // The player is already created with autoplay:0 and sought to the right time.
-    // So it will just sit there paused.
-    if (showReturnDialog) {
-        return;
+    
+    // Logic for initial load (not returning user)
+    if (!showReturnDialog && !hasInteracted) {
+      event.target.mute();
+      event.target.playVideo();
+    } else if (!showReturnDialog && hasInteracted) {
+       // Returning user, no dialog, just play with sound
+      const storedTime = parseFloat(localStorage.getItem(`vsl_currentTime_${videoId}`) || '0');
+      event.target.seekTo(storedTime, true);
+      event.target.unMute();
+      event.target.playVideo();
+      setIsMuted(false);
     }
-
-    if (localStorage.getItem('vsl_hasInteracted') !== 'true') {
-        event.target.mute();
-        event.target.playVideo();
-    } else {
-        setIsMuted(false);
-        const storedTime = parseFloat(localStorage.getItem(`vsl_currentTime_${videoId}`) || '0');
-        event.target.seekTo(storedTime, true);
-        event.target.playVideo();
-    }
+    // If showReturnDialog is true, do nothing. The video is already loaded and paused at the correct time.
   };
 
   const onPlayerStateChange = (event: any) => {
     setPlayerState(event.data);
     
-    // If user somehow pauses it, play it again.
-    if (event.data === (window as any).YT.PlayerState.PAUSED && hasInteracted) {
-      // Allow pause only if the return dialog is active
-      if(!showReturnDialog) {
+    // If user somehow pauses it, play it again, unless the dialog is open.
+    if (event.data === (window as any).YT.PlayerState.PAUSED && hasInteracted && !showReturnDialog) {
         playerRef.current.playVideo();
-      }
     }
     
     if (event.data === (window as any).YT.PlayerState.PLAYING) {
@@ -352,3 +348,5 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
 };
 
 export default VslPlayer;
+
+    

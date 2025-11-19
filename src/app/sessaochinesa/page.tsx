@@ -25,13 +25,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import {
-    AlertDialog,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from '@/components/ui/input';
 import { useFirebase, useDoc, useMemoFirebase, useAppConfig } from '@/firebase';
 import Link from 'next/link';
@@ -43,8 +43,8 @@ const formSchema = z.object({
   .min(8, {
     message: 'O ID do usuário deve ter no mínimo 8 caracteres.',
   })
-  .max(8, {
-    message: 'O ID do usuário não pode ter mais de 8 caracteres.',
+  .max(20, {
+    message: 'O ID do usuário não pode ter mais de 20 caracteres.',
   })
   .regex(/^\d+$/, {
     message: "O ID deve conter apenas números."
@@ -242,7 +242,7 @@ export default function SessaoChinesaPage() {
                                                     disabled={isIdConfirmed}
                                                     onChange={(e) => {
                                                         const val = e.target.value;
-                                                        if (/^\d{0,8}$/.test(val)) {
+                                                        if (/^\d{0,20}$/.test(val)) {
                                                             field.onChange(val);
                                                         }
                                                     }}
@@ -273,16 +273,16 @@ export default function SessaoChinesaPage() {
                 </footer>
             </div>
 
-            <AlertDialog open={isFailureAlertOpen} onOpenChange={setFailureAlertOpen}>
-                <AlertDialogContent>
-                    <AlertDialogHeader className="text-center items-center">
+            <Dialog open={isFailureAlertOpen} onOpenChange={setFailureAlertOpen}>
+                <DialogContent>
+                    <DialogHeader className="text-center items-center">
                         <XCircle className="h-12 w-12 text-destructive mb-2"/>
-                        <AlertDialogTitle className="font-headline text-2xl">Falha ao entrar ❌</AlertDialogTitle>
-                        <AlertDialogDescription className="text-base">
+                        <DialogTitle className="font-headline text-2xl">Falha ao entrar ❌</DialogTitle>
+                        <DialogDescription className="text-base">
                             Não encontramos seu cadastro no sistema. É preciso se cadastrar e realizar um depósito para ter acesso à Sessão Chinesa.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter className="flex-col sm:flex-col sm:space-x-0 gap-2 pt-4">
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="flex-col sm:flex-col sm:space-x-0 gap-2 pt-4">
                         <Button asChild>
                             <Link href={config?.exnovaUrl || '#'} target="_blank">
                                 Cadastrar na Exnova
@@ -298,9 +298,9 @@ export default function SessaoChinesaPage() {
                                 Falar com Suporte
                             </Link>
                         </Button>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }

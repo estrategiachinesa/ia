@@ -2,20 +2,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { VolumeX, Play } from 'lucide-react';
+import { VolumeX, Play, Pause } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getAnalytics, logEvent } from 'firebase/analytics';
 import { useFirebase } from '@/firebase/provider';
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
-
 
 const VSL_CTA_TIMESTAMP = 167; // 2 minutos e 47 segundos
 
@@ -23,56 +13,39 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
   const { firebaseApp } = useFirebase();
   const playerRef = useRef<any>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout>();
-  
-  const [playerState, setPlayerState] = useState<number>(-1);
+
   const [isReady, setIsReady] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [showCta, setShowCta] = useState(false);
   const [videoEnded, setVideoEnded] = useState(false);
-  const [endTime, setEndTime] = useState<number | null>(null);
-
-  // New state for the return popup
-  const [showReturnDialog, setShowReturnDialog] = useState(false);
-
-  // States for analytics events to fire only once
+  
   const [hasTrackedStart, setHasTrackedStart] = useState(false);
   const [trackedProgress, setTrackedProgress] = useState<Set<number>>(new Set());
 
-  useEffect(() => {
-    const storedInteraction = localStorage.getItem('vsl_hasInteracted') === 'true';
-    const storedVideoEnded = localStorage.getItem('vsl_videoEnded') === 'true';
-    const storedEndTime = localStorage.getItem('vsl_endTime');
-    const storedTime = parseFloat(localStorage.getItem(`vsl_currentTime_${videoId}`) || '0');
+  const currentTimeKey = `vsl_currentTime_${videoId}`;
+  const hasInteractedKey = 'vsl_hasInteracted';
 
+  useEffect(() => {
+    // Check localStorage on mount
+    const storedInteraction = localStorage.getItem(hasInteractedKey) === 'true';
     setHasInteracted(storedInteraction);
 
-    const initPlayer = () => {
-       if (storedVideoEnded && storedEndTime) {
-        setVideoEnded(true);
-        setEndTime(parseInt(storedEndTime, 10));
-        setShowCta(true); 
-      } else {
-          // Determine if the return dialog should be shown BEFORE creating the player
-          const shouldShowReturnDialog = storedInteraction && storedTime > 1;
-          setShowReturnDialog(shouldShowReturnDialog);
+    const tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
 
-          const tag = document.createElement('script');
-          tag.src = "https://www.youtube.com/iframe_api";
-          document.head.appendChild(tag);
+    (window as any).onYouTubeIframeAPIReady = () => {
+      createPlayer();
+    };
 
-          (window as any).onYouTubeIframeAPIReady = () => {
-              createPlayer(storedTime);
-          };
-          if ((window as any).YT) {
-            createPlayer(storedTime);
-          }
-      }
+    if ((window as any).YT) {
+      createPlayer();
     }
-
-    initPlayer();
 
     return () => {
       clearInterval(progressIntervalRef.current);
@@ -81,105 +54,23 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
       }
     };
   }, [videoId]);
-  
-  useEffect(() => {
-    // This effect controls playback after the player is ready.
-    if (isReady && playerRef.current) {
-        if (!hasInteracted && !showReturnDialog) {
-            // First time user, autoplay muted
-            playerRef.current.mute();
-            playerRef.current.playVideo();
-        }
-        // If showReturnDialog is true, we do nothing. It will wait for user input.
-        // If hasInteracted is true and showReturnDialog is false, it means the user clicked play.
-    }
-  }, [isReady, hasInteracted, showReturnDialog]);
-
 
   useEffect(() => {
-    if (showCta) {
-        const analytics = getAnalytics(firebaseApp);
-        logEvent(analytics, 'cta_shown');
-    }
-  }, [showCta, firebaseApp]);
+    // Save progress to localStorage
+    if (isPlaying) {
+      progressIntervalRef.current = setInterval(() => {
+        const currentTime = playerRef.current?.getCurrentTime();
+        if (currentTime !== undefined) {
+          setProgress(currentTime);
+          localStorage.setItem(currentTimeKey, String(currentTime));
 
-
-  const createPlayer = (startTime: number = 0) => {
-    if (playerRef.current) return;
-
-    playerRef.current = new (window as any).YT.Player('youtube-player', {
-      videoId: videoId,
-      playerVars: {
-        autoplay: 0, // Always start with autoplay off. useEffect will handle playback.
-        controls: 0,
-        showinfo: 0,
-        rel: 0,
-        iv_load_policy: 3,
-        modestbranding: 1,
-        disablekb: 1,
-        playsinline: 1,
-        start: Math.floor(startTime),
-      },
-      events: {
-        'onReady': onPlayerReady,
-        'onStateChange': onPlayerStateChange
-      }
-    });
-  };
-
-  const onPlayerReady = (event: any) => {
-    setDuration(event.target.getDuration());
-    setIsReady(true); // Signal that the player is ready to be controlled
-  };
-
-  const onPlayerStateChange = (event: any) => {
-    setPlayerState(event.data);
-    
-    // If user somehow pauses it, play it again, unless the dialog is open.
-    if (event.data === (window as any).YT.PlayerState.PAUSED && hasInteracted && !showReturnDialog) {
-        playerRef.current.playVideo();
-    }
-    
-    if (event.data === (window as any).YT.PlayerState.PLAYING) {
-      startProgressTracker();
-    } else {
-      clearInterval(progressIntervalRef.current);
-    }
-
-    if (event.data === (window as any).YT.PlayerState.ENDED) {
-        handleVideoEnd();
-    }
-  };
-
-  const handleVideoEnd = () => {
-    const analytics = getAnalytics(firebaseApp);
-    logEvent(analytics, 'video_complete');
-
-    const videoEndTime = Date.now();
-    setVideoEnded(true);
-    setEndTime(videoEndTime);
-    setShowCta(true);
-    localStorage.setItem('vsl_videoEnded', 'true');
-    localStorage.setItem('vsl_endTime', String(videoEndTime));
-    localStorage.removeItem(`vsl_currentTime_${videoId}`);
-    playerRef.current?.destroy();
-  }
-
-  const startProgressTracker = () => {
-    clearInterval(progressIntervalRef.current);
-    progressIntervalRef.current = setInterval(() => {
-      const currentTime = playerRef.current?.getCurrentTime();
-      if (currentTime !== undefined) {
-        setProgress(currentTime);
-        localStorage.setItem(`vsl_currentTime_${videoId}`, String(currentTime));
-
-        // CTA Logic
-        if (currentTime >= VSL_CTA_TIMESTAMP && !showCta) {
-          setShowCta(true);
-        }
-
-        // Analytics progress tracking
-        if (duration > 0) {
+          // CTA Logic
+          if (currentTime >= VSL_CTA_TIMESTAMP && !showCta) {
+            setShowCta(true);
+          }
+          
+          // Analytics
+          if (duration > 0) {
             const analytics = getAnalytics(firebaseApp);
             const percentage = (currentTime / duration) * 100;
             const milestones = [25, 50, 75];
@@ -190,164 +81,151 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
                     setTrackedProgress(prev => new Set(prev).add(milestone));
                 }
             });
+          }
         }
-      }
-    }, 1000);
-  };
-  
-  const handleInitialPlay = () => {
-    if (playerRef.current && !hasInteracted) {
+      }, 1000);
+    } else {
+      clearInterval(progressIntervalRef.current);
+    }
+
+    return () => clearInterval(progressIntervalRef.current);
+  }, [isPlaying, duration, firebaseApp, trackedProgress]);
+
+   useEffect(() => {
+    if (showCta) {
         const analytics = getAnalytics(firebaseApp);
-        if(!hasTrackedStart){
+        logEvent(analytics, 'cta_shown');
+    }
+  }, [showCta, firebaseApp]);
+
+
+  const createPlayer = () => {
+    if (playerRef.current) return;
+    const storedTime = parseFloat(localStorage.getItem(currentTimeKey) || '0');
+    
+    playerRef.current = new (window as any).YT.Player('youtube-player', {
+      videoId: videoId,
+      playerVars: {
+        autoplay: hasInteracted ? 0 : 1,
+        mute: hasInteracted ? 0 : 1,
+        controls: 0,
+        showinfo: 0,
+        rel: 0,
+        iv_load_policy: 3,
+        modestbranding: 1,
+        disablekb: 1,
+        playsinline: 1,
+        start: Math.floor(storedTime),
+      },
+      events: {
+        'onReady': onPlayerReady,
+        'onStateChange': onPlayerStateChange
+      }
+    });
+  };
+
+  const onPlayerReady = (event: any) => {
+    setIsReady(true);
+    setDuration(event.target.getDuration());
+    
+    const storedTime = parseFloat(localStorage.getItem(currentTimeKey) || '0');
+    if (hasInteracted && storedTime > 0) {
+      event.target.seekTo(storedTime, true);
+      event.target.pauseVideo();
+    } else {
+       setIsMuted(true); // Ensure muted state is correct on first load
+       event.target.playVideo();
+    }
+  };
+
+  const onPlayerStateChange = (event: any) => {
+    if (event.data === (window as any).YT.PlayerState.PLAYING) {
+      setIsPlaying(true);
+    } else {
+      setIsPlaying(false);
+    }
+
+    if (event.data === (window as any).YT.PlayerState.ENDED) {
+      setVideoEnded(true);
+      setShowCta(true);
+      localStorage.removeItem(currentTimeKey);
+      const analytics = getAnalytics(firebaseApp);
+      logEvent(analytics, 'video_complete');
+    }
+  };
+
+  const handlePlayerClick = () => {
+    if (!isReady) return;
+
+    if (!hasInteracted) {
+      // First interaction
+      const analytics = getAnalytics(firebaseApp);
+       if(!hasTrackedStart){
             logEvent(analytics, 'video_start');
             setHasTrackedStart(true);
         }
-
+      
       playerRef.current.unMute();
       playerRef.current.seekTo(0, true);
       playerRef.current.playVideo();
       setIsMuted(false);
       setHasInteracted(true);
-      localStorage.setItem('vsl_hasInteracted', 'true');
-    }
-  };
-
-  const continueVideo = () => {
-    setShowReturnDialog(false);
-    if (playerRef.current) {
-        playerRef.current.unMute();
+      localStorage.setItem(hasInteractedKey, 'true');
+    } else {
+      // Subsequent interactions: play/pause
+      if (isPlaying) {
+        playerRef.current.pauseVideo();
+      } else {
         playerRef.current.playVideo();
-        setIsMuted(false);
-        setHasInteracted(true);
-        localStorage.setItem('vsl_hasInteracted', 'true');
-    }
-  }
-
-  const restartVideo = () => {
-    setShowReturnDialog(false);
-    localStorage.setItem(`vsl_currentTime_${videoId}`, '0');
-    if (playerRef.current) {
-        playerRef.current.seekTo(0, true);
-        playerRef.current.unMute();
-        playerRef.current.playVideo();
-        setIsMuted(false);
-        setHasInteracted(true);
-        localStorage.setItem('vsl_hasInteracted', 'true');
-    }
-  }
-
-
-  const getNonLinearProgress = (current: number, total: number) => {
-    if (total === 0) return 0;
-    const percentage = (current / total);
-
-    if (percentage <= 0.10) { // Fase 1
-      return (percentage / 0.10) * 60;
-    } else if (percentage <= 0.70) { // Fase 2
-      return 60 + ((percentage - 0.10) / 0.60) * 20;
-    } else if (percentage <= 0.80) { // Fase 3
-      return 80 + ((percentage - 0.70) / 0.10) * 10;
-    } else { // Fase 4
-      return 90 + ((percentage - 0.80) / 0.20) * 10;
+      }
     }
   };
 
-  const calculatedProgress = getNonLinearProgress(progress, duration);
-
-  const ScarcityCounter = () => {
-    const [licenses, setLicenses] = useState(11);
-    const [color, setColor] = useState('text-primary');
-
-    useEffect(() => {
-      if (!endTime) return;
-
-      const updateCounter = () => {
-        const elapsed = (Date.now() - endTime) / 1000;
-        if (elapsed > 42) { // 12s + 30s
-          setLicenses(9);
-          setColor('text-red-600');
-        } else if (elapsed > 12) {
-          setLicenses(10);
-          setColor('text-red-600');
-        } else {
-          setLicenses(11);
-          setColor('text-primary');
-        }
-      };
-
-      updateCounter();
-      const interval = setInterval(updateCounter, 1000);
-      return () => clearInterval(interval);
-    }, []);
-
-    return (
-      <div className="flex flex-col items-center justify-center bg-black/50 p-8 rounded-lg aspect-video">
-        <h3 className="text-xl font-bold uppercase sm:text-2xl text-center">Faltam apenas</h3>
-        <p className={cn("text-7xl sm:text-9xl font-extrabold my-4 transition-colors", color)}>{licenses}</p>
-        <h3 className="text-xl font-bold uppercase sm:text-2xl text-center">Licenças Disponíveis</h3>
-      </div>
-    );
-  };
-  
   const handleCtaClick = () => {
     const analytics = getAnalytics(firebaseApp);
     logEvent(analytics, 'cta_click');
   }
 
-  const handlePlayerClick = () => {
-    if (!hasInteracted) {
-        handleInitialPlay();
-    }
-    // After initial interaction, clicks do nothing to prevent pausing.
-  }
+  const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
 
   return (
     <>
     <div className="relative w-full aspect-video">
-      {videoEnded ? (
-        <ScarcityCounter />
-      ) : (
-        <div className="group relative w-full h-full" onClick={handlePlayerClick}>
-          <div id="youtube-player" className="w-full h-full rounded-lg overflow-hidden pointer-events-none" />
-          
-          {isMuted && hasInteracted === false && !showReturnDialog && (
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm cursor-pointer">
-                <VolumeX className="h-16 w-16 text-white" />
-                <p className="mt-4 text-xl font-bold uppercase text-white">Clique para ativar o som</p>
-            </div>
-          )}
-
-          <div className="absolute bottom-0 left-0 w-full h-1.5 bg-white/20">
-            <div 
-              className="h-full bg-primary transition-all duration-1000 ease-linear"
-              style={{ width: `${calculatedProgress}%` }}
-            ></div>
+      <div 
+        className="group relative w-full h-full cursor-pointer"
+        onClick={handlePlayerClick}
+      >
+        <div id="youtube-player" className="w-full h-full rounded-lg overflow-hidden pointer-events-none" />
+        
+        {isMuted && !hasInteracted && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm pointer-events-none">
+              <VolumeX className="h-16 w-16 text-white" />
+              <p className="mt-4 text-xl font-bold uppercase text-white">Clique para ativar o som</p>
           </div>
+        )}
+
+        {!isPlaying && hasInteracted && !videoEnded && (
+           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/40 pointer-events-none">
+              <Play className="h-20 w-20 text-white/80" />
+          </div>
+        )}
+
+        <div className="absolute bottom-0 left-0 w-full h-1.5 bg-white/20">
+          <div 
+            className="h-full bg-primary transition-all duration-100 ease-linear"
+            style={{ width: `${progressPercent}%` }}
+          ></div>
         </div>
-      )}
+      </div>
 
       {showCta && (
-        <div className="mt-8 flex justify-center animate-pulse">
-            <a href="https://pay.hotmart.com/E101943327K?checkoutMode=2" onClick={handleCtaClick} className="hotmart-fb hotmart__button-checkout font-headline text-lg font-bold uppercase">
+         <div className="mt-8 flex justify-center animate-pulse">
+            <a href="https://pay.hotmart.com/E101943327K?checkoutMode=2" onClick={handleCtaClick} className="hotmart-fb hotmart__button-checkout text-base sm:text-lg font-headline font-bold uppercase text-center">
                 QUERO ACESSAR AGORA
             </a>
         </div>
       )}
     </div>
-     <AlertDialog open={showReturnDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Você já começou a assistir!</AlertDialogTitle>
-            <AlertDialogDescription>
-              Vimos que você já iniciou o vídeo. Deseja continuar de onde parou ou começar novamente?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <Button variant="outline" onClick={restartVideo}>Reiniciar Vídeo</Button>
-            <Button onClick={continueVideo}>Continuar de Onde Parei</Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 };

@@ -18,11 +18,11 @@ const ScarcityCounter = () => {
             const now = Date.now();
             const elapsedSeconds = Math.floor((now - videoEndTime) / 1000);
 
-            if (elapsedSeconds >= 12 && elapsedSeconds < 42) {
-                setLicenses(10);
-                setLicenseColor('text-red-500');
-            } else if (elapsedSeconds >= 42) {
+            if (elapsedSeconds >= 42) {
                 setLicenses(9);
+                setLicenseColor('text-red-500');
+            } else if (elapsedSeconds >= 12) {
+                setLicenses(10);
                 setLicenseColor('text-red-500');
             } else {
                 setLicenses(11);
@@ -274,5 +274,3 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
 };
 
 export default VslPlayer;
-
-    

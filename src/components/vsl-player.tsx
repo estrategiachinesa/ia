@@ -175,7 +175,8 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
 
         {!isPlaying && hasInteracted && !videoEnded && (
            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/40 pointer-events-none">
-              <Play className="h-20 w-20 text-white/80" />
+              <Play className="h-20 w-20 text-white/80 animate-pulse" />
+              <p className="mt-2 text-lg font-bold text-white uppercase">Aperte o play</p>
           </div>
         )}
 

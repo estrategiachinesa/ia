@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw, HelpCircle } from 'lucide-react';
 import { CurrencyFlags } from './currency-flags';
 import Link from 'next/link';
-import { SignalData } from '@/app/free/page';
+import { SignalData } from '@/app/demo/page';
 import { cn } from '@/lib/utils';
 import { Asset } from '@/app/analisador/page';
 import { useAppConfig } from '@/firebase';
@@ -99,8 +99,8 @@ export function FreeSignalResult({ data, onReset, isMarketMode, isSignalFinished
     <div className="w-full max-w-md space-y-6 text-center">
       <Card className={cn(
           'border-primary/30 bg-background/50',
-           isMarketMode && isCall && 'border-success/50 bg-success/10',
-           isMarketMode && !isCall && 'border-destructive/50 bg-destructive/10'
+           isMarketMode && isCall && signal !== '?' && 'border-success/50 bg-success/10',
+           isMarketMode && !isCall && signal !== '?' && 'border-destructive/50 bg-destructive/10'
         )}>
         <CardHeader>
           <CardTitle className="text-2xl flex items-center justify-between">

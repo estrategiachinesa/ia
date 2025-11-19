@@ -76,6 +76,18 @@ body {
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
+  .theme-premium {
+    --primary: 260 80% 60%;
+    --accent: 260 80% 60%;
+    --ring: 260 80% 60%;
+  }
+
+  .theme-free {
+    --primary: 217 91% 60%;
+    --accent: 217 91% 60%;
+    --ring: 217 91% 60%;
+  }
 }
 
 @layer base {

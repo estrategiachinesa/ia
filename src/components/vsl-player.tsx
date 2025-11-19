@@ -2,15 +2,11 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { VolumeX, Play, Pause } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { getAnalytics, logEvent } from 'firebase/analytics';
-import { useFirebase } from '@/firebase/provider';
+import { VolumeX, Play } from 'lucide-react';
 
 const VSL_CTA_TIMESTAMP = 167; // 2 minutos e 47 segundos
 
 const VslPlayer = ({ videoId }: { videoId: string }) => {
-  const { firebaseApp } = useFirebase();
   const playerRef = useRef<any>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout>();
 
@@ -22,9 +18,6 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
   const [duration, setDuration] = useState(0);
   const [showCta, setShowCta] = useState(false);
   const [videoEnded, setVideoEnded] = useState(false);
-  
-  const [hasTrackedStart, setHasTrackedStart] = useState(false);
-  const [trackedProgress, setTrackedProgress] = useState<Set<number>>(new Set());
 
   const currentTimeKey = `vsl_currentTime_${videoId}`;
   const hasInteractedKey = 'vsl_hasInteracted';
@@ -68,20 +61,6 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
           if (currentTime >= VSL_CTA_TIMESTAMP && !showCta) {
             setShowCta(true);
           }
-          
-          // Analytics
-          if (duration > 0) {
-            const analytics = getAnalytics(firebaseApp);
-            const percentage = (currentTime / duration) * 100;
-            const milestones = [25, 50, 75];
-            
-            milestones.forEach(milestone => {
-                if (percentage >= milestone && !trackedProgress.has(milestone)) {
-                    logEvent(analytics, 'video_progress', { progress_percent: milestone });
-                    setTrackedProgress(prev => new Set(prev).add(milestone));
-                }
-            });
-          }
         }
       }, 1000);
     } else {
@@ -89,15 +68,7 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
     }
 
     return () => clearInterval(progressIntervalRef.current);
-  }, [isPlaying, duration, firebaseApp, trackedProgress]);
-
-   useEffect(() => {
-    if (showCta) {
-        const analytics = getAnalytics(firebaseApp);
-        logEvent(analytics, 'cta_shown');
-    }
-  }, [showCta, firebaseApp]);
-
+  }, [isPlaying]);
 
   const createPlayer = () => {
     if (playerRef.current) return;
@@ -153,8 +124,6 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
       setVideoEnded(true);
       setShowCta(true);
       localStorage.removeItem(currentTimeKey);
-      const analytics = getAnalytics(firebaseApp);
-      logEvent(analytics, 'video_complete');
     }
   };
 
@@ -163,12 +132,6 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
 
     if (!hasInteracted) {
       // First interaction: unmute, restart, and play.
-      const analytics = getAnalytics(firebaseApp);
-       if(!hasTrackedStart){
-            logEvent(analytics, 'video_start');
-            setHasTrackedStart(true);
-        }
-      
       playerRef.current.unMute();
       playerRef.current.seekTo(0, true);
       playerRef.current.playVideo();
@@ -184,11 +147,6 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
       }
     }
   };
-
-  const handleCtaClick = () => {
-    const analytics = getAnalytics(firebaseApp);
-    logEvent(analytics, 'cta_click');
-  }
 
   const progressPercent = duration > 0 ? (progress / duration) * 100 : 0;
 
@@ -223,8 +181,8 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
       </div>
 
       {showCta && (
-         <div className="mt-8 flex justify-center animate-pulse">
-            <a href="https://pay.hotmart.com/E101943327K?checkoutMode=2" onClick={handleCtaClick} className="hotmart-fb hotmart__button-checkout text-base sm:text-lg font-headline font-bold uppercase text-center">
+        <div className="mt-8 flex justify-center animate-pulse">
+            <a href="https://pay.hotmart.com/E101943327K?checkoutMode=2" className="hotmart-fb hotmart__button-checkout font-headline text-lg font-bold uppercase">
                 QUERO ACESSAR AGORA
             </a>
         </div>

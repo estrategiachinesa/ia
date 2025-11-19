@@ -39,7 +39,7 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
       createPlayer();
     };
 
-    if ((window as any).YT) {
+    if ((window as any).YT && (window as any).YT.Player) {
       createPlayer();
     }
 
@@ -71,7 +71,7 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
     }
 
     return () => clearInterval(progressIntervalRef.current);
-  }, [isPlaying]);
+  }, [isPlaying, showCta]);
 
   const createPlayer = () => {
     if (playerRef.current) return;
@@ -106,9 +106,14 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
     
     const storedTime = parseFloat(localStorage.getItem(currentTimeKey) || '0');
     const storedInteraction = localStorage.getItem(hasInteractedKey) === 'true';
+    
+    if (storedTime >= VSL_CTA_TIMESTAMP) {
+        setShowCta(true);
+    }
 
     if (storedInteraction && storedTime > 0) {
       event.target.seekTo(storedTime, true);
+      // Don't auto-play on reload, just seek and pause
       event.target.pauseVideo();
     } else {
        setIsMuted(true); 
@@ -161,7 +166,7 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
       >
         <div id="youtube-player" className="w-full h-full rounded-lg overflow-hidden pointer-events-none" />
         
-        {isMuted && (
+        {isMuted && hasInteracted === false && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm pointer-events-none">
               <VolumeX className="h-16 w-16 text-white" />
               <p className="mt-4 text-xl font-bold uppercase text-white">Clique para ativar o som</p>

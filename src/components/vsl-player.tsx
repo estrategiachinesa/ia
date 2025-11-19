@@ -6,6 +6,16 @@ import { VolumeX, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getAnalytics, logEvent } from 'firebase/analytics';
 import { useFirebase } from '@/firebase/provider';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+
 
 const VSL_CTA_TIMESTAMP = 167; // 2 minutos e 47 segundos
 
@@ -23,31 +33,36 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
   const [videoEnded, setVideoEnded] = useState(false);
   const [endTime, setEndTime] = useState<number | null>(null);
 
+  // New state for the return popup
+  const [showReturnDialog, setShowReturnDialog] = useState(false);
+
   // States for analytics events to fire only once
   const [hasTrackedStart, setHasTrackedStart] = useState(false);
   const [trackedProgress, setTrackedProgress] = useState<Set<number>>(new Set());
 
   useEffect(() => {
-    // Check localStorage on initial mount
     const storedInteraction = localStorage.getItem('vsl_hasInteracted') === 'true';
-    setHasInteracted(storedInteraction);
-
     const storedVideoEnded = localStorage.getItem('vsl_videoEnded') === 'true';
     const storedEndTime = localStorage.getItem('vsl_endTime');
+    const storedTime = parseFloat(localStorage.getItem(`vsl_currentTime_${videoId}`) || '0');
+
+    setHasInteracted(storedInteraction);
 
     if (storedVideoEnded && storedEndTime) {
       setVideoEnded(true);
       setEndTime(parseInt(storedEndTime, 10));
-      setShowCta(true); // If video ended, CTA must have been shown
+      setShowCta(true); 
     } else {
-      // Load YouTube API only if video hasn't ended
-      const tag = document.createElement('script');
-      tag.src = "https://www.youtube.com/iframe_api";
-      document.head.appendChild(tag);
+        if (storedInteraction && storedTime > 1) {
+            setShowReturnDialog(true);
+        }
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        document.head.appendChild(tag);
 
-      (window as any).onYouTubeIframeAPIReady = () => {
-        createPlayer();
-      };
+        (window as any).onYouTubeIframeAPIReady = () => {
+            createPlayer(false); // Don't autoplay initially if dialog might show
+        };
     }
 
     return () => {
@@ -64,14 +79,13 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
   }, [showCta, firebaseApp]);
 
 
-  const createPlayer = () => {
-    const storedTime = parseFloat(localStorage.getItem(`vsl_currentTime_${videoId}`) || '0');
-    const storedInteraction = localStorage.getItem('vsl_hasInteracted') === 'true';
-    
+  const createPlayer = (shouldAutoplay: boolean, startTime: number = 0) => {
+    if (playerRef.current) return;
+
     playerRef.current = new (window as any).YT.Player('youtube-player', {
       videoId: videoId,
       playerVars: {
-        autoplay: 1,
+        autoplay: shouldAutoplay ? 1 : 0,
         controls: 0,
         showinfo: 0,
         rel: 0,
@@ -79,8 +93,8 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
         modestbranding: 1,
         disablekb: 1,
         playsinline: 1,
-        start: Math.floor(storedTime),
-        mute: storedInteraction ? 0 : 1,
+        start: Math.floor(startTime),
+        mute: 1,
       },
       events: {
         'onReady': onPlayerReady,
@@ -91,19 +105,29 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
 
   const onPlayerReady = (event: any) => {
     setDuration(event.target.getDuration());
-    if (localStorage.getItem('vsl_hasInteracted') !== 'true') {
+     if (localStorage.getItem('vsl_hasInteracted') !== 'true') {
         event.target.mute();
-        event.target.playVideo();
+        if(!showReturnDialog) { // Only play if the dialog isn't supposed to show
+          event.target.playVideo();
+        }
     } else {
         setIsMuted(false);
         const storedTime = parseFloat(localStorage.getItem(`vsl_currentTime_${videoId}`) || '0');
         event.target.seekTo(storedTime, true);
-        event.target.playVideo();
+        if(!showReturnDialog) {
+            event.target.playVideo();
+        }
     }
   };
 
   const onPlayerStateChange = (event: any) => {
     setPlayerState(event.data);
+    
+    // If user somehow pauses it, play it again.
+    if (event.data === (window as any).YT.PlayerState.PAUSED && hasInteracted) {
+      playerRef.current.playVideo();
+    }
+    
     if (event.data === (window as any).YT.PlayerState.PLAYING) {
       startProgressTracker();
     } else {
@@ -176,18 +200,32 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
     }
   };
 
-  const togglePlayPause = () => {
-    if (!hasInteracted) {
-      handleInitialPlay();
-      return;
-    }
-    const state = playerRef.current?.getPlayerState();
-    if (state === (window as any).YT.PlayerState.PLAYING) {
-      playerRef.current.pauseVideo();
+  const continueVideo = () => {
+    setShowReturnDialog(false);
+    const storedTime = parseFloat(localStorage.getItem(`vsl_currentTime_${videoId}`) || '0');
+    if (!playerRef.current) {
+        createPlayer(true, storedTime);
     } else {
-      playerRef.current.playVideo();
+        playerRef.current.seekTo(storedTime, true);
+        playerRef.current.unMute();
+        playerRef.current.playVideo();
     }
-  };
+    setIsMuted(false);
+  }
+
+  const restartVideo = () => {
+    setShowReturnDialog(false);
+    localStorage.setItem(`vsl_currentTime_${videoId}`, '0');
+    if (!playerRef.current) {
+        createPlayer(true, 0);
+    } else {
+        playerRef.current.seekTo(0, true);
+        playerRef.current.unMute();
+        playerRef.current.playVideo();
+    }
+     setIsMuted(false);
+  }
+
 
   const getNonLinearProgress = (current: number, total: number) => {
     if (total === 0) return 0;
@@ -246,24 +284,26 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
     logEvent(analytics, 'cta_click');
   }
 
+  const handlePlayerClick = () => {
+    if (!hasInteracted) {
+        handleInitialPlay();
+    }
+    // After initial interaction, clicks do nothing to prevent pausing.
+  }
+
   return (
+    <>
     <div className="relative w-full aspect-video">
       {videoEnded ? (
         <ScarcityCounter />
       ) : (
-        <div className="group relative w-full h-full cursor-pointer" onClick={togglePlayPause}>
-          <div id="youtube-player" className="w-full h-full rounded-lg overflow-hidden" />
+        <div className="group relative w-full h-full" onClick={handlePlayerClick}>
+          <div id="youtube-player" className="w-full h-full rounded-lg overflow-hidden pointer-events-none" />
           
           {isMuted && hasInteracted === false && (
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm cursor-pointer">
                 <VolumeX className="h-16 w-16 text-white" />
                 <p className="mt-4 text-xl font-bold uppercase text-white">Clique para ativar o som</p>
-            </div>
-          )}
-
-          {playerState !== 1 && hasInteracted && (
-             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 transition-opacity opacity-0 group-hover:opacity-100">
-                <Play className="h-16 w-16 text-white" />
             </div>
           )}
 
@@ -284,6 +324,21 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
         </div>
       )}
     </div>
+     <AlertDialog open={showReturnDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Você já começou a assistir!</AlertDialogTitle>
+            <AlertDialogDescription>
+              Vimos que você já iniciou o vídeo. Deseja continuar de onde parou ou começar novamente?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button variant="outline" onClick={restartVideo}>Reiniciar Vídeo</Button>
+            <Button onClick={continueVideo}>Continuar de Onde Parei</Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 

@@ -15,12 +15,6 @@ permissions:
   pages: write
   id-token: write
 
-# Permite apenas uma implantação simultânea, cancelando execuções anteriores
-# Força o deploy
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
-
 jobs:
   # Job de build
   build:

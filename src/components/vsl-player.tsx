@@ -26,6 +26,9 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
     // Check localStorage on mount
     const storedInteraction = localStorage.getItem(hasInteractedKey) === 'true';
     setHasInteracted(storedInteraction);
+    if(storedInteraction){
+        setIsMuted(false);
+    }
 
     const tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
@@ -72,13 +75,14 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
 
   const createPlayer = () => {
     if (playerRef.current) return;
+    
     const storedTime = parseFloat(localStorage.getItem(currentTimeKey) || '0');
     const storedInteraction = localStorage.getItem(hasInteractedKey) === 'true';
     
     playerRef.current = new (window as any).YT.Player('youtube-player', {
       videoId: videoId,
       playerVars: {
-        autoplay: storedInteraction ? 0 : 1, // Autoplay only if NO previous interaction
+        autoplay: storedInteraction ? 0 : 1, 
         mute: storedInteraction ? 0 : 1,
         controls: 0,
         showinfo: 0,
@@ -104,11 +108,9 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
     const storedInteraction = localStorage.getItem(hasInteractedKey) === 'true';
 
     if (storedInteraction && storedTime > 0) {
-      // If user has interacted and there's saved time, just seek and pause.
       event.target.seekTo(storedTime, true);
       event.target.pauseVideo();
     } else {
-       // On first load, it will autoplay muted.
        setIsMuted(true); 
     }
   };
@@ -127,10 +129,10 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
     }
   };
 
-  const handlePlayerClick = () => {
+  const handleInteraction = () => {
     if (!isReady) return;
 
-    if (!hasInteracted) {
+    if (isMuted) {
       // First interaction: unmute, restart, and play.
       playerRef.current.unMute();
       playerRef.current.seekTo(0, true);
@@ -155,11 +157,11 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
     <div className="relative w-full aspect-video">
       <div 
         className="group relative w-full h-full cursor-pointer"
-        onClick={handlePlayerClick}
+        onClick={handleInteraction}
       >
         <div id="youtube-player" className="w-full h-full rounded-lg overflow-hidden pointer-events-none" />
         
-        {isMuted && !hasInteracted && (
+        {isMuted && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm pointer-events-none">
               <VolumeX className="h-16 w-16 text-white" />
               <p className="mt-4 text-xl font-bold uppercase text-white">Clique para ativar o som</p>
@@ -181,8 +183,8 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
       </div>
 
       {showCta && (
-        <div className="mt-8 flex justify-center animate-pulse">
-            <a href="https://pay.hotmart.com/E101943327K?checkoutMode=2" className="hotmart-fb hotmart__button-checkout font-headline text-lg font-bold uppercase">
+        <div className="mt-8 flex justify-center text-center animate-pulse">
+            <a href="https://pay.hotmart.com/E101943327K?checkoutMode=2" className="hotmart-fb hotmart__button-checkout font-headline text-lg sm:text-xl font-bold uppercase">
                 QUERO ACESSAR AGORA
             </a>
         </div>

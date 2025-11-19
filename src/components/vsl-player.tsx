@@ -48,26 +48,35 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
 
     setHasInteracted(storedInteraction);
 
-    if (storedVideoEnded && storedEndTime) {
-      setVideoEnded(true);
-      setEndTime(parseInt(storedEndTime, 10));
-      setShowCta(true); 
-    } else {
-        if (storedInteraction && storedTime > 1) {
-            setShowReturnDialog(true);
-        }
-        const tag = document.createElement('script');
-        tag.src = "https://www.youtube.com/iframe_api";
-        document.head.appendChild(tag);
+    const initPlayer = () => {
+       if (storedVideoEnded && storedEndTime) {
+        setVideoEnded(true);
+        setEndTime(parseInt(storedEndTime, 10));
+        setShowCta(true); 
+      } else {
+          if (storedInteraction && storedTime > 1) {
+              setShowReturnDialog(true);
+          }
+          const tag = document.createElement('script');
+          tag.src = "https://www.youtube.com/iframe_api";
+          document.head.appendChild(tag);
 
-        (window as any).onYouTubeIframeAPIReady = () => {
-            createPlayer(false); // Don't autoplay initially if dialog might show
-        };
+          (window as any).onYouTubeIframeAPIReady = () => {
+              createPlayer(false, storedTime); // Don't autoplay, but seek to stored time
+          };
+          if ((window as any).YT) {
+            createPlayer(false, storedTime);
+          }
+      }
     }
+
+    initPlayer();
 
     return () => {
       clearInterval(progressIntervalRef.current);
-      playerRef.current?.destroy();
+      if (playerRef.current?.destroy) {
+        playerRef.current.destroy();
+      }
     };
   }, []);
 
@@ -105,18 +114,21 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
 
   const onPlayerReady = (event: any) => {
     setDuration(event.target.getDuration());
-     if (localStorage.getItem('vsl_hasInteracted') !== 'true') {
+    // If the return dialog is going to be shown, we don't want to play.
+    // The player is already created with autoplay:0 and sought to the right time.
+    // So it will just sit there paused.
+    if (showReturnDialog) {
+        return;
+    }
+
+    if (localStorage.getItem('vsl_hasInteracted') !== 'true') {
         event.target.mute();
-        if(!showReturnDialog) { // Only play if the dialog isn't supposed to show
-          event.target.playVideo();
-        }
+        event.target.playVideo();
     } else {
         setIsMuted(false);
         const storedTime = parseFloat(localStorage.getItem(`vsl_currentTime_${videoId}`) || '0');
         event.target.seekTo(storedTime, true);
-        if(!showReturnDialog) {
-            event.target.playVideo();
-        }
+        event.target.playVideo();
     }
   };
 
@@ -125,7 +137,10 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
     
     // If user somehow pauses it, play it again.
     if (event.data === (window as any).YT.PlayerState.PAUSED && hasInteracted) {
-      playerRef.current.playVideo();
+      // Allow pause only if the return dialog is active
+      if(!showReturnDialog) {
+        playerRef.current.playVideo();
+      }
     }
     
     if (event.data === (window as any).YT.PlayerState.PLAYING) {
@@ -202,28 +217,22 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
 
   const continueVideo = () => {
     setShowReturnDialog(false);
-    const storedTime = parseFloat(localStorage.getItem(`vsl_currentTime_${videoId}`) || '0');
-    if (!playerRef.current) {
-        createPlayer(true, storedTime);
-    } else {
-        playerRef.current.seekTo(storedTime, true);
+    if (playerRef.current) {
         playerRef.current.unMute();
         playerRef.current.playVideo();
+        setIsMuted(false);
     }
-    setIsMuted(false);
   }
 
   const restartVideo = () => {
     setShowReturnDialog(false);
     localStorage.setItem(`vsl_currentTime_${videoId}`, '0');
-    if (!playerRef.current) {
-        createPlayer(true, 0);
-    } else {
+    if (playerRef.current) {
         playerRef.current.seekTo(0, true);
         playerRef.current.unMute();
         playerRef.current.playVideo();
+        setIsMuted(false);
     }
-     setIsMuted(false);
   }
 
 
@@ -300,7 +309,7 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
         <div className="group relative w-full h-full" onClick={handlePlayerClick}>
           <div id="youtube-player" className="w-full h-full rounded-lg overflow-hidden pointer-events-none" />
           
-          {isMuted && hasInteracted === false && (
+          {isMuted && hasInteracted === false && !showReturnDialog && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm cursor-pointer">
                 <VolumeX className="h-16 w-16 text-white" />
                 <p className="mt-4 text-xl font-bold uppercase text-white">Clique para ativar o som</p>

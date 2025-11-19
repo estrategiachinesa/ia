@@ -102,12 +102,13 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
   const createPlayer = () => {
     if (playerRef.current) return;
     const storedTime = parseFloat(localStorage.getItem(currentTimeKey) || '0');
+    const storedInteraction = localStorage.getItem(hasInteractedKey) === 'true';
     
     playerRef.current = new (window as any).YT.Player('youtube-player', {
       videoId: videoId,
       playerVars: {
-        autoplay: hasInteracted ? 0 : 1,
-        mute: hasInteracted ? 0 : 1,
+        autoplay: storedInteraction ? 0 : 1, // Autoplay only if NO previous interaction
+        mute: storedInteraction ? 0 : 1,
         controls: 0,
         showinfo: 0,
         rel: 0,
@@ -129,12 +130,15 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
     setDuration(event.target.getDuration());
     
     const storedTime = parseFloat(localStorage.getItem(currentTimeKey) || '0');
-    if (hasInteracted && storedTime > 0) {
+    const storedInteraction = localStorage.getItem(hasInteractedKey) === 'true';
+
+    if (storedInteraction && storedTime > 0) {
+      // If user has interacted and there's saved time, just seek and pause.
       event.target.seekTo(storedTime, true);
       event.target.pauseVideo();
     } else {
-       setIsMuted(true); // Ensure muted state is correct on first load
-       event.target.playVideo();
+       // On first load, it will autoplay muted.
+       setIsMuted(true); 
     }
   };
 
@@ -158,7 +162,7 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
     if (!isReady) return;
 
     if (!hasInteracted) {
-      // First interaction
+      // First interaction: unmute, restart, and play.
       const analytics = getAnalytics(firebaseApp);
        if(!hasTrackedStart){
             logEvent(analytics, 'video_start');

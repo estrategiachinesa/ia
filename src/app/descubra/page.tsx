@@ -389,7 +389,7 @@ const FinalCtaSection = () => (
 );
 
 const Footer = () => (
-  <footer className="bg-gray-900 text-gray-400 py-8">
+  <footer className="bg-background text-gray-400 py-8">
     <div className="container mx-auto px-4 text-center text-sm">
       <Logo />
       <p className="mt-4">

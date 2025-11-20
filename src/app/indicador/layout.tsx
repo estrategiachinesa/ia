@@ -1,3 +1,4 @@
+
 export default function IndicadorLayout({
   children,
 }: Readonly<{

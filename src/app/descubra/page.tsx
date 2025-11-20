@@ -30,7 +30,6 @@ import {
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import CountdownTimer from '@/components/countdown-timer';
-import YoutubePlayer from '@/components/youtube-player';
 import TestimonialCard from '@/components/testimonial-card';
 import { Logo } from '@/components/logo';
 import { cn } from '@/lib/utils';
@@ -122,13 +121,8 @@ const SolutionSection = () => {
                 A Solução Definitiva: Indicador da ESTRATEGIA CHINESA
                 </h2>
                 <p className="mt-4 max-w-3xl mx-auto text-muted-foreground text-lg">
-                Assista ao vídeo abaixo e veja como o indicador funciona na prática.
-                É simples, direto e eficaz.
+                O indicador é simples, direto e eficaz. Veja suas principais características:
                 </p>
-            </div>
-
-            <div className="mt-12 max-w-4xl mx-auto">
-                <YoutubePlayer videoId="O_R9k6Yh2b4" />
             </div>
 
             <div className="mt-16 grid md:grid-cols-3 gap-8 text-center">

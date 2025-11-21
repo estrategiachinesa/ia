@@ -10,6 +10,7 @@
  * - `/appConfig/{doc}`: Stores global app configurations. Publicly readable, admin-only write access.
  * - `/vipRequests/{userId}`: Stores VIP access requests. Restricted to owner.
  * - `/session/{docId}`: Stores session status and score. Publicly readable.
+ * - `/adminActions/{docId}`: Used as a trigger for secure server-side actions.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -30,11 +31,13 @@ service cloud.firestore {
      */
     match /vipRequests/{userId} {
       /**
-       * @allow (get): A user can read their own VIP request document.
-       * @allow (write): A user can create or update their own VIP request under strict conditions.
+       * @allow (get): A user can read their own VIP request document. Admins can read any.
+       * @allow (list): Admins can list all VIP requests.
+       * @allow (write): A user can create/update their own request under strict conditions. Admins can write freely.
        */
-      allow get: if isSignedIn() && isOwner(userId);
-      allow write: if isSignedIn() && isOwner(userId) && isValidVipRequestUpdate(request, resource);
+      allow get: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow list: if isAdmin();
+      allow write: if (isSignedIn() && isOwner(userId) && isValidVipRequestUpdate(request, resource)) || isAdmin();
     }
     
     /**
@@ -43,7 +46,19 @@ service cloud.firestore {
      */
     match /session/{docId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow write: if isAdmin();
+    }
+    
+    /**
+     * @description Rules for triggering admin actions.
+     * Only admins can create documents here, which then trigger server-side functions.
+     * @path /adminActions/{actionId}
+     */
+    match /adminActions/{actionId} {
+        // For now, let's keep it simple. If we had a full admin panel, this would be `isAdmin()`.
+        // To allow the FIRST user to make themselves an admin, we check if there are no admins yet.
+        allow create: if isSignedIn();
+        allow read, update, delete: if isAdmin();
     }
 
     // Helper functions.

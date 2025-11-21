@@ -31,10 +31,10 @@ service cloud.firestore {
     match /vipRequests/{userId} {
       /**
        * @allow (get): A user can read their own VIP request document.
-       * @allow (write): A user can create or update their own VIP request.
+       * @allow (write): A user can create or update their own VIP request under strict conditions.
        */
       allow get: if isSignedIn() && isOwner(userId);
-      allow write: if isSignedIn() && isOwner(userId) && isValidVipRequest(request, resource);
+      allow write: if isSignedIn() && isOwner(userId) && isValidVipRequestUpdate(request, resource);
     }
     
     /**
@@ -43,8 +43,7 @@ service cloud.firestore {
      */
     match /session/{docId} {
       allow read: if true;
-      allow create: if isAdmin(); // Only admins can create session docs
-      allow update, delete: if isAdmin(); // Only admins can update/delete session docs
+      allow create, update, delete: if isAdmin();
     }
 
     // Helper functions.
@@ -60,24 +59,39 @@ service cloud.firestore {
       return isSignedIn() && request.auth.token.admin == true;
     }
 
-    function isValidVipRequest(req, res) {
+    /**
+     * @description Validates the data for a VIP request during creation or update.
+     * Ensures that users can only transition between specific, allowed statuses.
+     * @param {object} req - The request object.
+     * @param {object} res - The resource object (data before the operation).
+     * @returns {boolean} True if the write operation is valid.
+     */
+    function isValidVipRequestUpdate(req, res) {
+      // Common validation for the brokerId format.
       let isBrokerIdValid = req.resource.data.brokerId is string &&
                            req.resource.data.brokerId.matches("^[0-9]{8,}$");
       
+      // Scenario 1: Creating a new request.
+      // Must have a valid brokerId and status must be 'PENDING'.
       let isCreating = req.method == 'create' && 
                        req.resource.data.status == 'PENDING' &&
                        isBrokerIdValid;
       
-      let isUpdatingToDepositPending = req.method == 'update' && 
-                                       req.resource.data.status == 'DEPOSIT_PENDING' &&
-                                       res.data.status == 'AWAITING_DEPOSIT';
+      // Scenario 2: User is confirming they have made a deposit.
+      // The status must be transitioning from 'AWAITING_DEPOSIT' to 'DEPOSIT_PENDING'.
+      let isConfirmingDeposit = req.method == 'update' && 
+                                req.resource.data.status == 'DEPOSIT_PENDING' &&
+                                res.data.status == 'AWAITING_DEPOSIT';
                                        
+      // Scenario 3: User is re-submitting a request that was previously rejected.
+      // The old status must be 'REJECTED' and the new one must be 'PENDING' with a valid (potentially new) brokerId.
       let isResubmittingRejected = req.method == 'update' &&
                                    res.data.status == 'REJECTED' &&
                                    req.resource.data.status == 'PENDING' &&
                                    isBrokerIdValid;
 
-      return isCreating || isUpdatingToDepositPending || isResubmittingRejected;
+      // The write is only allowed if it matches one of the valid scenarios.
+      return isCreating || isConfirmingDeposit || isResubmittingRejected;
     }
   }
 }

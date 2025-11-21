@@ -155,7 +155,7 @@ const SolutionSection = () => {
             </div>
             
             <div className="mt-12 max-w-4xl mx-auto">
-              <YoutubePlayer videoId="ewlGNXdH7oM" />
+              <YoutubePlayer videoId="O_R9k6Yh2b4" />
             </div>
 
             <div className="mt-16 grid md:grid-cols-3 gap-8 text-center">

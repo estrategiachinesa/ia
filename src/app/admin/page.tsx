@@ -2,72 +2,30 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useFirebase } from '@/firebase';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
 import { Loader2, ShieldAlert, ShieldCheck } from 'lucide-react';
-import { setAdminClaim } from './actions';
-
-const formSchema = z.object({
-  email: z.string().email({ message: 'Por favor, insira um email válido.' }),
-});
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { AdminUsersPanel } from '@/components/admin/admin-users-panel';
+import { VipRequestsPanel } from '@/components/admin/vip-requests-panel';
 
 export default function AdminPage() {
   const router = useRouter();
   const { user, isUserLoading } = useFirebase();
-  const { toast } = useToast();
   const [isAdmin, setIsAdmin] = React.useState<boolean | null>(null);
 
   React.useEffect(() => {
     if (!isUserLoading) {
       if (!user) {
-        // If not logged in, redirect to login page
         router.push('/login');
         return;
       }
-      // Check for admin claim
       user.getIdTokenResult().then(idTokenResult => {
-        if (idTokenResult.claims.admin) {
-          setIsAdmin(true);
-        } else {
-          setIsAdmin(false);
-        }
+        setIsAdmin(!!idTokenResult.claims.admin);
       });
     }
   }, [user, isUserLoading, router]);
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      email: '',
-    },
-  });
-
-  const { isSubmitting } = form.formState;
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    const result = await setAdminClaim(values.email);
-    if (result.success) {
-      toast({
-        title: 'Sucesso!',
-        description: result.message,
-        className: 'bg-green-600 border-green-600 text-white',
-      });
-      form.reset();
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Erro',
-        description: result.message,
-      });
-    }
-  }
 
   if (isUserLoading || isAdmin === null) {
     return (
@@ -94,39 +52,51 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <ShieldCheck className="h-6 w-6 text-primary" />
-          </div>
-          <CardTitle className="mt-2 text-2xl font-bold">Painel de Administrador</CardTitle>
-          <CardDescription>Conceda permissões de administrador a um usuário.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email do Usuário</FormLabel>
-                    <FormControl>
-                      <Input placeholder="email@exemplo.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Tornar Administrador
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+    <div className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8">
+      <div className="w-full max-w-7xl">
+        <header className="mb-8 text-center">
+             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4">
+                <ShieldCheck className="h-8 w-8 text-primary" />
+            </div>
+            <h1 className="text-4xl font-bold font-headline">Painel de Administrador</h1>
+            <p className="text-muted-foreground mt-2">Gerencie as funcionalidades da aplicação.</p>
+        </header>
+
+        <Tabs defaultValue="vip-requests" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="vip-requests">Solicitações VIP</TabsTrigger>
+            <TabsTrigger value="users">Usuários Admin</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="vip-requests">
+            <Card>
+              <CardHeader>
+                <CardTitle>Solicitações de Acesso VIP/PREMIUM</CardTitle>
+                <CardDescription>
+                  Aprove ou rejeite as solicitações de usuários para o acesso prioritário.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <VipRequestsPanel />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="users">
+            <Card>
+              <CardHeader>
+                <CardTitle>Gerenciar Administradores</CardTitle>
+                <CardDescription>
+                  Conceda ou revogue permissões de administrador para outros usuários.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AdminUsersPanel />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }

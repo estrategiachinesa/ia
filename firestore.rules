@@ -4,25 +4,24 @@
  *
  * Core Philosophy:
  * This ruleset enforces access control for VIP requests and app configuration.
+ * It introduces an admin role via custom claims for secure configuration management.
  *
  * Data Structure:
- * - `/appConfig/{doc}`: Stores global app configurations. Publicly readable.
+ * - `/appConfig/{doc}`: Stores global app configurations. Publicly readable, admin-only write access.
  * - `/vipRequests/{userId}`: Stores VIP access requests. Restricted to owner.
+ * - `/session/{docId}`: Stores session status and score. Publicly readable.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
     /**
-     * @description Grants public read access to app configuration.
-     * @description Allows any user to create the document if it doesn't exist.
-     * @description Restricts updates to authenticated users (ideally admins).
+     * @description Grants public read access. Restricts write access to admins.
      * @path /appConfig/{configDoc}
      */
     match /appConfig/{configDoc} {
       allow read: if true;
-      allow create: if true;
-      allow update: if isSignedIn();
+      allow write: if isAdmin();
     }
 
     /**
@@ -44,8 +43,8 @@ service cloud.firestore {
      */
     match /session/{docId} {
       allow read: if true;
-      allow create: if true; // Allow creation if docs don't exist
-      allow update, delete: if false; // Nobody can write from the client-side after creation
+      allow create: if isAdmin(); // Only admins can create session docs
+      allow update, delete: if isAdmin(); // Only admins can update/delete session docs
     }
 
     // Helper functions.
@@ -55,6 +54,10 @@ service cloud.firestore {
 
     function isOwner(userId) {
       return request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
     }
 
     function isValidVipRequest(req, res) {
@@ -78,5 +81,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

@@ -12,6 +12,7 @@ export interface AppConfig {
   exnovaUrl: string;
   iqOptionUrl: string;
   telegramUrl: string;
+  blackFridayUrl: string;
   hourlySignalLimit: number;
   correlationChance: number;
   registrationSecret: string;
@@ -34,6 +35,7 @@ const defaultLinkConfig = {
     exnovaUrl: "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=",
     iqOptionUrl: "https://affiliate.iqoption.net/redir/?aff=198544&aff_model=revenue&afftrack=",
     telegramUrl: "https://t.me/Trader_Chines",
+    blackFridayUrl: "https://pay.hotmart.com/E101943327K?checkoutMode=2&off=cy5v5mrr",
 };
 
 const defaultLimitConfig = {

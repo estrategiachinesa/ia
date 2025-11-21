@@ -34,17 +34,16 @@ import TestimonialCard from '@/components/testimonial-card';
 import { Logo } from '@/components/logo';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAppConfig } from '@/firebase';
 
 const VslPlayerWithNoSSR = dynamic(() => import('@/components/vsl-player'), {
   ssr: false,
   loading: () => <Skeleton className="aspect-video w-full max-w-4xl rounded-lg bg-white/10" />,
 });
 
-const CTA_URL = 'https://pay.hotmart.com/E101943327K?checkoutMode=2&off=cy5v5mrr';
-
-const HotmartButton = ({ className }: { className?: string }) => (
+const HotmartButton = ({ className, url }: { className?: string; url: string }) => (
   <a
-    href={CTA_URL}
+    href={url}
     className={cn(
       'hotmart-fb hotmart__button-checkout font-headline text-lg font-bold uppercase',
       className
@@ -54,16 +53,19 @@ const HotmartButton = ({ className }: { className?: string }) => (
   </a>
 );
 
-const Header = () => (
-  <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm shadow-md shadow-primary/20">
-    <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-      <Logo />
-      <div className="hidden sm:inline-flex">
-        <HotmartButton />
-      </div>
-    </div>
-  </header>
-);
+const Header = () => {
+    const { config } = useAppConfig();
+    return (
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm shadow-md shadow-primary/20">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
+          <Logo />
+          <div className="hidden sm:inline-flex">
+            <HotmartButton url={config?.blackFridayUrl || '#'} />
+          </div>
+        </div>
+      </header>
+    );
+};
 
 const ProblemSection = () => {
     const problems = [
@@ -218,6 +220,7 @@ const TestimonialsSection = () => {
 };
 
 const OfferSection = () => {
+    const { config } = useAppConfig();
     const bonuses = [
         "Acesso a um grupo VIP no Telegram para networking e suporte",
         "Ferramentas de Inteligência artificial para auxiliar nas analises",
@@ -276,7 +279,7 @@ const OfferSection = () => {
                     </p>
                     <p className="font-bold text-foreground">ou R$ 97,00 à vista</p>
                     <div className="mt-6 w-full flex justify-center">
-                        <HotmartButton />
+                        <HotmartButton url={config?.blackFridayUrl || '#'} />
                     </div>
                     <div className="mt-6">
                         <p className="font-bold text-primary">A OFERTA TERMINA EM:</p>
@@ -353,40 +356,43 @@ const FaqSection = () => {
     )
 };
 
-const FinalCtaSection = () => (
-  <section id="final-cta" className="py-20 md:py-32">
-    <div className="container mx-auto px-4 text-center">
-      <h2 className="font-headline text-3xl md:text-4xl font-bold text-foreground">
-        Aproveite a Black Friday Agora!
-      </h2>
-      <div className="mt-12 grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-        <div className="p-6 border rounded-lg border-gray-700">
-          <h3 className="font-headline text-2xl font-bold text-muted-foreground">
-            Opção 1: Deixar Passar
-          </h3>
-          <p className="mt-4 text-muted-foreground">
-            Continuar buscando estratégias, perdendo tempo e dinheiro, e se
-            frustrando com a falta de consistência.
-          </p>
+const FinalCtaSection = () => {
+  const { config } = useAppConfig();
+  return (
+      <section id="final-cta" className="py-20 md:py-32">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="font-headline text-3xl md:text-4xl font-bold text-foreground">
+            Aproveite a Black Friday Agora!
+          </h2>
+          <div className="mt-12 grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div className="p-6 border rounded-lg border-gray-700">
+              <h3 className="font-headline text-2xl font-bold text-muted-foreground">
+                Opção 1: Deixar Passar
+              </h3>
+              <p className="mt-4 text-muted-foreground">
+                Continuar buscando estratégias, perdendo tempo e dinheiro, e se
+                frustrando com a falta de consistência.
+              </p>
+            </div>
+            <div className="p-6 border-2 border-primary rounded-lg shadow-lg shadow-primary/20">
+              <h3 className="font-headline text-2xl font-bold text-primary">
+                Opção 2: A Decisão Certa
+              </h3>
+              <p className="mt-4 text-foreground">
+                Pegar um atalho com a Estratégia Chinesa por um preço nunca visto e
+                alcançar a consistência que você sempre sonhou.
+              </p>
+            </div>
+          </div>
+          <div
+            className="mt-12 text-base md:text-xl font-bold"
+          >
+            <HotmartButton url={config?.blackFridayUrl || '#'} />
+          </div>
         </div>
-        <div className="p-6 border-2 border-primary rounded-lg shadow-lg shadow-primary/20">
-          <h3 className="font-headline text-2xl font-bold text-primary">
-            Opção 2: A Decisão Certa
-          </h3>
-          <p className="mt-4 text-foreground">
-            Pegar um atalho com a Estratégia Chinesa por um preço nunca visto e
-            alcançar a consistência que você sempre sonhou.
-          </p>
-        </div>
-      </div>
-      <div
-        className="mt-12 text-base md:text-xl font-bold"
-      >
-        <HotmartButton />
-      </div>
-    </div>
-  </section>
-);
+      </section>
+    );
+};
 
 const Footer = () => (
   <footer className="bg-background text-gray-400 py-8">

@@ -147,7 +147,7 @@ const SolutionSection = () => {
 
 const BenefitsSection = () => {
     const benefits = [
-        "Sinais claros e precisos para operações em M1.",
+        "Sinais claros e precisos que não repintam.",
         "Estratégia validada sem o uso de Martingale.",
         "Ideal para iniciantes e traders experientes.",
         "Funciona em qualquer corretora de Opções Binárias.",

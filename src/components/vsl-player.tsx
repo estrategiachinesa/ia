@@ -3,10 +3,12 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { VolumeX, Play } from 'lucide-react';
+import { useAppConfig } from '@/firebase';
 
 const VSL_CTA_TIMESTAMP = 167; // 2 minutos e 47 segundos
 
 const ScarcityCounter = () => {
+    const { config } = useAppConfig();
     const [licenses, setLicenses] = useState(11);
     const [licenseColor, setLicenseColor] = useState('text-green-500');
 
@@ -51,7 +53,7 @@ const ScarcityCounter = () => {
                     {licenses}
                 </p>
             </div>
-            <a href="https://pay.hotmart.com/E101943327K?checkoutMode=2" className="hotmart-fb hotmart__button-checkout font-headline text-lg sm:text-xl font-bold uppercase">
+            <a href={config?.blackFridayUrl || '#'} className="hotmart-fb hotmart__button-checkout font-headline text-lg sm:text-xl font-bold uppercase">
                 GARANTIR MINHA VAGA AGORA
             </a>
         </div>
@@ -60,6 +62,7 @@ const ScarcityCounter = () => {
 
 
 const VslPlayer = ({ videoId }: { videoId: string }) => {
+  const { config } = useAppConfig();
   const playerRef = useRef<any>(null);
   const progressIntervalRef = useRef<NodeJS.Timeout>();
 
@@ -263,7 +266,7 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
 
       {showCta && !videoEnded && (
         <div className="mt-8 flex justify-center text-center animate-pulse">
-            <a href="https://pay.hotmart.com/E101943327K?checkoutMode=2" className="hotmart-fb hotmart__button-checkout font-headline text-lg sm:text-xl font-bold uppercase">
+            <a href={config?.blackFridayUrl || '#'} className="hotmart-fb hotmart__button-checkout font-headline text-lg sm:text-xl font-bold uppercase">
                 QUERO ACESSAR AGORA
             </a>
         </div>

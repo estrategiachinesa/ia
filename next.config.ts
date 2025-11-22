@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const repoName = 'vip';
@@ -24,6 +25,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Anotação para novo push
 };
 
 export default nextConfig;
+

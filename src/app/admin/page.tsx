@@ -1,14 +1,16 @@
+
 'use client';
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useFirebase } from '@/firebase';
 import { Button } from '@/components/ui/button';
-import { Loader2, ShieldAlert, ShieldCheck } from 'lucide-react';
+import { Loader2, ShieldAlert, ShieldCheck, Lock } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AdminUsersPanel } from '@/components/admin/admin-users-panel';
 import { VipRequestsPanel } from '@/components/admin/vip-requests-panel';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -22,7 +24,8 @@ export default function AdminPage() {
         return;
       }
       user.getIdTokenResult().then(idTokenResult => {
-        setIsAdmin(!!idTokenResult.claims.admin);
+        const adminClaim = !!idTokenResult.claims.admin;
+        setIsAdmin(adminClaim);
       });
     }
   }, [user, isUserLoading, router]);
@@ -36,21 +39,7 @@ export default function AdminPage() {
     );
   }
 
-  if (!isAdmin) {
-    return (
-      <div className="flex h-screen w-full flex-col items-center justify-center p-4 text-center">
-        <ShieldAlert className="h-16 w-16 text-destructive" />
-        <h1 className="mt-4 text-2xl font-bold">Acesso Negado</h1>
-        <p className="mt-2 max-w-md text-muted-foreground">
-          Esta página é restrita a administradores. Se você acredita que isso é um erro, entre em contato com o suporte.
-        </p>
-        <Button onClick={() => router.push('/analisador')} className="mt-6">
-          Voltar para o Analisador
-        </Button>
-      </div>
-    );
-  }
-
+  // This renders the full panel structure, but conditionally shows content
   return (
     <div className="flex min-h-screen flex-col items-center p-4 sm:p-6 md:p-8">
       <div className="w-full max-w-7xl">
@@ -64,22 +53,39 @@ export default function AdminPage() {
 
         <Tabs defaultValue="vip-requests" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="vip-requests">Solicitações VIP</TabsTrigger>
+            <TabsTrigger value="vip-requests" disabled={!isAdmin}>Solicitações VIP</TabsTrigger>
             <TabsTrigger value="users">Usuários Admin</TabsTrigger>
           </TabsList>
           
           <TabsContent value="vip-requests">
-            <Card>
-              <CardHeader>
-                <CardTitle>Solicitações de Acesso VIP/PREMIUM</CardTitle>
-                <CardDescription>
-                  Aprove ou rejeite as solicitações de usuários para o acesso prioritário.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <VipRequestsPanel />
-              </CardContent>
-            </Card>
+             {isAdmin ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Solicitações de Acesso VIP/PREMIUM</CardTitle>
+                    <CardDescription>
+                      Aprove ou rejeite as solicitações de usuários para o acesso prioritário.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <VipRequestsPanel />
+                  </CardContent>
+                </Card>
+             ) : (
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><Lock /> Acesso Restrito</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                         <Alert variant="destructive">
+                            <ShieldAlert className="h-4 w-4" />
+                            <AlertTitle>Acesso Negado</AlertTitle>
+                            <AlertDescription>
+                                Esta funcionalidade é restrita a administradores. Para ganhar acesso, vá para a aba "Usuários Admin", promova sua conta e atualize a página.
+                            </AlertDescription>
+                        </Alert>
+                    </CardContent>
+                </Card>
+             )}
           </TabsContent>
 
           <TabsContent value="users">
@@ -87,7 +93,7 @@ export default function AdminPage() {
               <CardHeader>
                 <CardTitle>Gerenciar Administradores</CardTitle>
                 <CardDescription>
-                  Conceda ou revogue permissões de administrador para outros usuários.
+                  Conceda permissões de administrador. Se esta for a sua primeira vez, insira o seu próprio e-mail para se tornar o primeiro administrador.
                 </CardDescription>
               </CardHeader>
               <CardContent>

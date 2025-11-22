@@ -1,5 +1,6 @@
 # Workflow para construir e implantar um site Next.js no GitHub Pages
-# Forçando novo build - Tentativa 8
+# Desativado: Este workflow é para o GitHub Pages, que não suporta as Server Actions do Next.js.
+# O deploy agora é gerenciado pelo Firebase App Hosting.
 name: Deploy Next.js site to Pages
 
 on:
@@ -44,6 +45,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages - Desativado
         id: deployment
-        uses: actions/deploy-pages@v4
+        run: echo "Deploy para GitHub Pages está desativado. O deploy é feito pelo Firebase."
+        # A ação original 'actions/deploy-pages@v4' foi removida.

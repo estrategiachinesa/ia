@@ -1,8 +1,8 @@
+
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   output: 'export',
-  basePath: '/ia',
   images: {
     unoptimized: true,
     remotePatterns: [

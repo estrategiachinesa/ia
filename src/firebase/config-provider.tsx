@@ -55,12 +55,14 @@ const defaultOfferConfig = {
     price: "R$ 197"
 };
 
+// This is the fallback config used if Firestore is unreachable.
+// The sensitive registrationSecret is intentionally omitted here.
 const defaultConfig: AppConfig = {
     ...defaultLinkConfig,
     ...defaultLimitConfig,
     ...defaultRemoteValuesConfig,
-    ...defaultRegistrationConfig,
     ...defaultOfferConfig,
+    registrationSecret: '', // Default to an empty string for safety
 };
 
 // Create the provider component

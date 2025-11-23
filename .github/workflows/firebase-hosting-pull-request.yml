@@ -25,9 +25,12 @@ jobs:
         run: npm run build
 
       - name: Deploy to Firebase App Hosting
-        uses: firebase/firebase-tools@v0.11.0
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          args: apphosting:deploy
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_GERADOR_DE_SINAIS_158130_B1A02 }}'
+          projectId: 'gerador-de-sinais-158130-b1a02'
+          channelId: live
         env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-          PROJECT_ID: ${{ vars.PROJECT_ID }}
+          FIREBASE_CLI_PREVIEWS: apphosting
+# Trigger new deploy after deletion

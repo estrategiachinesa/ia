@@ -9,3 +9,5 @@ runConfig:
 rewrites:
   - source: '/**'
     destination: '/_next/server/server.js'
+
+# Trigger new deploy

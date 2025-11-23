@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useAppConfig } from '@/firebase';
 import { Check, ShieldCheck, Zap, BarChart, Clock, Users, Gift, Timer, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import VslPlayer from '@/components/vsl-player';
 
 const Feature = ({ icon: Icon, title, description }: { icon: React.ElementType; title: string; description: string }) => (
   <div className="flex items-start gap-4">
@@ -40,6 +40,10 @@ export default function VipPage() {
           <p className="mt-4 text-base md:text-lg text-foreground/80 max-w-2xl mx-auto">
             Você está a um passo de desbloquear o acesso ilimitado à ferramenta que está revolucionando o mercado de opções binárias.
           </p>
+        </div>
+
+        <div className="mb-8 md:mb-12">
+            <VslPlayer videoId="8RebjHIi7Ok" />
         </div>
 
         <Card className="bg-background/50 backdrop-blur-sm border-border/50 shadow-2xl shadow-primary/10">

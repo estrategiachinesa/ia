@@ -2,8 +2,6 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  basePath: '/ia',
-  assetPrefix: '/ia',
   output: 'export',
   images: {
     unoptimized: true,

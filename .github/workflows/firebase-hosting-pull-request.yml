@@ -28,9 +28,9 @@ jobs:
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_GERADOR_DE_SINAIS_158130_B1A02 }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
           projectId: 'gerador-de-sinais-158130-b1a02'
           channelId: live
         env:
           FIREBASE_CLI_PREVIEWS: apphosting
-# Trigger new deploy after deletion
+

@@ -16,3 +16,4 @@ rewrites:
 # Triggering new deploy at Sun Nov 23 2025
 # Trigger new deploy after deletion
 # Final trigger with correct secret
+# Final trigger to solve secret name.

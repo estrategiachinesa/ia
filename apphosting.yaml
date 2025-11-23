@@ -11,3 +11,4 @@ rewrites:
     destination: '/_next/server/server.js'
 
 # Trigger new deploy
+# Novo gatilho para deploy

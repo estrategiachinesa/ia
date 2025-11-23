@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useAppConfig } from '@/firebase';
 import { Check, ShieldCheck, Zap, BarChart, Clock, Users, Gift, Timer, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import VslPlayer from '@/components/vsl-player';
+import VipVslPlayer from '@/components/vip-vsl-player';
 
 const Feature = ({ icon: Icon, title, description }: { icon: React.ElementType; title: string; description: string }) => (
   <div className="flex items-start gap-4">
@@ -43,7 +43,7 @@ export default function VipPage() {
         </div>
 
         <div className="mb-8 md:mb-12">
-            <VslPlayer videoId="8RebjHIi7Ok" />
+            <VipVslPlayer videoId="8RebjHIi7Ok" />
         </div>
 
         <Card className="bg-background/50 backdrop-blur-sm border-border/50 shadow-2xl shadow-primary/10">

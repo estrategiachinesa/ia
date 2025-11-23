@@ -31,3 +31,4 @@ const nextConfig: NextConfig = {
 export default nextConfig;
 
 // Trigger new deploy
+// Adicionando novo gatilho para deploy

@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from '@/lib/utils';
 import Script from 'next/script';
+import { DevToolsBlocker } from '@/components/app/dev-tools-blocker';
 
 export const metadata: Metadata = {
   title: 'Estratégia Chinesa',
@@ -23,6 +24,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&display=swap" rel="stylesheet" />
       </head>
       <body className={cn("font-body antialiased", "bg-background")}>
+        <DevToolsBlocker />
         {children}
         <Toaster />
         <Script id="hotmart-script" strategy="afterInteractive">

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -98,17 +97,13 @@ export default function VipPage() {
               )}
               <p className="text-sm md:text-base text-muted-foreground">Pagamento único, acesso vitalício.</p>
 
-              <Button
-                asChild
-                size="lg"
-                className="w-full mt-6 h-12 md:h-14 text-base md:text-lg font-bold bg-gradient-to-r from-yellow-400 to-yellow-500 text-black hover:to-yellow-600 shadow-lg shadow-yellow-500/20 transform hover:scale-105 transition-all duration-300"
-                disabled={isConfigLoading}
-              >
-                <Link href="/descubra" target="_blank">
-                  <Zap className="mr-2" />
-                  QUERO ACESSO VIP AGORA
-                </Link>
-              </Button>
+              <div className="w-full mt-6">
+                <a href="https://pay.hotmart.com/G102999657C?checkoutMode=2" className="hotmart-fb hotmart__button-checkout">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src='https://static.hotmart.com/img/btn-buy-green.png' alt="Comprar agora" />
+                </a>
+              </div>
+
               <div className="flex items-center justify-center gap-2 mt-4 text-xs text-muted-foreground">
                 <ShieldCheck className="h-4 w-4 text-success" />
                 <span>Compra segura e garantida pela Hotmart.</span>

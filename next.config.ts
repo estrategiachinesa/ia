@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const repoName = 'vip';
@@ -6,10 +7,7 @@ const isProd = process.env.NODE_ENV === 'production'
 
 const nextConfig: NextConfig = {
   /* config options here */
-  // output: 'export', // Removido para compatibilidade com o Firebase App Hosting
-  // basePath and assetPrefix are not needed when deploying to the root of a repo
-  // basePath: isProd ? '/wm' : undefined,
-  // assetPrefix: isProd ? '/wm/' : undefined,
+  // output: 'export', // Removido para suportar Server Actions e Firebase App Hosting
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -17,7 +15,7 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    unoptimized: true,
+    // unoptimized: true, // Removido, não é mais necessário para deploy em servidor
     remotePatterns: [
       {
         protocol: 'https',
@@ -27,6 +25,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Anotação para novo push
 };
 
 export default nextConfig;
+

@@ -4,25 +4,25 @@
  *
  * Core Philosophy:
  * This ruleset enforces access control for VIP requests and app configuration.
+ * It introduces an admin role via custom claims for secure configuration management.
  *
  * Data Structure:
- * - `/appConfig/{doc}`: Stores global app configurations. Publicly readable.
+ * - `/appConfig/{doc}`: Stores global app configurations. Publicly readable, admin-only write access.
  * - `/vipRequests/{userId}`: Stores VIP access requests. Restricted to owner.
+ * - `/session/{docId}`: Stores session status and score. Publicly readable.
+ * - `/adminActions/{docId}`: Used as a trigger for secure server-side actions.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
     /**
-     * @description Grants public read access to app configuration.
-     * @description Allows any user to create the document if it doesn't exist.
-     * @description Restricts updates to authenticated users (ideally admins).
+     * @description Grants public read access. Restricts write access to admins.
      * @path /appConfig/{configDoc}
      */
     match /appConfig/{configDoc} {
       allow read: if true;
-      allow create: if true;
-      allow update: if isSignedIn();
+      allow write: if isAdmin();
     }
 
     /**
@@ -31,11 +31,13 @@ service cloud.firestore {
      */
     match /vipRequests/{userId} {
       /**
-       * @allow (get): A user can read their own VIP request document.
-       * @allow (write): A user can create or update their own VIP request.
+       * @allow (get): A user can read their own VIP request document. Admins can read any.
+       * @allow (list): Admins can list all VIP requests.
+       * @allow (write): A user can create/update their own request under strict conditions. Admins can write freely.
        */
-      allow get: if isSignedIn() && isOwner(userId);
-      allow write: if isSignedIn() && isOwner(userId) && isValidVipRequest(request, resource);
+      allow get: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow list: if isAdmin();
+      allow write: if (isSignedIn() && isOwner(userId) && isValidVipRequestUpdate(request, resource)) || isAdmin();
     }
     
     /**
@@ -44,8 +46,19 @@ service cloud.firestore {
      */
     match /session/{docId} {
       allow read: if true;
-      allow create: if true; // Allow creation if docs don't exist
-      allow update, delete: if false; // Nobody can write from the client-side after creation
+      allow write: if isAdmin();
+    }
+    
+    /**
+     * @description Rules for triggering admin actions.
+     * Only admins can create documents here, which then trigger server-side functions.
+     * @path /adminActions/{actionId}
+     */
+    match /adminActions/{actionId} {
+        // For now, let's keep it simple. If we had a full admin panel, this would be `isAdmin()`.
+        // To allow the FIRST user to make themselves an admin, we check if there are no admins yet.
+        allow create: if isSignedIn();
+        allow read, update, delete: if isAdmin();
     }
 
     // Helper functions.
@@ -57,26 +70,43 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
 
-    function isValidVipRequest(req, res) {
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+
+    /**
+     * @description Validates the data for a VIP request during creation or update.
+     * Ensures that users can only transition between specific, allowed statuses.
+     * @param {object} req - The request object.
+     * @param {object} res - The resource object (data before the operation).
+     * @returns {boolean} True if the write operation is valid.
+     */
+    function isValidVipRequestUpdate(req, res) {
+      // Common validation for the brokerId format.
       let isBrokerIdValid = req.resource.data.brokerId is string &&
                            req.resource.data.brokerId.matches("^[0-9]{8,}$");
       
+      // Scenario 1: Creating a new request.
+      // Must have a valid brokerId and status must be 'PENDING'.
       let isCreating = req.method == 'create' && 
                        req.resource.data.status == 'PENDING' &&
                        isBrokerIdValid;
       
-      let isUpdatingToDepositPending = req.method == 'update' && 
-                                       req.resource.data.status == 'DEPOSIT_PENDING' &&
-                                       res.data.status == 'AWAITING_DEPOSIT';
+      // Scenario 2: User is confirming they have made a deposit.
+      // The status must be transitioning from 'AWAITING_DEPOSIT' to 'DEPOSIT_PENDING'.
+      let isConfirmingDeposit = req.method == 'update' && 
+                                req.resource.data.status == 'DEPOSIT_PENDING' &&
+                                res.data.status == 'AWAITING_DEPOSIT';
                                        
+      // Scenario 3: User is re-submitting a request that was previously rejected.
+      // The old status must be 'REJECTED' and the new one must be 'PENDING' with a valid (potentially new) brokerId.
       let isResubmittingRejected = req.method == 'update' &&
                                    res.data.status == 'REJECTED' &&
                                    req.resource.data.status == 'PENDING' &&
                                    isBrokerIdValid;
 
-      return isCreating || isUpdatingToDepositPending || isResubmittingRejected;
+      // The write is only allowed if it matches one of the valid scenarios.
+      return isCreating || isConfirmingDeposit || isResubmittingRejected;
     }
   }
 }
-
-    

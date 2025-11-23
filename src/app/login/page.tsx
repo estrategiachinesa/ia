@@ -22,6 +22,7 @@ export default function LoginPage() {
   const { auth, isUserLoading, user } = useFirebase();
   const { config, isConfigLoading } = useAppConfig();
 
+  // Redirect to analyzer if user is already logged in
   useEffect(() => {
     if (!isUserLoading && user) {
         router.push('/analisador');
@@ -52,12 +53,12 @@ export default function LoginPage() {
         await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
         
         localStorage.setItem('loginTimestamp', Date.now().toString());
-        localStorage.setItem('showPremiumUpgradeOnLoad', 'true'); // Flag to show modal
+        
         toast({
           title: 'Login bem-sucedido!',
           description: 'Redirecionando para o analisador...',
         });
-        // The useEffect hook will handle the redirect
+        // The useEffect hook will handle the redirect to /analisador
     } catch (error: any) {
       console.error("Login error:", error);
       let description = 'Ocorreu um erro inesperado.';
@@ -72,7 +73,7 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, credentials, auth, toast]);
+  }, [isLoading, credentials, auth, toast, router]);
   
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {

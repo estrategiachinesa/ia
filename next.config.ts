@@ -1,21 +1,10 @@
-
-import type {NextConfig} from 'next';
-
-const repoName = 'vip';
-
-const isProd = process.env.NODE_ENV === 'production'
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  // output: 'export', // Removido para suportar Server Actions e Firebase App Hosting
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  output: 'export',
+  basePath: '/ia',
   images: {
-    // unoptimized: true, // Removido, não é mais necessário para deploy em servidor
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
@@ -25,10 +14,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Anotação para novo push
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 };
 
 export default nextConfig;
-
-// Trigger new deploy
-// Adicionando novo gatilho para deploy

@@ -2,6 +2,7 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  basePath: '/ia',
   output: 'export',
   images: {
     unoptimized: true,

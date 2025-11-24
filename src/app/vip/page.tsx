@@ -105,10 +105,7 @@ export default function VipPage() {
               <p className="text-sm md:text-base text-muted-foreground">Pagamento único, acesso vitalício.</p>
 
               <div className="w-full mt-6">
-                <a href={checkoutUrl} className="hotmart-fb hotmart__button-checkout">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src='https://static.hotmart.com/img/btn-buy-green.png' alt="Comprar agora" />
-                </a>
+                <a onclick="return false;" href="https://pay.hotmart.com/G102999657C?checkoutMode=2" className="hotmart-fb hotmart__button-checkout"><img src='https://static.hotmart.com/img/btn-buy-green.png' alt="Comprar agora" /></a>
               </div>
 
               <div className="flex items-center justify-center gap-2 mt-4 text-xs text-muted-foreground">

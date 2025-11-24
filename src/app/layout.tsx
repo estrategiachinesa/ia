@@ -1,9 +1,11 @@
+
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from '@/lib/utils';
 import Script from 'next/script';
 import { DevToolsBlocker } from '@/components/app/dev-tools-blocker';
+import { FirebaseClientProvider } from '@/firebase';
 
 export const metadata: Metadata = {
   title: 'Estratégia Chinesa',
@@ -25,7 +27,9 @@ export default function RootLayout({
       </head>
       <body className={cn("font-body antialiased", "bg-background")}>
         <DevToolsBlocker />
-        {children}
+        <FirebaseClientProvider>
+          {children}
+        </FirebaseClientProvider>
         <Toaster />
         <Script id="hotmart-script" strategy="afterInteractive">
           {`

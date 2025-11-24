@@ -323,7 +323,7 @@ export default function DemoPage() {
         
         <footer className="p-4 text-center text-xs text-foreground/30">
           <p>© 2025 Estratégia Chinesa. Todos os direitos reservados.</p>
-          <Link href="/legal" className="underline underline-offset-2">
+          <Link href={legalUrl} className="underline underline-offset-2">
             Termos de Uso e Privacidade
           </Link>
           <p className="max-w-xl mx-auto text-[0.6rem] mt-2">Aviso Legal: Todas as estratégias e investimentos envolvem risco de perda. Nenhuma informação contida neste produto deve ser interpretada como uma garantia de resultados.</p>
@@ -340,7 +340,7 @@ export default function DemoPage() {
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-col sm:space-x-0 gap-2">
             <Button asChild variant="secondary">
-                <Link href="/vip">
+                <Link href={vipUrl}>
                   Adquirir uma Licença
                 </Link>
             </Button>
@@ -406,7 +406,7 @@ export default function DemoPage() {
                 Fechar
             </Button>
             <Button asChild>
-                <Link href="/vip">
+                <Link href={vipUrl}>
                     Quero o Indicador
                 </Link>
             </Button>

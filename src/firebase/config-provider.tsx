@@ -2,8 +2,8 @@
 'use client';
 
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { doc, getDoc, setDoc, writeBatch } from 'firebase/firestore';
-import { useFirestore } from './provider';
 import { initializeFirebase } from '.';
 
 // Define the shape of the configuration object
@@ -13,6 +13,7 @@ export interface AppConfig {
   iqOptionUrl: string;
   telegramUrl: string;
   blackFridayUrl: string;
+  vipUrl?: string;
   hourlySignalLimit: number;
   correlationChance: number;
   registrationSecret: string;
@@ -24,6 +25,7 @@ interface ConfigContextState {
   config: AppConfig | null;
   isConfigLoading: boolean;
   configError: Error | null;
+  affiliateId: string | null;
 }
 
 // Create the context with an initial undefined value
@@ -36,6 +38,7 @@ const defaultLinkConfig = {
     iqOptionUrl: "https://affiliate.iqoption.net/redir/?aff=198544&aff_model=revenue&afftrack=",
     telegramUrl: "https://t.me/Trader_Chines",
     blackFridayUrl: "https://pay.hotmart.com/E101943327K?checkoutMode=2&off=cy5v5mrr",
+    vipUrl: "https://pay.hotmart.com/T101931662P?checkoutMode=2"
 };
 
 const defaultLimitConfig = {
@@ -56,7 +59,6 @@ const defaultOfferConfig = {
 };
 
 // This is the fallback config used if Firestore is unreachable.
-// The sensitive registrationSecret is intentionally omitted here.
 const defaultConfig: AppConfig = {
     ...defaultLinkConfig,
     ...defaultLimitConfig,
@@ -65,10 +67,43 @@ const defaultConfig: AppConfig = {
     registrationSecret: '', // Default to an empty string for safety
 };
 
+const AffiliateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    const searchParams = useSearchParams();
+    const [affiliateId, setAffiliateId] = useState<string | null>(null);
+    const [isAffiliateIdLoaded, setIsAffiliateIdLoaded] = useState(false);
+
+    useEffect(() => {
+        const affIdFromUrl = searchParams.get('aff');
+        const affIdFromStorage = localStorage.getItem('affiliateId');
+
+        if (affIdFromUrl) {
+            // URL parameter has the highest priority.
+            if (affIdFromUrl !== affIdFromStorage) {
+                localStorage.setItem('affiliateId', affIdFromUrl);
+            }
+            setAffiliateId(affIdFromUrl);
+        } else if (affIdFromStorage) {
+            // If no URL param, use the one from storage.
+            setAffiliateId(affIdFromStorage);
+        } else {
+            // No affiliate ID anywhere.
+            setAffiliateId(null);
+        }
+        setIsAffiliateIdLoaded(true);
+    }, [searchParams]);
+
+    if (!isAffiliateIdLoaded) {
+        return null; // or a loading spinner
+    }
+
+    return <ConfigProvider affiliateId={affiliateId}>{children}</ConfigProvider>;
+};
+
+
 // Create the provider component
-export const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: string | null }> = ({ children, affiliateId }) => {
   const { firestore } = initializeFirebase();
-  const [configState, setConfigState] = useState<ConfigContextState>({
+  const [configState, setConfigState] = useState<Omit<ConfigContextState, 'affiliateId'>>({
     config: null,
     isConfigLoading: true,
     configError: null,
@@ -160,17 +195,27 @@ export const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
 
   return (
-    <ConfigContext.Provider value={configState}>
+    <ConfigContext.Provider value={{ ...configState, affiliateId: affiliateId !== undefined ? affiliateId : null }}>
       {children}
     </ConfigContext.Provider>
   );
 };
 
+// Main provider to be used in the layout.
+export const AppConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    return (
+        <React.Suspense fallback={null}> 
+            <AffiliateProvider>{children}</AffiliateProvider>
+        </React.Suspense>
+    )
+};
+
+
 // Create the hook to use the config context
 export const useAppConfig = (): ConfigContextState => {
   const context = useContext(ConfigContext);
   if (context === undefined) {
-    throw new Error('useAppConfig must be used within a ConfigProvider');
+    throw new Error('useAppConfig must be used within a AppConfigProvider');
   }
   return context;
 };

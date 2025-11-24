@@ -4,13 +4,20 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { useAppConfig } from '@/firebase/config-provider';
 
 export default function HomePage() {
   const router = useRouter();
+  const { affiliateId } = useAppConfig();
 
   useEffect(() => {
-    router.replace('/demo');
-  }, [router]);
+    // Check for `null` to know when the provider has determined the ID state.
+    // `undefined` might mean it's still loading.
+    if (affiliateId !== undefined) {
+      const destinationUrl = affiliateId ? `/demo?aff=${affiliateId}` : '/demo';
+      router.replace(destinationUrl);
+    }
+  }, [router, affiliateId]);
 
   return (
     <div className="flex h-screen w-full items-center justify-center">

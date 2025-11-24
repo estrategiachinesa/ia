@@ -18,7 +18,8 @@ import { SignalForm } from '@/components/app/signal-form';
 import { SignalResult } from '@/components/app/signal-result';
 import { isMarketOpenForAsset } from '@/lib/market-hours';
 import { Loader2 } from 'lucide-react';
-import { useFirebase, useDoc, useMemoFirebase, useAppConfig } from '@/firebase';
+import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
+import { useAppConfig } from '@/firebase/config-provider';
 import { Button } from '@/components/ui/button';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -417,7 +418,7 @@ export default function AnalisadorPage() {
         
         <footer className="p-4 text-center text-xs text-foreground/30">
           <p>© 2025 Estratégia Chinesa. Todos os direitos reservados.</p>
-          <Link href="/legal" className="underline underline-offset-2">
+          <Link href={legalUrl} className="underline underline-offset-2">
             Termos de Uso e Privacidade
           </Link>
           <p className="max-w-xl mx-auto text-[0.6rem] mt-2">Aviso Legal: Todas as estratégias e investimentos envolvem risco de perda. Nenhuma informação contida neste produto deve ser interpretada como uma garantia de resultados.</p>

@@ -41,17 +41,25 @@ const VslPlayerWithNoSSR = dynamic(() => import('@/components/vsl-player'), {
   loading: () => <Skeleton className="aspect-video w-full max-w-4xl rounded-lg bg-white/10" />,
 });
 
-const HotmartButton = ({ className, url }: { className?: string; url: string }) => (
-  <a
-    href={url}
-    className={cn(
-      'hotmart-fb hotmart__button-checkout font-headline text-lg font-bold uppercase',
-      className
-    )}
-  >
-    Quero a Oferta de Black Friday
-  </a>
-);
+const HotmartButton = ({ className, url }: { className?: string; url: string }) => {
+    const { affiliateId } = useAppConfig();
+    let finalUrl = url;
+    if (affiliateId && !finalUrl.includes('afftrack')) {
+        finalUrl += `&afftrack=${affiliateId}`;
+    }
+
+    return (
+        <a
+            href={finalUrl}
+            className={cn(
+            'hotmart-fb hotmart__button-checkout font-headline text-lg font-bold uppercase',
+            className
+            )}
+        >
+            Quero a Oferta de Black Friday
+        </a>
+    );
+};
 
 const Header = () => {
     const { config } = useAppConfig();

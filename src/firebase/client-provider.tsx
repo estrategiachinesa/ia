@@ -3,7 +3,7 @@
 import React, { useMemo, type ReactNode } from 'react';
 import { FirebaseProvider } from '@/firebase/provider';
 import { initializeFirebase } from '@/firebase';
-import { ConfigProvider } from './config-provider';
+import { AppConfigProvider } from './config-provider';
 
 interface FirebaseClientProviderProps {
   children: ReactNode;
@@ -21,9 +21,9 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
       auth={firebaseServices.auth}
       firestore={firebaseServices.firestore}
     >
-      <ConfigProvider>
+      <AppConfigProvider>
           {children}
-      </ConfigProvider>
+      </AppConfigProvider>
     </FirebaseProvider>
   );
 }

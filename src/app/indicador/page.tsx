@@ -34,17 +34,25 @@ import { cn } from '@/lib/utils';
 import { useAppConfig } from '@/firebase';
 import YoutubePlayer from '@/components/youtube-player';
 
-const HotmartButton = ({ className, url }: { className?: string; url: string }) => (
-  <a
-    href={url}
-    className={cn(
-      'hotmart-fb hotmart__button-checkout font-headline text-lg font-bold uppercase',
-      className
-    )}
-  >
-    Quero a Oferta de Black Friday
-  </a>
-);
+const HotmartButton = ({ className, url }: { className?: string; url: string }) => {
+    const { affiliateId } = useAppConfig();
+    let finalUrl = url;
+    if (affiliateId && !finalUrl.includes('afftrack')) {
+        finalUrl += `&afftrack=${affiliateId}`;
+    }
+
+  return (
+    <a
+      href={finalUrl}
+      className={cn(
+        'hotmart-fb hotmart__button-checkout font-headline text-lg font-bold uppercase',
+        className
+      )}
+    >
+      Quero a Oferta de Black Friday
+    </a>
+  );
+};
 
 const Header = () => {
   const { config } = useAppConfig();

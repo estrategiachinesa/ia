@@ -20,14 +20,21 @@ export default function LoginPage() {
   const [credentials, setCredentials] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const { auth, isUserLoading, user } = useFirebase();
-  const { config, isConfigLoading } = useAppConfig();
+  const { config, isConfigLoading, affiliateId } = useAppConfig();
+
+  // Construct URLs with affiliate ID if it exists
+  const demoUrl = affiliateId ? `/demo?aff=${affiliateId}` : '/demo';
+  const vipUrl = affiliateId ? `/vip?aff=${affiliateId}` : '/vip';
+  const legalUrl = affiliateId ? `/legal?aff=${affiliateId}` : '/legal';
+  const analisadorUrl = affiliateId ? `/analisador?aff=${affiliateId}` : '/analisador';
+  const telegramUrl = config?.telegramUrl || '#'; // Telegram URL doesn't need affiliate logic unless specified
 
   // Redirect to analyzer if user is already logged in
   useEffect(() => {
     if (!isUserLoading && user) {
-        router.push('/analisador');
+        router.push(analisadorUrl);
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isUserLoading, router, analisadorUrl]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -58,7 +65,7 @@ export default function LoginPage() {
           title: 'Login bem-sucedido!',
           description: 'Redirecionando para o analisador...',
         });
-        // The useEffect hook will handle the redirect to /analisador
+        // The useEffect hook will handle the redirect
     } catch (error: any) {
       console.error("Login error:", error);
       let description = 'Ocorreu um erro inesperado.';
@@ -73,7 +80,7 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, credentials, auth, toast, router]);
+  }, [isLoading, credentials, auth, toast]);
   
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
@@ -158,8 +165,8 @@ export default function LoginPage() {
             </div>
             <div className="space-y-2 pt-2">
               <div className="grid grid-cols-2 gap-2">
-                <Button onClick={() => router.push('/demo')} variant="outline">
-                    Sinal Grátis
+                <Button asChild variant="outline">
+                    <Link href={demoUrl}>Sinal Grátis</Link>
                 </Button>
                 <Button onClick={handleLogin} disabled={isLoading} className="bg-primary/90 hover:bg-primary text-primary-foreground font-bold">
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -167,7 +174,7 @@ export default function LoginPage() {
                 </Button>
               </div>
                <Button variant="link" size="sm" className="w-full text-blue-400 text-xs h-auto pt-2" asChild>
-                  <Link href={config?.telegramUrl || '#'} target="_blank">
+                  <Link href={telegramUrl} target="_blank">
                     Problemas com o acesso? Fale conosco
                   </Link>
                 </Button>
@@ -187,7 +194,7 @@ export default function LoginPage() {
              <div className="text-center">
                 <p className="text-sm text-muted-foreground">
                   Não tem uma licença?{' '}
-                  <Link href="/vip" className="font-semibold text-primary underline-offset-4 hover:underline">
+                  <Link href={vipUrl} className="font-semibold text-primary underline-offset-4 hover:underline">
                     Clique aqui
                   </Link>
                 </p>

@@ -20,13 +20,19 @@ const Feature = ({ icon: Icon, title, description }: { icon: React.ElementType; 
 );
 
 export default function VipPage() {
-  const { config, isConfigLoading } = useAppConfig();
+  const { config, isConfigLoading, affiliateId } = useAppConfig();
+
+  const checkoutUrl = affiliateId === 'wm' 
+    ? 'https://go.hotmart.com/D103007301M?dp=1' 
+    : config?.checkoutUrl || '#';
+
+  const loginUrl = affiliateId ? `/login?aff=${affiliateId}` : '/login';
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
        <header className="p-4 w-full max-w-4xl mx-auto flex justify-start items-center">
           <Button variant="ghost" asChild>
-            <Link href="/login">
+            <Link href={loginUrl}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar
             </Link>
@@ -98,7 +104,7 @@ export default function VipPage() {
               <p className="text-sm md:text-base text-muted-foreground">Pagamento único, acesso vitalício.</p>
 
               <div className="w-full mt-6">
-                <a href="https://pay.hotmart.com/G102999657C?checkoutMode=2" className="hotmart-fb hotmart__button-checkout">
+                <a href={checkoutUrl} className="hotmart-fb hotmart__button-checkout">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src='https://static.hotmart.com/img/btn-buy-green.png' alt="Comprar agora" />
                 </a>

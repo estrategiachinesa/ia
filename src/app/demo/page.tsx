@@ -45,7 +45,11 @@ type FormData = {
 
 export default function DemoPage() {
   const router = useRouter();
-  const { config } = useAppConfig();
+  const { config, affiliateId } = useAppConfig();
+  const vipUrl = affiliateId ? `/vip?aff=${affiliateId}` : '/vip';
+  const legalUrl = affiliateId ? `/legal?aff=${affiliateId}` : '/legal';
+  const loginUrl = affiliateId ? `/login?aff=${affiliateId}` : '/login';
+
   const [appState, setAppState] = useState<'form' | 'loading' | 'result'>('form');
   const [signalData, setSignalData] = useState<SignalData | null>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -247,7 +251,7 @@ export default function DemoPage() {
   };
 
   const handleBackToHome = () => {
-    router.push('/login');
+    router.push(loginUrl);
   }
 
   const isSignalFinished = signalData?.operationStatus === 'finished';

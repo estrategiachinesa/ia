@@ -61,7 +61,12 @@ type SignalUsage = {
 export default function AnalisadorPage() {
   const router = useRouter();
   const { auth, user, isUserLoading, firestore } = useFirebase();
-  const { config, isConfigLoading } = useAppConfig();
+  const { config, isConfigLoading, affiliateId } = useAppConfig();
+
+  // Construct URLs with affiliate ID
+  const legalUrl = affiliateId ? `/legal?aff=${affiliateId}` : '/legal';
+  const loginUrl = affiliateId ? `/login?aff=${affiliateId}` : '/login';
+
   const [accessState, setAccessState] = useState<AccessState>('checking');
   const [appState, setAppState] = useState<AppState>('idle');
   const [signalData, setSignalData] = useState<SignalData | null>(null);
@@ -323,7 +328,7 @@ export default function AnalisadorPage() {
     await auth.signOut();
     localStorage.removeItem('loginTimestamp');
     localStorage.removeItem('hasSeenVipWelcome'); // Clear welcome message flag on logout
-    router.push('/login');
+    router.push(loginUrl);
   }
 
   // Loading screen while checking user auth
@@ -348,7 +353,7 @@ export default function AnalisadorPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={() => router.push('/login')}>Ir para Login</AlertDialogAction>
+            <AlertDialogAction onClick={() => router.push(loginUrl)}>Ir para Login</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

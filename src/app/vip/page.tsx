@@ -22,10 +22,6 @@ const Feature = ({ icon: Icon, title, description }: { icon: React.ElementType; 
 export default function VipPage() {
   const { config, isConfigLoading, affiliateId } = useAppConfig();
 
-  const checkoutUrl = affiliateId === 'wm' 
-    ? 'https://go.hotmart.com/D103007301M?dp=1' 
-    : (config?.vipUrl || '#');
-
   const loginUrl = affiliateId ? `/login?aff=${affiliateId}` : '/login';
   const legalUrl = affiliateId ? `/legal?aff=${affiliateId}` : '/legal';
 
@@ -105,7 +101,10 @@ export default function VipPage() {
               <p className="text-sm md:text-base text-muted-foreground">Pagamento único, acesso vitalício.</p>
 
               <div className="w-full mt-6">
-                <a onclick="return false;" href="https://pay.hotmart.com/G102999657C?checkoutMode=2" className="hotmart-fb hotmart__button-checkout"><img src='https://static.hotmart.com/img/btn-buy-green.png' alt="Comprar agora" /></a>
+                <a href="https://pay.hotmart.com/G102999657C?checkoutMode=2" className="hotmart-fb hotmart__button-checkout">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src='https://static.hotmart.com/img/btn-buy-green.png' alt="Comprar agora" />
+                </a>
               </div>
 
               <div className="flex items-center justify-center gap-2 mt-4 text-xs text-muted-foreground">
@@ -117,7 +116,7 @@ export default function VipPage() {
         </Card>
       </main>
       <footer className="w-full text-center text-xs text-foreground/50 p-4 mt-8">
-          <p>© 2025 ESTRATÉGIA CHINESA. Todos os direitos reservados.</p>
+          <p>© 2025 ESTRATÉGia CHINESA. Todos os direitos reservados.</p>
            <Link href={legalUrl} className="underline underline-offset-2">
             Termos de Uso e Privacidade
           </Link>

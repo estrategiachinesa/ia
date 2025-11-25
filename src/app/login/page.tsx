@@ -8,10 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { LineChart, Loader2, Eye, EyeOff } from 'lucide-react';
+import { LineChart, Loader2, Eye, EyeOff, UserCog } from 'lucide-react';
 import AffiliateLink from '@/components/app/affiliate-link';
 import { useFirebase, useAppConfig } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { makeAdmin } from '@/app/admin/actions';
 
 export default function LoginPage() {
   const router = useAffiliateRouter();
@@ -21,12 +22,14 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const { auth, isUserLoading, user } = useFirebase();
   const { config, isConfigLoading, affiliateId } = useAppConfig();
+  const [isMakingAdmin, setIsMakingAdmin] = useState(false);
 
-  const telegramUrl = config?.telegramUrl || '#'; // Telegram URL doesn't need affiliate logic unless specified
+  const telegramUrl = config?.telegramUrl || '#'; 
 
-  // Redirect to analyzer if user is already logged in
+  // Redirect to analyzer if user is already logged in and not trying to become admin
   useEffect(() => {
     if (!isUserLoading && user) {
+        // We only redirect if the user is not in the process of making themselves admin
         router.push('/analisador');
     }
   }, [user, isUserLoading, router]);
@@ -76,12 +79,46 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   }, [isLoading, credentials, auth, toast]);
+
+  const handleMakeAdmin = async () => {
+    if (!user) {
+        toast({
+            variant: 'destructive',
+            title: 'Não autenticado',
+            description: 'Você precisa estar logado para executar esta ação.',
+        });
+        return;
+    }
+    setIsMakingAdmin(true);
+    try {
+        await makeAdmin(user.uid);
+        toast({
+            title: 'Sucesso!',
+            description: 'Você agora é um administrador. Faça logout e login novamente para que as alterações tenham efeito.',
+        });
+        // Optionally sign out the user so they can log back in to get the new token
+        await auth.signOut();
+        router.push('/login');
+
+    } catch (error: any) {
+        console.error("Error making admin:", error);
+        toast({
+            variant: 'destructive',
+            title: 'Erro ao se tornar Admin',
+            description: error.message || 'Não foi possível concluir a operação.',
+        });
+    } finally {
+        setIsMakingAdmin(false);
+    }
+  };
   
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       if (event.key === 'Enter') {
         event.preventDefault();
-        handleLogin();
+        if (!user) { // Only trigger login on Enter if not logged in
+          handleLogin();
+        }
       }
     };
     
@@ -90,18 +127,13 @@ export default function LoginPage() {
     return () => {
       window.removeEventListener('keydown', handleKeyPress);
     };
-  }, [handleLogin]);
+  }, [handleLogin, user]);
   
-  // This is the main change: we no longer show a global loading screen.
-  // The page renders immediately. The redirection logic for already logged-in
-  // users is handled by the useEffect above.
-  if (user) {
-      // If the user object is already available, they will be redirected by the useEffect.
-      // We can show a loading indicator just for this brief moment.
+  if (isUserLoading || (user && !isMakingAdmin)) {
       return (
           <div className="flex h-screen w-full items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin" />
-              <p className="ml-2">Redirecionando...</p>
+              <p className="ml-2">Carregando...</p>
           </div>
       )
   }
@@ -121,84 +153,109 @@ export default function LoginPage() {
                </div>
             </div>
             <CardTitle className="font-headline text-3xl">Estratégia Chinesa</CardTitle>
-            <CardDescription>Acesse com suas credenciais ou teste gratuitamente.</CardDescription>
+            <CardDescription>{user ? `Bem-vindo, ${user.email}` : 'Acesse com suas credenciais ou teste gratuitamente.'}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={credentials.email}
-                onChange={handleInputChange}
-                disabled={isLoading}
-              />
-            </div>
-            <div className="space-y-2 relative">
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="********"
-                value={credentials.password}
-                onChange={handleInputChange}
-                disabled={isLoading}
-                className="pr-10"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute right-1 top-7 h-7 w-7 text-muted-foreground"
-                onClick={() => setShowPassword(prev => !prev)}
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </Button>
-            </div>
-            <div className="space-y-2 pt-2">
-              <div className="grid grid-cols-2 gap-2">
-                <Button asChild variant="outline">
-                    <AffiliateLink href="/demo">Sinal Grátis</AffiliateLink>
-                </Button>
-                <Button onClick={handleLogin} disabled={isLoading} className="bg-primary/90 hover:bg-primary text-primary-foreground font-bold">
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Entrar
-                </Button>
-              </div>
-               <Button variant="link" size="sm" className="w-full text-blue-400 text-xs h-auto pt-2" asChild>
-                  <AffiliateLink href={telegramUrl} target="_blank">
-                    Problemas com o acesso? Fale conosco
-                  </AffiliateLink>
-                </Button>
-            </div>
-
-            <div className="relative my-4">
-                <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
+            {!user ? (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="email">E-mail</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="seu@email.com"
+                    value={credentials.email}
+                    onChange={handleInputChange}
+                    disabled={isLoading}
+                  />
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                    ou
-                    </span>
+                <div className="space-y-2 relative">
+                  <Label htmlFor="password">Senha</Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="********"
+                    value={credentials.password}
+                    onChange={handleInputChange}
+                    disabled={isLoading}
+                    className="pr-10"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-7 h-7 w-7 text-muted-foreground"
+                    onClick={() => setShowPassword(prev => !prev)}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
                 </div>
-            </div>
+                <div className="space-y-2 pt-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button asChild variant="outline">
+                        <AffiliateLink href="/demo">Sinal Grátis</AffiliateLink>
+                    </Button>
+                    <Button onClick={handleLogin} disabled={isLoading} className="bg-primary/90 hover:bg-primary text-primary-foreground font-bold">
+                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Entrar
+                    </Button>
+                  </div>
+                   <Button variant="link" size="sm" className="w-full text-blue-400 text-xs h-auto pt-2" asChild>
+                      <AffiliateLink href={telegramUrl} target="_blank">
+                        Problemas com o acesso? Fale conosco
+                      </AffiliateLink>
+                    </Button>
+                </div>
 
-             <div className="text-center">
-                <p className="text-sm text-muted-foreground">
-                  Não tem uma licença?{' '}
-                  <AffiliateLink href="/vip" className="font-semibold text-primary underline-offset-4 hover:underline">
-                    Clique aqui
-                  </AffiliateLink>
-                </p>
-            </div>
+                <div className="relative my-4">
+                    <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">
+                        ou
+                        </span>
+                    </div>
+                </div>
 
+                 <div className="text-center">
+                    <p className="text-sm text-muted-foreground">
+                      Não tem uma licença?{' '}
+                      <AffiliateLink href="/vip" className="font-semibold text-primary underline-offset-4 hover:underline">
+                        Clique aqui
+                      </AffiliateLink>
+                    </p>
+                </div>
+              </>
+            ) : (
+                <div className="space-y-4 pt-2">
+                    <Button
+                        variant="destructive"
+                        className="w-full"
+                        onClick={handleMakeAdmin}
+                        disabled={isMakingAdmin}
+                    >
+                        {isMakingAdmin ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserCog className="mr-2 h-4 w-4" />}
+                        Tornar-se Admin
+                    </Button>
+                    <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={async () => {
+                            await auth.signOut();
+                            router.push('/login');
+                        }}
+                    >
+                        Sair
+                    </Button>
+                </div>
+            )}
           </CardContent>
         </Card>
         <footer className="w-full text-center text-xs text-foreground/50 p-4 mt-8">
-          <p>© 2025 ESTRATÉGIA CHINESA. Todos os direitos reservados.</p>
+          <p>© 2025 ESTRATÉGia CHINESA. Todos os direitos reservados.</p>
            <AffiliateLink href="/legal" className="underline underline-offset-2">
             Termos de Uso e Privacidade
           </AffiliateLink>
@@ -207,3 +264,5 @@ export default function LoginPage() {
     </>
   );
 }
+
+    

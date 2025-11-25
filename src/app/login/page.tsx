@@ -12,7 +12,6 @@ import { LineChart, Loader2, Eye, EyeOff, UserCog } from 'lucide-react';
 import AffiliateLink from '@/components/app/affiliate-link';
 import { useFirebase, useAppConfig } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { makeAdmin } from '@/app/admin/actions';
 
 export default function LoginPage() {
   const router = useAffiliateRouter();
@@ -62,24 +61,6 @@ export default function LoginPage() {
           title: 'Login bem-sucedido!',
           description: 'Redirecionando para o analisador...',
         });
-
-        // Auto-promote specific user to admin on login
-        if (loggedInUser.email === 'chines@trader.com') {
-            try {
-                await makeAdmin(loggedInUser.uid);
-                toast({
-                    title: 'Privilégios de Admin Concedidos!',
-                    description: 'Faça logout e login novamente para aplicar.',
-                });
-                await auth.signOut();
-            } catch (adminError: any) {
-                 toast({
-                    variant: 'destructive',
-                    title: 'Falha ao se tornar Admin',
-                    description: adminError.message,
-                });
-            }
-        }
         
         // The useEffect hook will handle the redirect after state update
     } catch (error: any) {

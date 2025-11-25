@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -22,7 +23,7 @@ const Feature = ({ icon: Icon, title, description }: { icon: React.ElementType; 
 export default function VipPage() {
   const { config, isConfigLoading, affiliateId } = useAppConfig();
 
-  let checkoutUrl = config?.vipUrl || '#';
+  let checkoutUrl = config?.hotmartUrl || '#';
 
   if (affiliateId && config?.afiliados[affiliateId]) {
     checkoutUrl = config.afiliados[affiliateId];

@@ -2,19 +2,19 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAffiliateRouter } from '@/hooks/use-affiliate-router';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Loader2, Eye, EyeOff } from 'lucide-react';
-import Link from 'next/link';
+import AffiliateLink from '@/components/app/affiliate-link';
 import { useFirebase, useAppConfig } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function LoginPage() {
-  const router = useRouter();
+  const router = useAffiliateRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [credentials, setCredentials] = useState({ email: '', password: '' });
@@ -22,19 +22,14 @@ export default function LoginPage() {
   const { auth, isUserLoading, user } = useFirebase();
   const { config, isConfigLoading, affiliateId } = useAppConfig();
 
-  // Construct URLs with affiliate ID if it exists
-  const demoUrl = affiliateId ? `/demo?aff=${affiliateId}` : '/demo';
-  const vipUrl = affiliateId ? `/vip?aff=${affiliateId}` : '/vip';
-  const legalUrl = affiliateId ? `/legal?aff=${affiliateId}` : '/legal';
-  const analisadorUrl = affiliateId ? `/analisador?aff=${affiliateId}` : '/analisador';
   const telegramUrl = config?.telegramUrl || '#'; // Telegram URL doesn't need affiliate logic unless specified
 
   // Redirect to analyzer if user is already logged in
   useEffect(() => {
     if (!isUserLoading && user) {
-        router.push(analisadorUrl);
+        router.push('/analisador');
     }
-  }, [user, isUserLoading, router, analisadorUrl]);
+  }, [user, isUserLoading, router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -166,7 +161,7 @@ export default function LoginPage() {
             <div className="space-y-2 pt-2">
               <div className="grid grid-cols-2 gap-2">
                 <Button asChild variant="outline">
-                    <Link href={demoUrl}>Sinal Grátis</Link>
+                    <AffiliateLink href="/demo">Sinal Grátis</AffiliateLink>
                 </Button>
                 <Button onClick={handleLogin} disabled={isLoading} className="bg-primary/90 hover:bg-primary text-primary-foreground font-bold">
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -174,9 +169,9 @@ export default function LoginPage() {
                 </Button>
               </div>
                <Button variant="link" size="sm" className="w-full text-blue-400 text-xs h-auto pt-2" asChild>
-                  <Link href={telegramUrl} target="_blank">
+                  <AffiliateLink href={telegramUrl} target="_blank">
                     Problemas com o acesso? Fale conosco
-                  </Link>
+                  </AffiliateLink>
                 </Button>
             </div>
 
@@ -194,9 +189,9 @@ export default function LoginPage() {
              <div className="text-center">
                 <p className="text-sm text-muted-foreground">
                   Não tem uma licença?{' '}
-                  <Link href={vipUrl} className="font-semibold text-primary underline-offset-4 hover:underline">
+                  <AffiliateLink href="/vip" className="font-semibold text-primary underline-offset-4 hover:underline">
                     Clique aqui
-                  </Link>
+                  </AffiliateLink>
                 </p>
             </div>
 
@@ -204,9 +199,9 @@ export default function LoginPage() {
         </Card>
         <footer className="w-full text-center text-xs text-foreground/50 p-4 mt-8">
           <p>© 2025 ESTRATÉGIA CHINESA. Todos os direitos reservados.</p>
-           <Link href={legalUrl} className="underline underline-offset-2">
+           <AffiliateLink href="/legal" className="underline underline-offset-2">
             Termos de Uso e Privacidade
-          </Link>
+          </AffiliateLink>
         </footer>
       </div>
     </>

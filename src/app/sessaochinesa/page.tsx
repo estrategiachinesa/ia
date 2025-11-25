@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from '@/components/ui/input';
 import { useFirebase, useDoc, useMemoFirebase, useAppConfig } from '@/firebase';
-import Link from 'next/link';
+import AffiliateLink from '@/components/app/affiliate-link';
 import { useToast } from '@/hooks/use-toast';
 
 // Schema for form validation
@@ -284,19 +284,19 @@ export default function SessaoChinesaPage() {
                     </DialogHeader>
                     <DialogFooter className="flex-col sm:flex-col sm:space-x-0 gap-2 pt-4">
                         <Button asChild>
-                            <Link href={config?.exnovaUrl || '#'} target="_blank">
+                            <AffiliateLink href={config?.exnovaUrl || '#'} target="_blank">
                                 Cadastrar na Exnova
-                            </Link>
+                            </AffiliateLink>
                         </Button>
                          <Button asChild>
-                            <Link href={config?.iqOptionUrl || '#'} target="_blank">
+                            <AffiliateLink href={config?.iqOptionUrl || '#'} target="_blank">
                                 Cadastrar na IQ Option
-                            </Link>
+                            </AffiliateLink>
                         </Button>
                         <Button asChild variant="secondary">
-                            <Link href={config?.telegramUrl || '#'} target="_blank">
+                            <AffiliateLink href={config?.telegramUrl || '#'} target="_blank">
                                 Falar com Suporte
-                            </Link>
+                            </AffiliateLink>
                         </Button>
                     </DialogFooter>
                 </DialogContent>

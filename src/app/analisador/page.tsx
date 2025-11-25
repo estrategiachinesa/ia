@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAffiliateRouter } from '@/hooks/use-affiliate-router';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,7 +23,7 @@ import { useAppConfig } from '@/firebase/config-provider';
 import { Button } from '@/components/ui/button';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import Link from 'next/link';
+import AffiliateLink from '@/components/app/affiliate-link';
 import { generateSignal as generateClientSideSignal } from '@/lib/signal-generator';
 import { VipUpgradeModal } from '@/components/app/vip-upgrade-modal';
 
@@ -60,13 +60,9 @@ type SignalUsage = {
 }
 
 export default function AnalisadorPage() {
-  const router = useRouter();
+  const router = useAffiliateRouter();
   const { auth, user, isUserLoading, firestore } = useFirebase();
   const { config, isConfigLoading, affiliateId } = useAppConfig();
-
-  // Construct URLs with affiliate ID
-  const legalUrl = affiliateId ? `/legal?aff=${affiliateId}` : '/legal';
-  const loginUrl = affiliateId ? `/login?aff=${affiliateId}` : '/login';
 
   const [accessState, setAccessState] = useState<AccessState>('checking');
   const [appState, setAppState] = useState<AppState>('idle');
@@ -329,7 +325,7 @@ export default function AnalisadorPage() {
     await auth.signOut();
     localStorage.removeItem('loginTimestamp');
     localStorage.removeItem('hasSeenVipWelcome'); // Clear welcome message flag on logout
-    router.push(loginUrl);
+    router.push('/login');
   }
 
   // Loading screen while checking user auth
@@ -354,7 +350,7 @@ export default function AnalisadorPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={() => router.push(loginUrl)}>Ir para Login</AlertDialogAction>
+            <AlertDialogAction onClick={() => router.push('/login')}>Ir para Login</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -418,9 +414,9 @@ export default function AnalisadorPage() {
         
         <footer className="p-4 text-center text-xs text-foreground/30">
           <p>© 2025 Estratégia Chinesa. Todos os direitos reservados.</p>
-          <Link href={legalUrl} className="underline underline-offset-2">
+          <AffiliateLink href="/legal" className="underline underline-offset-2">
             Termos de Uso e Privacidade
-          </Link>
+          </AffiliateLink>
           <p className="max-w-xl mx-auto text-[0.6rem] mt-2">Aviso Legal: Todas as estratégias e investimentos envolvem risco de perda. Nenhuma informação contida neste produto deve ser interpretada como uma garantia de resultados.</p>
         </footer>
       </div>

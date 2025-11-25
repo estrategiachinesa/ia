@@ -2,14 +2,14 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAffiliateRouter } from '@/hooks/use-affiliate-router';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Loader2, Eye, EyeOff } from 'lucide-react';
-import Link from 'next/link';
+import AffiliateLink from '@/components/app/affiliate-link';
 import { useFirebase, useAppConfig } from '@/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -18,7 +18,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 type RegistrationStep = 'codeValidation' | 'terms' | 'form';
 
 export default function RegisterPage() {
-  const router = useRouter();
+  const router = useAffiliateRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [credentials, setCredentials] = useState({ email: '', password: '', confirmPassword: '' });
@@ -190,7 +190,7 @@ export default function RegisterPage() {
                     htmlFor="terms"
                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
-                    Li e concordo com os <Link href="/legal" target="_blank" className="text-primary underline">Termos de Uso</Link>.
+                    Li e concordo com os <AffiliateLink href="/legal" target="_blank" className="text-primary underline">Termos de Uso</AffiliateLink>.
                 </label>
             </div>
           <DialogFooter className="pt-4">
@@ -289,9 +289,9 @@ export default function RegisterPage() {
 
              <div className="text-center">
                  <Button variant="outline" asChild>
-                    <Link href="/login">
+                    <AffiliateLink href="/login">
                       Fazer Login
-                    </Link>
+                    </AffiliateLink>
                  </Button>
             </div>
 

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useAppConfig } from '@/firebase';
 import { Check, ShieldCheck, Zap, BarChart, Clock, Users, Gift, Timer, ArrowLeft, Loader2 } from 'lucide-react';
-import Link from 'next/link';
+import AffiliateLink from '@/components/app/affiliate-link';
 import VipVslPlayer from '@/components/vip-vsl-player';
 
 const Feature = ({ icon: Icon, title, description }: { icon: React.ElementType; title: string; description: string }) => (
@@ -22,21 +22,24 @@ const Feature = ({ icon: Icon, title, description }: { icon: React.ElementType; 
 export default function VipPage() {
   const { config, isConfigLoading, affiliateId } = useAppConfig();
 
-  const checkoutUrl = affiliateId === 'wm' 
-    ? 'https://go.hotmart.com/D103007301M?dp=1' 
-    : (config?.vipUrl || '#');
+  let checkoutUrl = config?.vipUrl || '#';
 
-  const loginUrl = affiliateId ? `/login?aff=${affiliateId}` : '/login';
-  const legalUrl = affiliateId ? `/legal?aff=${affiliateId}` : '/legal';
+  if (affiliateId && config?.afiliados[affiliateId]) {
+    checkoutUrl = config.afiliados[affiliateId];
+  } else if (affiliateId && checkoutUrl !== '#') {
+    const separator = checkoutUrl.includes('?') ? '&' : '?';
+    checkoutUrl = `${checkoutUrl}${separator}afftrack=${affiliateId}`;
+  }
+
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
        <header className="p-4 w-full max-w-4xl mx-auto flex justify-start items-center">
           <Button variant="ghost" asChild>
-            <Link href={loginUrl}>
+            <AffiliateLink href="/login">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar
-            </Link>
+            </AffiliateLink>
           </Button>
         </header>
       <main className="w-full max-w-4xl mx-auto px-4 sm:px-6 md:px-8 flex-grow">
@@ -105,7 +108,9 @@ export default function VipPage() {
               <p className="text-sm md:text-base text-muted-foreground">Pagamento único, acesso vitalício.</p>
 
               <div className="w-full mt-6">
-                <a onclick="return false;" href="https://pay.hotmart.com/G102999657C?checkoutMode=2" className="hotmart-fb hotmart__button-checkout"><img src='https://static.hotmart.com/img/btn-buy-green.png' alt="Comprar agora" /></a>
+                <a href={checkoutUrl} className="hotmart-fb hotmart__button-checkout">
+                  <img src='https://static.hotmart.com/img/btn-buy-green.png' alt="Comprar agora" />
+                </a>
               </div>
 
               <div className="flex items-center justify-center gap-2 mt-4 text-xs text-muted-foreground">
@@ -118,9 +123,9 @@ export default function VipPage() {
       </main>
       <footer className="w-full text-center text-xs text-foreground/50 p-4 mt-8">
           <p>© 2025 ESTRATÉGIA CHINESA. Todos os direitos reservados.</p>
-           <Link href={legalUrl} className="underline underline-offset-2">
+           <AffiliateLink href="/legal" className="underline underline-offset-2">
             Termos de Uso e Privacidade
-          </Link>
+          </AffiliateLink>
           <p className="max-w-xl mx-auto text-[0.6rem] mt-2">Aviso Legal: Todas as estratégias e investimentos envolvem risco de perda. Nenhuma informação contida neste produto deve ser interpretada como uma garantia de resultados.</p>
         </footer>
     </div>

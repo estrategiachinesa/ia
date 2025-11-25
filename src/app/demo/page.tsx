@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useAffiliateRouter } from '@/hooks/use-affiliate-router';
 import { SignalForm } from '@/components/app/signal-form';
 import { isMarketOpenForAsset } from '@/lib/market-hours';
 import { FreeSignalResult } from '@/components/app/free-signal-result';
@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import AffiliateLink from '@/components/app/affiliate-link';
 import { OnlineServer } from '@/components/app/OnlineServer';
 import { Asset, ExpirationTime } from '@/app/analisador/page';
 import { useAppConfig } from '@/firebase';
@@ -44,11 +44,8 @@ type FormData = {
 };
 
 export default function DemoPage() {
-  const router = useRouter();
+  const router = useAffiliateRouter();
   const { config, affiliateId } = useAppConfig();
-  const vipUrl = affiliateId ? `/vip?aff=${affiliateId}` : '/vip';
-  const legalUrl = affiliateId ? `/legal?aff=${affiliateId}` : '/legal';
-  const loginUrl = affiliateId ? `/login?aff=${affiliateId}` : '/login';
 
   const [appState, setAppState] = useState<'form' | 'loading' | 'result'>('form');
   const [signalData, setSignalData] = useState<SignalData | null>(null);
@@ -251,7 +248,7 @@ export default function DemoPage() {
   };
 
   const handleBackToHome = () => {
-    router.push(loginUrl);
+    router.push('/login');
   }
 
   const isSignalFinished = signalData?.operationStatus === 'finished';
@@ -323,9 +320,9 @@ export default function DemoPage() {
         
         <footer className="p-4 text-center text-xs text-foreground/30">
           <p>© 2025 Estratégia Chinesa. Todos os direitos reservados.</p>
-          <Link href={legalUrl} className="underline underline-offset-2">
+          <AffiliateLink href="/legal" className="underline underline-offset-2">
             Termos de Uso e Privacidade
-          </Link>
+          </AffiliateLink>
           <p className="max-w-xl mx-auto text-[0.6rem] mt-2">Aviso Legal: Todas as estratégias e investimentos envolvem risco de perda. Nenhuma informação contida neste produto deve ser interpretada como uma garantia de resultados.</p>
         </footer>
       </div>
@@ -340,14 +337,14 @@ export default function DemoPage() {
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-col sm:space-x-0 gap-2">
             <Button asChild variant="secondary">
-                <Link href={vipUrl}>
+                <AffiliateLink href="/vip">
                   Adquirir uma Licença
-                </Link>
+                </AffiliateLink>
             </Button>
             <Button asChild className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-black shadow-lg hover:to-yellow-600">
-                <Link href={config?.exnovaUrl || '#'} target="_blank">
+                <AffiliateLink href={config?.exnovaUrl || '#'} target="_blank">
                   Cadastrar agora
-                </Link>
+                </AffiliateLink>
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -363,9 +360,9 @@ export default function DemoPage() {
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-col sm:space-x-0 gap-2">
               <Button asChild className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-black shadow-lg hover:to-yellow-600">
-                <Link href={config?.exnovaUrl || '#'} target="_blank" onClick={() => setWelcomeModalOpen(false)}>
+                <AffiliateLink href={config?.exnovaUrl || '#'} target="_blank" onClick={() => setWelcomeModalOpen(false)}>
                   Abrir a Corretora
-                </Link>
+                </AffiliateLink>
               </Button>
               <Button variant="secondary" onClick={() => {
                 setWelcomeModalOpen(false);
@@ -406,9 +403,9 @@ export default function DemoPage() {
                 Fechar
             </Button>
             <Button asChild>
-                <Link href={vipUrl}>
+                <AffiliateLink href="/vip">
                     Quero o Indicador
-                </Link>
+                </AffiliateLink>
             </Button>
           </DialogFooter>
         </DialogContent>

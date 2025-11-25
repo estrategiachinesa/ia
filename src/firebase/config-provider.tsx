@@ -1,9 +1,8 @@
-
 'use client';
 
-import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { doc, getDoc, setDoc, writeBatch } from 'firebase/firestore';
+import { doc, getDoc, writeBatch, collection, getDocs } from 'firebase/firestore';
 import { initializeFirebase } from '.';
 
 // Define the shape of the configuration object
@@ -18,6 +17,7 @@ export interface AppConfig {
   correlationChance: number;
   registrationSecret: string;
   price: string;
+  afiliados: { [key: string]: string };
 }
 
 // Define the state for the config context
@@ -58,47 +58,41 @@ const defaultOfferConfig = {
     price: "R$ 197"
 };
 
+
 // This is the fallback config used if Firestore is unreachable.
 const defaultConfig: AppConfig = {
     ...defaultLinkConfig,
     ...defaultLimitConfig,
     ...defaultRemoteValuesConfig,
     ...defaultOfferConfig,
-    registrationSecret: '', // Default to an empty string for safety
+    afiliados: {}, // Default afiliados is an empty object
+    registrationSecret: 'changeme',
 };
 
-const AffiliateProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const searchParams = useSearchParams();
-    const [affiliateId, setAffiliateId] = useState<string | null>(null);
-    const [isAffiliateIdLoaded, setIsAffiliateIdLoaded] = useState(false);
+const AffiliateIdManager: React.FC<{
+  setAffiliateId: React.Dispatch<React.SetStateAction<string | null>>;
+  children: ReactNode;
+}> = ({ setAffiliateId, children }) => {
+  const searchParams = useSearchParams();
 
-    useEffect(() => {
-        const affIdFromUrl = searchParams.get('aff');
-        const affIdFromStorage = localStorage.getItem('affiliateId');
+  useEffect(() => {
+    const affIdFromUrl = searchParams.get('aff');
+    const affIdFromStorage = localStorage.getItem('affiliateId');
 
-        if (affIdFromUrl) {
-            // URL parameter has the highest priority.
-            if (affIdFromUrl !== affIdFromStorage) {
-                localStorage.setItem('affiliateId', affIdFromUrl);
-            }
-            setAffiliateId(affIdFromUrl);
-        } else if (affIdFromStorage) {
-            // If no URL param, use the one from storage.
-            setAffiliateId(affIdFromStorage);
-        } else {
-            // No affiliate ID anywhere.
-            setAffiliateId(null);
-        }
-        setIsAffiliateIdLoaded(true);
-    }, [searchParams]);
-
-    if (!isAffiliateIdLoaded) {
-        return null; // or a loading spinner
+    if (affIdFromUrl) {
+      if (affIdFromUrl !== affIdFromStorage) {
+        localStorage.setItem('affiliateId', affIdFromUrl);
+      }
+      setAffiliateId(affIdFromUrl);
+    } else if (affIdFromStorage) {
+      setAffiliateId(affIdFromStorage);
+    } else {
+      setAffiliateId(null);
     }
+  }, [searchParams, setAffiliateId]);
 
-    return <ConfigProvider affiliateId={affiliateId}>{children}</ConfigProvider>;
+  return <>{children}</>;
 };
-
 
 // Create the provider component
 export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: string | null }> = ({ children, affiliateId }) => {
@@ -116,6 +110,15 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
       setConfigState(prevState => ({ ...prevState, isConfigLoading: true, configError: null }));
 
       try {
+        // Fetch all affiliates first
+        const affiliatesCollectionRef = collection(firestore, 'affiliates');
+        const affiliatesSnapshot = await getDocs(affiliatesCollectionRef);
+        const affiliatesData: { [key: string]: string } = {};
+        affiliatesSnapshot.forEach(doc => {
+            affiliatesData[doc.id] = doc.data().checkoutUrl;
+        });
+
+
         const docRefs = {
           links: doc(firestore, 'appConfig', 'links'),
           limitation: doc(firestore, 'appConfig', 'limitation'),
@@ -132,7 +135,7 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
           getDoc(docRefs.offer),
         ]);
 
-        let combinedConfig: AppConfig = { ...defaultConfig };
+        let combinedConfig: AppConfig = { ...defaultConfig, afiliados: affiliatesData };
         let mustInitialize = false;
         
         if (linksSnap.exists()) {
@@ -164,6 +167,7 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
         } else {
           mustInitialize = true;
         }
+
         
         setConfigState({ config: combinedConfig, isConfigLoading: false, configError: null });
 
@@ -203,11 +207,17 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
 
 // Main provider to be used in the layout.
 export const AppConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    const [affiliateId, setAffiliateId] = useState<string | null>(null);
+
     return (
-        <React.Suspense fallback={null}> 
-            <AffiliateProvider>{children}</AffiliateProvider>
-        </React.Suspense>
-    )
+        <Suspense fallback={<div>Loading...</div>}>
+            <AffiliateIdManager setAffiliateId={setAffiliateId}>
+                <ConfigProvider affiliateId={affiliateId}>
+                    {children}
+                </ConfigProvider>
+            </AffiliateIdManager>
+        </Suspense>
+    );
 };
 
 

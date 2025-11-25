@@ -53,7 +53,7 @@ const ScarcityCounter = () => {
                     {licenses}
                 </p>
             </div>
-            <a href={config?.vipUrl || '#'} className="hotmart-fb hotmart__button-checkout font-headline text-lg sm:text-xl font-bold uppercase">
+            <a href={'https://pay.hotmart.com/E101943327K'} className="hotmart-fb hotmart__button-checkout font-headline text-lg sm:text-xl font-bold uppercase">
                 GARANTIR MINHA VAGA AGORA
             </a>
         </div>
@@ -266,7 +266,7 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
 
       {showCta && !videoEnded && (
         <div className="mt-8 flex justify-center text-center animate-pulse">
-            <a href={config?.vipUrl || '#'} className="hotmart-fb hotmart__button-checkout font-headline text-lg sm:text-xl font-bold uppercase">
+            <a href={'https://pay.hotmart.com/E101943327K'} className="hotmart-fb hotmart__button-checkout font-headline text-lg sm:text-xl font-bold uppercase">
                 QUERO ACESSAR AGORA
             </a>
         </div>

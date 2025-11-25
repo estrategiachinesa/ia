@@ -31,6 +31,7 @@ export default function VipPage() {
     checkoutUrl = `${checkoutUrl}${separator}afftrack=${affiliateId}`;
   }
 
+  const legalUrl = affiliateId ? `/legal?aff=${affiliateId}` : '/legal';
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
@@ -109,6 +110,7 @@ export default function VipPage() {
 
               <div className="w-full mt-6">
                 <a href={checkoutUrl} className="hotmart-fb hotmart__button-checkout">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src='https://static.hotmart.com/img/btn-buy-green.png' alt="Comprar agora" />
                 </a>
               </div>
@@ -123,7 +125,7 @@ export default function VipPage() {
       </main>
       <footer className="w-full text-center text-xs text-foreground/50 p-4 mt-8">
           <p>© 2025 ESTRATÉGIA CHINESA. Todos os direitos reservados.</p>
-           <AffiliateLink href="/legal" className="underline underline-offset-2">
+           <AffiliateLink href={legalUrl} className="underline underline-offset-2">
             Termos de Uso e Privacidade
           </AffiliateLink>
           <p className="max-w-xl mx-auto text-[0.6rem] mt-2">Aviso Legal: Todas as estratégias e investimentos envolvem risco de perda. Nenhuma informação contida neste produto deve ser interpretada como uma garantia de resultados.</p>

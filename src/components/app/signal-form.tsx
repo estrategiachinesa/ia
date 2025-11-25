@@ -24,6 +24,7 @@ import { doc, setDoc, serverTimestamp, Firestore } from 'firebase/firestore';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { Asset, ExpirationTime } from '@/app/analisador/page';
 import { useAppConfig } from '@/firebase';
+import AffiliateLink from './affiliate-link';
 
 
 type VipStatus = 'PENDING' | 'AWAITING_DEPOSIT' | 'DEPOSIT_PENDING' | 'APPROVED' | 'REJECTED' | 'PREMIUM';
@@ -418,9 +419,9 @@ export function SignalForm({
                         Cadastre-se na corretora pelo nosso link para se tornar PREMIUM, resgatar seu bônus, evitar a fila de espera e ter sinais ilimitados.
                     </p>
                     <Button className="w-full" asChild>
-                        <Link href={config.exnovaUrl} target="_blank">
+                        <AffiliateLink href={config.exnovaUrl} target="_blank">
                         Cadastrar na Corretora
-                        </Link>
+                        </AffiliateLink>
                     </Button>
                     <div className="flex w-full items-center space-x-2">
                         <Input
@@ -516,13 +517,13 @@ export function SignalForm({
                 <AlertDescription className="text-xs text-primary/80">
                   <span className="sm:inline">Sinais OTC são para as corretoras</span>
                   <br className="sm:hidden" />
-                  <Link href={config.iqOptionUrl} target="_blank" className="font-bold underline hover:text-primary mx-1">
+                  <AffiliateLink href={config.iqOptionUrl} target="_blank" className="font-bold underline hover:text-primary mx-1">
                     IQ Option
-                  </Link>
+                  </AffiliateLink>
                   e
-                  <Link href={config.exnovaUrl} target="_blank" className="font-bold underline hover:text-primary ml-1">
+                  <AffiliateLink href={config.exnovaUrl} target="_blank" className="font-bold underline hover:text-primary ml-1">
                     Exnova
-                  </Link>
+                  </AffiliateLink>
                   .
                 </AlertDescription>
               </Alert>
@@ -568,10 +569,10 @@ export function SignalForm({
             {!isPremium && (
               isFreeSignalPage ? (
                 <Button variant="link" className="w-full flex-col h-auto text-yellow-400 hover:text-yellow-300" asChild>
-                  <Link href="/vip">
+                  <AffiliateLink href="/vip">
                     <Trophy className="h-5 w-5 mb-0.5" />
                     SEJA VIP
-                  </Link>
+                  </AffiliateLink>
                 </Button>
               ) : (
                 <Button variant="link" className="w-full flex-col h-auto text-purple-400 hover:text-purple-300" onClick={() => {

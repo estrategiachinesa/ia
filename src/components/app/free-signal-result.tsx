@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, HelpCircle } from 'lucide-react';
 import { CurrencyFlags } from './currency-flags';
-import Link from 'next/link';
+import AffiliateLink from './affiliate-link';
 import { SignalData } from '@/app/demo/page';
 import { cn } from '@/lib/utils';
 import { Asset } from '@/app/analisador/page';
@@ -81,14 +81,14 @@ export function FreeSignalResult({ data, onReset, isMarketMode, isSignalFinished
         <div className="pt-4 space-y-2">
           <p className="text-sm text-primary font-semibold">Revele este sinal e tenha acesso ILIMITADO!</p>
           <Button asChild className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 text-black font-bold hover:to-yellow-600 shadow-lg">
-            <Link href="/vip">
+            <AffiliateLink href="/vip">
               Adquirir Licença VIP
-            </Link>
+            </AffiliateLink>
           </Button>
           <Button asChild variant="outline" className="w-full">
-            <Link href={config?.exnovaUrl || '#'} target="_blank">
+            <AffiliateLink href={config?.exnovaUrl || '#'} target="_blank">
               Revelar Sinal Grátis (Via Cadastro)
-            </Link>
+            </AffiliateLink>
           </Button>
         </div>
       </>

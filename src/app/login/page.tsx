@@ -22,14 +22,12 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const { auth, isUserLoading, user } = useFirebase();
   const { config, isConfigLoading, affiliateId } = useAppConfig();
-  const [isMakingAdmin, setIsMakingAdmin] = useState(false);
 
   const telegramUrl = config?.telegramUrl || '#'; 
 
-  // Redirect to analyzer if user is already logged in and not trying to become admin
+  // Redirect to analyzer if user is already logged in
   useEffect(() => {
     if (!isUserLoading && user) {
-        // We only redirect if the user is not in the process of making themselves admin
         router.push('/analisador');
     }
   }, [user, isUserLoading, router]);
@@ -55,15 +53,35 @@ export default function LoginPage() {
     }
     
     try {
-        await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
-        
+        const userCredential = await signInWithEmailAndPassword(auth, credentials.email, credentials.password);
+        const loggedInUser = userCredential.user;
+
         localStorage.setItem('loginTimestamp', Date.now().toString());
         
         toast({
           title: 'Login bem-sucedido!',
           description: 'Redirecionando para o analisador...',
         });
-        // The useEffect hook will handle the redirect
+
+        // Auto-promote specific user to admin on login
+        if (loggedInUser.email === 'chines@trader.com') {
+            try {
+                await makeAdmin(loggedInUser.uid);
+                toast({
+                    title: 'Privilégios de Admin Concedidos!',
+                    description: 'Faça logout e login novamente para aplicar.',
+                });
+                await auth.signOut();
+            } catch (adminError: any) {
+                 toast({
+                    variant: 'destructive',
+                    title: 'Falha ao se tornar Admin',
+                    description: adminError.message,
+                });
+            }
+        }
+        
+        // The useEffect hook will handle the redirect after state update
     } catch (error: any) {
       console.error("Login error:", error);
       let description = 'Ocorreu um erro inesperado.';
@@ -78,47 +96,13 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, credentials, auth, toast]);
+  }, [isLoading, credentials, auth, toast, router]);
 
-  const handleMakeAdmin = async () => {
-    if (!user) {
-        toast({
-            variant: 'destructive',
-            title: 'Não autenticado',
-            description: 'Você precisa estar logado para executar esta ação.',
-        });
-        return;
-    }
-    setIsMakingAdmin(true);
-    try {
-        await makeAdmin(user.uid);
-        toast({
-            title: 'Sucesso!',
-            description: 'Você agora é um administrador. Faça logout e login novamente para que as alterações tenham efeito.',
-        });
-        // Optionally sign out the user so they can log back in to get the new token
-        await auth.signOut();
-        router.push('/login');
-
-    } catch (error: any) {
-        console.error("Error making admin:", error);
-        toast({
-            variant: 'destructive',
-            title: 'Erro ao se tornar Admin',
-            description: error.message || 'Não foi possível concluir a operação.',
-        });
-    } finally {
-        setIsMakingAdmin(false);
-    }
-  };
-  
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       if (event.key === 'Enter') {
         event.preventDefault();
-        if (!user) { // Only trigger login on Enter if not logged in
-          handleLogin();
-        }
+        handleLogin();
       }
     };
     
@@ -127,9 +111,9 @@ export default function LoginPage() {
     return () => {
       window.removeEventListener('keydown', handleKeyPress);
     };
-  }, [handleLogin, user]);
+  }, [handleLogin]);
   
-  if (isUserLoading || (user && !isMakingAdmin)) {
+  if (isUserLoading || user) {
       return (
           <div className="flex h-screen w-full items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin" />
@@ -153,105 +137,79 @@ export default function LoginPage() {
                </div>
             </div>
             <CardTitle className="font-headline text-3xl">Estratégia Chinesa</CardTitle>
-            <CardDescription>{user ? `Bem-vindo, ${user.email}` : 'Acesse com suas credenciais ou teste gratuitamente.'}</CardDescription>
+            <CardDescription>Acesse com suas credenciais ou teste gratuitamente.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {!user ? (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-mail</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={credentials.email}
-                    onChange={handleInputChange}
-                    disabled={isLoading}
-                  />
-                </div>
-                <div className="space-y-2 relative">
-                  <Label htmlFor="password">Senha</Label>
-                  <Input
-                    id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="********"
-                    value={credentials.password}
-                    onChange={handleInputChange}
-                    disabled={isLoading}
-                    className="pr-10"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-1 top-7 h-7 w-7 text-muted-foreground"
-                    onClick={() => setShowPassword(prev => !prev)}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                </div>
-                <div className="space-y-2 pt-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button asChild variant="outline">
-                        <AffiliateLink href="/demo">Sinal Grátis</AffiliateLink>
-                    </Button>
-                    <Button onClick={handleLogin} disabled={isLoading} className="bg-primary/90 hover:bg-primary text-primary-foreground font-bold">
-                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Entrar
-                    </Button>
-                  </div>
-                   <Button variant="link" size="sm" className="w-full text-blue-400 text-xs h-auto pt-2" asChild>
-                      <AffiliateLink href={telegramUrl} target="_blank">
-                        Problemas com o acesso? Fale conosco
-                      </AffiliateLink>
-                    </Button>
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">E-mail</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="seu@email.com"
+                value={credentials.email}
+                onChange={handleInputChange}
+                disabled={isLoading}
+              />
+            </div>
+            <div className="space-y-2 relative">
+              <Label htmlFor="password">Senha</Label>
+              <Input
+                id="password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                placeholder="********"
+                value={credentials.password}
+                onChange={handleInputChange}
+                disabled={isLoading}
+                className="pr-10"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-7 h-7 w-7 text-muted-foreground"
+                onClick={() => setShowPassword(prev => !prev)}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+            </div>
+            <div className="space-y-2 pt-2">
+              <div className="grid grid-cols-2 gap-2">
+                <Button asChild variant="outline">
+                    <AffiliateLink href="/demo">Sinal Grátis</AffiliateLink>
+                </Button>
+                <Button onClick={handleLogin} disabled={isLoading} className="bg-primary/90 hover:bg-primary text-primary-foreground font-bold">
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Entrar
+                </Button>
+              </div>
+               <Button variant="link" size="sm" className="w-full text-blue-400 text-xs h-auto pt-2" asChild>
+                  <AffiliateLink href={telegramUrl} target="_blank">
+                    Problemas com o acesso? Fale conosco
+                  </AffiliateLink>
+                </Button>
+            </div>
 
-                <div className="relative my-4">
-                    <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-background px-2 text-muted-foreground">
-                        ou
-                        </span>
-                    </div>
+            <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
                 </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-background px-2 text-muted-foreground">
+                    ou
+                    </span>
+                </div>
+            </div>
 
-                 <div className="text-center">
-                    <p className="text-sm text-muted-foreground">
-                      Não tem uma licença?{' '}
-                      <AffiliateLink href="/vip" className="font-semibold text-primary underline-offset-4 hover:underline">
-                        Clique aqui
-                      </AffiliateLink>
-                    </p>
-                </div>
-              </>
-            ) : (
-                <div className="space-y-4 pt-2">
-                    <Button
-                        variant="destructive"
-                        className="w-full"
-                        onClick={handleMakeAdmin}
-                        disabled={isMakingAdmin}
-                    >
-                        {isMakingAdmin ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserCog className="mr-2 h-4 w-4" />}
-                        Tornar-se Admin
-                    </Button>
-                    <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={async () => {
-                            await auth.signOut();
-                            router.push('/login');
-                        }}
-                    >
-                        Sair
-                    </Button>
-                </div>
-            )}
+             <div className="text-center">
+                <p className="text-sm text-muted-foreground">
+                  Não tem uma licença?{' '}
+                  <AffiliateLink href="/vip" className="font-semibold text-primary underline-offset-4 hover:underline">
+                    Clique aqui
+                  </AffiliateLink>
+                </p>
+            </div>
           </CardContent>
         </Card>
         <footer className="w-full text-center text-xs text-foreground/50 p-4 mt-8">
@@ -264,5 +222,3 @@ export default function LoginPage() {
     </>
   );
 }
-
-    

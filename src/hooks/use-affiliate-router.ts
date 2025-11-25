@@ -16,7 +16,7 @@ export function useAffiliateRouter() {
   const isExternal = (url: string) => /^(https|http|www)/.test(url);
 
   const generateHref = useCallback((url: string) => {
-    if (!affiliateId || isExternal(url) || pathname === url) {
+    if (!affiliateId || isExternal(url)) {
       return url;
     }
 
@@ -24,7 +24,7 @@ export function useAffiliateRouter() {
     const separator = hasParams ? '&' : '?';
     
     return `${url}${separator}aff=${affiliateId}`;
-  }, [affiliateId, pathname]);
+  }, [affiliateId]);
 
   const push = useCallback(
     (href: Route, options?: NavigateOptions) => {

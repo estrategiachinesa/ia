@@ -1,0 +1,308 @@
+
+'use client';
+
+import * as React from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { doc, getDoc, writeBatch } from 'firebase/firestore';
+import { Loader2, ShieldCheck, XCircle, CheckCircle } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from '@/components/ui/input';
+import { useFirebase, useDoc, useMemoFirebase, useAppConfig } from '@/firebase';
+import AffiliateLink from '@/components/app/affiliate-link';
+import { useToast } from '@/hooks/use-toast';
+
+// Schema for form validation
+const formSchema = z.object({
+  userId: z.string()
+  .min(8, {
+    message: 'O ID do usuário deve ter no mínimo 8 caracteres.',
+  })
+  .max(20, {
+    message: 'O ID do usuário não pode ter mais de 20 caracteres.',
+  })
+  .regex(/^\d+$/, {
+    message: "O ID deve conter apenas números."
+  })
+});
+
+// Component for Status Indicator
+function StatusIndicator({ isOnline, isLoading }: { isOnline: boolean | undefined, isLoading: boolean }) {
+    if (isLoading) {
+        return (
+            <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Verificando status...</span>
+            </div>
+        )
+    }
+
+    return (
+        <div className="flex items-center gap-2">
+            <span className="relative flex h-3 w-3">
+                {isOnline && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>}
+                <span className={`relative inline-flex rounded-full h-3 w-3 ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}></span>
+            </span>
+            <span className="font-semibold">{isOnline ? 'Sessão Online' : 'Sessão Offline'}</span>
+        </div>
+    )
+}
+
+// Component for Scoreboard
+function Scoreboard({ wins, losses, isLoading }: { wins: number | undefined, losses: number | undefined, isLoading: boolean }) {
+    if (isLoading) {
+        return <Loader2 className="h-6 w-6 animate-spin text-primary" />;
+    }
+    
+    const total = (wins || 0) + (losses || 0);
+    const assertiveness = total > 0 ? (((wins || 0) / total) * 100).toFixed(1) : "0.0";
+
+    return (
+        <div className='text-center'>
+            <div className="flex justify-center items-center gap-4 text-2xl font-bold">
+                <span className="text-green-400">{wins ?? 0}</span>
+                <span>:</span>
+                <span className="text-red-400">{losses ?? 0}</span>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">Assertividade: {assertiveness}%</p>
+        </div>
+    )
+}
+
+export default function SessaoChinesaPage() {
+    const { firestore } = useFirebase();
+    const { config } = useAppConfig();
+    const { toast } = useToast();
+
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [isFailureAlertOpen, setFailureAlertOpen] = React.useState(false);
+    const [isIdConfirmed, setIsIdConfirmed] = React.useState(false);
+    
+    // Firebase real-time data subscriptions
+    const statusRef = useMemoFirebase(() => firestore ? doc(firestore, 'session', 'status') : null, [firestore]);
+    const scoreRef = useMemoFirebase(() => firestore ? doc(firestore, 'session', 'monthly_score') : null, [firestore]);
+
+    const { data: statusData, isLoading: isStatusLoading } = useDoc(statusRef);
+    const { data: scoreData, isLoading: isScoreLoading } = useDoc(scoreRef);
+
+    const isOnline = (statusData as { isOnline: boolean } | null)?.isOnline;
+    const wins = (scoreData as { wins: number } | null)?.wins;
+    const losses = (scoreData as { losses: number } | null)?.losses;
+    
+    // Effect to initialize documents if they don't exist
+    React.useEffect(() => {
+        const initializeSessionDocs = async () => {
+            if (!firestore || !statusRef || !scoreRef) return;
+
+            // This check ensures we don't re-run this logic while data is loading.
+            // We wait until the initial fetch is complete.
+            if (isStatusLoading || isScoreLoading) return;
+
+            try {
+                const statusDoc = await getDoc(statusRef);
+                const scoreDoc = await getDoc(scoreRef);
+                
+                const batch = writeBatch(firestore);
+                let needsCommit = false;
+
+                if (!statusDoc.exists()) {
+                    batch.set(statusRef, { isOnline: true });
+                    needsCommit = true;
+                }
+
+                if (!scoreDoc.exists()) {
+                    batch.set(scoreRef, { wins: 0, losses: 0 });
+                    needsCommit = true;
+                }
+
+                if (needsCommit) {
+                    await batch.commit();
+                    console.log("Documentos da sessão inicializados no Firestore.");
+                }
+            } catch (error) {
+                // This might be a permission error if rules are not set yet.
+                // It will be handled by the useDoc error state.
+                console.error("Erro ao verificar ou inicializar documentos da sessão:", error);
+            }
+        };
+
+        initializeSessionDocs();
+
+    }, [firestore, statusRef, scoreRef, isStatusLoading, isScoreLoading]);
+
+
+    const form = useForm<z.infer<typeof formSchema>>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+          userId: '',
+        },
+    });
+
+    function onSubmit(values: z.infer<typeof formSchema>) {
+        setIsSubmitting(true);
+        // Simulate API call
+        setTimeout(() => {
+            setIsSubmitting(false);
+
+            // Simulate success if ID is '12345678'
+            if (values.userId === '12345678') {
+                setIsIdConfirmed(true);
+                toast({
+                    title: 'ID Confirmado!',
+                    description: 'Seu acesso foi verificado. Clique em "Entrar na Sessão".',
+                    className: 'bg-green-600 border-green-600 text-white',
+                    icon: <CheckCircle className="h-5 w-5 text-white" />,
+                })
+            } else {
+                setFailureAlertOpen(true);
+                form.reset();
+            }
+        }, 1500);
+    }
+    
+    function handleEnterSession() {
+        // Here you would add the logic to redirect the user to the session page
+        toast({
+            title: 'Entrando na Sessão...',
+            description: 'Você será redirecionado em breve.',
+        })
+        // Exemplo: router.push('/caminho-da-sessao-real');
+    }
+
+    return (
+        <>
+            <div className="fixed inset-0 -z-20 h-full w-full grid-bg" />
+            <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/80 to-background" />
+
+            <div className="flex flex-col min-h-screen items-center justify-center p-4">
+                <Card className="w-full max-w-md bg-background/50 backdrop-blur-sm border-border/50 shadow-2xl shadow-primary/10">
+                    <CardHeader className="text-center">
+                        <div className="flex justify-center items-center gap-2 mb-2">
+                            <ShieldCheck className="h-10 w-10 text-primary" />
+                        </div>
+                        <CardTitle className="font-headline text-3xl">Sessão Chinesa</CardTitle>
+                        <CardDescription>Acesso exclusivo para membros verificados</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="grid grid-cols-2 gap-4 text-center">
+                             <Card className='p-3 bg-card/50'>
+                                <h3 className="text-sm font-semibold text-muted-foreground mb-2">Status da Sessão</h3>
+                                <StatusIndicator isOnline={isOnline} isLoading={isStatusLoading} />
+                             </Card>
+                             <Card className='p-3 bg-card/50'>
+                                 <h3 className="text-sm font-semibold text-muted-foreground mb-2">Placar do Mês</h3>
+                                 <Scoreboard wins={wins} losses={losses} isLoading={isScoreLoading} />
+                             </Card>
+                        </div>
+                        
+                        <div className='text-center'>
+                           <p className='text-sm text-muted-foreground'>Insira seu ID da corretora para tentar o acesso.</p>
+                        </div>
+
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                                <FormField
+                                    control={form.control}
+                                    name="userId"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>ID de Usuário</FormLabel>
+                                            <FormControl>
+                                                <Input 
+                                                    placeholder="Apenas números" 
+                                                    {...field}
+                                                    type="text"
+                                                    pattern="[0-9]*"
+                                                    inputMode="numeric"
+                                                    disabled={isIdConfirmed}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        if (/^\d{0,20}$/.test(val)) {
+                                                            field.onChange(val);
+                                                        }
+                                                    }}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <Button type="submit" className="w-full" disabled={isSubmitting || isIdConfirmed}>
+                                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    {isIdConfirmed ? 'ID Confirmado' : 'Confirmar ID'}
+                                </Button>
+                            </form>
+                        </Form>
+                         <Button
+                            onClick={handleEnterSession}
+                            className="w-full"
+                            disabled={!isIdConfirmed}
+                            variant={isIdConfirmed ? 'default' : 'outline'}
+                        >
+                            Entrar na Sessão
+                        </Button>
+                    </CardContent>
+                </Card>
+                <footer className="w-full text-center text-xs text-foreground/50 p-4 mt-8">
+                  <p>© 2025 ESTRATÉGIA CHINESA. Todos os direitos reservados.</p>
+                </footer>
+            </div>
+
+            <Dialog open={isFailureAlertOpen} onOpenChange={setFailureAlertOpen}>
+                <DialogContent>
+                    <DialogHeader className="text-center items-center">
+                        <XCircle className="h-12 w-12 text-destructive mb-2"/>
+                        <DialogTitle className="font-headline text-2xl">Falha ao entrar ❌</DialogTitle>
+                        <DialogDescription className="text-base">
+                            Não encontramos seu cadastro no sistema. É preciso se cadastrar e realizar um depósito para ter acesso à Sessão Chinesa.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="flex-col sm:flex-col sm:space-x-0 gap-2 pt-4">
+                        <Button asChild>
+                            <AffiliateLink href={config?.exnovaUrl || '#'} target="_blank">
+                                Cadastrar na Exnova
+                            </AffiliateLink>
+                        </Button>
+                         <Button asChild>
+                            <AffiliateLink href={config?.iqOptionUrl || '#'} target="_blank">
+                                Cadastrar na IQ Option
+                            </AffiliateLink>
+                        </Button>
+                        <Button asChild variant="secondary">
+                            <AffiliateLink href={config?.telegramUrl || '#'} target="_blank">
+                                Falar com Suporte
+                            </AffiliateLink>
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </>
+    );
+}
+
+    

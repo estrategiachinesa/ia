@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import AffiliateLink from '@/components/app/affiliate-link';
 
 export default function LegalLayout({
   children,
@@ -16,14 +17,14 @@ export default function LegalLayout({
       <div className="flex flex-col min-h-screen">
          <header className="p-4 flex justify-between items-center sticky top-0 bg-background/80 backdrop-blur-lg border-b border-border/50 z-10">
           <Button variant="ghost" asChild>
-            <Link href="/login">
+            <AffiliateLink href="/">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Voltar
-            </Link>
+            </AffiliateLink>
           </Button>
-          <Link href="/login" className="font-headline text-2xl font-bold text-primary absolute left-1/2 -translate-x-1/2">
+          <AffiliateLink href="/" className="font-headline text-2xl font-bold text-primary absolute left-1/2 -translate-x-1/2">
             Estratégia Chinesa
-          </Link>
+          </AffiliateLink>
           <div />
         </header>
 
@@ -38,3 +39,5 @@ export default function LegalLayout({
     </>
   );
 }
+
+    

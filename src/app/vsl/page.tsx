@@ -1,7 +1,10 @@
 
 'use client';
 
+'use client';
 
+import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import {
   AlertTriangle,
@@ -32,8 +35,13 @@ import CountdownTimer from '@/components/countdown-timer';
 import TestimonialCard from '@/components/testimonial-card';
 import { Logo } from '@/components/logo';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useAppConfig } from '@/firebase';
-import YoutubePlayer from '@/components/youtube-player';
+
+const VslPlayerWithNoSSR = dynamic(() => import('@/components/vsl-player'), {
+  ssr: false,
+  loading: () => <Skeleton className="aspect-video w-full max-w-4xl rounded-lg bg-white/10" />,
+});
 
 const HotmartButton = ({ className, url }: { className?: string; url: string }) => {
     const { affiliateId } = useAppConfig();
@@ -42,65 +50,31 @@ const HotmartButton = ({ className, url }: { className?: string; url: string }) 
         finalUrl += `&afftrack=${affiliateId}`;
     }
 
-  return (
-    <a
-      href={finalUrl}
-      className={cn(
-        'hotmart-fb hotmart__button-checkout font-headline text-lg font-bold uppercase',
-        className
-      )}
-    >
-      Quero a Oferta de Black Friday
-    </a>
-  );
+    return (
+        <a
+            href={finalUrl}
+            className={cn(
+            'hotmart-fb hotmart__button-checkout font-headline text-lg font-bold uppercase',
+            className
+            )}
+        >
+            Quero a Oferta de Black Friday
+        </a>
+    );
 };
 
 const Header = () => {
-  const { config } = useAppConfig();
-  return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm shadow-md shadow-primary/20">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-        <Logo />
-        <div className="hidden sm:inline-flex">
-          <HotmartButton url={config?.blackFridayUrl || '#'} />
-        </div>
-      </div>
-    </header>
-  );
-};
-
-const HeroSection = () => {
     const { config } = useAppConfig();
     return (
-        <section
-            id="hero"
-            className="relative flex h-screen min-h-[700px] items-center justify-center text-center"
-        >
-            <div className="absolute inset-0 -z-10">
-                <Image
-                src="/hero-bg.jpg" // Você pode substituir por uma imagem relevante
-                alt="Trading background"
-                fill
-                className="object-cover opacity-10"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
-            </div>
-            <div className="container px-4">
-                <h1 className="font-headline text-5xl font-bold uppercase tracking-wider text-primary md:text-7xl">
-                Black Friday
-                </h1>
-                <p className="mx-auto mt-4 max-w-3xl text-xl text-foreground md:text-2xl">
-                A Consistência no Trading com um Desconto Único!
-                </p>
-                <p className="mx-auto mt-6 max-w-2xl text-muted-foreground">
-                Descubra a Estratégia Chinesa, a ferramenta que automatiza suas análises e te entrega os melhores momentos de entrada, sem achismos e sem martingale.
-                </p>
-                <div className="mt-10">
-                <HotmartButton url={config?.blackFridayUrl || '#'} />
-                </div>
-            </div>
-        </section>
-    )
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-sm shadow-md shadow-primary/20">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
+          <Logo />
+          <div className="hidden sm:inline-flex">
+            <HotmartButton url={'https://pay.hotmart.com/E101943327K'} />
+          </div>
+        </div>
+      </header>
+    );
 };
 
 const ProblemSection = () => {
@@ -161,10 +135,6 @@ const SolutionSection = () => {
                 <p className="mt-4 max-w-3xl mx-auto text-muted-foreground text-lg">
                 O indicador é simples, direto e eficaz. Veja suas principais características:
                 </p>
-            </div>
-            
-            <div className="mt-12 max-w-4xl mx-auto">
-              <YoutubePlayer videoId="O_R9k6Yh2b4" />
             </div>
 
             <div className="mt-16 grid md:grid-cols-3 gap-8 text-center">
@@ -319,7 +289,7 @@ const OfferSection = () => {
                     </p>
                     <p className="font-bold text-foreground">ou R$ 97,00 à vista</p>
                     <div className="mt-6 w-full flex justify-center">
-                        <HotmartButton url={config?.blackFridayUrl || '#'} />
+                        <HotmartButton url={'https://pay.hotmart.com/E101943327K'} />
                     </div>
                     <div className="mt-6">
                         <p className="font-bold text-primary">A OFERTA TERMINA EM:</p>
@@ -427,7 +397,7 @@ const FinalCtaSection = () => {
           <div
             className="mt-12 text-base md:text-xl font-bold"
           >
-            <HotmartButton url={config?.blackFridayUrl || '#'} />
+            <HotmartButton url={'https://pay.hotmart.com/E101943327K'} />
           </div>
         </div>
       </section>
@@ -452,22 +422,67 @@ const Footer = () => (
 );
 
 
-export default function IndicadorPage() {
+export default function DescubraPage() {
+  const [videoEnded, setVideoEnded] = useState(false);
+
+  useEffect(() => {
+    // Check localStorage on mount and on changes to update the state
+    const checkVideoStatus = () => {
+      const storedVideoEnded = localStorage.getItem('vsl_videoEnded') === 'true';
+      if (storedVideoEnded !== videoEnded) {
+        setVideoEnded(storedVideoEnded);
+      }
+    };
+    checkVideoStatus();
+
+    // Also listen for storage events to sync across tabs
+    window.addEventListener('storage', checkVideoStatus);
+    
+    // Set up an interval as a fallback, especially for the active tab
+    const interval = setInterval(checkVideoStatus, 500);
+
+    return () => {
+      window.removeEventListener('storage', checkVideoStatus);
+      clearInterval(interval);
+    };
+  }, [videoEnded]);
+
+
   return (
-    <div className="dark font-headline bg-[#0e0e0e] text-white">
-        <Header />
-        <main>
-            <HeroSection />
-            <ProblemSection />
-            <SolutionSection />
-            <BenefitsSection />
-            <TestimonialsSection />
-            <OfferSection />
-            <GuaranteeSection />
-            <FaqSection />
-            <FinalCtaSection />
-        </main>
-        <Footer />
+    <div className="flex min-h-screen flex-col items-center bg-[#0e0e0e] text-white">
+      <header className="fixed top-0 left-0 right-0 z-50 w-full bg-red-600 p-2 text-center">
+        <p className="text-sm font-bold uppercase sm:text-base">
+          Atenção: seu acesso será liberado no final do vídeo!
+        </p>
+      </header>
+
+      <main className="mt-[60px] flex w-full flex-col items-center p-4">
+        {!videoEnded && (
+            <h1 className="mb-8 text-center text-3xl font-extrabold uppercase sm:text-4xl md:text-5xl">
+                Descubra o gatilho mais <br />
+                <span className="text-primary">assertivo no daytrade</span>
+            </h1>
+        )}
+
+        <div className="w-full max-w-4xl">
+          <VslPlayerWithNoSSR videoId="ewlGNXdH7oM" />
+        </div>
+
+        {videoEnded && (
+            <div className="w-full">
+                <ProblemSection />
+                <SolutionSection />
+                <BenefitsSection />
+                <TestimonialsSection />
+                <OfferSection />
+                <GuaranteeSection />
+                <FaqSection />
+                <FinalCtaSection />
+            </div>
+        )}
+      </main>
+
+       {videoEnded && <Footer />}
     </div>
   );
 }

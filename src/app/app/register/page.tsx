@@ -14,6 +14,7 @@ import { useFirebase, useAppConfig } from '@/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
+import { validateActivationCode } from './actions';
 
 type RegistrationStep = 'codeValidation' | 'terms' | 'form';
 
@@ -39,23 +40,25 @@ export default function RegisterPage() {
 
   const handleCodeValidation = async () => {
     if (!activationCode) {
-        toast({ variant: 'destructive', title: 'Código Inválido', description: 'Por favor, insira um código de ativação.' });
-        return;
+      toast({ variant: 'destructive', title: 'Código Inválido', description: 'Por favor, insira um código de ativação.' });
+      return;
     }
-    if (isConfigLoading || !config) {
-        toast({ variant: 'destructive', title: 'Aguarde', description: 'A configuração ainda está carregando. Tente novamente em um instante.' });
-        return;
-    }
-
+    
     setIsCodeLoading(true);
-    // Client-side validation against the secret from config
-    if (activationCode === config.registrationSecret) {
+
+    try {
+      const result = await validateActivationCode(activationCode);
+      if (result.success) {
         localStorage.setItem('activationCodeValidated', 'true');
         setRegistrationStep('terms');
         toast({ title: 'Código Validado!', description: 'Prossiga para o próximo passo.' });
-    } else {
+      } else {
         toast({ variant: 'destructive', title: 'Código Inválido', description: 'O código de ativação está incorreto. Verifique e tente novamente.' });
+      }
+    } catch (error) {
+       toast({ variant: 'destructive', title: 'Erro de Servidor', description: 'Não foi possível validar o código. Tente novamente mais tarde.' });
     }
+    
     setIsCodeLoading(false);
   };
 
@@ -300,5 +303,4 @@ export default function RegisterPage() {
       </div>
     </>
   );
-
-    
+}

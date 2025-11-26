@@ -277,11 +277,10 @@ const OfferSection = () => {
                     </ul>
                     </div>
                     <div className="text-center bg-background p-6 rounded-lg">
-                    <p className="text-muted-foreground">De <span className="line-through">R$497,00</span> por apenas:</p>
                     <p className="font-headline text-4xl md:text-5xl font-bold text-primary my-2">
-                        12x de R$10,03
+                        12 x de R$ 20,47 *
                     </p>
-                    <p className="font-bold text-foreground">ou R$ 97,00 à vista</p>
+                    <p className="font-bold text-foreground">Ou R$ 197,97 à vista</p>
                     <div className="mt-6 w-full flex justify-center">
                         <HotmartButton url={'https://pay.hotmart.com/G102999657C?checkoutMode=2'} />
                     </div>

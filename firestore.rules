@@ -48,6 +48,15 @@ service cloud.firestore {
       allow write: if false; // Should be managed from Firebase Console
     }
 
+    /**
+     * @description Rules for affiliate data.
+     * @path /affiliates/{affiliateId}
+     */
+    match /affiliates/{affiliateId} {
+      allow read: if true;
+      allow write: if false; // Managed from Firebase Console only
+    }
+
     // Helper functions.
     function isSignedIn() {
       return request.auth != null;

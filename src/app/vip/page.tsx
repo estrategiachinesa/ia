@@ -25,9 +25,11 @@ export default function VipPage() {
 
   let checkoutUrl = config?.hotmartUrl || '#';
 
-  if (affiliateId && config?.afiliados[affiliateId]) {
-    checkoutUrl = config.afiliados[affiliateId];
+  // Specific override for affiliate 'wm'
+  if (affiliateId === 'wm') {
+    checkoutUrl = 'https://go.hotmart.com/D103007301M?dp=1';
   } else if (affiliateId && checkoutUrl !== '#') {
+    // General affiliate tracking for others
     const separator = checkoutUrl.includes('?') ? '&' : '?';
     checkoutUrl = `${checkoutUrl}${separator}afftrack=${affiliateId}`;
   }

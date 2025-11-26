@@ -136,13 +136,7 @@
     "providers": [
       "password",
       "anonymous"
-    ],
-    "customClaims": {
-      "admin": {
-        "type": "boolean",
-        "description": "Grants administrative privileges over the application."
-      }
-    }
+    ]
   },
   "firestore": {
     "structure": [
@@ -193,7 +187,7 @@
           "schema": {
             "$ref": "#/backend/entities/VipRequest"
           },
-          "description": "Stores VIP access requests from users. The document ID is the user's Firebase UID.",
+          "description": "Stores VIP access requests from users inside the /app section. The document ID is the user's Firebase UID.",
           "params": [
             {
               "name": "userId",
@@ -209,7 +203,7 @@
           "schema": {
             "$ref": "#/backend/entities/Affiliate"
           },
-          "description": "Stores custom checkout links for affiliates. The document ID is the affiliate's code (e.g., 'wm').",
+          "description": "Stores custom checkout links for affiliates. Used in pages like /demo/vip. The document ID is the affiliate's code (e.g., 'wm').",
            "params": [
             {
               "name": "affiliateId",
@@ -219,6 +213,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to handle VIP access requests and global app configurations. It now includes a registration document under /appConfig to hold a secret code for signup validation. VIP requests are stored per user, using their UID as the document ID. Global configurations are stored in single documents under `/appConfig` for easy access."
+    "reasoning": "The Firestore structure is designed to handle VIP access requests and global app configurations. VIP requests are stored per user, using their UID as the document ID. Global configurations are stored in single documents under /appConfig for easy access from anywhere in the app. The affiliates collection allows for custom checkout links for different partners."
   }
 }

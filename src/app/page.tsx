@@ -1,4 +1,3 @@
-
 'use client';
 
 
@@ -471,5 +470,3 @@ export default function IndicadorPage() {
     </div>
   );
 }
-
-    

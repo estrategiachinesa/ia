@@ -3,26 +3,26 @@
  * @fileoverview Firestore Security Rules for Estratégia Chinesa.
  *
  * Core Philosophy:
- * This ruleset enforces access control for VIP requests and app configuration.
- * It introduces an admin role via custom claims for secure configuration management.
+ * This ruleset enforces access control for VIP requests, app configuration,
+ * and the standalone 'sessaochinesa' page. It uses ownership-based rules
+ * to protect user data.
  *
  * Data Structure:
- * - `/appConfig/{doc}`: Stores global app configurations. Publicly readable, admin-only write access.
+ * - `/appConfig/{doc}`: Stores global app configurations. Publicly readable.
  * - `/vipRequests/{userId}`: Stores VIP access requests. Restricted to owner.
- * - `/session/{docId}`: Stores session status and score. Publicly readable.
- * - `/adminActions/{docId}`: Used as a trigger for secure server-side actions.
+ * - `/session/{docId}`: Stores session status and score for 'sessaochinesa'. Publicly readable.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
     /**
-     * @description Grants public read access. Restricts write access to admins.
+     * @description Grants public read access. Write access is disabled from clients.
      * @path /appConfig/{configDoc}
      */
     match /appConfig/{configDoc} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if false; // Should be managed from Firebase Console
     }
 
     /**
@@ -31,34 +31,21 @@ service cloud.firestore {
      */
     match /vipRequests/{userId} {
       /**
-       * @allow (get): A user can read their own VIP request document. Admins can read any.
-       * @allow (list): Admins can list all VIP requests.
-       * @allow (write): A user can create/update their own request under strict conditions. Admins can write freely.
+       * @allow (get, list): A user can read their own VIP request document. No one can list.
+       * @allow (write): A user can create/update their own request under strict conditions.
        */
-      allow get: if isSignedIn() && (isOwner(userId) || isAdmin());
-      allow list: if isAdmin();
-      allow write: if (isSignedIn() && isOwner(userId) && isValidVipRequestUpdate(request, resource)) || isAdmin();
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if false;
+      allow write: if isSignedIn() && isOwner(userId) && isValidVipRequestUpdate(request, resource);
     }
     
     /**
-     * @description Grants public read access to the session status and score.
+     * @description Grants public read access to the session status and score for sessaochinesa.
      * @path /session/{docId}
      */
     match /session/{docId} {
       allow read: if true;
-      allow write: if isAdmin();
-    }
-    
-    /**
-     * @description Rules for triggering admin actions.
-     * Only admins can create documents here, which then trigger server-side functions.
-     * @path /adminActions/{actionId}
-     */
-    match /adminActions/{actionId} {
-        // For now, let's keep it simple. If we had a full admin panel, this would be `isAdmin()`.
-        // To allow the FIRST user to make themselves an admin, we check if there are no admins yet.
-        allow create: if isSignedIn();
-        allow read, update, delete: if isAdmin();
+      allow write: if false; // Should be managed from Firebase Console
     }
 
     // Helper functions.
@@ -68,10 +55,6 @@ service cloud.firestore {
 
     function isOwner(userId) {
       return request.auth.uid == userId;
-    }
-
-    function isAdmin() {
-      return isSignedIn() && request.auth.token.admin == true;
     }
 
     /**

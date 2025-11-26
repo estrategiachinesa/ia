@@ -70,7 +70,7 @@ const Header = () => {
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
           <Logo />
           <div className="hidden sm:inline-flex">
-            <HotmartButton url={'https://pay.hotmart.com/E101943327K'} />
+            <HotmartButton url={'https://pay.hotmart.com/G102999657C'} />
           </div>
         </div>
       </header>
@@ -289,7 +289,7 @@ const OfferSection = () => {
                     </p>
                     <p className="font-bold text-foreground">ou R$ 97,00 à vista</p>
                     <div className="mt-6 w-full flex justify-center">
-                        <HotmartButton url={'https://pay.hotmart.com/E101943327K'} />
+                        <HotmartButton url={'https://pay.hotmart.com/G102999657C'} />
                     </div>
                     <div className="mt-6">
                         <p className="font-bold text-primary">A OFERTA TERMINA EM:</p>
@@ -397,7 +397,7 @@ const FinalCtaSection = () => {
           <div
             className="mt-12 text-base md:text-xl font-bold"
           >
-            <HotmartButton url={'https://pay.hotmart.com/E101943327K'} />
+            <HotmartButton url={'https://pay.hotmart.com/G102999657C'} />
           </div>
         </div>
       </section>

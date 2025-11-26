@@ -2,7 +2,7 @@
 import { FirebaseClientProvider } from '@/firebase';
 import Script from 'next/script';
 
-export default function VslLayout({
+export default function DescubraLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;

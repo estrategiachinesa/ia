@@ -471,3 +471,5 @@ export default function IndicadorPage() {
     </div>
   );
 }
+
+    

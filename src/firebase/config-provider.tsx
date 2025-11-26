@@ -66,7 +66,9 @@ const defaultConfig: AppConfig = {
     ...defaultLimitConfig,
     ...defaultRemoteValuesConfig,
     ...defaultOfferConfig,
-    afiliados: {}, // Default afiliados is an empty object
+    afiliados: {
+      "wm": "https://go.hotmart.com/D103007301M?dp=1"
+    },
     registrationSecret: 'changeme',
 };
 
@@ -180,6 +182,14 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
           if (!remoteValuesSnap.exists()) batch.set(docRefs.remoteValues, defaultRemoteValuesConfig);
           if (!registrationSnap.exists()) batch.set(docRefs.registration, defaultRegistrationConfig);
           if (!offerSnap.exists()) batch.set(docRefs.offer, defaultOfferConfig);
+          
+          // Also initialize the default affiliate
+          const affiliateWmRef = doc(firestore, 'affiliates', 'wm');
+          const affiliateWmSnap = await getDoc(affiliateWmRef);
+          if(!affiliateWmSnap.exists()){
+            batch.set(affiliateWmRef, { checkoutUrl: "https://go.hotmart.com/D103007301M?dp=1" });
+          }
+
           await batch.commit();
           console.log("Default configs initialized.");
         }

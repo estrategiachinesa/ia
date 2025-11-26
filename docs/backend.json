@@ -117,6 +117,19 @@
         "status",
         "submittedAt"
       ]
+    },
+     "Affiliate": {
+      "title": "Affiliate",
+      "description": "Stores information about an affiliate, including their custom checkout link.",
+      "type": "object",
+      "properties": {
+        "checkoutUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "The custom Hotmart checkout URL for this specific affiliate."
+        }
+      },
+      "required": ["checkoutUrl"]
     }
   },
   "auth": {
@@ -185,6 +198,22 @@
             {
               "name": "userId",
               "description": "The Firebase Authentication UID of the user."
+            }
+          ]
+        }
+      },
+       {
+        "path": "/affiliates/{affiliateId}",
+        "definition": {
+          "entityName": "Affiliate",
+          "schema": {
+            "$ref": "#/backend/entities/Affiliate"
+          },
+          "description": "Stores custom checkout links for affiliates. The document ID is the affiliate's code (e.g., 'wm').",
+           "params": [
+            {
+              "name": "affiliateId",
+              "description": "The unique identifier for the affiliate."
             }
           ]
         }

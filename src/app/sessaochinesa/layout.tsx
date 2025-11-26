@@ -1,3 +1,4 @@
+
 import { FirebaseClientProvider } from '@/firebase';
 
 export default function SessaoChinesaLayout({

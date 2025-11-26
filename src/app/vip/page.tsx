@@ -23,7 +23,7 @@ const Feature = ({ icon: Icon, title, description }: { icon: React.ElementType; 
 export default function VipPage() {
   const { config, isConfigLoading, affiliateId } = useAppConfig();
 
-  let checkoutUrl = config?.hotmartUrl || '#';
+  let checkoutUrl = "https://pay.hotmart.com/G102999657C";
 
   // Specific override for affiliate 'wm'
   if (affiliateId === 'wm') {

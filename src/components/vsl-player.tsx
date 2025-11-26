@@ -53,9 +53,7 @@ const ScarcityCounter = () => {
                     {licenses}
                 </p>
             </div>
-            <a href={'https://pay.hotmart.com/E101943327K'} className="hotmart-fb hotmart__button-checkout font-headline text-lg sm:text-xl font-bold uppercase">
-                GARANTIR MINHA VAGA AGORA
-            </a>
+            <a onClick={() => false} href="https://pay.hotmart.com/G102999657C?checkoutMode=2" className="hotmart-fb hotmart__button-checkout"><img src='https://static.hotmart.com/img/btn-buy-green.png' alt="Garantir Vaga"/></a>
         </div>
     );
 };
@@ -266,9 +264,7 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
 
       {showCta && !videoEnded && (
         <div className="mt-8 flex justify-center text-center animate-pulse">
-            <a href={'https://pay.hotmart.com/E101943327K'} className="hotmart-fb hotmart__button-checkout font-headline text-lg sm:text-xl font-bold uppercase">
-                QUERO ACESSAR AGORA
-            </a>
+            <a onClick={() => false} href="https://pay.hotmart.com/G102999657C?checkoutMode=2" className="hotmart-fb hotmart__button-checkout"><img src='https://static.hotmart.com/img/btn-buy-green.png' alt="Quero Acessar Agora"/></a>
         </div>
       )}
     </div>

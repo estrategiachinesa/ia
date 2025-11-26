@@ -30,7 +30,7 @@ jobs:
         run: npm run build
 
       - name: Deploy to Firebase App Hosting
-        uses: FirebaseExtended/action-apphosting-deploy@v0
+        uses: FirebaseExtended/action-apphosting-deploy@main
         with:
           # These secrets need to be configured in your GitHub repository settings
           # You can find these values in your Firebase project settings

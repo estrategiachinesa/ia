@@ -1,3 +1,4 @@
+
 'use client';
 
 
@@ -32,7 +33,7 @@ import TestimonialCard from '@/components/testimonial-card';
 import { Logo } from '@/components/logo';
 import { cn } from '@/lib/utils';
 import { useAppConfig } from '@/firebase';
-import YoutubePlayer from '@/components/youtube-player';
+import VipVslPlayer from '@/components/vip-vsl-player';
 
 const HotmartButton = ({ className, url }: { className?: string; url: string }) => {
     const { affiliateId } = useAppConfig();
@@ -163,7 +164,7 @@ const SolutionSection = () => {
             </div>
             
             <div className="mt-12 max-w-4xl mx-auto">
-              <YoutubePlayer videoId="O_R9k6Yh2b4" />
+              <VipVslPlayer videoId="O_R9k6Yh2b4" />
             </div>
 
             <div className="mt-16 grid md:grid-cols-3 gap-8 text-center">

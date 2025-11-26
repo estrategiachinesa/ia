@@ -37,7 +37,7 @@ const VipVslPlayer = ({ videoId }: { videoId: string }) => {
   const createPlayer = () => {
     if (playerRef.current) return;
     
-    playerRef.current = new (window as any).YT.Player('vip-youtube-player', {
+    playerRef.current = new (window as any).YT.Player('vip-youtube-player-main', {
       videoId: videoId,
       playerVars: {
         autoplay: 1, 
@@ -108,7 +108,7 @@ const VipVslPlayer = ({ videoId }: { videoId: string }) => {
       className="relative w-full aspect-video rounded-lg overflow-hidden border-2 border-primary/30 shadow-2xl shadow-primary/20"
       onClick={handleInteraction}
     >
-      <div id="vip-youtube-player" className="w-full h-full pointer-events-none" />
+      <div id="vip-youtube-player-main" className="w-full h-full pointer-events-none" />
       
       {!hasInteracted && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm cursor-pointer">

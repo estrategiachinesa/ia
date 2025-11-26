@@ -7,6 +7,7 @@ import { useAppConfig } from '@/firebase';
 import { Check, ShieldCheck, Zap, BarChart, Clock, Users, Gift, Timer, ArrowLeft, Loader2 } from 'lucide-react';
 import AffiliateLink from '@/components/app/affiliate-link';
 import VipVslPlayer from '@/components/vip-vsl-player';
+import { HotmartButton } from '@/components/app/hotmart-button';
 
 const Feature = ({ icon: Icon, title, description }: { icon: React.ElementType; title: string; description: string }) => (
   <div className="flex items-start gap-4">
@@ -112,14 +113,11 @@ export default function VipPage() {
               <p className="text-sm md:text-base text-muted-foreground">Pagamento único, acesso vitalício.</p>
 
               <div className="w-full mt-6">
-                <a href={checkoutUrl}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src='https://static.hotmart.com/img/btn-buy-green.png' alt="Comprar agora" />
-                </a>
+                 <HotmartButton url={checkoutUrl} />
               </div>
 
               <div className="flex items-center justify-center gap-2 mt-4 text-xs text-muted-foreground">
-                <ShieldCheck className="h-4 w-4 text-success" />
+                <ShieldCheck className="h-4 w-4 text-green-500" />
                 <span>Compra segura e garantida pela Hotmart.</span>
               </div>
             </div>

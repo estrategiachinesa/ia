@@ -26,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import AffiliateLink from '@/components/app/affiliate-link';
 import { generateSignal as generateClientSideSignal } from '@/lib/signal-generator';
 import { VipUpgradeModal } from '@/components/app/vip-upgrade-modal';
+import { AnalysisAnimation } from '@/components/app/analysis-animation';
 
 export type Asset = 
   | 'EUR/USD' | 'EUR/USD (OTC)'
@@ -265,14 +266,19 @@ export default function AnalisadorPage() {
     setAppState('loading');
     
     // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 8000));
     
     try {
       // Use the client-side signal generator
       const result = generateClientSideSignal({
         asset: formData.asset,
         expirationTime: formData.expirationTime,
-        correlationChance: config.correlationChance,
+        userTier: isPremium ? 'PREMIUM' : 'VIP',
+        // Pass the configs from Firebase
+        premiumMinWait: config.premiumMinWait,
+        premiumMaxWait: config.premiumMaxWait,
+        vipMinWait: config.vipMinWait,
+        vipMaxWait: config.vipMaxWait,
       });
       
       const newSignalData: SignalData = {
@@ -357,6 +363,37 @@ export default function AnalisadorPage() {
     );
   }
 
+  const renderContent = () => {
+    switch (appState) {
+      case 'loading':
+        return <AnalysisAnimation />;
+      case 'result':
+        return signalData && <SignalResult data={signalData} onReset={handleReset} />;
+      default:
+        return (
+          <SignalForm
+            formData={formData}
+            setFormData={setFormData}
+            onSubmit={handleAnalyze}
+            isLoading={appState === 'loading'}
+            showOTC={showOTC}
+            setShowOTC={setShowOTC}
+            isMarketOpen={isMarketOpen}
+            hasReachedLimit={hasReachedLimit}
+            user={user}
+            firestore={useFirebase().firestore}
+            isPremium={isPremium}
+            vipStatus={(vipData as any)?.status}
+            isVipModalOpen={isVipModalOpen}
+            setVipModalOpen={setVipModalOpen}
+            setUpgradeModalOpen={setUpgradeModalOpen}
+            rejectedBrokerId={(vipData as any)?.brokerId}
+          />
+        );
+    }
+  }
+
+
   // Main content for granted access
   return (
     <>
@@ -379,36 +416,15 @@ export default function AnalisadorPage() {
         </header>
 
         <main className="flex-grow flex flex-col items-center justify-center p-4 space-y-6">
-          {appState === 'result' && (
+          {(appState === 'result' || appState === 'idle') && (
              <div className="text-center">
                 <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl font-headline">
                     ESTRATÉGIA CHINESA
                 </h1>
              </div>
           )}
-          <div className="w-full max-w-md bg-background/50 backdrop-blur-sm border border-border/50 rounded-xl shadow-2xl shadow-primary/10 p-8">
-             {appState !== 'result' ? (
-              <SignalForm
-                formData={formData}
-                setFormData={setFormData}
-                onSubmit={handleAnalyze}
-                isLoading={appState === 'loading'}
-                showOTC={showOTC}
-                setShowOTC={setShowOTC}
-                isMarketOpen={isMarketOpen}
-                hasReachedLimit={hasReachedLimit}
-                user={user}
-                firestore={useFirebase().firestore}
-                isPremium={isPremium}
-                vipStatus={(vipData as any)?.status}
-                isVipModalOpen={isVipModalOpen}
-                setVipModalOpen={setVipModalOpen}
-                setUpgradeModalOpen={setUpgradeModalOpen}
-                rejectedBrokerId={(vipData as any)?.brokerId}
-              />
-             ) : (
-              signalData && <SignalResult data={signalData} onReset={handleReset} />
-             )}
+          <div className="w-full max-w-md bg-background/50 backdrop-blur-sm border border-border/50 rounded-xl shadow-2xl shadow-primary/10 p-8 min-h-[480px] flex items-center justify-center">
+             {renderContent()}
           </div>
         </main>
         

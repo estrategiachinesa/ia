@@ -12,8 +12,11 @@ export type UserTier = 'VIP' | 'PREMIUM';
 export type GenerateSignalInput = {
   asset: Asset;
   expirationTime: ExpirationTime;
-  correlationChance: number; 
   userTier: UserTier; 
+  premiumMinWait: number;
+  premiumMaxWait: number;
+  vipMinWait: number;
+  vipMaxWait: number;
 };
 
 export type GenerateSignalOutput = {
@@ -72,13 +75,23 @@ function getOneMinuteSignalSequence(masterSignal: 'CALL 🔼' | 'PUT 🔽', seed
 // --- Main Signal Generation Function ---
 
 export function generateSignal(input: GenerateSignalInput): GenerateSignalOutput {
-    const { expirationTime, userTier } = input;
+    const { 
+        expirationTime, 
+        userTier, 
+        premiumMinWait, 
+        premiumMaxWait,
+        vipMinWait,
+        vipMaxWait
+    } = input;
     const now = new Date();
 
     // 1. Determine the random wait time based on user tier and current minute.
     const minuteSeed = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes()).getTime();
     
-    const waitRange = userTier === 'PREMIUM' ? { min: 5, max: 10 } : { min: 10, max: 20 };
+    const waitRange = userTier === 'PREMIUM' 
+        ? { min: premiumMinWait, max: premiumMaxWait } 
+        : { min: vipMinWait, max: vipMaxWait };
+
     const randomWaitMinutes = Math.floor(seededRandom(minuteSeed) * (waitRange.max - waitRange.min + 1)) + waitRange.min;
 
     const initialTargetTime = new Date(now.getTime() + randomWaitMinutes * 60 * 1000);

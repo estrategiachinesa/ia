@@ -1,8 +1,6 @@
 
 'use client';
 
-'use client';
-
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
@@ -15,6 +13,8 @@ import {
   Star,
   LineChart,
   Youtube as YoutubeIcon,
+  Cpu,
+  Zap,
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -31,7 +31,6 @@ import {
   CardHeader,
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import CountdownTimer from '@/components/countdown-timer';
 import TestimonialCard from '@/components/testimonial-card';
 import { Logo } from '@/components/logo';
 import { cn } from '@/lib/utils';
@@ -42,6 +41,51 @@ const VslPlayerWithNoSSR = dynamic(() => import('@/components/vsl-player'), {
   ssr: false,
   loading: () => <Skeleton className="aspect-video w-full max-w-4xl rounded-lg bg-white/10" />,
 });
+
+const ScarcityCounter = () => {
+    const [licenses, setLicenses] = useState(11);
+    const [licenseColor, setLicenseColor] = useState('text-green-500');
+
+    useEffect(() => {
+        const videoEndTime = parseInt(localStorage.getItem('vsl_videoEndTime') || '0');
+        if (!videoEndTime) return;
+
+        const updateLicenses = () => {
+            const now = Date.now();
+            const elapsedSeconds = Math.floor((now - videoEndTime) / 1000);
+
+            if (elapsedSeconds >= 42) {
+                setLicenses(9);
+                setLicenseColor('text-red-500');
+            } else if (elapsedSeconds >= 12) {
+                setLicenses(10);
+                setLicenseColor('text-red-500');
+            } else {
+                setLicenses(11);
+                setLicenseColor('text-green-500');
+            }
+        };
+
+        updateLicenses();
+        const interval = setInterval(updateLicenses, 1000);
+
+        return () => clearInterval(interval);
+    }, []);
+
+
+    return (
+        <div className="mt-6 text-center">
+            <p className="font-bold text-primary">LICENÇAS DISPONÍVEIS:</p>
+            <div className="flex justify-center space-x-2 md:space-x-4 mt-2">
+                <div className="text-center">
+                    <div className={`text-4xl md:text-5xl font-bold font-mono p-2 rounded-lg transition-colors duration-500 ${licenseColor} animate-pulse`}>
+                        {licenses}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const HotmartButton = ({ className, url }: { className?: string; url: string }) => {
     const { affiliateId } = useAppConfig();
@@ -76,7 +120,7 @@ const ProblemSection = () => {
     "Você se sente perdido sem uma estratégia clara e lucrativa?",
     "Cansado de usar o Martingale e arriscar sua banca inteira?",
     "Frustrado por não conseguir identificar os melhores momentos de entrada?",
-    "Já gastou dinheiro em cursos e indicadores que não funcionaram?",
+    "Já gastou dinheiro em cursos e ferramentas que não funcionaram?",
     ];
 
     return (
@@ -104,19 +148,19 @@ const ProblemSection = () => {
 const SolutionSection = () => {
     const solutionFeatures = [
         {
-            icon: LineChart,
-            title: "Price Action",
-            description: "Faz marcações automáticas de suporte e resistência.",
+            icon: Cpu,
+            title: "Análise Automatizada",
+            description: "Nossa I.A. analisa o mercado para você, sem que você precise olhar para o gráfico.",
         },
         {
-            icon: SquareCheckBig,
-            title: "Confirmação de Entrada",
-            description: "Sinaliza o momento exato da entrada, eliminando dúvidas e hesitações.",
+            icon: Zap,
+            title: "Sinal Pronto para Operar",
+            description: "A Inteligência Artificial identifica o melhor momento e te envia o sinal pronto, eliminando dúvidas.",
         },
         {
-            icon: Goal,
+            icon: ShieldCheck,
             title: "Consistência e Segurança",
-            description: "Opera sem a necessidade de Martingale, protegendo seu capital e garantindo lucros consistentes.",
+            description: "Uma estratégia segura que opera sem a necessidade de Martingale, protegendo seu capital.",
         },
     ];
     return (
@@ -124,10 +168,10 @@ const SolutionSection = () => {
             <div className="container mx-auto px-4">
             <div className="text-center">
                 <h2 className="font-headline text-3xl md:text-4xl font-bold text-foreground">
-                A Solução Definitiva: Indicador da<br />ESTRATEGIA CHINESA
+                A Solução Definitiva: I.A. da<br />ESTRATEGIA CHINESA
                 </h2>
                 <p className="mt-4 max-w-3xl mx-auto text-muted-foreground text-lg">
-                O indicador é simples, direto e eficaz. Veja suas principais características:
+                A nossa Inteligência Artificial é simples, direta e eficaz. Veja suas principais características:
                 </p>
             </div>
 
@@ -151,7 +195,7 @@ const SolutionSection = () => {
 
 const BenefitsSection = () => {
     const benefits = [
-        "Sinais claros e precisos que não repintam.",
+        "Sinais claros e precisos.",
         "Estratégia validada sem o uso de Martingale.",
         "Ideal para iniciantes e traders experientes.",
         "Funciona em qualquer corretora de Opções Binárias.",
@@ -190,7 +234,7 @@ const TestimonialsSection = () => {
         {
             name: "Mariana L.",
             location: "São Paulo, SP",
-            testimonial: "Depois de meses pulando de galho em galho, finalmente encontrei uma estratégia que funciona. O indicador é incrivelmente preciso e fácil de usar. Bati minha meta semanal em apenas dois dias!",
+            testimonial: "Depois de meses pulando de galho em galho, finalmente encontrei uma estratégia que funciona. A I.A. é incrivelmente precisa e fácil de usar. Bati minha meta semanal em apenas dois dias!",
         },
         {
             name: "Ricardo P.",
@@ -252,7 +296,7 @@ const OfferSection = () => {
                     <ul className="mt-4 space-y-2 text-muted-foreground">
                         <li className="flex items-center">
                         <CheckCircle2 className="h-5 w-5 text-green-500 mr-2" />
-                        Indicador Estratégia Chinesa Vitalício
+                        I.A. da Estratégia Chinesa Vitalício
                         </li>
                         <li className="flex items-center">
                         <CheckCircle2 className="h-5 w-5 text-green-500 mr-2" />
@@ -284,10 +328,7 @@ const OfferSection = () => {
                     <div className="mt-6 w-full flex justify-center">
                         <HotmartButton url={'https://pay.hotmart.com/G102999657C?checkoutMode=2'} />
                     </div>
-                    <div className="mt-6">
-                        <p className="font-bold text-primary">A OFERTA TERMINA EM:</p>
-                        <CountdownTimer />
-                    </div>
+                    <ScarcityCounter />
                     </div>
                 </div>
                 </CardContent>
@@ -319,20 +360,20 @@ const GuaranteeSection = () => (
 const FaqSection = () => {
     const faqs = [
         {
-            question: "Preciso ter experiência para usar o indicador?",
+            question: "Preciso ter experiência para usar a I.A.?",
             answer: "Não! A Estratégia Chinesa foi desenvolvida para ser simples e eficaz, servindo tanto para traders iniciantes quanto para os mais experientes que buscam uma ferramenta de alta assertividade.",
         },
         {
-            question: "O indicador funciona em qualquer corretora?",
-            answer: "Sim, o indicador é compatível com a plataforma TradingView, e também pode ser conectada à maioria das corretoras de Opções Binárias do mercado",
+            question: "A Inteligência Artificial funciona em qualquer corretora?",
+            answer: "Sim, a nossa I.A. é compatível com a plataforma TradingView, e também pode ser conectada à maioria das corretoras de Opções Binárias do mercado",
         },
         {
             question: "O acesso é vitalício?",
-            answer: "Sim! Ao adquirir a Estratégia Chinesa, você paga uma única vez e tem acesso vitalício ao indicador, a todas as aulas e futuras atualizações.",
+            answer: "Sim! Ao adquirir a Estratégia Chinesa, você paga uma única vez e tem acesso vitalício à nossa Inteligência Artificial, a todas as aulas e futuras atualizações.",
         },
         {
             question: "Como funciona o suporte?",
-            answer: "Você terá acesso ao nosso suporte exclusivo via Telegram e e-mail para tirar todas as suas dúvidas sobre a instalação e utilização do indicador.",
+            answer: "Você terá acesso ao nosso suporte exclusivo via Telegram e e-mail para tirar todas as suas dúvidas sobre a instalação e utilização da I.A..",
         },
     ];
 

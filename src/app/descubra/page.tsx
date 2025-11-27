@@ -86,7 +86,7 @@ const ProblemSection = () => {
                 Seus problemas acabam <span className="text-primary">HOJE!</span>
             </h2>
             <p className="mt-4 text-muted-foreground text-lg">
-                A Black Friday chegou para eliminar as dificuldades que te impedem de ser consistente.
+                As dificuldades que te impedem de ser consistente podem ser eliminadas agora.
             </p>
             <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 {problems.map((problem, index) => (
@@ -237,10 +237,10 @@ const OfferSection = () => {
             <Card className="max-w-4xl mx-auto shadow-2xl border-2 border-primary bg-card">
                 <CardHeader className="text-center bg-primary text-primary-foreground p-6 rounded-t-lg">
                 <h2 className="font-headline text-2xl md:text-3xl font-bold">
-                    OFERTA DE BLACK FRIDAY
+                    OFERTA ESPECIAL POR TEMPO LIMITADO
                 </h2>
                 <p className="text-base md:text-lg opacity-90">
-                    Sua chance de ouro! Preço especial que não vai se repetir.
+                    Sua chance de ter acesso vitalício a uma ferramenta poderosa.
                 </p>
                 </CardHeader>
                 <CardContent className="p-6 md:p-8">
@@ -278,7 +278,7 @@ const OfferSection = () => {
                     </div>
                     <div className="text-center bg-background p-6 rounded-lg">
                     <p className="font-headline text-4xl md:text-5xl font-bold text-primary my-2">
-                        12 x de R$ 20,47 *
+                        12x de R$ 20,47 *
                     </p>
                     <p className="font-bold text-foreground">Ou R$ 197,97 à vista</p>
                     <div className="mt-6 w-full flex justify-center">
@@ -365,7 +365,7 @@ const FinalCtaSection = () => {
       <section id="final-cta" className="py-20 md:py-32">
         <div className="container mx-auto px-4 text-center">
           <h2 className="font-headline text-3xl md:text-4xl font-bold text-foreground">
-            Aproveite a Black Friday Agora!
+            Aproveite a Oferta Especial Agora!
           </h2>
           <div className="mt-12 grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <div className="p-6 border rounded-lg border-gray-700">
@@ -382,7 +382,7 @@ const FinalCtaSection = () => {
                 Opção 2: A Decisão Certa
               </h3>
               <p className="mt-4 text-foreground">
-                Pegar um atalho com a Estratégia Chinesa por um preço nunca visto e
+                Pegar um atalho com a Estratégia Chinesa por um preço especial e
                 alcançar a consistência que você sempre sonhou.
               </p>
             </div>

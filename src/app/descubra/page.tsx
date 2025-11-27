@@ -365,7 +365,7 @@ const FaqSection = () => {
         },
         {
             question: "A Inteligência Artificial funciona em qualquer corretora?",
-            answer: "Sim, a nossa I.A. é compatível com a plataforma TradingView, e também pode ser conectada à maioria das corretoras de Opções Binárias do mercado",
+            answer: "Sim. A nossa I.A. funciona de forma independente e foi desenhada para ser universal. Como ela analisa os gráficos do mercado em tempo real, os sinais gerados podem ser usados em qualquer corretora que ofereça os pares de moedas que analisamos (como EUR/USD e EUR/JPY). Para operações em OTC, basta usar uma das corretoras recomendadas.",
         },
         {
             question: "O acesso é vitalício?",

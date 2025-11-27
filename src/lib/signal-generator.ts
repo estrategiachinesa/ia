@@ -12,11 +12,12 @@ export type UserTier = 'VIP' | 'PREMIUM';
 export type GenerateSignalInput = {
   asset: Asset;
   expirationTime: ExpirationTime;
-  userTier: UserTier; 
-  premiumMinWait: number;
-  premiumMaxWait: number;
-  vipMinWait: number;
-  vipMaxWait: number;
+  userTier?: UserTier;
+  premiumMinWait?: number;
+  premiumMaxWait?: number;
+  vipMinWait?: number;
+  vipMaxWait?: number;
+  correlationChance?: number;
 };
 
 export type GenerateSignalOutput = {
@@ -78,10 +79,10 @@ export function generateSignal(input: GenerateSignalInput): GenerateSignalOutput
     const { 
         expirationTime, 
         userTier, 
-        premiumMinWait, 
-        premiumMaxWait,
-        vipMinWait,
-        vipMaxWait
+        premiumMinWait = 5,
+        premiumMaxWait = 10,
+        vipMinWait = 10,
+        vipMaxWait = 20,
     } = input;
     const now = new Date();
 

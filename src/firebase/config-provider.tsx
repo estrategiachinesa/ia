@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, ReactNode, useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { doc, getDoc, writeBatch, collection, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
 import { initializeFirebase } from '.';
 
 // Define the shape of the configuration object
@@ -71,17 +71,17 @@ const defaultOfferConfig = {
 };
 
 
-// This is the fallback config used if Firestore is unreachable.
+// This is the fallback config used if Firestore is unreachable or docs are missing.
 const defaultConfig: AppConfig = {
     ...defaultLinkConfig,
     ...defaultLimitConfig,
     ...defaultRemoteValuesConfig,
     ...defaultTimeConfig,
+    ...defaultRegistrationConfig,
     ...defaultOfferConfig,
     afiliados: {
       "wm": "https://go.hotmart.com/D103007301M?dp=1"
     },
-    registrationSecret: 'changeme',
 };
 
 const AffiliateIdManager: React.FC<{
@@ -125,15 +125,6 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
       setConfigState(prevState => ({ ...prevState, isConfigLoading: true, configError: null }));
 
       try {
-        // Fetch all affiliates first
-        const affiliatesCollectionRef = collection(firestore, 'affiliates');
-        const affiliatesSnapshot = await getDocs(affiliatesCollectionRef);
-        const affiliatesData: { [key: string]: string } = {};
-        affiliatesSnapshot.forEach(doc => {
-            affiliatesData[doc.id] = doc.data().checkoutUrl;
-        });
-
-
         const docRefs = {
           links: doc(firestore, 'appConfig', 'links'),
           limitation: doc(firestore, 'appConfig', 'limitation'),
@@ -143,77 +134,47 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
           offer: doc(firestore, 'appConfig', 'offer'),
         };
 
-        const [linksSnap, limitationSnap, timeSnap, remoteValuesSnap, registrationSnap, offerSnap] = await Promise.all([
+        const [
+          linksSnap, 
+          limitationSnap, 
+          timeSnap, 
+          remoteValuesSnap, 
+          registrationSnap, 
+          offerSnap,
+          affiliatesSnapshot
+        ] = await Promise.all([
           getDoc(docRefs.links),
           getDoc(docRefs.limitation),
           getDoc(docRefs.time),
           getDoc(docRefs.remoteValues),
           getDoc(docRefs.registration),
           getDoc(docRefs.offer),
+          getDocs(collection(firestore, 'affiliates')),
         ]);
-
-        let combinedConfig: AppConfig = { ...defaultConfig, afiliados: affiliatesData };
-        const batch = writeBatch(firestore);
-        let needsCommit = false;
         
-        if (linksSnap.exists()) {
-          combinedConfig = { ...combinedConfig, ...linksSnap.data() };
-        } else {
-          batch.set(docRefs.links, defaultLinkConfig);
-          needsCommit = true;
-        }
+        const affiliatesData: { [key: string]: string } = {};
+        affiliatesSnapshot.forEach(doc => {
+            affiliatesData[doc.id] = doc.data().checkoutUrl;
+        });
 
-        if (limitationSnap.exists()) {
-          combinedConfig = { ...combinedConfig, ...limitationSnap.data() };
-        } else {
-          batch.set(docRefs.limitation, defaultLimitConfig);
-          needsCommit = true;
-        }
+        // Start with the local fallback defaults
+        let combinedConfig: AppConfig = { ...defaultConfig };
 
-        if (timeSnap.exists()) {
-          combinedConfig = { ...combinedConfig, ...timeSnap.data() };
-        } else {
-          batch.set(docRefs.time, defaultTimeConfig);
-          needsCommit = true;
-        }
-
-        if (remoteValuesSnap.exists()) {
-          combinedConfig = { ...combinedConfig, ...remoteValuesSnap.data() };
-        } else {
-          batch.set(docRefs.remoteValues, defaultRemoteValuesConfig);
-          needsCommit = true;
-        }
-
-        if (registrationSnap.exists()) {
-          combinedConfig = { ...combinedConfig, ...registrationSnap.data() };
-        } else {
-          batch.set(docRefs.registration, defaultRegistrationConfig);
-          needsCommit = true;
-        }
-
-        if (offerSnap.exists()) {
-          combinedConfig = { ...combinedConfig, ...offerSnap.data() };
-        } else {
-          batch.set(docRefs.offer, defaultOfferConfig);
-          needsCommit = true;
-        }
+        // Layer existing Firestore documents over the defaults
+        if (linksSnap.exists()) combinedConfig = { ...combinedConfig, ...linksSnap.data() };
+        if (limitationSnap.exists()) combinedConfig = { ...combinedConfig, ...limitationSnap.data() };
+        if (timeSnap.exists()) combinedConfig = { ...combinedConfig, ...timeSnap.data() };
+        if (remoteValuesSnap.exists()) combinedConfig = { ...combinedConfig, ...remoteValuesSnap.data() };
+        if (registrationSnap.exists()) combinedConfig = { ...combinedConfig, ...registrationSnap.data() };
+        if (offerSnap.exists()) combinedConfig = { ...combinedConfig, ...offerSnap.data() };
         
+        // Add affiliates data
+        combinedConfig.afiliados = affiliatesData;
+
         setConfigState({ config: combinedConfig, isConfigLoading: false, configError: null });
 
-        if (needsCommit) {
-          console.log("One or more config documents missing, initializing...");
-          // Also initialize the default affiliate if it doesn't exist
-          const affiliateWmRef = doc(firestore, 'affiliates', 'wm');
-          const affiliateWmSnap = await getDoc(affiliateWmRef);
-          if(!affiliateWmSnap.exists()){
-            batch.set(affiliateWmRef, { checkoutUrl: "https://go.hotmart.com/D103007301M?dp=1" });
-          }
-          await batch.commit();
-          console.log("Default configs initialized.");
-        }
-
       } catch (error) {
-        console.error("Error fetching remote config:", error);
+        console.error("Error fetching remote config, using local fallback:", error);
         setConfigState({
           config: defaultConfig, // Fallback to default on error
           isConfigLoading: false,

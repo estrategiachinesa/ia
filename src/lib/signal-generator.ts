@@ -107,7 +107,7 @@ export function generateSignal(input: GenerateSignalInput): GenerateSignalOutput
     } else { // 5m
         const minutes = initialTargetTime.getMinutes();
         const remainder = minutes % 5;
-        const minutesToAdd = 5 - remainder;
+        const minutesToAdd = remainder === 0 ? 5 : 5 - remainder;
         finalTargetTime = new Date(initialTargetTime.getTime());
         finalTargetTime.setMinutes(minutes + minutesToAdd, 0, 0);
     }

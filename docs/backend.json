@@ -50,6 +50,35 @@
         "hourlySignalLimit"
       ]
     },
+    "TimeConfig": {
+      "title": "Time Config",
+      "description": "Stores the signal generation wait times for different user tiers.",
+      "type": "object",
+      "properties": {
+        "vipMinWait": {
+          "type": "number",
+          "description": "The minimum wait time in minutes for VIP users."
+        },
+        "vipMaxWait": {
+          "type": "number",
+          "description": "The maximum wait time in minutes for VIP users."
+        },
+        "premiumMinWait": {
+          "type": "number",
+          "description": "The minimum wait time in minutes for Premium users."
+        },
+        "premiumMaxWait": {
+          "type": "number",
+          "description": "The maximum wait time in minutes for Premium users."
+        }
+      },
+      "required": [
+        "vipMinWait",
+        "vipMaxWait",
+        "premiumMinWait",
+        "premiumMaxWait"
+      ]
+    },
     "RegistrationConfig": {
       "title": "Registration Config",
       "description": "Stores the secret code for app registration.",
@@ -158,6 +187,16 @@
             "$ref": "#/backend/entities/LimitConfig"
           },
           "description": "Stores global application usage limits. This is a single document."
+        }
+      },
+       {
+        "path": "/appConfig/time",
+        "definition": {
+          "entityName": "TimeConfig",
+          "schema": {
+            "$ref": "#/backend/entities/TimeConfig"
+          },
+          "description": "Stores global signal generation wait times. This is a single document."
         }
       },
        {

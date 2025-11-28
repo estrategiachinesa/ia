@@ -19,6 +19,10 @@ export interface AppConfig {
   registrationSecret: string;
   price: string;
   afiliados: { [key: string]: string };
+  vipMinWait: number;
+  vipMaxWait: number;
+  premiumMinWait: number;
+  premiumMaxWait: number;
 }
 
 // Define the state for the config context
@@ -51,6 +55,13 @@ const defaultRemoteValuesConfig = {
     correlationChance: 0.7
 };
 
+const defaultTimeConfig = {
+    vipMinWait: 10,
+    vipMaxWait: 20,
+    premiumMinWait: 5,
+    premiumMaxWait: 10
+};
+
 const defaultRegistrationConfig = {
     registrationSecret: "changeme"
 };
@@ -65,6 +76,7 @@ const defaultConfig: AppConfig = {
     ...defaultLinkConfig,
     ...defaultLimitConfig,
     ...defaultRemoteValuesConfig,
+    ...defaultTimeConfig,
     ...defaultOfferConfig,
     afiliados: {
       "wm": "https://go.hotmart.com/D103007301M?dp=1"
@@ -125,71 +137,77 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
         const docRefs = {
           links: doc(firestore, 'appConfig', 'links'),
           limitation: doc(firestore, 'appConfig', 'limitation'),
+          time: doc(firestore, 'appConfig', 'time'),
           remoteValues: doc(firestore, 'appConfig', 'remoteValues'),
           registration: doc(firestore, 'appConfig', 'registration'),
           offer: doc(firestore, 'appConfig', 'offer'),
         };
 
-        const [linksSnap, limitationSnap, remoteValuesSnap, registrationSnap, offerSnap] = await Promise.all([
+        const [linksSnap, limitationSnap, timeSnap, remoteValuesSnap, registrationSnap, offerSnap] = await Promise.all([
           getDoc(docRefs.links),
           getDoc(docRefs.limitation),
+          getDoc(docRefs.time),
           getDoc(docRefs.remoteValues),
           getDoc(docRefs.registration),
           getDoc(docRefs.offer),
         ]);
 
         let combinedConfig: AppConfig = { ...defaultConfig, afiliados: affiliatesData };
-        let mustInitialize = false;
+        const batch = writeBatch(firestore);
+        let needsCommit = false;
         
         if (linksSnap.exists()) {
           combinedConfig = { ...combinedConfig, ...linksSnap.data() };
         } else {
-          mustInitialize = true;
+          batch.set(docRefs.links, defaultLinkConfig);
+          needsCommit = true;
         }
 
         if (limitationSnap.exists()) {
           combinedConfig = { ...combinedConfig, ...limitationSnap.data() };
         } else {
-          mustInitialize = true;
+          batch.set(docRefs.limitation, defaultLimitConfig);
+          needsCommit = true;
+        }
+
+        if (timeSnap.exists()) {
+          combinedConfig = { ...combinedConfig, ...timeSnap.data() };
+        } else {
+          batch.set(docRefs.time, defaultTimeConfig);
+          needsCommit = true;
         }
 
         if (remoteValuesSnap.exists()) {
           combinedConfig = { ...combinedConfig, ...remoteValuesSnap.data() };
         } else {
-          mustInitialize = true;
+          batch.set(docRefs.remoteValues, defaultRemoteValuesConfig);
+          needsCommit = true;
         }
 
         if (registrationSnap.exists()) {
           combinedConfig = { ...combinedConfig, ...registrationSnap.data() };
         } else {
-          mustInitialize = true;
+          batch.set(docRefs.registration, defaultRegistrationConfig);
+          needsCommit = true;
         }
 
         if (offerSnap.exists()) {
           combinedConfig = { ...combinedConfig, ...offerSnap.data() };
         } else {
-          mustInitialize = true;
+          batch.set(docRefs.offer, defaultOfferConfig);
+          needsCommit = true;
         }
-
         
         setConfigState({ config: combinedConfig, isConfigLoading: false, configError: null });
 
-        if (mustInitialize) {
+        if (needsCommit) {
           console.log("One or more config documents missing, initializing...");
-          const batch = writeBatch(firestore);
-          if (!linksSnap.exists()) batch.set(docRefs.links, defaultLinkConfig);
-          if (!limitationSnap.exists()) batch.set(docRefs.limitation, defaultLimitConfig);
-          if (!remoteValuesSnap.exists()) batch.set(docRefs.remoteValues, defaultRemoteValuesConfig);
-          if (!registrationSnap.exists()) batch.set(docRefs.registration, defaultRegistrationConfig);
-          if (!offerSnap.exists()) batch.set(docRefs.offer, defaultOfferConfig);
-          
-          // Also initialize the default affiliate
+          // Also initialize the default affiliate if it doesn't exist
           const affiliateWmRef = doc(firestore, 'affiliates', 'wm');
           const affiliateWmSnap = await getDoc(affiliateWmRef);
           if(!affiliateWmSnap.exists()){
             batch.set(affiliateWmRef, { checkoutUrl: "https://go.hotmart.com/D103007301M?dp=1" });
           }
-
           await batch.commit();
           console.log("Default configs initialized.");
         }

@@ -96,26 +96,34 @@ export function generateSignal(input: GenerateSignalInput): GenerateSignalOutput
     const randomWaitMinutes = Math.floor(seededRandom(minuteSeed) * (waitRange.max - waitRange.min + 1)) + waitRange.min;
 
     const initialTargetTime = new Date(now.getTime() + randomWaitMinutes * 60 * 1000);
-
+    
     // 2. Calculate the final, correctly aligned target time.
     let finalTargetTime: Date;
-
+    
     if (expirationTime === '1m') {
         finalTargetTime = new Date(initialTargetTime);
-        finalTargetTime.setSeconds(0, 0); 
-        finalTargetTime.setMinutes(finalTargetTime.getMinutes() + 1); // Move to the start of the next minute
+        finalTargetTime.setSeconds(0, 0);
+        
+        // If the calculated time is in the past or same minute, move to the next minute.
+        if (finalTargetTime.getTime() <= now.getTime()) {
+            finalTargetTime.setMinutes(finalTargetTime.getMinutes() + 1);
+        }
+
     } else { // 5m
-        const minutes = initialTargetTime.getMinutes();
-        const remainder = minutes % 5;
-        const minutesToAdd = remainder === 0 ? 5 : 5 - remainder;
         finalTargetTime = new Date(initialTargetTime.getTime());
-        finalTargetTime.setMinutes(minutes + minutesToAdd, 0, 0);
-    }
-    
-    // Ensure target time is in the future. If calculation puts it in the past, add one interval.
-    if (finalTargetTime.getTime() <= now.getTime()) {
-        const interval = expirationTime === '1m' ? 1 : 5;
-        finalTargetTime.setMinutes(finalTargetTime.getMinutes() + interval);
+        const minutes = finalTargetTime.getMinutes();
+        const remainder = minutes % 5;
+        
+        if (remainder !== 0) {
+            const minutesToAdd = 5 - remainder;
+            finalTargetTime.setMinutes(minutes + minutesToAdd);
+        }
+        finalTargetTime.setSeconds(0, 0);
+
+        // Ensure target time is in the future. If calculation puts it in the past, add one 5-min interval.
+        if (finalTargetTime.getTime() <= now.getTime()) {
+            finalTargetTime.setMinutes(finalTargetTime.getMinutes() + 5);
+        }
     }
 
 

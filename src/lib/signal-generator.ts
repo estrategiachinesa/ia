@@ -103,10 +103,11 @@ export function generateSignal(input: GenerateSignalInput): GenerateSignalOutput
     if (expirationTime === '1m') {
         finalTargetTime = new Date(initialTargetTime);
         finalTargetTime.setSeconds(0, 0); 
+        finalTargetTime.setMinutes(finalTargetTime.getMinutes() + 1); // Move to the start of the next minute
     } else { // 5m
         const minutes = initialTargetTime.getMinutes();
         const remainder = minutes % 5;
-        const minutesToAdd = remainder === 0 ? 0 : 5 - remainder;
+        const minutesToAdd = 5 - remainder;
         finalTargetTime = new Date(initialTargetTime.getTime());
         finalTargetTime.setMinutes(minutes + minutesToAdd, 0, 0);
     }

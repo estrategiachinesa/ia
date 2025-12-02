@@ -37,7 +37,7 @@ export function AnalysisAnimation() {
             <div className="absolute inset-0 rounded-full border-2 border-primary/20"></div>
             <div className="absolute inset-2 rounded-full border-2 border-primary/30 animate-pulse"></div>
             <div className="absolute inset-0 rounded-full border-t-2 border-t-primary animate-spin-slow"></div>
-            <LineChart className="h-14 w-14 text-primary animate-pulse" style={{ filter: 'drop-shadow(0 0 8px hsl(var(--primary)))' }} />
+            <LineChart className="h-14 w-14 text-primary animate-spin" style={{ animationDuration: '3s', filter: 'drop-shadow(0 0 8px hsl(var(--primary)))' }} />
         </div>
       <p className="mt-8 text-lg font-semibold text-foreground">
         {analysisSteps[currentStep]}

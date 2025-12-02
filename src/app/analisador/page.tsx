@@ -397,8 +397,8 @@ export default function AnalisadorPage() {
   // Main content for granted access
   return (
     <>
-      <div className="fixed inset-0 -z-20 h-full w-full grid-bg" />
-      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/80 to-background" />
+      <div className="fixed inset-0 -z-20 h-full w-full animated-gradient" />
+      <div className="fixed inset-0 -z-10 h-full w-full bg-black/30" />
 
       <div className="flex flex-col min-h-screen">
         <header className="p-4 flex justify-between items-center">
@@ -418,12 +418,9 @@ export default function AnalisadorPage() {
         <main className="flex-grow flex flex-col items-center justify-center p-4 space-y-6">
           {(appState === 'result' || appState === 'idle') && (
              <div className="text-center">
-                <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl font-headline">
-                    ESTRATÉGIA CHINESA
-                </h1>
              </div>
           )}
-          <div className="w-full max-w-md bg-background/50 backdrop-blur-sm border border-border/50 rounded-xl shadow-2xl shadow-primary/10 p-8 min-h-[480px] flex items-center justify-center">
+          <div className="w-full max-w-md bg-card/10 backdrop-blur-xl border border-border/20 rounded-xl shadow-2xl shadow-primary/10 p-8 min-h-[480px] flex items-center justify-center shine-effect">
              {renderContent()}
           </div>
         </main>
@@ -446,3 +443,5 @@ export default function AnalisadorPage() {
     </>
   );
 }
+
+    

@@ -551,7 +551,7 @@ export function SignalForm({
         <div className="w-full space-y-2">
             <Button
               size="lg"
-              className="w-full h-14 text-lg font-bold bg-gradient-to-r from-primary/80 to-primary hover:from-primary/90 hover:to-primary text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-300 transform hover:scale-105"
+              className="w-full h-14 text-lg font-bold bg-primary text-primary-foreground shadow-lg transition-all duration-300 transform hover:scale-105 disabled:hover:scale-100 pulse-strong"
               onClick={onSubmit}
               disabled={buttonDisabled}
             >
@@ -598,3 +598,5 @@ export function SignalForm({
     </>
   );
 }
+
+    

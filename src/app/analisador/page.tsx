@@ -446,7 +446,3 @@ export default function AnalisadorPage() {
     </>
   );
 }
-
-    
-
-    

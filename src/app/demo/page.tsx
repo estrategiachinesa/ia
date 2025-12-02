@@ -61,7 +61,7 @@ export default function DemoPage() {
   const [isLimitModalOpen, setLimitModalOpen] = useState(false);
   const [nextSignalCountdown, setNextSignalCountdown] = useState('');
 
-  const isMarketOpen = isMarketOpenForAsset(formData.asset);
+  const isMarketOpen = isMarketOpenForAsset(formData.asset, config?.schedules);
 
   useEffect(() => {
     // This effect runs only on the client
@@ -73,8 +73,8 @@ export default function DemoPage() {
 
   useEffect(() => {
     const checkAndSetOTC = () => {
-      const isEurUsdOpen = isMarketOpenForAsset('EUR/USD');
-      const isEurJpyOpen = isMarketOpenForAsset('EUR/JPY');
+      const isEurUsdOpen = isMarketOpenForAsset('EUR/USD', config?.schedules);
+      const isEurJpyOpen = isMarketOpenForAsset('EUR/JPY', config?.schedules);
       if (!isEurUsdOpen && !isEurJpyOpen) {
         setShowOTC(true);
         setFormData(prev => ({ ...prev, asset: 'EUR/JPY (OTC)' }));
@@ -85,7 +85,7 @@ export default function DemoPage() {
     const interval = setInterval(checkAndSetOTC, 60000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [config]);
 
   const handleToggleMarketMode = () => {
     setMarketModeActive(prev => {

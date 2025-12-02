@@ -341,7 +341,7 @@ export default function DemoPage() {
                   Adquirir uma Licença
                 </AffiliateLink>
             </Button>
-            <Button asChild className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-black shadow-lg hover:to-yellow-600">
+            <Button asChild className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-black font-bold hover:to-yellow-600 shadow-lg">
                 <AffiliateLink href={config?.exnovaUrl || '#'} target="_blank">
                   Cadastrar agora
                 </AffiliateLink>
@@ -359,7 +359,7 @@ export default function DemoPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-col sm:space-x-0 gap-2">
-              <Button asChild className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-black shadow-lg hover:to-yellow-600">
+              <Button asChild className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-black font-bold hover:to-yellow-600 shadow-lg">
                 <AffiliateLink href={config?.exnovaUrl || '#'} target="_blank" onClick={() => setWelcomeModalOpen(false)}>
                   Abrir a Corretora
                 </AffiliateLink>

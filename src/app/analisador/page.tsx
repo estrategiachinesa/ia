@@ -174,17 +174,17 @@ export default function AnalisadorPage() {
 
   useEffect(() => {
     const checkMarketStatus = () => {
-        setIsMarketOpen(isMarketOpenForAsset(formData.asset));
+        setIsMarketOpen(isMarketOpenForAsset(formData.asset, config?.schedules));
     };
     checkMarketStatus();
     const interval = setInterval(checkMarketStatus, 10000); 
     return () => clearInterval(interval);
-  }, [formData.asset]);
+  }, [formData.asset, config]);
 
   useEffect(() => {
     const checkAndSetOTC = () => {
-      const isEurUsdOpen = isMarketOpenForAsset('EUR/USD');
-      const isEurJpyOpen = isMarketOpenForAsset('EUR/JPY');
+      const isEurUsdOpen = isMarketOpenForAsset('EUR/USD', config?.schedules);
+      const isEurJpyOpen = isMarketOpenForAsset('EUR/JPY', config?.schedules);
       if (!isEurUsdOpen && !isEurJpyOpen) {
         setShowOTC(true);
         setFormData(prev => ({ ...prev, asset: 'EUR/JPY (OTC)' }));
@@ -195,7 +195,7 @@ export default function AnalisadorPage() {
     const interval = setInterval(checkAndSetOTC, 60000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [config]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined;
@@ -416,11 +416,7 @@ export default function AnalisadorPage() {
         </header>
 
         <main className="flex-grow flex flex-col items-center justify-center p-4 space-y-6">
-          {(appState === 'result' || appState === 'idle') && (
-             <div className="text-center">
-             </div>
-          )}
-          <div className="w-full max-w-md bg-card/10 backdrop-blur-xl border border-border/20 rounded-xl shadow-2xl shadow-primary/10 p-8 min-h-[480px] flex items-center justify-center shine-effect">
+          <div className="w-full max-w-md bg-background/50 backdrop-blur-sm border border-border/50 rounded-xl shadow-2xl shadow-primary/10 p-8 min-h-[480px] flex items-center justify-center">
              {renderContent()}
           </div>
         </main>
@@ -443,5 +439,7 @@ export default function AnalisadorPage() {
     </>
   );
 }
+
+    
 
     

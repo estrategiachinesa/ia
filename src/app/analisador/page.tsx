@@ -27,6 +27,7 @@ import AffiliateLink from '@/components/app/affiliate-link';
 import { generateSignal as generateClientSideSignal } from '@/lib/signal-generator';
 import { VipUpgradeModal } from '@/components/app/vip-upgrade-modal';
 import { AnalysisAnimation } from '@/components/app/analysis-animation';
+import { useAudio } from '@/hooks/use-audio';
 
 export type Asset = 
   | 'EUR/USD' | 'EUR/USD (OTC)'
@@ -77,6 +78,9 @@ export default function AnalisadorPage() {
   const [isUpgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const { toast } = useToast();
   
+  const playTickSound = useAudio('/sounds/tick.mp3');
+  const playFinishSound = useAudio('/sounds/finish.mp3');
+
   const usageStorageKey = user ? `signalUsage_${user.uid}` : null;
 
 
@@ -207,6 +211,11 @@ export default function AnalisadorPage() {
           const now = new Date();
           if (prevData.operationStatus === 'pending') {
             const newCountdown = Math.max(0, Math.floor((prevData.targetDate.getTime() - now.getTime()) / 1000));
+            
+            if (newCountdown > 0 && newCountdown <= 10) {
+              playTickSound();
+            }
+
             if (newCountdown > 0) {
               return { ...prevData, countdown: newCountdown };
             } else {
@@ -221,6 +230,7 @@ export default function AnalisadorPage() {
               if (newOperationCountdown > 0) {
                   return { ...prevData, operationCountdown: newOperationCountdown };
               } else {
+                  playFinishSound();
                   return { ...prevData, operationCountdown: 0, operationStatus: 'finished' };
               }
           }
@@ -231,7 +241,7 @@ export default function AnalisadorPage() {
       timer = setInterval(updateCountdowns, 1000);
     }
     return () => clearInterval(timer);
-  }, [appState, signalData?.operationStatus]);
+  }, [appState, signalData?.operationStatus, playTickSound, playFinishSound]);
 
  const handleAnalyze = async () => {
     if (!config) {

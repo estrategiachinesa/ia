@@ -174,7 +174,7 @@ export default function AnalisadorPage() {
 
   useEffect(() => {
     const checkMarketStatus = () => {
-        setIsMarketOpen(isMarketOpenForAsset(formData.asset, config?.schedules));
+        setIsMarketOpen(isMarketOpenForAsset(formData.asset));
     };
     checkMarketStatus();
     const interval = setInterval(checkMarketStatus, 10000); 
@@ -183,8 +183,8 @@ export default function AnalisadorPage() {
 
   useEffect(() => {
     const checkAndSetOTC = () => {
-      const isEurUsdOpen = isMarketOpenForAsset('EUR/USD', config?.schedules);
-      const isEurJpyOpen = isMarketOpenForAsset('EUR/JPY', config?.schedules);
+      const isEurUsdOpen = isMarketOpenForAsset('EUR/USD');
+      const isEurJpyOpen = isMarketOpenForAsset('EUR/JPY');
       if (!isEurUsdOpen && !isEurJpyOpen) {
         setShowOTC(true);
         setFormData(prev => ({ ...prev, asset: 'EUR/JPY (OTC)' }));
@@ -204,9 +204,9 @@ export default function AnalisadorPage() {
       const updateCountdowns = () => {
         setSignalData(prevData => {
           if (!prevData) return null;
-          const now = Date.now();
+          const now = new Date();
           if (prevData.operationStatus === 'pending') {
-            const newCountdown = Math.max(0, Math.floor((prevData.targetDate.getTime() - now) / 1000));
+            const newCountdown = Math.max(0, Math.floor((prevData.targetDate.getTime() - now.getTime()) / 1000));
             if (newCountdown > 0) {
               return { ...prevData, countdown: newCountdown };
             } else {
@@ -217,7 +217,7 @@ export default function AnalisadorPage() {
           if (prevData.operationStatus === 'active') {
               const operationDuration = prevData.expirationTime === '1m' ? 60 : 300;
               const operationEndTime = prevData.targetDate.getTime() + (operationDuration * 1000);
-              const newOperationCountdown = Math.max(0, Math.floor((operationEndTime - now) / 1000));
+              const newOperationCountdown = Math.max(0, Math.floor((operationEndTime - now.getTime()) / 1000));
               if (newOperationCountdown > 0) {
                   return { ...prevData, operationCountdown: newOperationCountdown };
               } else {
@@ -432,7 +432,7 @@ export default function AnalisadorPage() {
           <p>© 2025 Estratégia Chinesa. Todos os direitos reservados.</p>
           <AffiliateLink href="/legal" className="underline underline-offset-2">
             Termos de Uso e Privacidade
-          </AffiliateLink>
+          </AfilliateLink>
           <p className="max-w-xl mx-auto text-[0.6rem] mt-2">Aviso Legal: Todas as estratégias e investimentos envolvem risco de perda. Nenhuma informação contida neste produto deve ser interpretada como uma garantia de resultados.</p>
         </footer>
       </div>

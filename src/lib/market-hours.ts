@@ -41,8 +41,19 @@ export function isMarketOpenForAsset(asset: Asset): boolean {
     return false; // Default to closed if no schedule is defined for a non-OTC asset
   }
 
-  // Get current time in America/Sao_Paulo timezone
-  const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+  let now: Date;
+  try {
+    // Attempt to use a specific timezone. This works in most modern environments.
+    now = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
+  } catch (error) {
+    // Fallback for environments that don't support the timeZone option well.
+    // This creates a less accurate UTC-3 offset but is better than crashing.
+    console.warn('Timezone conversion failed, using UTC offset fallback.', error);
+    now = new Date();
+    const utcOffset = -3 * 60; // UTC-3 in minutes
+    now.setMinutes(now.getMinutes() + now.getTimezoneOffset() + utcOffset);
+  }
+
   const currentDay = now.getDay();
   const currentHour = now.getHours() + now.getMinutes() / 60;
 

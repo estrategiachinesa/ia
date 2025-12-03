@@ -80,10 +80,10 @@ export function generateSignal(input: GenerateSignalInput): GenerateSignalOutput
     const { 
         expirationTime, 
         userTier, 
-        premiumMinWait = 5,
+        premiumMinWait = 1,
         premiumMaxWait = 10,
-        vipMinWait = 10,
-        vipMaxWait = 20,
+        vipMinWait = 5,
+        vipMaxWait = 15,
         invertSignal = false,
     } = input;
     const now = new Date();

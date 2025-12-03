@@ -18,6 +18,7 @@ export type GenerateSignalInput = {
   vipMinWait?: number;
   vipMaxWait?: number;
   correlationChance?: number;
+  invertSignal?: boolean;
 };
 
 export type GenerateSignalOutput = {
@@ -83,6 +84,7 @@ export function generateSignal(input: GenerateSignalInput): GenerateSignalOutput
         premiumMaxWait = 10,
         vipMinWait = 10,
         vipMaxWait = 20,
+        invertSignal = false,
     } = input;
     const now = new Date();
 
@@ -128,7 +130,7 @@ export function generateSignal(input: GenerateSignalInput): GenerateSignalOutput
 
 
     // 3. Determine the signal based on the new logic.
-    let finalSignal: 'CALL 🔼' | 'PUT 🔽';
+    let signal: 'CALL 🔼' | 'PUT 🔽';
 
     // Get the start of the 5-minute block containing the finalTargetTime.
     const blockStartMinutes = Math.floor(finalTargetTime.getMinutes() / 5) * 5;
@@ -141,16 +143,21 @@ export function generateSignal(input: GenerateSignalInput): GenerateSignalOutput
 
     if (expirationTime === '5m') {
         // For a 5m signal, we just return the master signal for that block.
-        finalSignal = masterSignal;
+        signal = masterSignal;
     } else { // 1m
         // For a 1m signal, we get the sequence and find the correct signal for our target minute.
         const signalSequence = getOneMinuteSignalSequence(masterSignal, fiveMinuteBlockSeed);
         const targetMinuteInBlock = finalTargetTime.getMinutes() % 5; // Will be 0, 1, 2, 3, or 4.
-        finalSignal = signalSequence[targetMinuteInBlock];
+        signal = signalSequence[targetMinuteInBlock];
+    }
+    
+    // 4. Invert the signal if the flag is set
+    if (invertSignal) {
+        signal = signal === 'CALL 🔼' ? 'PUT 🔽' : 'CALL 🔼';
     }
 
 
-    // 4. Format output.
+    // 5. Format output.
     const targetTimeString = finalTargetTime.toLocaleTimeString('en-US', {
         hour12: false,
         hour: '2-digit',
@@ -158,7 +165,7 @@ export function generateSignal(input: GenerateSignalInput): GenerateSignalOutput
     });
 
     return {
-        signal: finalSignal,
+        signal: signal,
         targetTime: targetTimeString,
         source: 'Aleatório' as const,
         targetDate: finalTargetTime,

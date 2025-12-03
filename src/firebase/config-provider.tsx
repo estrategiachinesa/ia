@@ -16,6 +16,7 @@ export interface AppConfig {
   vipUrl?: string;
   hourlySignalLimit: number;
   correlationChance: number;
+  invertSignal: boolean;
   registrationSecret: string;
   price: string;
   afiliados: { [key: string]: string };
@@ -52,7 +53,8 @@ const defaultLimitConfig = {
 
 // New remote config for correlation
 const defaultRemoteValuesConfig = {
-    correlationChance: 0.7
+    correlationChance: 0.7,
+    invertSignal: false
 };
 
 const defaultTimeConfig = {

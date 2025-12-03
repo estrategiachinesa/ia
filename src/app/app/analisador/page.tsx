@@ -278,6 +278,7 @@ export default function AnalisadorPage() {
         premiumMaxWait: config.premiumMaxWait,
         vipMinWait: config.vipMinWait,
         vipMaxWait: config.vipMaxWait,
+        invertSignal: config.invertSignal,
       });
       
       const newSignalData: SignalData = {

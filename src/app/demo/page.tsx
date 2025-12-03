@@ -154,7 +154,8 @@ export default function DemoPage() {
         try {
             const realSignal = generateClientSideSignal({
               ...formData,
-              correlationChance: config.correlationChance
+              correlationChance: config.correlationChance,
+              invertSignal: config.invertSignal,
             });
             setSignalData({
                 ...formData,

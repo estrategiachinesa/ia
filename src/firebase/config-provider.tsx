@@ -58,9 +58,9 @@ const defaultRemoteValuesConfig = {
 };
 
 const defaultTimeConfig = {
-    vipMinWait: 10,
-    vipMaxWait: 20,
-    premiumMinWait: 5,
+    vipMinWait: 5,
+    vipMaxWait: 15,
+    premiumMinWait: 1,
     premiumMaxWait: 10
 };
 

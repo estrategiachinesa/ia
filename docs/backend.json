@@ -159,6 +159,40 @@
         }
       },
       "required": ["checkoutUrl"]
+    },
+    "SignalFeedback": {
+        "title": "Signal Feedback",
+        "description": "Stores user feedback on the outcome of a generated signal.",
+        "type": "object",
+        "properties": {
+            "userId": {
+                "type": "string",
+                "description": "The Firebase Authentication UID of the user providing feedback."
+            },
+            "signalData": {
+                "type": "object",
+                "description": "A snapshot of the signal that the feedback is for.",
+                "properties": {
+                    "asset": {"type": "string"},
+                    "expirationTime": {"type": "string"},
+                    "signal": {"type": "string"},
+                    "targetTime": {"type": "string"},
+                    "source": {"type": "string"}
+                },
+                "required": ["asset", "expirationTime", "signal", "targetTime"]
+            },
+            "result": {
+                "type": "string",
+                "description": "The outcome of the signal as reported by the user.",
+                "enum": ["WIN", "LOSS", "DID_NOT_ENTER"]
+            },
+            "submittedAt": {
+                "type": "string",
+                "description": "The date and time when the feedback was submitted.",
+                "format": "date-time"
+            }
+        },
+        "required": ["userId", "signalData", "result", "submittedAt"]
     }
   },
   "auth": {
@@ -250,8 +284,24 @@
             }
           ]
         }
+      },
+      {
+        "path": "/signalFeedbacks/{feedbackId}",
+        "definition": {
+          "entityName": "SignalFeedback",
+          "schema": {
+            "$ref": "#/backend/entities/SignalFeedback"
+          },
+          "description": "Stores user feedback on signal outcomes. The document ID is auto-generated.",
+          "params": [
+            {
+                "name": "feedbackId",
+                "description": "The unique, auto-generated ID for the feedback document."
+            }
+          ]
+        }
       }
     ],
-    "reasoning": "The Firestore structure is designed to handle VIP access requests and global app configurations. VIP requests are stored per user, using their UID as the document ID. Global configurations are stored in single documents under /appConfig for easy access from anywhere in the app. The affiliates collection allows for custom checkout links for different partners."
+    "reasoning": "The Firestore structure is designed to handle VIP access requests, global app configurations, and now, signal feedback. VIP requests are stored per user, using their UID as the document ID. Global configurations are stored in single documents under /appConfig for easy access from anywhere in the app. The affiliates collection allows for custom checkout links for different partners. The new signalFeedbacks collection will store user-reported outcomes of signals to enable future machine learning optimizations."
   }
 }

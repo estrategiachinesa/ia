@@ -433,7 +433,7 @@ export default function AnalisadorPage() {
           <p>© 2025 Estratégia Chinesa. Todos os direitos reservados.</p>
           <AffiliateLink href="/legal" className="underline underline-offset-2">
             Termos de Uso e Privacidade
-          </AfilliateLink>
+          </AffiliateLink>
           <p className="max-w-xl mx-auto text-[0.6rem] mt-2">Aviso Legal: Todas as estratégias e investimentos envolvem risco de perda. Nenhuma informação contida neste produto deve ser interpretada como uma garantia de resultados.</p>
         </footer>
       </div>

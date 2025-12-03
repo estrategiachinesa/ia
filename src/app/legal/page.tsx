@@ -57,13 +57,18 @@ export default function LegalPage() {
         <li>Tentativas de burlar o sistema, uso automatizado ou fraude resultarão em banimento sem reembolso.</li>
       </ul>
 
-      <h3>6. Fila de Processamento</h3>
+      <h3>6. Política de Reembolso e Desativação da Conta</h3>
+      <p>Ao solicitar o reembolso da sua licença através da plataforma de compra (Hotmart), a sua conta no WebApp "Estratégia Chinesa" será <strong>suspensa imediatamente</strong>. Esta medida é necessária para garantir a integridade e a performance do sistema para os utilizadores ativos.</p>
+      <p>Caso a solicitação de reembolso seja cancelada por si, o seu acesso será reativado. No entanto, se o reembolso for efetivamente processado, a sua conta e todos os dados associados serão <strong>excluídos permanentemente</strong> da nossa plataforma.</p>
+
+
+      <h3>7. Fila de Processamento</h3>
       <p>Para garantir estabilidade, usuários FREE e VIP podem entrar em fila temporária. Usuários PREMIUM não entram em fila e têm prioridade no processamento de sinais.</p>
 
-      <h3>7. Modificações</h3>
+      <h3>8. Modificações</h3>
       <p>A Estratégia Chinesa pode alterar estes Termos a qualquer momento. É responsabilidade do usuário revisar periodicamente os documentos oficiais.</p>
 
-      <h3>8. Exclusão de Responsabilidade</h3>
+      <h3>9. Exclusão de Responsabilidade</h3>
       <p>A Estratégia Chinesa não garante:</p>
       <ul>
         <li>Precisão 100% dos sinais;</li>
@@ -72,7 +77,7 @@ export default function LegalPage() {
       </ul>
       <p>O uso é por conta e risco do usuário.</p>
 
-      <h3>9. Contato para Suporte e Questões Legais</h3>
+      <h3>10. Contato para Suporte e Questões Legais</h3>
       <p>E-mail: <strong>estrategiachinesa@gmail.com</strong></p>
 
       <hr className="border-border/50 my-8" />
@@ -94,7 +99,7 @@ export default function LegalPage() {
         <li>Personalização dos sinais;</li>
         <li>Monitoramento de segurança;</li>
         <li>Liberação dos planos VIP e PREMIUM;</li>
-        <li>Comunicação e suporte via email: <strong>estrategiachinesa@gmail.com</strong>.</li>
+        <li>Comunicação e suporte via email: <strong>estrategi1.1chinesa@gmail.com</strong>.</li>
       </ul>
 
       <h3>3. Compartilhamento</h3>

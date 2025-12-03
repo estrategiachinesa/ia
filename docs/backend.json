@@ -286,14 +286,18 @@
         }
       },
       {
-        "path": "/signalFeedbacks/{feedbackId}",
+        "path": "/users/{userId}/signalFeedbacks/{feedbackId}",
         "definition": {
           "entityName": "SignalFeedback",
           "schema": {
             "$ref": "#/backend/entities/SignalFeedback"
           },
-          "description": "Stores user feedback on signal outcomes. The document ID is auto-generated.",
+          "description": "Stores user-specific feedback on signal outcomes. This is a subcollection under each user.",
           "params": [
+            {
+                "name": "userId",
+                "description": "The Firebase Authentication UID of the user."
+            },
             {
                 "name": "feedbackId",
                 "description": "The unique, auto-generated ID for the feedback document."
@@ -302,6 +306,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to handle VIP access requests, global app configurations, and now, signal feedback. VIP requests are stored per user, using their UID as the document ID. Global configurations are stored in single documents under /appConfig for easy access from anywhere in the app. The affiliates collection allows for custom checkout links for different partners. The new signalFeedbacks collection will store user-reported outcomes of signals to enable future machine learning optimizations."
+    "reasoning": "The Firestore structure is designed to handle VIP access requests, global app configurations, and signal feedback. VIP requests are stored per user. Global configurations are in single documents under /appConfig. The new structure for signalFeedbacks is now a subcollection under each user (`/users/{userId}/signalFeedbacks/{feedbackId}`), which is a more scalable and organized approach for querying and managing user-specific data."
   }
 }

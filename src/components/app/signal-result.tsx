@@ -68,7 +68,8 @@ const FeedbackForm: React.FC<{ data: SignalData, onFeedbackSubmitted: () => void
         setFeedbackStatus('submitting');
         
         try {
-            const feedbackRef = collection(firestore, 'signalFeedbacks');
+            // Updated reference to the user's specific feedback subcollection
+            const feedbackRef = collection(firestore, 'users', user.uid, 'signalFeedbacks');
             await addDoc(feedbackRef, {
                 userId: user.uid,
                 signalData: { // Storing a copy of the signal data

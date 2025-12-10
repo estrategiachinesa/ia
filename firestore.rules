@@ -4,13 +4,12 @@
  *
  * Core Philosophy:
  * This ruleset enforces access control for VIP requests, app configuration,
- * user data, and the standalone 'sessaochinesa' page. It uses ownership-based rules
- * to protect user data and their signal feedback.
+ * and user data. It uses ownership-based rules to protect user data.
  *
  * Data Structure:
  * - `/appConfig/{doc}`: Stores global app configurations. Publicly readable.
  * - `/vipRequests/{userId}`: Stores VIP access requests. Restricted to owner.
- * - `/users/{userId}/signalFeedbacks/{feedbackId}`: Stores user-specific feedback.
+ * - `/users/{userId}`: Main user document, currently for potential future use.
  * - `/session/{docId}`: Stores session status for 'sessaochinesa'. Publicly readable.
  */
 rules_version = '2';
@@ -59,22 +58,7 @@ service cloud.firestore {
      * @path /users/{userId}
      */
     match /users/{userId} {
-      // Allow users to read/write their own document if needed in the future.
-      // For now, access is primarily for the subcollection.
       allow read, write: if isSignedIn() && isOwner(userId);
-      
-      /**
-       * @description Rules for user-specific signal feedback subcollection.
-       * @path /users/{userId}/signalFeedbacks/{feedbackId}
-       */
-      match /signalFeedbacks/{feedbackId} {
-        /**
-         * @allow (create): A signed-in user can only create feedback for themselves.
-         * @allow (read, update, delete): No one can read, update, or delete feedback from the client.
-         */
-        allow create: if isSignedIn() && isOwner(userId) && isValidFeedback(request.resource.data, userId);
-        allow read, update, delete: if false;
-      }
     }
 
     // Helper functions.
@@ -107,21 +91,6 @@ service cloud.firestore {
                                    isBrokerIdValid;
 
       return isCreating || isConfirmingDeposit || isResubmittingRejected;
-    }
-
-     /**
-     * @description Validates the structure and ownership of a new feedback document.
-     */
-    function isValidFeedback(data, userId) {
-        // Ensures the userId in the document matches the authenticated user.
-        let isFeedbackOwner = data.userId == request.auth.uid && request.auth.uid == userId;
-        let hasValidResult = data.result in ['WIN', 'LOSS', 'DID_NOT_ENTER'];
-        let hasValidSignalData = 'asset' in data.signalData &&
-                                 'expirationTime' in data.signalData &&
-                                 'signal' in data.signalData &&
-                                 'targetTime' in data.signalData;
-
-        return isFeedbackOwner && hasValidResult && hasValidSignalData;
     }
   }
 }

@@ -34,131 +34,40 @@ function seededRandom(seed: number) {
     return x - Math.floor(x);
 }
 
-
-// --- 5-Minute Market Simulation Logic ---
-
-/**
- * Determines the overall signal ('CALL' or 'PUT') for a 5-minute block.
- * This is the "master prediction" for that block.
- * @param seed - A seed based on the start time of the 5-minute block.
- */
-function getFiveMinuteMasterSignal(seed: number): 'CALL 🔼' | 'PUT 🔽' {
-    return seededRandom(seed) < 0.5 ? 'CALL 🔼' : 'PUT 🔽';
-}
-
-/**
- * Generates the sequence of 5 individual 1-minute signals within a 5-minute block
- * that collectively result in the master signal.
- * @param masterSignal - The target outcome for the 5-minute period.
- * @param seed - A seed based on the start time of the 5-minute block.
- */
-function getOneMinuteSignalSequence(masterSignal: 'CALL 🔼' | 'PUT 🔽', seed: number): ('CALL 🔼' | 'PUT 🔽')[] {
-    const sequence: ('CALL 🔼' | 'PUT 🔽')[] = [];
-    const callSignal: 'CALL 🔼' = 'CALL 🔼';
-    const putSignal: 'PUT 🔽' = 'PUT 🔽';
-
-    // To ensure the master signal is met, we need more CALLs for an overall CALL, and vice-versa.
-    const majoritySignal = masterSignal;
-    const minoritySignal = masterSignal === callSignal ? putSignal : callSignal;
-
-    // The sequence will have 3 majority signals and 2 minority signals.
-    sequence.push(majoritySignal, majoritySignal, majoritySignal, minoritySignal, minoritySignal);
-
-    // Shuffle the sequence pseudo-randomly so the pattern isn't always the same.
-    for (let i = sequence.length - 1; i > 0; i--) {
-        const j = Math.floor(seededRandom(seed + i) * (i + 1));
-        [sequence[i], sequence[j]] = [sequence[j], sequence[i]];
-    }
-
-    return sequence;
-}
-
-
 // --- Main Signal Generation Function ---
-
 export function generateSignal(input: GenerateSignalInput): GenerateSignalOutput {
     const { 
         expirationTime, 
-        userTier, 
-        premiumMinWait = 1,
-        premiumMaxWait = 10,
-        vipMinWait = 5,
-        vipMaxWait = 15,
         invertSignal = false,
     } = input;
     const now = new Date();
+    let targetTime: Date;
 
-    // 1. Determine the random wait time based on user tier and current minute.
-    const minuteSeed = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes()).getTime();
-    
-    const waitRange = userTier === 'PREMIUM' 
-        ? { min: premiumMinWait, max: premiumMaxWait } 
-        : { min: vipMinWait, max: vipMaxWait };
-
-    const randomWaitMinutes = Math.floor(seededRandom(minuteSeed) * (waitRange.max - waitRange.min + 1)) + waitRange.min;
-
-    const initialTargetTime = new Date(now.getTime() + randomWaitMinutes * 60 * 1000);
-    
-    // 2. Calculate the final, correctly aligned target time.
-    let finalTargetTime: Date;
-    
+    // 1. Calculate the next available target time, without random waits.
     if (expirationTime === '1m') {
-        finalTargetTime = new Date(initialTargetTime);
-        finalTargetTime.setSeconds(0, 0);
-        
-        // If the calculated time is in the past or same minute, move to the next minute.
-        if (finalTargetTime.getTime() <= now.getTime()) {
-            finalTargetTime.setMinutes(finalTargetTime.getMinutes() + 1);
-        }
-
+        targetTime = new Date(now);
+        targetTime.setSeconds(0, 0);
+        targetTime.setMinutes(targetTime.getMinutes() + 1);
     } else { // 5m
-        finalTargetTime = new Date(initialTargetTime.getTime());
-        const minutes = finalTargetTime.getMinutes();
+        targetTime = new Date(now);
+        const minutes = targetTime.getMinutes();
         const remainder = minutes % 5;
-        
-        if (remainder !== 0) {
-            const minutesToAdd = 5 - remainder;
-            finalTargetTime.setMinutes(minutes + minutesToAdd);
-        }
-        finalTargetTime.setSeconds(0, 0);
-
-        // Ensure target time is in the future. If calculation puts it in the past, add one 5-min interval.
-        if (finalTargetTime.getTime() <= now.getTime()) {
-            finalTargetTime.setMinutes(finalTargetTime.getMinutes() + 5);
-        }
+        const minutesToAdd = (remainder === 0) ? 5 : (5 - remainder);
+        targetTime.setMinutes(minutes + minutesToAdd, 0, 0);
     }
 
+    // 2. Generate a deterministic signal based on the target time.
+    // The seed is derived from the target time, ensuring everyone gets the same signal for that specific minute.
+    const timeSeed = targetTime.getTime();
+    let signal: 'CALL 🔼' | 'PUT 🔽' = seededRandom(timeSeed) < 0.5 ? 'CALL 🔼' : 'PUT 🔽';
 
-    // 3. Determine the signal based on the new logic.
-    let signal: 'CALL 🔼' | 'PUT 🔽';
-
-    // Get the start of the 5-minute block containing the finalTargetTime.
-    const blockStartMinutes = Math.floor(finalTargetTime.getMinutes() / 5) * 5;
-    const fiveMinuteBlockStart = new Date(finalTargetTime);
-    fiveMinuteBlockStart.setMinutes(blockStartMinutes, 0, 0);
-    const fiveMinuteBlockSeed = fiveMinuteBlockStart.getTime();
-
-    // Get the "master" prediction for that 5-minute block.
-    const masterSignal = getFiveMinuteMasterSignal(fiveMinuteBlockSeed);
-
-    if (expirationTime === '5m') {
-        // For a 5m signal, we just return the master signal for that block.
-        signal = masterSignal;
-    } else { // 1m
-        // For a 1m signal, we get the sequence and find the correct signal for our target minute.
-        const signalSequence = getOneMinuteSignalSequence(masterSignal, fiveMinuteBlockSeed);
-        const targetMinuteInBlock = finalTargetTime.getMinutes() % 5; // Will be 0, 1, 2, 3, or 4.
-        signal = signalSequence[targetMinuteInBlock];
-    }
-    
-    // 4. Invert the signal if the flag is set
+    // 3. Invert the signal if the flag is set
     if (invertSignal) {
         signal = signal === 'CALL 🔼' ? 'PUT 🔽' : 'CALL 🔼';
     }
 
-
-    // 5. Format output.
-    const targetTimeString = finalTargetTime.toLocaleTimeString('en-US', {
+    // 4. Format output.
+    const targetTimeString = targetTime.toLocaleTimeString('en-US', {
         hour12: false,
         hour: '2-digit',
         minute: '2-digit',
@@ -168,6 +77,6 @@ export function generateSignal(input: GenerateSignalInput): GenerateSignalOutput
         signal: signal,
         targetTime: targetTimeString,
         source: 'Aleatório' as const,
-        targetDate: finalTargetTime,
+        targetDate: targetTime,
     };
 }

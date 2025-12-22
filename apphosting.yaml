@@ -10,6 +10,7 @@ rewrites:
   - source: '/**'
     destination: '/_next/server/server.js'
 
+# Local changes:
 # Trigger new deploy
 # Novo gatilho para deploy
 # Final deploy trigger
@@ -25,10 +26,11 @@ rewrites:
 # This is the final attempt.
 # This will finally work.
 # This is the final, final, final attempt that will work.
-# This is the absolute final change to fix the deployment.
 # Re-triggering deploy after accidental deletion.
 # estrategiachinesa 1.0
 # estrategiachinesa 1.1
 # pop up 2.0
 # Triggering deploy
 # Triggering new deploy to resolve push issue
+# Remote changes:
+# Triggering new deploy to resolve git sync issue

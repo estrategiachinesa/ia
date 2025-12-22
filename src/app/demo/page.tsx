@@ -348,7 +348,7 @@ export default function DemoPage() {
       <Dialog open={isWelcomeModalOpen} onOpenChange={setWelcomeModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Como Usar a Demonstração</DialogTitle>
+            <DialogTitle>Bem-vindo à Demonstração!</DialogTitle>
             <DialogDescription>
               Assista ao vídeo de instruções para aprender a gerar seus sinais gratuitos e entender como a Estratégia Chinesa funciona.
             </DialogDescription>

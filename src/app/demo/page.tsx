@@ -54,7 +54,7 @@ export default function DemoPage() {
   });
   const [showOTC, setShowOTC] = useState(false);
   const [isFailureModalOpen, setFailureModalOpen] = useState(false);
-  const [isWelcomeModalOpen, setWelcomeModalOpen] = useState(true);
+  const [isWelcomeModalOpen, setWelcomeModalOpen] = useState(false);
   const [isPlayerModalOpen, setPlayerModalOpen] = useState(false);
   const [isMarketModeActive, setMarketModeActive] = useState(false);
   const [isLimitModalOpen, setLimitModalOpen] = useState(false);
@@ -153,7 +153,9 @@ export default function DemoPage() {
         try {
             const realSignal = generateClientSideSignal({
               ...formData,
-              correlationChance: config.correlationChance,
+              userTier: 'VIP', // Use VIP settings for demo real signals
+              vipMinWait: config.vipMinWait,
+              vipMaxWait: config.vipMaxWait,
               invertSignal: config.invertSignal,
             });
             setSignalData({
@@ -348,20 +350,18 @@ export default function DemoPage() {
           <DialogHeader>
             <DialogTitle>Bem-vindo à Demonstração!</DialogTitle>
             <DialogDescription>
-              Para gerar os sinais gratuitos da Estratégia Chinesa, você deve se cadastrar na plataforma e realizar um depósito de qualquer valor.
+              Assista ao vídeo de instruções para aprender a gerar seus sinais gratuitos e entender como a Estratégia Chinesa funciona.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-col sm:space-x-0 gap-2">
-              <Button asChild className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-black font-bold hover:to-yellow-600 shadow-lg">
-                <AffiliateLink href={config?.exnovaUrl || '#'} target="_blank" onClick={() => setWelcomeModalOpen(false)}>
-                  Abrir a Corretora
-                </AffiliateLink>
-              </Button>
-              <Button variant="secondary" onClick={() => {
+              <Button onClick={() => {
                 setWelcomeModalOpen(false);
                 setPlayerModalOpen(true);
               }}>
-                Instruções
+                Ver Instruções
+              </Button>
+              <Button variant="secondary" onClick={() => setWelcomeModalOpen(false)}>
+                Fechar
               </Button>
           </DialogFooter>
         </DialogContent>
@@ -406,3 +406,6 @@ export default function DemoPage() {
     </>
   );
 }
+    
+
+    

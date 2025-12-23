@@ -3,17 +3,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { initializeAdminApp } from '@/firebase/admin';
 import admin from 'firebase-admin';
 
-// Initialize Firebase Admin SDK
-try {
-  initializeAdminApp();
-} catch (error) {
-  console.warn("Admin SDK already initialized or initialization failed in a non-critical way.");
-}
-
 /**
  * Endpoint to handle Hotmart's postback notifications for subscriptions.
+ * This function specifically handles POST requests from Hotmart.
  */
 export async function POST(request: NextRequest) {
+  try {
+    // Initialize Firebase Admin SDK inside the request handler
+    initializeAdminApp();
+  } catch (error) {
+    console.error('Firebase admin initialization failed:', error);
+    // Even if admin fails, log it and proceed to check the token for security.
+    // We might not be able to process the data, but we should still respond correctly to Hotmart.
+  }
+
   const hotmartToken = process.env.HOTMART_TOKEN;
 
   if (!hotmartToken) {
@@ -51,6 +54,7 @@ export async function POST(request: NextRequest) {
     }
 
     const userDoc = querySnapshot.docs[0];
+    // Map Hotmart statuses to our internal statuses
     const newStatus = ['active', 'activated'].includes(subscriptionStatus) ? 'ACTIVE' : 'INACTIVE';
 
     await userDoc.ref.update({

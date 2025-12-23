@@ -13,3 +13,4 @@ rewrites:
 # Trigger new deploy
 # Novo gatilho para deploy
 # Final deploy trigger
+# Final trigger for deploy synchronization.

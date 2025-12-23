@@ -9,3 +9,4 @@ runConfig:
 rewrites:
   - source: '/**'
     destination: '/_next/server/server.js'
+# Novo commit "assinatura"

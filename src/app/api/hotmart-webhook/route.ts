@@ -25,13 +25,13 @@ export async function POST(request: NextRequest) {
   if (!hotmartToken) {
     console.error('CRITICAL: HOTMART_TOKEN environment variable is not set.');
     // Respond with 500 but don't give away internal details.
-    return NextResponse.json({ success: false, message: 'Internal server error.' }, { status: 500 });
+    return new NextResponse('Internal server error.', { status: 500 });
   }
 
   const providedToken = request.headers.get('Hottok');
   if (providedToken !== hotmartToken) {
     console.warn(`Unauthorized webhook attempt with token: ${providedToken}`);
-    return NextResponse.json({ success: false, message: 'Unauthorized.' }, { status: 401 });
+    return new NextResponse('Unauthorized.', { status: 401 });
   }
 
   // If token is valid, proceed to initialize Firebase and process the data.
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     initializeAdminApp();
   } catch (error) {
     console.error('Firebase admin initialization failed:', error);
-    return NextResponse.json({ success: false, message: 'Internal server configuration error.' }, { status: 500 });
+    return new NextResponse('Internal server configuration error.', { status: 500 });
   }
 
   try {
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
 
     if (!userEmail || !subscriptionStatus) {
       console.warn('Webhook received but missing required fields (email or status).');
-      return NextResponse.json({ success: false, message: 'Missing required fields.' }, { status: 400 });
+      return new NextResponse('Missing required fields.', { status: 400 });
     }
 
     const firestore = admin.firestore();
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
             // For other errors or if status is not 'ACTIVE' for a non-existent user.
             console.error(`Error fetching user ${userEmail}:`, error);
              // Acknowledge to Hotmart to prevent retries for non-actionable errors.
-            return NextResponse.json({ success: true, message: 'User not found or not an activation event.' });
+            return new NextResponse('User not found or not an activation event.', { status: 200 });
         }
     }
     
@@ -96,11 +96,11 @@ export async function POST(request: NextRequest) {
 
     console.log(`Successfully processed webhook for user ${userRecord.uid} (${userEmail}). Set status to ${newAppStatus}.`);
 
-    // Acknowledge receipt to Hotmart.
-    return NextResponse.json({ success: true, message: 'Webhook processed successfully.' });
+    // Acknowledge receipt to Hotmart with a simple 200 OK.
+    return new NextResponse('Webhook processed successfully.', { status: 200 });
 
   } catch (error) {
     console.error('Error processing Hotmart webhook payload:', error);
-    return NextResponse.json({ success: false, message: 'An internal error occurred.' }, { status: 500 });
+    return new NextResponse('An internal error occurred.', { status: 500 });
   }
 }

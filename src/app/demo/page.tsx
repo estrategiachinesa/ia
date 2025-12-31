@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -348,20 +347,15 @@ export default function DemoPage() {
           <DialogHeader>
             <DialogTitle>Bem-vindo à Demonstração!</DialogTitle>
             <DialogDescription>
-              Para gerar os sinais gratuitos da Estratégia Chinesa, você deve se cadastrar na plataforma e realizar um depósito de qualquer valor.
+              Para começar, assista ao vídeo com as instruções de como usar a ferramenta.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex-col sm:flex-col sm:space-x-0 gap-2">
-              <Button asChild className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-black font-bold hover:to-yellow-600 shadow-lg">
-                <AffiliateLink href={config?.exnovaUrl || '#'} target="_blank" onClick={() => setWelcomeModalOpen(false)}>
-                  Abrir a Corretora
-                </AffiliateLink>
-              </Button>
-              <Button variant="secondary" onClick={() => {
+          <DialogFooter>
+              <Button className="w-full" onClick={() => {
                 setWelcomeModalOpen(false);
                 setPlayerModalOpen(true);
               }}>
-                Instruções
+                Ver Instruções
               </Button>
           </DialogFooter>
         </DialogContent>

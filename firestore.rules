@@ -4,12 +4,13 @@
  *
  * Core Philosophy:
  * This ruleset enforces access control for VIP requests, app configuration,
- * and user data. It uses ownership-based rules to protect user data.
+ * and user data. It uses ownership-based rules to protect user data and
+ * prevents clients from modifying subscription statuses.
  *
  * Data Structure:
  * - `/appConfig/{doc}`: Stores global app configurations. Publicly readable.
  * - `/vipRequests/{userId}`: Stores VIP access requests. Restricted to owner.
- * - `/users/{userId}`: Main user document, currently for potential future use.
+ * - `/users/{userId}`: Main user document. Contains subscription status.
  * - `/session/{docId}`: Stores session status for 'sessaochinesa'. Publicly readable.
  */
 rules_version = '2';
@@ -58,7 +59,14 @@ service cloud.firestore {
      * @path /users/{userId}
      */
     match /users/{userId} {
-      allow read, write: if isSignedIn() && isOwner(userId);
+      // Users can read their own data.
+      allow read: if isSignedIn() && isOwner(userId);
+      
+      // Users can create their own profile.
+      allow create: if isSignedIn() && isOwner(userId);
+      
+      // Users can update their profile, but CANNOT change their subscription status.
+      allow update: if isSignedIn() && isOwner(userId) && !isChangingSubscription();
     }
 
     // Helper functions.
@@ -68,6 +76,14 @@ service cloud.firestore {
 
     function isOwner(userId) {
       return request.auth.uid == userId;
+    }
+
+    /**
+     * @description Prevents a user from modifying their own subscriptionStatus.
+     * This field should only be changed by a backend process (like a Firebase Function).
+     */
+    function isChangingSubscription() {
+      return request.resource.data.subscriptionStatus != resource.data.subscriptionStatus;
     }
 
     /**

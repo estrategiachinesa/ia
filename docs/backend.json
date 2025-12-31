@@ -1,6 +1,28 @@
 
 {
   "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores public information about a user.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The user's email address."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "The user's public display name."
+        },
+        "subscriptionStatus": {
+          "type": "string",
+          "description": "The current status of the user's subscription.",
+          "enum": ["ACTIVE", "INACTIVE", "CANCELED"]
+        }
+      },
+      "required": ["email"]
+    },
     "LinkConfig": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "LinkConfig",
@@ -170,6 +192,16 @@
   "firestore": {
     "structure": [
       {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Stores user profile information. The document ID is the user's Firebase UID."
+        }
+      },
+      {
         "path": "/appConfig/links",
         "definition": {
           "entityName": "LinkConfig",
@@ -252,6 +284,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to handle VIP access requests and global app configurations. VIP requests are stored per user. Global configurations are in single documents under /appConfig. The signalFeedbacks collection and entity have been removed as requested to simplify the data model."
+    "reasoning": "The Firestore structure is designed to handle user profiles, VIP access requests, and global app configurations. The user's subscription status is now part of their profile. Global configurations are in single documents under /appConfig. The signalFeedbacks collection and entity have been removed to simplify the data model."
   }
 }

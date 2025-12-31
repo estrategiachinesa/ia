@@ -53,7 +53,7 @@ export default function DemoPage() {
   });
   const [showOTC, setShowOTC] = useState(false);
   const [isFailureModalOpen, setFailureModalOpen] = useState(false);
-  const [isWelcomeModalOpen, setWelcomeModalOpen] = useState(true);
+  const [isWelcomeModalOpen, setWelcomeModalOpen] = useState(false);
   const [isPlayerModalOpen, setPlayerModalOpen] = useState(false);
   const [isMarketModeActive, setMarketModeActive] = useState(false);
   const [isLimitModalOpen, setLimitModalOpen] = useState(false);
@@ -152,7 +152,9 @@ export default function DemoPage() {
         try {
             const realSignal = generateClientSideSignal({
               ...formData,
-              correlationChance: config.correlationChance,
+              userTier: 'VIP', // Use VIP settings for demo real signals
+              vipMinWait: config.vipMinWait,
+              vipMaxWait: config.vipMaxWait,
               invertSignal: config.invertSignal,
             });
             setSignalData({
@@ -347,15 +349,29 @@ export default function DemoPage() {
           <DialogHeader>
             <DialogTitle>Bem-vindo à Demonstração!</DialogTitle>
             <DialogDescription>
+<<<<<<< HEAD
               Assista ao vídeo de instruções
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
               <Button className="w-full" onClick={() => {
+=======
+              Assista ao vídeo de instruções para aprender a gerar seus sinais gratuitos e entender como a Estratégia Chinesa funciona.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-col sm:space-x-0 gap-2">
+              <Button onClick={() => {
+>>>>>>> 6839b5d45592b24b4a2cd483d9b26a09c2058a0c
                 setWelcomeModalOpen(false);
                 setPlayerModalOpen(true);
               }}>
                 Ver Instruções
+<<<<<<< HEAD
+=======
+              </Button>
+              <Button variant="secondary" onClick={() => setWelcomeModalOpen(false)}>
+                Fechar
+>>>>>>> 6839b5d45592b24b4a2cd483d9b26a09c2058a0c
               </Button>
           </DialogFooter>
         </DialogContent>
@@ -400,3 +416,6 @@ export default function DemoPage() {
     </>
   );
 }
+    
+
+    

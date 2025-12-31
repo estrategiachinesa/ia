@@ -9,6 +9,7 @@ runConfig:
 rewrites:
   - source: '/**'
     destination: '/_next/server/server.js'
+<<<<<<< HEAD
 
 # Trigger new deploy
 # Novo gatilho para deploy
@@ -34,3 +35,6 @@ rewrites:
 # Sync for push
 # Final sync attempt
 # Final final sync attempt.
+=======
+# Novo commit "assinatura"
+>>>>>>> 6839b5d45592b24b4a2cd483d9b26a09c2058a0c

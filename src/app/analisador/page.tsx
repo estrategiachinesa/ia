@@ -276,7 +276,7 @@ export default function AnalisadorPage() {
     setAppState('loading');
     
     // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 8000));
+    await new Promise(resolve => setTimeout(resolve, 5000));
     
     try {
       // Use the client-side signal generator

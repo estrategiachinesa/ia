@@ -53,7 +53,7 @@ export default function DemoPage() {
   });
   const [showOTC, setShowOTC] = useState(false);
   const [isFailureModalOpen, setFailureModalOpen] = useState(false);
-  const [isWelcomeModalOpen, setWelcomeModalOpen] = useState(false);
+  const [isWelcomeModalOpen, setWelcomeModalOpen] = useState(true);
   const [isPlayerModalOpen, setPlayerModalOpen] = useState(false);
   const [isMarketModeActive, setMarketModeActive] = useState(false);
   const [isLimitModalOpen, setLimitModalOpen] = useState(false);

@@ -19,31 +19,32 @@ function mapHotmartStatusToAppStatus(hotmartStatus: string): 'ACTIVE' | 'INACTIV
  * This function is designed to securely process subscription status changes.
  */
 export async function POST(request: NextRequest) {
-  // Security First: Verify Hotmart's token immediately.
-  const hotmartToken = process.env.HOTMART_TOKEN;
-
-  if (!hotmartToken) {
-    console.error('CRITICAL: HOTMART_TOKEN environment variable is not set.');
-    // Respond with 500 but don't give away internal details.
-    return new NextResponse('Internal server error.', { status: 500 });
-  }
-
-  const providedToken = request.headers.get('Hottok');
-  if (providedToken !== hotmartToken) {
-    console.warn(`Unauthorized webhook attempt with token: ${providedToken}`);
-    return new NextResponse('Unauthorized.', { status: 401 });
-  }
-
-  // If token is valid, proceed to initialize Firebase and process the data.
-  try {
-    initializeAdminApp();
-  } catch (error) {
-    console.error('Firebase admin initialization failed:', error);
-    return new NextResponse('Internal server configuration error.', { status: 500 });
-  }
-
   try {
     const data = await request.json();
+    
+    // Security First: Verify Hotmart's token immediately.
+    const hotmartToken = process.env.HOTMART_TOKEN;
+
+    if (!hotmartToken) {
+      console.error('CRITICAL: HOTMART_TOKEN environment variable is not set.');
+      // Respond with 500 but don't give away internal details.
+      return new NextResponse('Internal server error.', { status: 500 });
+    }
+
+    const providedToken = request.headers.get('Hottok');
+    if (providedToken !== hotmartToken) {
+      console.warn(`Unauthorized webhook attempt with token: ${providedToken}`);
+      return new NextResponse('Unauthorized.', { status: 401 });
+    }
+
+    // If token is valid, proceed to initialize Firebase and process the data.
+    try {
+      initializeAdminApp();
+    } catch (error) {
+      console.error('Firebase admin initialization failed:', error);
+      return new NextResponse('Internal server configuration error.', { status: 500 });
+    }
+
     console.log('Received data from Hotmart:', JSON.stringify(data, null, 2));
 
     const userEmail = data?.subscriber?.email || data?.buyer?.email;
@@ -101,6 +102,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error processing Hotmart webhook payload:', error);
+    // This top-level catch handles errors like invalid JSON in the request body.
     return new NextResponse('An internal error occurred.', { status: 500 });
   }
 }

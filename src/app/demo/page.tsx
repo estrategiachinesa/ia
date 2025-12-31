@@ -347,7 +347,7 @@ export default function DemoPage() {
           <DialogHeader>
             <DialogTitle>Bem-vindo à Demonstração!</DialogTitle>
             <DialogDescription>
-              Para começar, assista ao vídeo com as instruções de como usar a ferramenta.
+              Assista ao vídeo de instruções
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

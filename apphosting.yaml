@@ -36,6 +36,8 @@ rewrites:
 # Final sync attempt
 # Final final sync attempt.
 # Signature commit for push
+# Novo commit "assinatura"
 =======
 # Novo commit "assinatura"
+# Simplificando o gerador de sinal
 >>>>>>> 6839b5d45592b24b4a2cd483d9b26a09c2058a0c

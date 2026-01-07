@@ -118,7 +118,7 @@ export default function LoginPage() {
                </div>
             </div>
             <CardTitle className="font-headline text-3xl">Estratégia Chinesa</CardTitle>
-            <CardDescription>Acesse com suas credenciais ou teste gratuitamente.</CardDescription>
+            <CardDescription>Acesse com suas credenciais.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -156,15 +156,10 @@ export default function LoginPage() {
               </Button>
             </div>
             <div className="space-y-2 pt-2">
-              <div className="grid grid-cols-2 gap-2">
-                <Button asChild variant="outline">
-                    <AffiliateLink href="/demo">Sinal Grátis</AffiliateLink>
-                </Button>
-                <Button onClick={handleLogin} disabled={isLoading} className="bg-primary/90 hover:bg-primary text-primary-foreground font-bold">
+                <Button onClick={handleLogin} disabled={isLoading} className="w-full bg-primary/90 hover:bg-primary text-primary-foreground font-bold">
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Entrar
                 </Button>
-              </div>
                <Button variant="link" size="sm" className="w-full text-blue-400 text-xs h-auto pt-2" asChild>
                   <AffiliateLink href={telegramUrl} target="_blank">
                     Problemas com o acesso? Fale conosco

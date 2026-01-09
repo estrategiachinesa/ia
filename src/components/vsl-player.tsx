@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -91,18 +90,20 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
     if(storedInteraction){
         setIsMuted(false);
     }
-
-    const tag = document.createElement('script');
-    tag.src = "https://www.youtube.com/iframe_api";
-    const firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
-
+    
+    // Define the ready function on the window object
     (window as any).onYouTubeIframeAPIReady = () => {
       createPlayer();
     };
 
-    if ((window as any).YT && (window as any).YT.Player) {
-      createPlayer();
+    if (document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
+        if ((window as any).YT && (window as any).YT.Player) {
+            createPlayer();
+        }
+    } else {
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        document.head.appendChild(tag);
     }
 
     return () => {
@@ -110,6 +111,8 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
       if (playerRef.current?.destroy) {
         playerRef.current.destroy();
       }
+      // Clean up the global function to avoid memory leaks
+      delete (window as any).onYouTubeIframeAPIReady;
     };
   }, [videoId]);
 

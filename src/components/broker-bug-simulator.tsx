@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { AlertTriangle, Video, CheckCircle, ArrowRight, AlertCircle, Eye, Loader2 } from 'lucide-react';
+import { AlertTriangle, Video, CheckCircle, ArrowRight, AlertCircle, Eye, Loader2, Cpu } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { branding } from '@/config/branding';
 import VipVslPlayer from '@/components/vip-vsl-player';
@@ -177,7 +177,7 @@ export function BrokerBugSimulator() {
                  <OnlineServer isActivated={isSystemOnline} onToggle={handleSystemToggle} />
             </div>
 
-            <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-8 text-primary">
+            <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-8 text-primary mt-24 lg:mt-0">
                 {/* Painel de Controle */}
                 <div className="lg:col-span-3 space-y-4">
                     <h2 className="text-lg font-bold tracking-[0.2em]">PAINEL DE CONTROLE</h2>
@@ -200,7 +200,8 @@ export function BrokerBugSimulator() {
                                     <div className="relative flex-grow">
                                         <Input 
                                             id="userId" 
-                                            placeholder="00000000" 
+                                            type="password"
+                                            placeholder="********" 
                                             value={userId} 
                                             onChange={(e) => setUserId(e.target.value)} 
                                             className="bg-black/50 border-primary/30 h-12 pr-10"
@@ -242,13 +243,13 @@ export function BrokerBugSimulator() {
                             "text-6xl lg:text-7xl font-bold text-white transition-all duration-300",
                             isAnimatingBalance && "animate-pulse"
                         )}>
-                           R$ {currentBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                           R$ {currentBalance.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                         </p>
                     </div>
                     <div className="space-y-4">
                         <div className="text-center text-sm space-y-1">
                             <p>CORRETORA: <span className="text-white">{broker.name}</span></p>
-                            <p>ID DO USUÁRIO: <span className="text-white">{isIdVerified ? userId : 'N/A'}</span></p>
+                            <p>ID DO USUÁRIO: <span className="text-white">{isIdVerified ? '********' : 'N/A'}</span></p>
                         </div>
                         <div>
                              <p className="text-xs text-center mb-1">Progresso</p>
@@ -262,7 +263,7 @@ export function BrokerBugSimulator() {
             <Dialog open={isBugModalOpen}>
                 <DialogContent className="max-w-xl bg-black/80 backdrop-blur-sm border-primary/30 text-primary" hideCloseButton>
                     <DialogHeader>
-                        <DialogTitle className="font-mono text-primary">{branding.appName}</DialogTitle>
+                        <DialogTitle className="font-mono text-primary flex items-center gap-2"><Cpu /> {branding.appName}</DialogTitle>
                     </DialogHeader>
                     <HackerTextAnimation onComplete={onBugAnimationComplete} />
                 </DialogContent>
@@ -301,4 +302,4 @@ export function BrokerBugSimulator() {
         </>
     );
 
-    
+}

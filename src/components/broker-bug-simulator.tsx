@@ -4,7 +4,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertTriangle, Video, CheckCircle, ArrowRight, AlertCircle, Eye, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { branding } from '@/config/branding';
@@ -300,4 +300,5 @@ export function BrokerBugSimulator() {
             </Dialog>
         </>
     );
-}
+
+    

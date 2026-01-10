@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 
 type OnlineServerProps = {
@@ -16,8 +17,8 @@ export function OnlineServer({ isActivated, onToggle }: OnlineServerProps) {
     setIsHolding(true);
     timerRef.current = setTimeout(() => {
       onToggle();
-      setIsHolding(false);
-    }, 2000);
+      setIsHolding(false); // Reset holding state after toggle
+    }, 2000); // 2-second hold to activate
   };
 
   const handleMouseUp = () => {
@@ -28,6 +29,7 @@ export function OnlineServer({ isActivated, onToggle }: OnlineServerProps) {
     }
   };
 
+  // Also handle leaving the button area while holding
   const handleMouseLeave = () => {
     if (isHolding) {
       handleMouseUp();
@@ -41,19 +43,21 @@ export function OnlineServer({ isActivated, onToggle }: OnlineServerProps) {
       onMouseLeave={handleMouseLeave}
       onTouchStart={handleMouseDown}
       onTouchEnd={handleMouseUp}
-      className="flex items-center gap-2 select-none cursor-pointer rounded-full p-2"
+      className="flex items-center gap-2 select-none cursor-pointer"
     >
       <span className="relative flex h-3 w-3">
         <span
           className={cn(
-            'absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75',
-            (isHolding || isActivated) && 'animate-ping'
+            isActivated && 'animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75'
           )}
         ></span>
-        <span className="relative inline-flex rounded-full h-3 w-3 bg-green-600"></span>
+        <span className={cn(
+            "relative inline-flex rounded-full h-3 w-3",
+            isActivated ? 'bg-primary' : 'bg-primary/50'
+        )}></span>
       </span>
-      <span className="text-xs font-semibold text-foreground/80">
-        Online
+      <span className="text-sm font-semibold tracking-widest">
+        SISTEMA {isActivated ? 'ONLINE' : 'OFFLINE'}
       </span>
     </button>
   );

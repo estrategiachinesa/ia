@@ -1,5 +1,7 @@
 
 import { AnimatedBackground } from "@/components/animated-background";
+import { Cpu } from "lucide-react";
+import { OnlineServer } from "@/components/app/OnlineServer";
 
 export default function BBLayout({
   children,
@@ -7,10 +9,19 @@ export default function BBLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="theme-bb">
+    <div className="theme-bb font-mono">
         <AnimatedBackground />
-        <div className="relative z-10 scanlines">
-             <div className="absolute inset-0 bg-radial-gradient-primary opacity-20 pointer-events-none"></div>
+        <div className="relative z-10">
+            <header className="absolute top-0 left-0 right-0 p-4 md:p-6 flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                    <Cpu className="h-8 w-8 md:h-10 md:w-10 text-primary" />
+                    <div>
+                        <h1 className="text-xl md:text-2xl font-bold text-primary tracking-widest">G-BREAKER</h1>
+                        <p className="text-xs md:text-sm text-primary/80 tracking-wider">INJETOR DE SALDO</p>
+                    </div>
+                </div>
+                {/* O estado deste componente será gerido dentro do broker-bug-simulator */}
+            </header>
             {children}
         </div>
     </div>

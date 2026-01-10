@@ -2,13 +2,13 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { AlertCircle, AlertTriangle, CheckCircle, Video } from 'lucide-react';
+import { AlertTriangle, Video, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { branding } from '@/config/branding';
 import VipVslPlayer from '@/components/vip-vsl-player';
@@ -30,6 +30,7 @@ const HackerTextAnimation = ({ onComplete }: { onComplete: () => void }) => {
         '  - Finalizando conexão segura... [OK]',
     ];
     const [visibleLines, setVisibleLines] = useState<string[]>([]);
+    const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         let currentIndex = 0;
@@ -41,15 +42,21 @@ const HackerTextAnimation = ({ onComplete }: { onComplete: () => void }) => {
                 clearInterval(interval);
                 setTimeout(onComplete, 1000);
             }
-        }, 500);
+        }, 350);
 
         return () => clearInterval(interval);
     }, [onComplete]);
 
+    useEffect(() => {
+        if (containerRef.current) {
+            containerRef.current.scrollTop = containerRef.current.scrollHeight;
+        }
+    }, [visibleLines]);
+
     return (
-        <div className="font-mono text-sm sm:text-base text-primary p-4 bg-black/50 rounded-lg h-64 overflow-y-auto">
+        <div ref={containerRef} className="font-mono text-sm sm:text-base text-primary p-4 bg-black/50 rounded-lg h-64 overflow-y-auto border border-primary/20">
             {visibleLines.map((line, i) => (
-                <p key={i} className="whitespace-pre-wrap">{line}</p>
+                <p key={i} className="whitespace-pre-wrap text-shadow-primary animate-text-flicker" style={{animationDelay: `${i * 25}ms`}}>{line}</p>
             ))}
             <div className="animate-pulse">_</div>
         </div>
@@ -74,10 +81,6 @@ export function BrokerBugSimulator() {
 
     const handleSystemActivation = useCallback(() => {
         setIsSystemOnline(true);
-    }, []);
-
-    const handleSystemDeactivation = useCallback(() => {
-        setIsSystemOnline(false);
     }, []);
 
     useEffect(() => {
@@ -172,7 +175,6 @@ export function BrokerBugSimulator() {
     const broker = branding.brokers[0];
     const affiliateLink = `${broker.affiliateLink}${userId || ''}`;
 
-
     const renderStepContent = () => {
         switch (step) {
             case 0.5:
@@ -233,12 +235,15 @@ export function BrokerBugSimulator() {
 
     return (
         <>
-            <Card className="w-full max-w-lg bg-card/80 backdrop-blur-sm border-primary/20 shadow-2xl shadow-primary/10">
-                <CardHeader className="text-center border-b border-primary/20 pb-4">
-                    <CardTitle className="text-3xl font-black text-primary font-mono tracking-widest">{branding.appName}</CardTitle>
+            <Card className="w-full max-w-lg bg-card/80 backdrop-blur-sm border-primary/20 shadow-2xl shadow-primary/20 relative overflow-hidden">
+                 <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
+                 <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent"></div>
+
+                <CardHeader className="text-center border-b border-primary/20 pb-4 relative">
+                    <CardTitle className="text-3xl font-black text-primary font-mono tracking-widest text-shadow-primary">{branding.appName}</CardTitle>
                     <CardDescription className="font-mono text-muted-foreground">{branding.appSubtitle}</CardDescription>
                 </CardHeader>
-                <CardContent className="grid md:grid-cols-2 gap-6 p-6">
+                <CardContent className="grid md:grid-cols-2 gap-6 p-6 relative">
                     <div className="space-y-4 p-4 rounded-lg bg-secondary/20 border border-border">
                         <h3 className="font-bold text-center text-muted-foreground font-mono">PAINEL DE CONTROLE</h3>
                         {renderStepContent()}
@@ -248,12 +253,15 @@ export function BrokerBugSimulator() {
                             <h3 className="font-bold text-center text-muted-foreground font-mono">PAINEL DE SALDO</h3>
                             <div className="text-center my-4">
                                 <p className="text-sm text-muted-foreground">{accountName}</p>
-                                <p className="text-4xl font-bold text-primary font-mono">
+                                <p className={cn(
+                                    "text-4xl font-bold text-primary font-mono text-shadow-primary transition-all duration-300",
+                                    isAnimatingBalance && "animate-pulse"
+                                )}>
                                     R$ {currentBalance.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </p>
                             </div>
                         </div>
-                        <div className="flex items-center justify-center gap-2"
+                        <div className="flex items-center justify-center gap-2 cursor-pointer select-none"
                              onMouseDown={handleOnlinePress}
                              onMouseUp={handleOnlineRelease}
                              onMouseLeave={handleOnlineRelease}
@@ -270,16 +278,16 @@ export function BrokerBugSimulator() {
             </Card>
 
             <Dialog open={isBugModalOpen}>
-                <DialogContent className="max-w-xl" hideCloseButton>
+                <DialogContent className="max-w-xl bg-background/80 backdrop-blur-sm border-primary/30" hideCloseButton>
                     <DialogHeader>
-                        <DialogTitle className="font-mono text-primary">{branding.appName}</DialogTitle>
+                        <DialogTitle className="font-mono text-primary text-shadow-primary">{branding.appName}</DialogTitle>
                     </DialogHeader>
                     <HackerTextAnimation onComplete={onBugAnimationComplete} />
                 </DialogContent>
             </Dialog>
 
             <Dialog open={isFailureModalOpen} onOpenChange={setIsFailureModalOpen}>
-                 <DialogContent>
+                 <DialogContent className="bg-background/80 backdrop-blur-sm border-destructive/50">
                     <DialogHeader className="items-center text-center">
                         <AlertTriangle className="h-12 w-12 text-destructive" />
                         <DialogTitle>FALHA NA EXECUÇÃO</DialogTitle>
@@ -304,7 +312,7 @@ export function BrokerBugSimulator() {
             </Dialog>
             
             <Dialog open={isVslModalOpen} onOpenChange={setIsVslModalOpen}>
-                <DialogContent className="max-w-3xl p-0">
+                <DialogContent className="max-w-3xl p-0 bg-black border-primary/30">
                    <VipVslPlayer videoId="8RebjHIi7Ok" />
                 </DialogContent>
             </Dialog>

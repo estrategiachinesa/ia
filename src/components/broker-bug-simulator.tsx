@@ -9,7 +9,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   AlertTriangle,
@@ -79,7 +78,7 @@ const HackerTextAnimation = ({
           key={i}
           className={cn(
             'whitespace-pre-wrap',
-            line.includes('NEGADO') ? 'text-red-500' : 'text-primary'
+            line && line.includes('NEGADO') ? 'text-red-500' : 'text-primary'
           )}
           style={{ animationDelay: `${i * 25}ms` }}
         >
@@ -130,7 +129,6 @@ export function BrokerBugSimulator() {
   const [depositSelected, setDepositSelected] = useState(false);
 
   const animationFrameRef = useRef<number>();
-  const holdTimeoutRef = useRef<NodeJS.Timeout>();
 
   const broker = branding.brokers[0];
   const affiliateLink = broker.affiliateLink;
@@ -138,18 +136,6 @@ export function BrokerBugSimulator() {
   const handleSystemToggle = useCallback(() => {
     setIsSystemOnline((prev) => !prev);
   }, []);
-
-  const handleHoldToggle = (start: boolean) => {
-    if (start) {
-      holdTimeoutRef.current = setTimeout(() => {
-        handleSystemToggle();
-      }, 2000);
-    } else {
-      if (holdTimeoutRef.current) {
-        clearTimeout(holdTimeoutRef.current);
-      }
-    }
-  };
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -177,13 +163,13 @@ export function BrokerBugSimulator() {
         }
         setVerificationStatus('> ID VALIDADO...');
         setTimeout(() => {
-          setVerificationStatus('> CONEXÃO ESTABELECIDA.');
-          setTimeout(() => {
-            setIsIdVerified(true);
-            setStep(2);
-            setIsVerifying(false);
-            setProgress(30);
-          }, 700);
+            setVerificationStatus('> CONEXÃO ESTABELECIDA.');
+            setTimeout(() => {
+                setIsIdVerified(true);
+                setStep(2);
+                setIsVerifying(false);
+                setProgress(30);
+            }, 700);
         }, 700);
       }, 700);
     }, 700);
@@ -266,13 +252,8 @@ export function BrokerBugSimulator() {
     <>
       <div
         className="absolute top-4 md:top-6 right-4 md:right-6"
-        onMouseDown={() => handleHoldToggle(true)}
-        onMouseUp={() => handleHoldToggle(false)}
-        onMouseLeave={() => handleHoldToggle(false)}
-        onTouchStart={() => handleHoldToggle(true)}
-        onTouchEnd={() => handleHoldToggle(false)}
       >
-        <OnlineServer isActivated={isSystemOnline} />
+        <OnlineServer isActivated={isSystemOnline} onToggle={handleSystemToggle} />
       </div>
 
       <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-8 text-primary mt-24 lg:mt-0">
@@ -375,12 +356,6 @@ export function BrokerBugSimulator() {
                  </Button>
             </div>
 
-            <StepItem
-              isActive={step === 3}
-              icon={<Shield className={cn('h-5 w-5 flex-shrink-0', step > 3 && 'text-green-400')} />}
-              text={step > 2 ? `Depósito de R$ ${initialBalance.toFixed(2)} confirmado.` : "Faça um depósito de R$100 a R$1.000 para começar."}
-            />
-
             <div className={cn('border border-primary/20 rounded-lg p-4 bg-black/40', step !== 3 && 'opacity-50')}>
                 <p className="text-primary/80 mb-4">Clique abaixo para ir ao ambiente de operação da corretora.</p>
                 <Button onClick={handleOpenOperation} disabled={step !== 3} className="w-full">
@@ -476,7 +451,7 @@ export function BrokerBugSimulator() {
               pelo nosso link.
             </AlertDescription>
           </DialogHeader>
-          <DialogFooter className="flex-col sm:flex-col sm:space-x-0 gap-2">
+            <div className="flex-col sm:flex-col sm:space-x-0 gap-2">
             <Button
               onClick={() => window.open(affiliateLink, 'brokerWindow')}
               className="w-full bg-primary text-black hover:bg-primary/90"
@@ -502,7 +477,7 @@ export function BrokerBugSimulator() {
             >
               Reiniciar
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 

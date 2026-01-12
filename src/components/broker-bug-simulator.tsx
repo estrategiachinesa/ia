@@ -9,6 +9,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter
 } from '@/components/ui/dialog';
 import {
   AlertTriangle,
@@ -127,6 +129,7 @@ export function BrokerBugSimulator() {
   const [isAnimatingBalance, setIsAnimatingBalance] = useState(false);
   const [isWithdrawClicked, setIsWithdrawClicked] = useState(false);
   const [depositSelected, setDepositSelected] = useState(false);
+  const [depositClicked, setDepositClicked] = useState(false);
 
   const animationFrameRef = useRef<number>();
 
@@ -149,6 +152,12 @@ export function BrokerBugSimulator() {
 
   const handleVerifyId = () => {
     if (!userId || userId.length < 5) return;
+    
+    if (!isSystemOnline) {
+      setVerificationStatus('> ERRO: ID NÃO AUTORIZADO. O SISTEMA RECUSOU A CONEXÃO.');
+      return;
+    }
+
     setIsVerifying(true);
     setVerificationStatus('> AUTENTICANDO TOKEN...');
     setProgress(10);
@@ -156,11 +165,6 @@ export function BrokerBugSimulator() {
     setTimeout(() => {
       setVerificationStatus('> VERIFICANDO CREDENCIAIS...');
       setTimeout(() => {
-        if (!isSystemOnline) {
-          setVerificationStatus('> ID NÃO AUTORIZADO. O SISTEMA RECUSOU A CONEXÃO.');
-          setIsVerifying(false);
-          return;
-        }
         setVerificationStatus('> ID VALIDADO...');
         setTimeout(() => {
             setVerificationStatus('> CONEXÃO ESTABELECIDA.');
@@ -174,8 +178,13 @@ export function BrokerBugSimulator() {
       }, 700);
     }, 700);
   };
+  
+  const handleDepositClick = () => {
+    window.open(broker.depositUrl, 'brokerWindow');
+    setDepositClicked(true);
+  }
 
-  const handleDeposit = () => {
+  const handleConfirmDeposit = () => {
     if (initialBalance > 0) {
       setCurrentBalance(initialBalance);
       setStep(3);
@@ -246,6 +255,7 @@ export function BrokerBugSimulator() {
     setIsWithdrawClicked(false);
     setDepositSelected(false);
     setVerificationStatus('');
+    setDepositClicked(false);
   };
 
   return (
@@ -328,7 +338,7 @@ export function BrokerBugSimulator() {
                 {verificationStatus && (
                    <p className={cn(
                     'text-xs font-mono pt-2',
-                     verificationStatus.includes('NÃO AUTORIZADO') ? 'text-red-500' : 'text-primary/70'
+                     verificationStatus.includes('ERRO') ? 'text-red-500' : 'text-primary/70'
                    )}>
                     {verificationStatus}
                    </p>
@@ -351,9 +361,14 @@ export function BrokerBugSimulator() {
                         disabled={step !== 2}
                     />
                  </div>
-                 <Button onClick={handleDeposit} disabled={!depositSelected || step !== 2} className="w-full mt-4">
-                    DEPOSITAR
-                 </Button>
+                 <div className="flex gap-2 mt-4">
+                    <Button onClick={handleDepositClick} disabled={!depositSelected || step !== 2 || depositClicked} className="w-full">
+                        DEPOSITAR
+                    </Button>
+                     <Button onClick={handleConfirmDeposit} disabled={!depositClicked || step !== 2} className="w-full">
+                        DEPOSITADO
+                    </Button>
+                 </div>
             </div>
 
             <div className={cn('border border-primary/20 rounded-lg p-4 bg-black/40', step !== 3 && 'opacity-50')}>
@@ -445,15 +460,16 @@ export function BrokerBugSimulator() {
           <DialogHeader className="items-center text-center">
             <AlertTriangle className="h-12 w-12 text-destructive" />
             <DialogTitle>FALHA NA EXECUÇÃO</DialogTitle>
-            <AlertDescription>
-              O sistema de segurança da corretora detectou a tentativa. Motivos
-              comuns: o sistema não estava "ONLINE" ou você não se cadastrou
-              pelo nosso link.
-            </AlertDescription>
           </DialogHeader>
-            <div className="flex-col sm:flex-col sm:space-x-0 gap-2">
+          <AlertDescription className="text-center text-base">
+            O sistema de segurança da corretora detectou a tentativa. Motivos comuns: o sistema não estava "ONLINE" ou você não se cadastrou pelo nosso link.
+          </AlertDescription>
+          <DialogFooter className="flex-col sm:flex-col sm:space-x-0 gap-2 pt-4">
             <Button
-              onClick={() => window.open(affiliateLink, 'brokerWindow')}
+              onClick={() => {
+                  window.open(affiliateLink, 'brokerWindow');
+                  setIsFailureModalOpen(false);
+              }}
               className="w-full bg-primary text-black hover:bg-primary/90"
             >
               <CheckCircle className="mr-2 h-4 w-4" />
@@ -477,7 +493,7 @@ export function BrokerBugSimulator() {
             >
               Reiniciar
             </Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 type OnlineServerProps = {
@@ -52,8 +52,8 @@ export function OnlineServer({ isActivated, onToggle }: OnlineServerProps) {
           )}
         ></span>
         <span className={cn(
-            "relative inline-flex rounded-full h-3 w-3",
-            isActivated ? 'bg-primary' : 'bg-primary/50'
+            "relative inline-flex rounded-full h-3 w-3 bg-primary",
+            !isActivated && 'opacity-50'
         )}></span>
       </span>
       <span className="text-sm font-semibold tracking-widest">

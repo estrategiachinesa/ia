@@ -307,8 +307,8 @@ export function BrokerBugSimulator() {
                     <Label htmlFor='userId' className="text-xs font-bold tracking-widest">
                         SEU ID DE USUÁRIO
                     </Label>
-                    <div className="flex items-center gap-2">
-                        <div className="relative flex-grow">
+                    <div className="flex flex-col sm:flex-row items-center gap-2">
+                        <div className="relative flex-grow w-full">
                             <Input
                                 id="userId"
                                 type={showId ? 'text' : 'password'}
@@ -335,7 +335,7 @@ export function BrokerBugSimulator() {
                             onClick={handleVerifyId}
                             disabled={!userId || userId.length < 5 || isIdVerified || isVerifying || !hasConfirmedCreation}
                             variant="outline"
-                            className="bg-black/50 border-primary/30 h-10 md:h-12 hover:bg-primary/10"
+                            className="bg-black/50 border-primary/30 h-10 md:h-12 w-full sm:w-auto hover:bg-primary/10"
                         >
                             {isVerifying ? <Loader2 className="animate-spin" /> : 'VALIDAR'}
                         </Button>
@@ -353,8 +353,8 @@ export function BrokerBugSimulator() {
 
             <StepItem icon={<CircleDollarSign />} text="PASSO 2: FAZER O DEPÓSITO" isActive={step === 2}>
                 <p className="text-primary/80 mb-4">Selecione o valor a ser depositado para multiplicar por 10x.</p>
-                 <div className="flex items-center gap-4 mt-4">
-                    <span className="font-mono text-lg w-28 text-white">R$ {initialBalance.toFixed(2)}</span>
+                 <div className="flex flex-col sm:flex-row items-center gap-4 mt-4">
+                    <span className="font-mono text-lg w-full sm:w-28 text-white">R$ {initialBalance.toFixed(2)}</span>
                     <Slider
                         value={[initialBalance]}
                         onValueChange={(value) => {
@@ -410,7 +410,7 @@ export function BrokerBugSimulator() {
           <div className="text-center my-8">
             <p
               className={cn(
-                'text-5xl sm:text-6xl font-bold text-white transition-all duration-300',
+                'text-4xl sm:text-6xl font-bold text-white transition-all duration-300',
                 isAnimatingBalance && 'animate-pulse'
               )}
             >

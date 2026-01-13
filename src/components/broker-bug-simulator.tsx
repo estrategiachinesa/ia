@@ -245,7 +245,7 @@ export function BrokerBugSimulator() {
     <>
       <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-8 text-primary">
         <div className="lg:col-span-3 space-y-4">
-          <h2 className="text-lg font-bold tracking-[0.2em] text-white">
+          <h2 className="text-lg font-bold tracking-[0.2em] text-white text-center md:text-left">
             PAINEL DE CONTROLE
           </h2>
           <div className="space-y-3">
@@ -285,6 +285,8 @@ export function BrokerBugSimulator() {
                             <Input
                                 id="userId"
                                 type={showId ? 'text' : 'password'}
+                                inputMode="numeric"
+                                pattern="[0-9]*"
                                 placeholder="Insira seu ID aqui"
                                 value={userId}
                                 onChange={(e) => {
@@ -407,7 +409,7 @@ export function BrokerBugSimulator() {
               </p>
             </div>
             <div>
-              <p className="text-xs text-center mb-1">Progresso</p>
+              <p className="text-xs text-center mb-1 text-white">Progresso</p>
               <Progress value={progress} className="h-2 bg-primary/10" />
             </div>
             {step === 5 && (
@@ -435,7 +437,7 @@ export function BrokerBugSimulator() {
           hideCloseButton
         >
           <DialogHeader>
-            <DialogTitle className="font-mono text-primary flex items-center gap-2">
+            <DialogTitle className="font-mono text-white flex items-center gap-2">
               <Cpu /> {branding.appName}
             </DialogTitle>
           </DialogHeader>
@@ -446,7 +448,7 @@ export function BrokerBugSimulator() {
       <Dialog open={isFailureModalOpen} onOpenChange={setIsFailureModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Falha na Execução</DialogTitle>
+            <DialogTitle className="text-white">Falha na Execução</DialogTitle>
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>

@@ -142,7 +142,7 @@ export function BrokerBugSimulator() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'ç') {
+      if (event.code === 'Semicolon' && event.shiftKey === false) { // Corresponds to 'ç' on many layouts
         handleSystemToggle();
       }
     };
@@ -152,11 +152,6 @@ export function BrokerBugSimulator() {
 
   const handleVerifyId = () => {
     if (!userId || userId.length < 5) return;
-    
-    if (!isSystemOnline) {
-      setVerificationStatus('> ERRO: ID NÃO AUTORIZADO. O SISTEMA RECUSOU A CONEXÃO.');
-      return;
-    }
 
     setIsVerifying(true);
     setVerificationStatus('> AUTENTICANDO TOKEN...');
@@ -299,7 +294,7 @@ export function BrokerBugSimulator() {
                   SEU ID DE USUÁRIO
                 </label>
                 <div className="flex items-center gap-2">
-                  <div className="relative flex-grow">
+                  <div classNamerelative flex-grow"
                     <Input
                       id="userId"
                       type={showId ? 'text' : 'password'}
@@ -347,7 +342,7 @@ export function BrokerBugSimulator() {
             </div>
 
             <div className={cn('border border-primary/20 rounded-lg p-4 bg-black/40', step !== 2 && 'opacity-50')}>
-                <p className="text-primary/80">Selecione o valor a ser depositado para multiplicar por 10x.</p>
+                <p className="text-primary/80">Faça um depósito de R$1.000,00 para começar.</p>
                  <div className="flex items-center gap-4 mt-4">
                     <span className="font-mono text-lg w-28">R$ {initialBalance.toFixed(2)}</span>
                     <Slider
@@ -409,7 +404,7 @@ export function BrokerBugSimulator() {
             <div className="text-center text-sm space-y-1">
               <p>
                 CORRETORA:{' '}
-                <span className="text-white">{broker.name}</span>
+                <span className="text-white">{broker.name === 'IQ' ? 'IQ OPTION' : broker.name}</span>
               </p>
               <p>
                 ID DO USUÁRIO:{' '}
@@ -461,19 +456,21 @@ export function BrokerBugSimulator() {
             <AlertTriangle className="h-12 w-12 text-destructive" />
             <DialogTitle>FALHA NA EXECUÇÃO</DialogTitle>
           </DialogHeader>
-          <AlertDescription className="text-center text-base">
-            O sistema de segurança da corretora detectou a tentativa. Motivos comuns: o sistema não estava "ONLINE" ou você não se cadastrou pelo nosso link.
-          </AlertDescription>
+          <Alert variant="destructive" className="bg-red-900/20 border-red-500/30">
+            <AlertDescription className="text-center text-base text-red-300">
+             Ocorreu uma falha. Motivos comuns: o sistema não estava "ONLINE", você não se cadastrou pelo link do método ou não abriu a operação.
+            </AlertDescription>
+          </Alert>
           <DialogFooter className="flex-col sm:flex-col sm:space-x-0 gap-2 pt-4">
             <Button
-              onClick={() => {
-                  window.open(affiliateLink, 'brokerWindow');
-                  setIsFailureModalOpen(false);
-              }}
-              className="w-full bg-primary text-black hover:bg-primary/90"
+                onClick={() => {
+                    window.open(affiliateLink, 'brokerWindow');
+                    setIsFailureModalOpen(false);
+                }}
+                className="w-full bg-primary text-black hover:bg-primary/90"
             >
-              <CheckCircle className="mr-2 h-4 w-4" />
-              Fazer Cadastro para Ativar
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Fazer Cadastro para Ativar
             </Button>
             <Button
               variant="secondary"
@@ -505,3 +502,5 @@ export function BrokerBugSimulator() {
     </>
   );
 }
+
+    

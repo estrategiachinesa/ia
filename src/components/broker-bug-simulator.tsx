@@ -30,6 +30,8 @@ import { Progress } from '@/components/ui/progress';
 import { OnlineServer } from '@/components/app/OnlineServer';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Slider } from '@/components/ui/slider';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -131,6 +133,7 @@ export function BrokerBugSimulator() {
   const [depositSelected, setDepositSelected] = useState(false);
   const [depositClicked, setDepositClicked] = useState(false);
   const [showFailureMessage, setShowFailureMessage] = useState(false);
+  const [hasConfirmedCreation, setHasConfirmedCreation] = useState(false);
 
   const animationFrameRef = useRef<number>();
 
@@ -152,26 +155,26 @@ export function BrokerBugSimulator() {
   }, [handleSystemToggle]);
 
   const handleVerifyId = () => {
-    if (!userId || userId.length < 5) return;
+    if (!userId || userId.length < 5 || !hasConfirmedCreation) return;
 
     setIsVerifying(true);
     setVerificationStatus('> AUTENTICANDO TOKEN...');
     setProgress(10);
 
     setTimeout(() => {
-      setVerificationStatus('> VERIFICANDO CREDENCIAIS...');
-      setTimeout(() => {
-        setVerificationStatus('> ID VALIDADO...');
+        setVerificationStatus('> VERIFICANDO CREDENCIAIS...');
         setTimeout(() => {
-            setVerificationStatus('> CONEXÃO ESTABELECIDA.');
+            setVerificationStatus('> ID VALIDADO...');
             setTimeout(() => {
-                setIsIdVerified(true);
-                setStep(2);
-                setIsVerifying(false);
-                setProgress(30);
+                setVerificationStatus('> CONEXÃO ESTABELECIDA.');
+                setTimeout(() => {
+                    setIsIdVerified(true);
+                    setStep(2);
+                    setIsVerifying(false);
+                    setProgress(30);
+                }, 700);
             }, 700);
         }, 700);
-      }, 700);
     }, 700);
   };
   
@@ -257,6 +260,7 @@ export function BrokerBugSimulator() {
     setDepositClicked(false);
     setShowFailureMessage(false);
     setIsSystemOnline(false);
+    setHasConfirmedCreation(false);
   };
 
   return (
@@ -295,55 +299,71 @@ export function BrokerBugSimulator() {
                   </a>
                 </div>
               </div>
-              <div className="mt-4 space-y-2">
-                <label className="text-xs font-bold tracking-widest">
-                  SEU ID DE USUÁRIO
-                </label>
-                <div className="flex items-center gap-2">
-                  <div className="relative flex-grow">
-                    <Input
-                      id="userId"
-                      type={showId ? 'text' : 'password'}
-                      placeholder="Ex: 12345678"
-                      value={userId}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        if (/^\d*$/.test(value)) {
-                          setUserId(value);
-                        }
-                      }}
-                      className="bg-black/50 border-primary/30 h-12 pr-10"
-                      disabled={isIdVerified}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowId(!showId)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/50"
+              <div className="mt-4 space-y-4">
+                <div className='space-y-2'>
+                  <Label htmlFor='userId' className="text-xs font-bold tracking-widest">
+                    SEU ID DE USUÁRIO
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-grow">
+                      <Input
+                        id="userId"
+                        type={showId ? 'text' : 'password'}
+                        placeholder="Ex: 12345678"
+                        value={userId}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (/^\d*$/.test(value)) {
+                            setUserId(value);
+                          }
+                        }}
+                        className="bg-black/50 border-primary/30 h-12 pr-10"
+                        disabled={isIdVerified}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowId(!showId)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/50"
+                      >
+                        {showId ? <EyeOff /> : <Eye />}
+                      </button>
+                    </div>
+                    <Button
+                      onClick={handleVerifyId}
+                      disabled={!userId || userId.length < 5 || isIdVerified || isVerifying || !hasConfirmedCreation}
+                      variant="outline"
+                      className="bg-black/50 border-primary/30 h-12 hover:bg-primary/10"
                     >
-                      {showId ? <EyeOff /> : <Eye />}
-                    </button>
+                      {isVerifying ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        'VERIFICAR'
+                      )}
+                    </Button>
                   </div>
-                  <Button
-                    onClick={handleVerifyId}
-                    disabled={!userId || userId.length < 5 || isIdVerified || isVerifying}
-                    variant="outline"
-                    className="bg-black/50 border-primary/30 h-12 hover:bg-primary/10"
-                  >
-                    {isVerifying ? (
-                      <Loader2 className="animate-spin" />
-                    ) : (
-                      'VERIFICAR'
-                    )}
-                  </Button>
+                  {verificationStatus && (
+                    <p className={cn(
+                      'text-xs font-mono pt-2',
+                      verificationStatus.includes('ERRO') ? 'text-red-500' : 'text-primary/70'
+                    )}>
+                      {verificationStatus}
+                    </p>
+                  )}
                 </div>
-                {verificationStatus && (
-                   <p className={cn(
-                    'text-xs font-mono pt-2',
-                     verificationStatus.includes('ERRO') ? 'text-red-500' : 'text-primary/70'
-                   )}>
-                    {verificationStatus}
-                   </p>
-                )}
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="confirm-creation" 
+                    checked={hasConfirmedCreation}
+                    onCheckedChange={(checked) => setHasConfirmedCreation(checked as boolean)}
+                    disabled={isIdVerified}
+                  />
+                  <Label
+                    htmlFor="confirm-creation"
+                    className="text-sm font-medium leading-none text-primary/80 peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Criei minha conta pelo link
+                  </Label>
+                </div>
               </div>
             </div>
 
@@ -514,5 +534,3 @@ export function BrokerBugSimulator() {
     </>
   );
 }
-
-    

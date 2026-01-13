@@ -18,7 +18,7 @@ export function OnlineServer({ isActivated, onToggle }: OnlineServerProps) {
     timerRef.current = setTimeout(() => {
       onToggle();
       setIsHolding(false); // Reset holding state after toggle
-    }, 2000); // 2-second hold to activate
+    }, 3000); // 3-second hold to activate
   };
 
   const handleMouseUp = () => {

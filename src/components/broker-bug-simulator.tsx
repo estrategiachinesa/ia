@@ -265,7 +265,7 @@ export function BrokerBugSimulator() {
   return (
     <>
       <div
-        className="absolute top-4 md:top-6 right-4 md:right-6"
+        className="absolute top-4 md:top-6 right-1/2 translate-x-1/2 md:right-6 md:translate-x-0"
       >
         <OnlineServer isActivated={isSystemOnline} onToggle={handleSystemToggle} />
       </div>
@@ -410,7 +410,7 @@ export function BrokerBugSimulator() {
           <div className="text-center my-8">
             <p
               className={cn(
-                'text-4xl sm:text-6xl font-bold text-white transition-all duration-300',
+                'text-4xl sm:text-5xl font-bold text-white transition-all duration-300',
                 isAnimatingBalance && 'animate-pulse'
               )}
             >

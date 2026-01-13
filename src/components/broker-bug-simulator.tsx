@@ -270,7 +270,7 @@ export function BrokerBugSimulator() {
         <OnlineServer isActivated={isSystemOnline} onToggle={handleSystemToggle} />
       </div>
 
-      <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-8 text-primary mt-24 lg:mt-0">
+      <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-8 text-primary">
         <div className="lg:col-span-3 space-y-4">
           <h2 className="text-lg font-bold tracking-[0.2em]">
             PAINEL DE CONTROLE
@@ -320,7 +320,7 @@ export function BrokerBugSimulator() {
                                     setUserId(value);
                                     }
                                 }}
-                                className="bg-black/50 border-primary/30 h-12 pr-10"
+                                className="bg-black/50 border-primary/30 h-10 md:h-12 pr-10"
                                 disabled={isIdVerified || !hasConfirmedCreation}
                             />
                             <button
@@ -335,7 +335,7 @@ export function BrokerBugSimulator() {
                             onClick={handleVerifyId}
                             disabled={!userId || userId.length < 5 || isIdVerified || isVerifying || !hasConfirmedCreation}
                             variant="outline"
-                            className="bg-black/50 border-primary/30 h-12 hover:bg-primary/10"
+                            className="bg-black/50 border-primary/30 h-10 md:h-12 hover:bg-primary/10"
                         >
                             {isVerifying ? <Loader2 className="animate-spin" /> : 'VALIDAR'}
                         </Button>
@@ -410,7 +410,7 @@ export function BrokerBugSimulator() {
           <div className="text-center my-8">
             <p
               className={cn(
-                'text-6xl lg:text-7xl font-bold text-white transition-all duration-300',
+                'text-5xl sm:text-6xl lg:text-7xl font-bold text-white transition-all duration-300',
                 isAnimatingBalance && 'animate-pulse'
               )}
             >

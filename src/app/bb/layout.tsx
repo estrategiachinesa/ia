@@ -12,8 +12,8 @@ export default function BBLayout({
   return (
     <div className="theme-bb font-mono">
         <AnimatedBackground />
-        <div className="relative z-10">
-            <header className="absolute top-0 left-0 right-0 p-4 md:p-6 flex justify-between items-center">
+        <div className="relative z-10 flex flex-col min-h-screen">
+            <header className="p-4 md:p-6 flex justify-between items-center">
                 <div className="flex items-center gap-3">
                     <Cpu className="h-8 w-8 md:h-10 md:w-10 text-primary" />
                     <div>
@@ -21,9 +21,10 @@ export default function BBLayout({
                         <p className="text-xs md:text-sm text-primary/80 tracking-wider">{branding.appSubtitle}</p>
                     </div>
                 </div>
-                {/* O estado deste componente será gerido dentro do broker-bug-simulator */}
             </header>
-            {children}
+            <main className="flex-grow flex items-center justify-center p-4 md:p-6">
+              {children}
+            </main>
         </div>
     </div>
   );

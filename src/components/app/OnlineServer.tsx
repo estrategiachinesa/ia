@@ -57,7 +57,7 @@ export function OnlineServer({ isActivated, onToggle }: OnlineServerProps) {
         )}></span>
       </span>
       <span className="text-sm font-semibold tracking-widest">
-        SISTEMA {isActivated ? 'ONLINE' : 'OFFLINE'}
+        SISTEMA ONLINE
       </span>
     </button>
   );

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -17,8 +16,8 @@ export function OnlineServer({ isActivated, onToggle }: OnlineServerProps) {
     setIsHolding(true);
     timerRef.current = setTimeout(() => {
       onToggle();
-      setIsHolding(false); // Reset holding state after toggle
-    }, 3000); // 3-second hold to activate
+      setIsHolding(false);
+    }, 3000);
   };
 
   const handleMouseUp = () => {
@@ -29,7 +28,6 @@ export function OnlineServer({ isActivated, onToggle }: OnlineServerProps) {
     }
   };
 
-  // Also handle leaving the button area while holding
   const handleMouseLeave = () => {
     if (isHolding) {
       handleMouseUp();
@@ -47,8 +45,11 @@ export function OnlineServer({ isActivated, onToggle }: OnlineServerProps) {
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
     };
-  }, [onToggle]);
+  }, [onToggle, isHolding]);
 
   return (
     <button

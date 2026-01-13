@@ -36,6 +36,20 @@ export function OnlineServer({ isActivated, onToggle }: OnlineServerProps) {
     }
   };
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'ç') {
+        onToggle();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onToggle]);
+
   return (
     <button
       onMouseDown={handleMouseDown}

@@ -53,7 +53,7 @@ export function OnlineServer({ isActivated, onToggle }: OnlineServerProps) {
         ></span>
         <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
       </span>
-      <span className="text-sm font-semibold tracking-widest">
+      <span className="text-sm font-semibold tracking-widest text-white">
         SISTEMA ONLINE
       </span>
     </button>

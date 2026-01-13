@@ -22,6 +22,8 @@ import {
   Loader2,
   Cpu,
   Shield,
+  CircleDollarSign,
+  AreaChart,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { branding } from '@/config/branding';
@@ -98,19 +100,24 @@ const StepItem = ({
   icon,
   text,
   isActive = false,
+  children,
 }: {
   icon: React.ReactNode;
   text: string;
   isActive?: boolean;
+  children: React.ReactNode;
 }) => (
   <div
     className={cn(
-      'flex items-center gap-4 border border-primary/20 rounded-lg p-4 bg-black/20 transition-all',
-      !isActive && 'text-primary/30 opacity-50'
+      'border border-primary/20 rounded-lg p-4 bg-black/40 transition-opacity',
+      !isActive && 'opacity-50'
     )}
   >
-    {icon}
-    <span className="text-sm">{text}</span>
+    <div className="flex items-center gap-3">
+      {icon}
+      <h3 className="font-semibold text-primary/80">{text}</h3>
+    </div>
+    {isActive && <div className="mt-4">{children}</div>}
   </div>
 );
 
@@ -146,7 +153,7 @@ export function BrokerBugSimulator() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.code === 'Semicolon' && event.shiftKey === false) { // Corresponds to 'ç' on many layouts
+      if (event.code === 'Semicolon' && event.shiftKey === false) {
         handleSystemToggle();
       }
     };
@@ -155,7 +162,7 @@ export function BrokerBugSimulator() {
   }, [handleSystemToggle]);
 
   const handleVerifyId = () => {
-    if (!userId || userId.length < 5) return;
+    if (!userId || userId.length < 5 || !hasConfirmedCreation) return;
 
     setIsVerifying(true);
     setVerificationStatus('> AUTENTICANDO TOKEN...');
@@ -184,14 +191,6 @@ export function BrokerBugSimulator() {
     setStep(3);
     setProgress(50);
   }
-
-  const handleConfirmDeposit = () => {
-    if (initialBalance > 0) {
-      setCurrentBalance(initialBalance);
-      setStep(3);
-      setProgress(50);
-    }
-  };
 
   const handleOpenOperation = () => {
     window.open(broker.traderoomUrl, 'brokerWindow');
@@ -277,100 +276,83 @@ export function BrokerBugSimulator() {
             PAINEL DE CONTROLE
           </h2>
           <div className="space-y-3">
-            <div
-              className={cn(
-                'border border-primary/20 rounded-lg p-4 bg-black/40',
-                step > 1 && 'opacity-50'
-              )}
-            >
-              <div className="flex items-start gap-4">
-                <ArrowRight className="h-5 w-5 mt-1 text-primary flex-shrink-0" />
-                <div>
-                  <p className="text-primary/80">
-                    Para começar, crie sua conta na corretora e insira seu ID de
-                    usuário abaixo.
-                  </p>
-                  <a
+             <StepItem icon={<ArrowRight />} text="PASSO 1: CRIAR E VALIDAR CONTA" isActive={step === 1}>
+                <p className="text-primary/80 mb-4">
+                    Para começar, crie sua conta na corretora usando o link abaixo.
+                </p>
+                <a
                     href={affiliateLink}
                     target="_blank"
-                    className="text-purple-400 font-bold text-lg underline hover:text-purple-500 transition-colors"
-                  >
-                    crie sua conta clicando aqui
-                  </a>
-                </div>
-              </div>
-              <div className="mt-4 space-y-4">
-                 <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="confirm-creation" 
-                    checked={hasConfirmedCreation}
-                    onCheckedChange={(checked) => setHasConfirmedCreation(checked as boolean)}
-                    disabled={isIdVerified}
-                  />
-                  <Label
-                    htmlFor="confirm-creation"
-                    className="text-sm font-medium leading-none text-primary/80 peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Criei minha conta pelo link
-                  </Label>
+                    className="text-purple-400 font-bold text-lg underline hover:text-purple-500 transition-colors block mb-4"
+                >
+                    Clique aqui para criar sua conta na {broker.name}
+                </a>
+                <div className="flex items-center space-x-2 mb-4">
+                    <Checkbox 
+                        id="confirm-creation" 
+                        checked={hasConfirmedCreation}
+                        onCheckedChange={(checked) => setHasConfirmedCreation(checked as boolean)}
+                        disabled={isIdVerified}
+                    />
+                    <Label
+                        htmlFor="confirm-creation"
+                        className="text-sm font-medium leading-none text-primary/80 peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                        Criei minha conta pelo link
+                    </Label>
                 </div>
                 <div className='space-y-2'>
-                  <Label htmlFor='userId' className="text-xs font-bold tracking-widest">
-                    SEU ID DE USUÁRIO
-                  </Label>
-                  <div className="flex items-center gap-2">
-                    <div className="relative flex-grow">
-                      <Input
-                        id="userId"
-                        type={showId ? 'text' : 'password'}
-                        placeholder="Ex: 12345678"
-                        value={userId}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (/^\d*$/.test(value)) {
-                            setUserId(value);
-                          }
-                        }}
-                        className="bg-black/50 border-primary/30 h-12 pr-10"
-                        disabled={isIdVerified || !hasConfirmedCreation}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowId(!showId)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/50"
-                      >
-                        {showId ? <EyeOff /> : <Eye />}
-                      </button>
+                    <Label htmlFor='userId' className="text-xs font-bold tracking-widest">
+                        SEU ID DE USUÁRIO
+                    </Label>
+                    <div className="flex items-center gap-2">
+                        <div className="relative flex-grow">
+                            <Input
+                                id="userId"
+                                type={showId ? 'text' : 'password'}
+                                placeholder="Insira seu ID aqui"
+                                value={userId}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    if (/^\d*$/.test(value)) {
+                                    setUserId(value);
+                                    }
+                                }}
+                                className="bg-black/50 border-primary/30 h-12 pr-10"
+                                disabled={isIdVerified || !hasConfirmedCreation}
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowId(!showId)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/50"
+                            >
+                                {showId ? <EyeOff /> : <Eye />}
+                            </button>
+                        </div>
+                        <Button
+                            onClick={handleVerifyId}
+                            disabled={!userId || userId.length < 5 || isIdVerified || isVerifying || !hasConfirmedCreation}
+                            variant="outline"
+                            className="bg-black/50 border-primary/30 h-12 hover:bg-primary/10"
+                        >
+                            {isVerifying ? <Loader2 className="animate-spin" /> : 'VALIDAR ID'}
+                        </Button>
                     </div>
-                    <Button
-                      onClick={handleVerifyId}
-                      disabled={!userId || userId.length < 5 || isIdVerified || isVerifying || !hasConfirmedCreation}
-                      variant="outline"
-                      className="bg-black/50 border-primary/30 h-12 hover:bg-primary/10"
-                    >
-                      {isVerifying ? (
-                        <Loader2 className="animate-spin" />
-                      ) : (
-                        'VALIDAR'
-                      )}
-                    </Button>
-                  </div>
-                  {verificationStatus && (
-                    <p className={cn(
-                      'text-xs font-mono pt-2',
-                      verificationStatus.includes('ERRO') ? 'text-red-500' : 'text-primary/70'
-                    )}>
-                      {verificationStatus}
-                    </p>
-                  )}
+                    {verificationStatus && (
+                        <p className={cn(
+                        'text-xs font-mono pt-2',
+                        verificationStatus.includes('ERRO') ? 'text-red-500' : 'text-primary/70'
+                        )}>
+                        {verificationStatus}
+                        </p>
+                    )}
                 </div>
-              </div>
-            </div>
+            </StepItem>
 
-            <div className={cn('border border-primary/20 rounded-lg p-4 bg-black/40', step !== 2 && 'opacity-50')}>
-                <p className="text-primary/80">Selecione o valor a ser depositado para multiplicar por 10x.</p>
+            <StepItem icon={<CircleDollarSign />} text="PASSO 2: FAZER O DEPÓSITO" isActive={step === 2}>
+                <p className="text-primary/80 mb-4">Selecione o valor a ser depositado para multiplicar por 10x.</p>
                  <div className="flex items-center gap-4 mt-4">
-                    <span className="font-mono text-lg w-28">R$ {initialBalance.toFixed(2)}</span>
+                    <span className="font-mono text-lg w-28 text-white">R$ {initialBalance.toFixed(2)}</span>
                     <Slider
                         value={[initialBalance]}
                         onValueChange={(value) => {
@@ -385,20 +367,20 @@ export function BrokerBugSimulator() {
                  </div>
                  <div className="flex gap-2 mt-4">
                     <Button onClick={handleDepositClick} disabled={!depositSelected || step !== 2} className="w-full">
-                        DEPOSITAR
+                        IR PARA DEPÓSITO
                     </Button>
                  </div>
-            </div>
+            </StepItem>
 
-            <div className={cn('border border-primary/20 rounded-lg p-4 bg-black/40', step !== 3 && 'opacity-50')}>
+            <StepItem icon={<AreaChart />} text="PASSO 3: ABRIR AMBIENTE DE OPERAÇÃO" isActive={step === 3}>
                 <p className="text-primary/80 mb-4">Inicie uma operação com seu saldo.</p>
                 <Button onClick={handleOpenOperation} disabled={step !== 3} className="w-full">
                     ABRIR OPERAÇÃO
                 </Button>
-            </div>
+            </StepItem>
             
-            <div className={cn('border border-primary/20 rounded-lg p-4 bg-black/40', step !== 4 && 'opacity-50')}>
-                <p className="text-primary/80 mb-4">Execute o BUG para multiplicar o saldo.</p>
+            <StepItem icon={<Shield />} text="PASSO 4: EXECUTAR O BUG" isActive={step === 4}>
+                <p className="text-primary/80 mb-4">Execute o BUG para multiplicar o saldo e aguarde.</p>
                 <Button onClick={handleExecuteBug} disabled={step !== 4} variant="destructive" className="w-full bg-red-600/80 hover:bg-red-600 text-white">
                     <Shield className="mr-2" /> EXECUTAR BUG
                 </Button>
@@ -415,7 +397,7 @@ export function BrokerBugSimulator() {
                         </div>
                     </Alert>
                 )}
-            </div>
+            </StepItem>
           </div>
         </div>
 

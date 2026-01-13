@@ -2,6 +2,7 @@
 import { AnimatedBackground } from "@/components/animated-background";
 import { Cpu } from "lucide-react";
 import { OnlineServer } from "@/components/app/OnlineServer";
+import { branding } from "@/config/branding";
 
 export default function BBLayout({
   children,
@@ -16,8 +17,8 @@ export default function BBLayout({
                 <div className="flex items-center gap-3">
                     <Cpu className="h-8 w-8 md:h-10 md:w-10 text-primary" />
                     <div>
-                        <h1 className="text-xl md:text-2xl font-bold text-primary tracking-widest">G-BREAKER</h1>
-                        <p className="text-xs md:text-sm text-primary/80 tracking-wider">INJETOR DE SALDO</p>
+                        <h1 className="text-xl md:text-2xl font-bold text-primary tracking-widest">{branding.appName}</h1>
+                        <p className="text-xs md:text-sm text-primary/80 tracking-wider">{branding.appSubtitle}</p>
                     </div>
                 </div>
                 {/* O estado deste componente será gerido dentro do broker-bug-simulator */}

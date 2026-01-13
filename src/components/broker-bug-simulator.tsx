@@ -155,7 +155,7 @@ export function BrokerBugSimulator() {
   }, [handleSystemToggle]);
 
   const handleVerifyId = () => {
-    if (!userId || userId.length < 5 || !hasConfirmedCreation) return;
+    if (!userId || userId.length < 5) return;
 
     setIsVerifying(true);
     setVerificationStatus('> AUTENTICANDO TOKEN...');
@@ -300,6 +300,20 @@ export function BrokerBugSimulator() {
                 </div>
               </div>
               <div className="mt-4 space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="confirm-creation" 
+                    checked={hasConfirmedCreation}
+                    onCheckedChange={(checked) => setHasConfirmedCreation(checked as boolean)}
+                    disabled={isIdVerified}
+                  />
+                  <Label
+                    htmlFor="confirm-creation"
+                    className="text-sm font-medium leading-none text-primary/80 peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Criei minha conta pelo link
+                  </Label>
+                </div>
                 <div className='space-y-2'>
                   <Label htmlFor='userId' className="text-xs font-bold tracking-widest">
                     SEU ID DE USUÁRIO
@@ -318,7 +332,7 @@ export function BrokerBugSimulator() {
                           }
                         }}
                         className="bg-black/50 border-primary/30 h-12 pr-10"
-                        disabled={isIdVerified}
+                        disabled={isIdVerified || !hasConfirmedCreation}
                       />
                       <button
                         type="button"
@@ -349,20 +363,6 @@ export function BrokerBugSimulator() {
                       {verificationStatus}
                     </p>
                   )}
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="confirm-creation" 
-                    checked={hasConfirmedCreation}
-                    onCheckedChange={(checked) => setHasConfirmedCreation(checked as boolean)}
-                    disabled={isIdVerified}
-                  />
-                  <Label
-                    htmlFor="confirm-creation"
-                    className="text-sm font-medium leading-none text-primary/80 peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Criei minha conta pelo link
-                  </Label>
                 </div>
               </div>
             </div>
@@ -441,7 +441,7 @@ export function BrokerBugSimulator() {
             <div className="text-center text-sm space-y-1">
               <p>
                 CORRETORA:{' '}
-                <span className="text-white">{broker.name === 'IQ' ? 'IQ OPTION' : broker.name}</span>
+                <span className="text-white">{broker.name.toUpperCase()}</span>
               </p>
               <p>
                 ID DO USUÁRIO:{' '}
@@ -480,7 +480,7 @@ export function BrokerBugSimulator() {
         >
           <DialogHeader>
             <DialogTitle className="font-mono text-primary flex items-center gap-2">
-              <Cpu /> BROKER BREAKER
+              <Cpu /> {branding.appName}
             </DialogTitle>
           </DialogHeader>
           <HackerTextAnimation onComplete={onBugAnimationComplete} />

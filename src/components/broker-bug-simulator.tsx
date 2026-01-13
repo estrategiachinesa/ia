@@ -9,13 +9,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   AlertTriangle,
-  Video,
-  CheckCircle,
   ArrowRight,
   Eye,
   EyeOff,
@@ -27,9 +23,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { branding } from '@/config/branding';
-import VipVslPlayer from '@/components/vip-vsl-player';
 import { Progress } from '@/components/ui/progress';
-import { OnlineServer } from '@/components/app/OnlineServer';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -134,7 +128,6 @@ export function BrokerBugSimulator() {
   const [progress, setProgress] = useState(0);
   const [isBugModalOpen, setIsBugModalOpen] = useState(false);
   const [isFailureModalOpen, setIsFailureModalOpen] = useState(false);
-  const [isVslModalOpen, setIsVslModalOpen] = useState(false);
   const [isAnimatingBalance, setIsAnimatingBalance] = useState(false);
   const [isWithdrawClicked, setIsWithdrawClicked] = useState(false);
   const [depositSelected, setDepositSelected] = useState(false);
@@ -146,20 +139,6 @@ export function BrokerBugSimulator() {
 
   const broker = branding.brokers[0];
   const affiliateLink = broker.affiliateLink;
-
-  const handleSystemToggle = useCallback(() => {
-    setIsSystemOnline((prev) => !prev);
-  }, []);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.code === 'Semicolon' && event.shiftKey === false) {
-        handleSystemToggle();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleSystemToggle]);
 
   const handleVerifyId = () => {
     if (!userId || userId.length < 5) return;
@@ -249,7 +228,6 @@ export function BrokerBugSimulator() {
     setInitialBalance(0);
     setCurrentBalance(0);
     setIsFailureModalOpen(false);
-    setIsVslModalOpen(false);
     setUserId('');
     setIsIdVerified(false);
     setProgress(0);
@@ -388,7 +366,6 @@ export function BrokerBugSimulator() {
                         </AlertDescription>
                         <div className="mt-4 flex gap-2 justify-center">
                              <Button size="sm" variant="outline" className="text-white" onClick={() => window.open(affiliateLink, 'brokerWindow')}>Cadastro</Button>
-                             <Button size="sm" variant="outline" className="text-white" onClick={() => setIsVslModalOpen(true)}>Tutorial</Button>
                              <Button size="sm" variant="outline" className="text-white" onClick={resetSimulation}>Reiniciar</Button>
                         </div>
                     </Alert>
@@ -465,12 +442,6 @@ export function BrokerBugSimulator() {
         </DialogContent>
       </Dialog>
       
-      <Dialog open={isVslModalOpen} onOpenChange={setIsVslModalOpen}>
-        <DialogContent className="max-w-3xl p-0 bg-black border-primary/30">
-          <VipVslPlayer videoId="8RebjHIi7Ok" />
-        </DialogContent>
-      </Dialog>
-      
       <Dialog open={isFailureModalOpen} onOpenChange={setIsFailureModalOpen}>
         <DialogContent>
           <DialogHeader>
@@ -490,15 +461,6 @@ export function BrokerBugSimulator() {
                 }}
              >
                 Ir para Cadastro
-            </Button>
-            <Button
-                onClick={() => {
-                    setIsVslModalOpen(true);
-                    setIsFailureModalOpen(false);
-                }}
-                variant="outline"
-            >
-                Ver Tutorial
             </Button>
              <Button
                 onClick={resetSimulation}

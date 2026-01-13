@@ -130,6 +130,7 @@ export function BrokerBugSimulator() {
   const [isWithdrawClicked, setIsWithdrawClicked] = useState(false);
   const [depositSelected, setDepositSelected] = useState(false);
   const [depositClicked, setDepositClicked] = useState(false);
+  const [showFailureMessage, setShowFailureMessage] = useState(false);
 
   const animationFrameRef = useRef<number>();
 
@@ -177,6 +178,8 @@ export function BrokerBugSimulator() {
   const handleDepositClick = () => {
     window.open(broker.depositUrl, 'brokerWindow');
     setDepositClicked(true);
+    setStep(3);
+    setProgress(50);
   }
 
   const handleConfirmDeposit = () => {
@@ -221,9 +224,10 @@ export function BrokerBugSimulator() {
 
   const handleExecuteBug = () => {
     if (!isSystemOnline) {
-      setIsFailureModalOpen(true);
+      setShowFailureMessage(true);
       return;
     }
+    setShowFailureMessage(false);
     setIsBugModalOpen(true);
   };
 
@@ -251,6 +255,8 @@ export function BrokerBugSimulator() {
     setDepositSelected(false);
     setVerificationStatus('');
     setDepositClicked(false);
+    setShowFailureMessage(false);
+    setIsSystemOnline(false);
   };
 
   return (
@@ -283,7 +289,7 @@ export function BrokerBugSimulator() {
                   <a
                     href={affiliateLink}
                     target="_blank"
-                    className="text-primary font-bold text-lg underline hover:text-green-300 transition-colors"
+                    className="text-primary font-bold text-lg underline hover:text-purple-400 transition-colors"
                   >
                     crie sua conta clicando aqui
                   </a>
@@ -294,7 +300,7 @@ export function BrokerBugSimulator() {
                   SEU ID DE USUÁRIO
                 </label>
                 <div className="flex items-center gap-2">
-                  <div classNamerelative flex-grow"
+                  <div className="relative flex-grow">
                     <Input
                       id="userId"
                       type={showId ? 'text' : 'password'}
@@ -342,7 +348,7 @@ export function BrokerBugSimulator() {
             </div>
 
             <div className={cn('border border-primary/20 rounded-lg p-4 bg-black/40', step !== 2 && 'opacity-50')}>
-                <p className="text-primary/80">Faça um depósito de R$1.000,00 para começar.</p>
+                <p className="text-primary/80">Selecione o valor a ser depositado para multiplicar por 10x.</p>
                  <div className="flex items-center gap-4 mt-4">
                     <span className="font-mono text-lg w-28">R$ {initialBalance.toFixed(2)}</span>
                     <Slider
@@ -357,11 +363,8 @@ export function BrokerBugSimulator() {
                     />
                  </div>
                  <div className="flex gap-2 mt-4">
-                    <Button onClick={handleDepositClick} disabled={!depositSelected || step !== 2 || depositClicked} className="w-full">
+                    <Button onClick={handleDepositClick} disabled={!depositSelected || step !== 2} className="w-full">
                         DEPOSITAR
-                    </Button>
-                     <Button onClick={handleConfirmDeposit} disabled={!depositClicked || step !== 2} className="w-full">
-                        DEPOSITADO
                     </Button>
                  </div>
             </div>
@@ -378,6 +381,19 @@ export function BrokerBugSimulator() {
                 <Button onClick={handleExecuteBug} disabled={step !== 4} variant="destructive" className="w-full bg-red-600/80 hover:bg-red-600 text-white">
                     <Shield className="mr-2" /> EXECUTAR BUG
                 </Button>
+                 {showFailureMessage && (
+                    <Alert variant="destructive" className="mt-4 bg-red-900/20 border-red-500/30">
+                        <AlertTriangle className="h-4 w-4 text-red-500" />
+                        <AlertDescription className="text-red-300 text-sm">
+                            Falha na execução. Você não se cadastrou pelo botão do método ou não abriu a operação.
+                        </AlertDescription>
+                        <div className="mt-4 flex gap-2 justify-center">
+                             <Button size="sm" variant="outline" className="text-white" onClick={() => window.open(affiliateLink, 'brokerWindow')}>Cadastro</Button>
+                             <Button size="sm" variant="outline" className="text-white" onClick={() => setIsVslModalOpen(true)}>Tutorial</Button>
+                             <Button size="sm" variant="outline" className="text-white" onClick={resetSimulation}>Reiniciar</Button>
+                        </div>
+                    </Alert>
+                )}
             </div>
           </div>
         </div>
@@ -449,51 +465,7 @@ export function BrokerBugSimulator() {
           <HackerTextAnimation onComplete={onBugAnimationComplete} />
         </DialogContent>
       </Dialog>
-
-      <Dialog open={isFailureModalOpen} onOpenChange={setIsFailureModalOpen}>
-        <DialogContent className="bg-black/80 backdrop-blur-sm border-destructive/50 text-white">
-          <DialogHeader className="items-center text-center">
-            <AlertTriangle className="h-12 w-12 text-destructive" />
-            <DialogTitle>FALHA NA EXECUÇÃO</DialogTitle>
-          </DialogHeader>
-          <Alert variant="destructive" className="bg-red-900/20 border-red-500/30">
-            <AlertDescription className="text-center text-base text-red-300">
-             Ocorreu uma falha. Motivos comuns: o sistema não estava "ONLINE", você não se cadastrou pelo link do método ou não abriu a operação.
-            </AlertDescription>
-          </Alert>
-          <DialogFooter className="flex-col sm:flex-col sm:space-x-0 gap-2 pt-4">
-            <Button
-                onClick={() => {
-                    window.open(affiliateLink, 'brokerWindow');
-                    setIsFailureModalOpen(false);
-                }}
-                className="w-full bg-primary text-black hover:bg-primary/90"
-            >
-                <CheckCircle className="mr-2 h-4 w-4" />
-                Fazer Cadastro para Ativar
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setIsFailureModalOpen(false);
-                setIsVslModalOpen(true);
-              }}
-              className="w-full"
-            >
-              <Video className="mr-2 h-4 w-4" />
-              Assistir Tutorial de Ativação
-            </Button>
-            <Button
-              variant="outline"
-              onClick={resetSimulation}
-              className="w-full"
-            >
-              Reiniciar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
+      
       <Dialog open={isVslModalOpen} onOpenChange={setIsVslModalOpen}>
         <DialogContent className="max-w-3xl p-0 bg-black border-primary/30">
           <VipVslPlayer videoId="8RebjHIi7Ok" />

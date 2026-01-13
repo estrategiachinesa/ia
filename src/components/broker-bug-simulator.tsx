@@ -264,12 +264,6 @@ export function BrokerBugSimulator() {
 
   return (
     <>
-      <div
-        className="absolute top-4 md:top-6 right-1/2 translate-x-1/2 md:right-6 md:translate-x-0"
-      >
-        <OnlineServer isActivated={isSystemOnline} onToggle={handleSystemToggle} />
-      </div>
-
       <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-8 text-primary">
         <div className="lg:col-span-3 space-y-4">
           <h2 className="text-lg font-bold tracking-[0.2em]">
@@ -285,7 +279,7 @@ export function BrokerBugSimulator() {
                         href={affiliateLink}
                         target="_blank"
                     >
-                        Clique aqui para criar sua conta na {broker.name}
+                        Clique aqui para criar sua conta
                     </a>
                 </Button>
                 

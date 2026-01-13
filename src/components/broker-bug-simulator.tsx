@@ -162,7 +162,7 @@ export function BrokerBugSimulator() {
   }, [handleSystemToggle]);
 
   const handleVerifyId = () => {
-    if (!userId || userId.length < 5 || !hasConfirmedCreation) return;
+    if (!userId || userId.length < 5) return;
 
     setIsVerifying(true);
     setVerificationStatus('> AUTENTICANDO TOKEN...');
@@ -410,7 +410,7 @@ export function BrokerBugSimulator() {
           <div className="text-center my-8">
             <p
               className={cn(
-                'text-5xl sm:text-6xl lg:text-7xl font-bold text-white transition-all duration-300',
+                'text-5xl sm:text-6xl font-bold text-white transition-all duration-300',
                 isAnimatingBalance && 'animate-pulse'
               )}
             >

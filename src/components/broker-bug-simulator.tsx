@@ -169,19 +169,19 @@ export function BrokerBugSimulator() {
     setProgress(10);
 
     setTimeout(() => {
-        setVerificationStatus('> VERIFICANDO CREDENCIAIS...');
+      setVerificationStatus('> VERIFICANDO CREDENCIAIS...');
+      setTimeout(() => {
+        setVerificationStatus('> VALIDANDO ID...');
         setTimeout(() => {
-            setVerificationStatus('> VALIDANDO ID...');
-            setTimeout(() => {
-                setVerificationStatus('> CONEXÃO ESTABELECIDA.');
-                setTimeout(() => {
-                    setIsIdVerified(true);
-                    setStep(2);
-                    setIsVerifying(false);
-                    setProgress(30);
-                }, 700);
-            }, 700);
+          setVerificationStatus('> CONEXÃO ESTABELECIDA.');
+          setTimeout(() => {
+            setIsIdVerified(true);
+            setStep(2);
+            setIsVerifying(false);
+            setProgress(30);
+          }, 700);
         }, 700);
+      }, 700);
     }, 700);
   };
   
@@ -280,13 +280,15 @@ export function BrokerBugSimulator() {
                 <p className="text-primary/80 mb-4">
                     Para começar, crie sua conta na corretora usando o link abaixo.
                 </p>
-                <a
-                    href={affiliateLink}
-                    target="_blank"
-                    className="text-purple-400 font-bold text-lg underline hover:text-purple-500 transition-colors block mb-4"
-                >
-                    Clique aqui para criar sua conta na {broker.name}
-                </a>
+                <Button asChild className="w-full mb-4">
+                    <a
+                        href={affiliateLink}
+                        target="_blank"
+                    >
+                        Clique aqui para criar sua conta na {broker.name}
+                    </a>
+                </Button>
+                
                 <div className="flex items-center space-x-2 mb-4">
                     <Checkbox 
                         id="confirm-creation" 
@@ -335,7 +337,7 @@ export function BrokerBugSimulator() {
                             variant="outline"
                             className="bg-black/50 border-primary/30 h-12 hover:bg-primary/10"
                         >
-                            {isVerifying ? <Loader2 className="animate-spin" /> : 'VALIDAR ID'}
+                            {isVerifying ? <Loader2 className="animate-spin" /> : 'VALIDAR'}
                         </Button>
                     </div>
                     {verificationStatus && (

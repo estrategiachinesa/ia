@@ -300,7 +300,7 @@ export function BrokerBugSimulator() {
                 </div>
               </div>
               <div className="mt-4 space-y-4">
-                <div className="flex items-center space-x-2">
+                 <div className="flex items-center space-x-2">
                   <Checkbox 
                     id="confirm-creation" 
                     checked={hasConfirmedCreation}
@@ -391,7 +391,7 @@ export function BrokerBugSimulator() {
             </div>
 
             <div className={cn('border border-primary/20 rounded-lg p-4 bg-black/40', step !== 3 && 'opacity-50')}>
-                <p className="text-primary/80 mb-4">Clique abaixo para ir ao ambiente de operação da corretora.</p>
+                <p className="text-primary/80 mb-4">Inicie uma operação com seu saldo.</p>
                 <Button onClick={handleOpenOperation} disabled={step !== 3} className="w-full">
                     ABRIR OPERAÇÃO
                 </Button>

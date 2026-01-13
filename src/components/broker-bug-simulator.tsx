@@ -164,7 +164,7 @@ export function BrokerBugSimulator() {
     setTimeout(() => {
         setVerificationStatus('> VERIFICANDO CREDENCIAIS...');
         setTimeout(() => {
-            setVerificationStatus('> ID VALIDADO...');
+            setVerificationStatus('> VALIDANDO ID...');
             setTimeout(() => {
                 setVerificationStatus('> CONEXÃO ESTABELECIDA.');
                 setTimeout(() => {
@@ -351,7 +351,7 @@ export function BrokerBugSimulator() {
                       {isVerifying ? (
                         <Loader2 className="animate-spin" />
                       ) : (
-                        'VERIFICAR'
+                        'VALIDAR'
                       )}
                     </Button>
                   </div>

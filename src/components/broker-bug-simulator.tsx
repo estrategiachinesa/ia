@@ -110,7 +110,7 @@ const StepItem = ({
   >
     <div className="flex items-center gap-3">
       {icon}
-      <h3 className="font-semibold text-primary/80">{text}</h3>
+      <h3 className="font-semibold text-white">{text}</h3>
     </div>
     {isActive && <div className="mt-4">{children}</div>}
   </div>
@@ -245,7 +245,7 @@ export function BrokerBugSimulator() {
     <>
       <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-5 gap-8 text-primary">
         <div className="lg:col-span-3 space-y-4">
-          <h2 className="text-lg font-bold tracking-[0.2em]">
+          <h2 className="text-lg font-bold tracking-[0.2em] text-white">
             PAINEL DE CONTROLE
           </h2>
           <div className="space-y-3">
@@ -277,7 +277,7 @@ export function BrokerBugSimulator() {
                     </Label>
                 </div>
                 <div className='space-y-2'>
-                    <Label htmlFor='userId' className="text-xs font-bold tracking-widest">
+                    <Label htmlFor='userId' className="text-xs font-bold tracking-widest text-white">
                         SEU ID DE USUÁRIO
                     </Label>
                     <div className="flex flex-col sm:flex-row items-center gap-2">
@@ -376,7 +376,7 @@ export function BrokerBugSimulator() {
         </div>
 
         <div className="lg:col-span-2 border border-primary/20 rounded-lg p-6 bg-black/40 flex flex-col justify-between">
-          <h2 className="text-lg font-bold tracking-[0.2em] text-center">
+          <h2 className="text-lg font-bold tracking-[0.2em] text-center text-white">
             SALDO EM CONTA
           </h2>
           <div className="text-center my-8">

@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter
+  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   AlertTriangle,
@@ -39,7 +39,7 @@ const HackerTextAnimation = ({
   onComplete: () => void;
 }) => {
   const lines = [
-    '> G-BREAKER.EXE INICIADO...',
+    '> BROKER BREAKER.EXE INICIADO...',
     '> INJETANDO VETOR DE EXPLORAÇÃO...',
     '> ACESSO AO KERNEL: NEGADO. REINICIANDO PROTOCOLOS...',
     '> FORÇANDO OVERRIDE DE SEGURANÇA...',
@@ -289,7 +289,7 @@ export function BrokerBugSimulator() {
                   <a
                     href={affiliateLink}
                     target="_blank"
-                    className="text-primary font-bold text-lg underline hover:text-purple-400 transition-colors"
+                    className="text-purple-400 font-bold text-lg underline hover:text-purple-500 transition-colors"
                   >
                     crie sua conta clicando aqui
                   </a>
@@ -355,6 +355,7 @@ export function BrokerBugSimulator() {
                         value={[initialBalance]}
                         onValueChange={(value) => {
                             setInitialBalance(value[0]);
+                            setCurrentBalance(value[0]);
                             setDepositSelected(value[0] > 0);
                         }}
                         max={1000}
@@ -459,7 +460,7 @@ export function BrokerBugSimulator() {
         >
           <DialogHeader>
             <DialogTitle className="font-mono text-primary flex items-center gap-2">
-              <Cpu /> G-BREAKER
+              <Cpu /> BROKER BREAKER
             </DialogTitle>
           </DialogHeader>
           <HackerTextAnimation onComplete={onBugAnimationComplete} />
@@ -469,6 +470,45 @@ export function BrokerBugSimulator() {
       <Dialog open={isVslModalOpen} onOpenChange={setIsVslModalOpen}>
         <DialogContent className="max-w-3xl p-0 bg-black border-primary/30">
           <VipVslPlayer videoId="8RebjHIi7Ok" />
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isFailureModalOpen} onOpenChange={setIsFailureModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Falha na Execução</DialogTitle>
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Você não se cadastrou pelo botão do método ou não abriu a operação.
+              </AlertDescription>
+            </Alert>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-col sm:space-x-0 gap-2 pt-4">
+             <Button
+                onClick={() => {
+                    window.open(affiliateLink, 'brokerWindow');
+                    setIsFailureModalOpen(false);
+                }}
+             >
+                Ir para Cadastro
+            </Button>
+            <Button
+                onClick={() => {
+                    setIsVslModalOpen(true);
+                    setIsFailureModalOpen(false);
+                }}
+                variant="outline"
+            >
+                Ver Tutorial
+            </Button>
+             <Button
+                onClick={resetSimulation}
+                variant="secondary"
+            >
+                Reiniciar
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

@@ -19,9 +19,23 @@
           "type": "string",
           "description": "The current status of the user's subscription.",
           "enum": ["ACTIVE", "INACTIVE", "CANCELED"]
+        },
+        "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp when the user account was created."
+        },
+        "termsAccepted": {
+            "type": "boolean",
+            "description": "Indicates whether the user has accepted the terms and conditions."
+        },
+        "termsAcceptedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp when the user accepted the terms and conditions."
         }
       },
-      "required": ["email"]
+      "required": ["email", "createdAt", "termsAccepted", "termsAcceptedAt"]
     },
     "LinkConfig": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -287,3 +301,5 @@
     "reasoning": "The Firestore structure is designed to handle user profiles, VIP access requests, and global app configurations. The user's subscription status is now part of their profile. Global configurations are in single documents under /appConfig. The signalFeedbacks collection and entity have been removed to simplify the data model."
   }
 }
+
+    

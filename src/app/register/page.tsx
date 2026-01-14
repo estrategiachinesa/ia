@@ -10,10 +10,11 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Loader2, Eye, EyeOff } from 'lucide-react';
 import AffiliateLink from '@/components/app/affiliate-link';
-import { useFirebase, useAppConfig } from '@/firebase';
+import { useFirebase, useAppConfig, setDocumentNonBlocking } from '@/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
+import { doc, serverTimestamp } from 'firebase/firestore';
 
 type RegistrationStep = 'codeValidation' | 'terms' | 'form';
 
@@ -43,7 +44,7 @@ export default function RegisterPage() {
         return;
     }
     if (isConfigLoading || !config) {
-        toast({ variant: 'destructive', title: 'Aguarde', description: 'A configuração ainda está carregando. Tente novamente em um instante.' });
+        toast({ variant: 'destructive', title: 'Aguarde', description: 'A configuração ainda está a carregar. Tente novamente em um instante.' });
         return;
     }
 
@@ -66,7 +67,7 @@ export default function RegisterPage() {
   };
 
   const handleRegister = useCallback(async () => {
-    if (isLoading) return;
+    if (isLoading || !firestore) return;
 
     if (!credentials.email || !credentials.password || !credentials.confirmPassword) {
         toast({ variant: 'destructive', title: 'Campos Vazios', description: 'Por favor, preencha todos os campos.' });
@@ -90,8 +91,20 @@ export default function RegisterPage() {
 
     setIsLoading(true);
     try {
-        await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
+        const userCredential = await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
         
+        const userDocRef = doc(firestore, 'users', userCredential.user.uid);
+        const userProfileData = {
+            email: userCredential.user.email,
+            displayName: userCredential.user.email?.split('@')[0],
+            subscriptionStatus: 'ACTIVE', // Initial status
+            createdAt: serverTimestamp(),
+            termsAccepted: true,
+            termsAcceptedAt: serverTimestamp(),
+        };
+
+        setDocumentNonBlocking(userDocRef, userProfileData, { merge: true });
+
         localStorage.setItem('loginTimestamp', Date.now().toString());
         localStorage.setItem('showPremiumUpgradeOnLoad', 'true'); // Flag to show modal
         localStorage.removeItem('activationCodeValidated'); // Clean up
@@ -301,3 +314,5 @@ export default function RegisterPage() {
     </>
   );
 }
+
+    

@@ -11,7 +11,7 @@ const CountdownTimer = () => {
   });
 
   useEffect(() => {
-    const endDate = new Date("2025-11-30T23:59:59");
+    const endDate = new Date("2026-11-30T23:59:59");
 
     const timer = setInterval(() => {
       const now = new Date();

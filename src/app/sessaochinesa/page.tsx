@@ -269,7 +269,7 @@ export default function SessaoChinesaPage() {
                     </CardContent>
                 </Card>
                 <footer className="w-full text-center text-xs text-foreground/50 p-4 mt-8">
-                  <p>© 2025 ESTRATÉGIA CHINESA. Todos os direitos reservados.</p>
+                  <p>© 2026 ESTRATÉGIA CHINESA. Todos os direitos reservados.</p>
                 </footer>
             </div>
 

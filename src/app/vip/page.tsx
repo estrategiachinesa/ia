@@ -125,7 +125,7 @@ export default function VipPage() {
         </Card>
       </main>
       <footer className="w-full text-center text-xs text-foreground/50 p-4 mt-8">
-          <p>© 2025 ESTRATÉGIA CHINESA. Todos os direitos reservados.</p>
+          <p>© 2026 ESTRATÉGIA CHINESA. Todos os direitos reservados.</p>
            <AffiliateLink href={legalUrl} className="underline underline-offset-2">
             Termos de Uso e Privacidade
           </AffiliateLink>

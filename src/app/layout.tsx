@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import Script from 'next/script';
 import { DevToolsBlocker } from '@/components/app/dev-tools-blocker';
 import { FirebaseClientProvider } from '@/firebase';
+import { CookieConsentBanner } from '@/components/app/cookie-consent-banner';
 
 export const metadata: Metadata = {
   title: 'Estratégia Chinesa',
@@ -46,9 +47,8 @@ export default function RootLayout({
           {children}
         </FirebaseClientProvider>
         <Toaster />
+        <CookieConsentBanner />
       </body>
     </html>
   );
 }
-
-    

@@ -434,9 +434,11 @@ export default function AnalisadorPage() {
         
         <footer className="p-4 text-center text-xs text-foreground/30">
           <p>© 2026 Estratégia Chinesa. Todos os direitos reservados.</p>
-          <AffiliateLink href="/legal" className="underline underline-offset-2">
-            Termos de Uso e Privacidade
-          </AffiliateLink>
+          <div className="flex justify-center gap-4 mt-2">
+            <AffiliateLink href="/legal#terms" className="underline underline-offset-2 hover:text-foreground">Termos de Uso</AffiliateLink>
+            <AffiliateLink href="/legal#privacy" className="underline underline-offset-2 hover:text-foreground">Política de Privacidade</AffiliateLink>
+            <AffiliateLink href="/legal#cookies" className="underline underline-offset-2 hover:text-foreground">Política de Cookies</AffiliateLink>
+          </div>
           <p className="max-w-xl mx-auto text-[0.6rem] mt-2">Aviso Legal: Todas as estratégias e investimentos envolvem risco de perda. Nenhuma informação contida neste produto deve ser interpretada como uma garantia de resultados.</p>
         </footer>
       </div>

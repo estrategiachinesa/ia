@@ -433,7 +433,7 @@ export default function AnalisadorPage() {
         </main>
         
         <footer className="p-4 text-center text-xs text-foreground/30">
-          <p>© 2026 Estratégia Chinesa. Todos os direitos reservados.</p>
+          <p>© 2026 ESTRATÉGIA CHINESA. Todos os direitos reservados.</p>
           <div className="flex justify-center gap-4 mt-2">
             <AffiliateLink href="/legal#terms" className="underline underline-offset-2 hover:text-foreground">Termos de Uso</AffiliateLink>
             <AffiliateLink href="/legal#privacy" className="underline underline-offset-2 hover:text-foreground">Política de Privacidade</AffiliateLink>
@@ -452,3 +452,5 @@ export default function AnalisadorPage() {
     </>
   );
 }
+
+    

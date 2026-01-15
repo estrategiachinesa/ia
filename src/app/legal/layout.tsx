@@ -33,7 +33,7 @@ export default function LegalLayout({
         </main>
         
         <footer className="p-4 text-center text-xs text-foreground/30">
-          <p>© 2026 Estratégia Chinesa. Todos os direitos reservados.</p>
+          <p>© 2026 ESTRATÉGIA CHINESA. Todos os direitos reservados.</p>
         </footer>
       </div>
     </>

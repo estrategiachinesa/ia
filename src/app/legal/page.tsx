@@ -1,5 +1,5 @@
 export default function LegalPage() {
-  const lastUpdated = '23/11/2026';
+  const lastUpdated = '23/11/2025';
 
   return (
     <div className="prose prose-invert prose-headings:text-primary prose-headings:font-headline max-w-4xl mx-auto bg-card/30 backdrop-blur-sm border border-border/20 p-6 sm:p-10 rounded-xl">

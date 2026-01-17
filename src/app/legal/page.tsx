@@ -99,7 +99,7 @@ export default function LegalPage() {
         <li>Personalização dos sinais;</li>
         <li>Monitoramento de segurança;</li>
         <li>Liberação dos planos VIP e PREMIUM;</li>
-        <li>Comunicação e suporte via email: <strong>estrategi1.1chinesa@gmail.com</strong>.</li>
+        <li>Comunicação e suporte via email: <strong>estrategiachinesa@gmail.com</strong>.</li>
       </ul>
 
       <h3>3. Compartilhamento</h3>

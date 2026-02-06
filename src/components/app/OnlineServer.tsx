@@ -49,7 +49,7 @@ export function OnlineServer({ isActivated, onToggle }: OnlineServerProps) {
         clearTimeout(timerRef.current);
       }
     };
-  }, [onToggle, isHolding]);
+  }, [onToggle]);
 
   return (
     <button

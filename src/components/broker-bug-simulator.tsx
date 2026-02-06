@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -29,6 +28,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { useBB } from '@/app/bb/bb-context';
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -117,8 +117,8 @@ const StepItem = ({
 );
 
 export function BrokerBugSimulator() {
+  const { isSystemOnline, toggleSystemOnline } = useBB();
   const [step, setStep] = useState<Step>(1);
-  const [isSystemOnline, setIsSystemOnline] = useState(false);
   const [userId, setUserId] = useState('');
   const [showId, setShowId] = useState(false);
   const [isIdVerified, setIsIdVerified] = useState(false);
@@ -237,7 +237,9 @@ export function BrokerBugSimulator() {
     setVerificationStatus('');
     setDepositClicked(false);
     setShowFailureMessage(false);
-    setIsSystemOnline(false);
+    if (isSystemOnline) {
+      toggleSystemOnline();
+    }
     setHasConfirmedCreation(false);
   };
 

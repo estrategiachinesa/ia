@@ -244,9 +244,12 @@ const VslPlayer = ({ videoId }: { videoId: string }) => {
         <div id="youtube-player" className="w-full h-full rounded-lg overflow-hidden pointer-events-none" />
         
         {isMuted && hasInteracted === false && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm pointer-events-none">
-              <VolumeX className="h-16 w-16 text-white" />
-              <p className="mt-4 text-xl font-bold uppercase text-white">Clique para ativar o som</p>
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm cursor-pointer">
+            <div className="relative flex h-24 w-24 items-center justify-center">
+                <div className="absolute h-full w-full rounded-full bg-primary/50 animate-ping"></div>
+                <Play className="relative h-20 w-20 text-white fill-white" />
+            </div>
+            <p className="mt-6 text-2xl font-bold uppercase text-white tracking-wider">CLIQUE PARA ASSISTIR</p>
           </div>
         )}
 

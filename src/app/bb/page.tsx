@@ -1,8 +1,5 @@
-
-import { BrokerBugSimulator } from "@/components/broker-bug-simulator";
+import { redirect } from 'next/navigation';
 
 export default function BrokerPage() {
-  return (
-    <BrokerBugSimulator />
-  );
+  redirect('/login');
 }

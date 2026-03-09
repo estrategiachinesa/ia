@@ -241,7 +241,10 @@ export default function AnalisadorPage() {
   }, [appState, signalData?.operationStatus]);
 
  const proceedWithAnalysis = async () => {
+    // Set a flag in session storage so this modal doesn't appear again during this session
+    sessionStorage.setItem('hasSeenNewsWarning', 'true');
     setIsNewsWarningModalOpen(false);
+
     if (!config) {
         toast({
             variant: 'destructive',
@@ -332,8 +335,17 @@ export default function AnalisadorPage() {
   };
 
   const handleAnalyze = () => {
-    setHasAgreedToNewsWarning(false);
-    setIsNewsWarningModalOpen(true);
+    // Check if the user has already seen the warning in this session
+    const hasSeenWarning = sessionStorage.getItem('hasSeenNewsWarning');
+
+    if (hasSeenWarning) {
+      // If they have, proceed directly to analysis
+      proceedWithAnalysis();
+    } else {
+      // Otherwise, show the warning modal
+      setHasAgreedToNewsWarning(false);
+      setIsNewsWarningModalOpen(true);
+    }
   };
 
   const handleReset = () => {

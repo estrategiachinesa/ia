@@ -56,6 +56,8 @@ export default function LoginPage() {
         const loggedInUser = userCredential.user;
 
         localStorage.setItem('loginTimestamp', Date.now().toString());
+        // Clear the news warning flag on a new login session
+        sessionStorage.removeItem('hasSeenNewsWarning');
         
         toast({
           title: 'Login bem-sucedido!',

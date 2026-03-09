@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -12,12 +11,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import YoutubePlayer from '@/components/youtube-player';
 
 import { SignalForm } from '@/components/app/signal-form';
 import { SignalResult } from '@/components/app/signal-result';
 import { isMarketOpenForAsset } from '@/lib/market-hours';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { useAppConfig } from '@/firebase/config-provider';
 import { Button } from '@/components/ui/button';
@@ -77,6 +78,9 @@ export default function AnalisadorPage() {
   const [isUpgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const { toast } = useToast();
   
+  const [isNewsWarningModalOpen, setIsNewsWarningModalOpen] = useState(false);
+  const [hasAgreedToNewsWarning, setHasAgreedToNewsWarning] = useState(false);
+
   const usageStorageKey = user ? `signalUsage_${user.uid}` : null;
 
 
@@ -233,7 +237,8 @@ export default function AnalisadorPage() {
     return () => clearInterval(timer);
   }, [appState, signalData?.operationStatus]);
 
- const handleAnalyze = async () => {
+ const proceedWithAnalysis = async () => {
+    setIsNewsWarningModalOpen(false);
     if (!config) {
         toast({
             variant: 'destructive',
@@ -320,6 +325,11 @@ export default function AnalisadorPage() {
         });
         setAppState('idle');
     }
+  };
+
+  const handleAnalyze = () => {
+    setHasAgreedToNewsWarning(false);
+    setIsNewsWarningModalOpen(true);
   };
 
   const handleReset = () => {
@@ -443,6 +453,47 @@ export default function AnalisadorPage() {
         firestore={firestore}
         config={config}
       />
+       <Dialog open={isNewsWarningModalOpen} onOpenChange={setIsNewsWarningModalOpen}>
+        <DialogContent className="max-w-lg">
+            <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                    <AlertTriangle className="text-yellow-400" />
+                    Atenção! Mercado Volátil?
+                </DialogTitle>
+                <DialogDescription>
+                    Operar durante notícias de alto impacto (3 touros) pode invalidar os sinais. Veja o vídeo e verifique o calendário antes de prosseguir.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="py-4 space-y-4">
+                <YoutubePlayer videoId="81HihzJWVwk" />
+                <Button asChild variant="outline" className="w-full">
+                    <a href="https://br.investing.com/economic-calendar" target="_blank" rel="noopener noreferrer">
+                        Abrir Calendário Económico
+                    </a>
+                </Button>
+                <div className="flex items-center space-x-2 pt-2">
+                    <Checkbox id="news-agreement" checked={hasAgreedToNewsWarning} onCheckedChange={(checked) => setHasAgreedToNewsWarning(checked as boolean)} />
+                    <label htmlFor="news-agreement" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                        Eu verifiquei o calendário e entendo os riscos.
+                    </label>
+                </div>
+            </div>
+            <DialogFooter className="gap-2 sm:gap-0">
+                <Button
+                    variant="secondary"
+                    onClick={() => setIsNewsWarningModalOpen(false)}
+                >
+                    Cancelar
+                </Button>
+                <Button
+                    onClick={proceedWithAnalysis}
+                    disabled={!hasAgreedToNewsWarning}
+                >
+                    Analisar Mesmo Assim
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

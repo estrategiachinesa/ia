@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useRef } from 'react';
@@ -13,12 +12,13 @@ const symbolMap: { [key: string]: string } = {
 
 type TradingViewWidgetProps = {
   asset: string;
+  interval: string;
 };
 
 // A simple check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined';
 
-const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset }) => {
+const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset, interval }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   // Using React.useId to ensure a unique ID for each widget instance
   const widgetContainerId = `tradingview_widget_${React.useId().replace(/:/g, '')}`;
@@ -36,16 +36,31 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset }) => {
       new (window as any).TradingView.widget({
         autosize: true,
         symbol: symbol,
-        interval: "1",
+        interval: interval,
         timezone: "America/Sao_Paulo",
         theme: "dark",
-        style: "1", // Corrected to '1' for Candlestick charts
+        style: "1",
         locale: "br",
         enable_publishing: false,
-        hide_side_toolbar: true, // Hides the drawing toolbar on the left
-        hide_volume: true, // Remove the volume indicator
+        hide_side_toolbar: true,
+        hide_volume: true,
         allow_symbol_change: false,
         container_id: widgetContainerId,
+        studies: [
+          {
+            id: "BollingerBands@tv-basicstudies",
+            inputs: {
+              length: 20,
+              Mult: 2,
+            }
+          },
+          {
+            id: "RSI@tv-basicstudies",
+            inputs: {
+              length: 14,
+            }
+          }
+        ],
       });
     };
 
@@ -66,7 +81,7 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset }) => {
       document.head.appendChild(script);
     }
     
-  }, [asset, widgetContainerId]); // Re-run when asset or the unique ID changes
+  }, [asset, interval, widgetContainerId]); // Re-run when asset or the unique ID changes
 
   return (
     <div id={widgetContainerId} ref={containerRef} className="tradingview-widget-container h-[400px] w-full" />

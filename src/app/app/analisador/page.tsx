@@ -18,7 +18,7 @@ import YoutubePlayer from '@/components/youtube-player';
 import { SignalForm } from '@/components/app/signal-form';
 import { SignalResult } from '@/components/app/signal-result';
 import { isMarketOpenForAsset } from '@/lib/market-hours';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { Loader2, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { useAppConfig } from '@/firebase/config-provider';
 import { Button } from '@/components/ui/button';
@@ -83,6 +83,9 @@ export default function AnalisadorPage() {
   const [hasAgreedToNewsWarning, setHasAgreedToNewsWarning] = useState(false);
 
   const usageStorageKey = user ? `signalUsage_${user.uid}` : null;
+  
+  const [chartInterval, setChartInterval] = useState('1');
+  const [isChartVisible, setIsChartVisible] = useState(true);
 
 
   const vipRequestRef = useMemoFirebase(() => {
@@ -451,7 +454,35 @@ export default function AnalisadorPage() {
           </div>
            {appState === 'idle' && (
             <div className="w-full max-w-4xl">
-              <TradingViewWidget asset={formData.asset} />
+              <div className="flex justify-end items-center gap-2 rounded-t-lg bg-background/50 backdrop-blur-sm border-x border-t border-border/50 p-2">
+                <div className="mr-auto flex items-center gap-1">
+                  <Button 
+                      variant={chartInterval === '1' ? 'secondary' : 'ghost'} 
+                      size="sm"
+                      className="h-7 px-2"
+                      onClick={() => setChartInterval('1')}
+                  >
+                      1m
+                  </Button>
+                  <Button 
+                      variant={chartInterval === '5' ? 'secondary' : 'ghost'} 
+                      size="sm"
+                      className="h-7 px-2"
+                      onClick={() => setChartInterval('5')}
+                  >
+                      5m
+                  </Button>
+                </div>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setIsChartVisible(!isChartVisible)}>
+                    {isChartVisible ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    <span className="sr-only">{isChartVisible ? 'Ocultar Gráfico' : 'Mostrar Gráfico'}</span>
+                </Button>
+              </div>
+              {isChartVisible && (
+                <div className="rounded-b-lg overflow-hidden">
+                    <TradingViewWidget asset={formData.asset} interval={chartInterval} />
+                </div>
+              )}
             </div>
           )}
         </main>

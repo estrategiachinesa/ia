@@ -469,13 +469,19 @@ export default function AnalisadorPage() {
                     <span className="sr-only">{isChartVisible ? 'Ocultar Gráfico' : 'Mostrar Gráfico'}</span>
                 </Button>
               </div>
-              {isChartVisible && (
+              {isChartVisible && ((appState === 'result' && signalData ? signalData.asset : formData.asset).includes('(OTC)') ? (
+                <div className="rounded-b-lg overflow-hidden h-[400px] w-full flex items-center justify-center bg-background/50 backdrop-blur-sm border-x border-b border-border/50">
+                    <div className="text-center text-muted-foreground">
+                        <p>Gráficos para ativos OTC não estão disponíveis.</p>
+                    </div>
+                </div>
+              ) : (
                 <div className="rounded-b-lg overflow-hidden">
                     <TradingViewWidget
                         asset={appState === 'result' && signalData ? signalData.asset : formData.asset}
                         interval={(appState === 'result' && signalData ? signalData.expirationTime : formData.expirationTime).replace('m', '')} />
                 </div>
-              )}
+              ))}
             </div>
           )}
         </main>

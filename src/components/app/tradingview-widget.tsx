@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useRef } from 'react';
@@ -61,6 +62,17 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset, interval }
             }
           }
         ],
+        overrides: {
+            "mainSeriesProperties.showOHLC": false,
+            "paneProperties.legendProperties.showStudyArguments": false,
+            "paneProperties.legendProperties.showStudyTitles": false,
+            "paneProperties.legendProperties.showStudyValues": false,
+        },
+        studies_overrides: {
+            "Bollinger Bands.Upper.color": "#FF5252",
+            "Bollinger Bands.Lower.color": "#FF5252",
+            "Bollinger Bands.Basis.color": "#FFFFFF",
+        }
       });
     };
 

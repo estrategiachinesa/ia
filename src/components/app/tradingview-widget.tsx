@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useRef } from 'react';
@@ -70,7 +69,7 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset, interval }
         },
         studies_overrides: {
             "Bollinger Bands.Upper.color": "#FF5252",
-            "Bollinger Bands.Lower.color": "#FF5252",
+            "Bollinger Bands.Lower.color": "#22c55e",
             "Bollinger Bands.Basis.color": "#FFFFFF",
         }
       });

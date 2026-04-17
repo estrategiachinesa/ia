@@ -454,9 +454,6 @@ export function SignalForm({
     <>
       <div className="w-full space-y-6 text-center">
         <div className="space-y-2">
-          <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl font-headline">
-            ESTRATÉGIA CHINESA
-          </h1>
           <p className="text-lg text-foreground/80">
             Escolha o ativo e o tempo de expiração para receber seus sinais.
           </p>

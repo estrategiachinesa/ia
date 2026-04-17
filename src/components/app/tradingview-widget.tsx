@@ -35,10 +35,10 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset }) => {
       new (window as any).TradingView.widget({
         autosize: true,
         symbol: symbol,
-        interval: "5",
+        interval: "1",
         timezone: "America/Sao_Paulo",
         theme: "dark",
-        style: "1",
+        style: "2",
         locale: "br",
         enable_publishing: false,
         hide_side_toolbar: true, // Hides the drawing toolbar on the left

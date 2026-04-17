@@ -48,10 +48,10 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset, interval }
         container_id: widgetContainerId,
         studies: [
           {
-            id: "BollingerBands@tv-basicstudies",
+            id: "BB@tv-basicstudies",
             inputs: {
               length: 20,
-              Mult: 2,
+              "StdDev": 2,
             }
           },
           {

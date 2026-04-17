@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useRef } from 'react';
@@ -38,10 +39,11 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset }) => {
         interval: "1",
         timezone: "America/Sao_Paulo",
         theme: "dark",
-        style: "2",
+        style: "1", // Corrected to '1' for Candlestick charts
         locale: "br",
         enable_publishing: false,
         hide_side_toolbar: true, // Hides the drawing toolbar on the left
+        hide_volume: true, // Remove the volume indicator
         allow_symbol_change: false,
         container_id: widgetContainerId,
       });

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -455,11 +456,11 @@ export default function AnalisadorPage() {
           <div className="w-full max-w-md bg-background/50 backdrop-blur-sm border border-border/50 rounded-xl shadow-2xl shadow-primary/10 p-8 min-h-[480px] flex items-center justify-center">
              {renderContent()}
           </div>
-          {appState === 'idle' && (
+          {appState === 'result' && signalData && (
             <div className="w-full max-w-4xl">
               <div className="flex justify-end items-center gap-2 rounded-t-lg bg-background/50 backdrop-blur-sm border-x border-t border-border/50 p-2">
                 <div className="mr-auto flex items-center gap-1 text-sm font-semibold text-muted-foreground px-2">
-                  Timeframe: <span className="text-foreground font-bold">{formData.expirationTime}</span>
+                  Timeframe: <span className="text-foreground font-bold">{signalData.expirationTime}</span>
                 </div>
                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setIsChartVisible(!isChartVisible)}>
                     {isChartVisible ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -468,7 +469,7 @@ export default function AnalisadorPage() {
               </div>
               {isChartVisible && (
                 <div className="rounded-b-lg overflow-hidden">
-                    <TradingViewWidget asset={formData.asset} interval={formData.expirationTime.replace('m', '')} />
+                    <TradingViewWidget asset={signalData.asset} interval={signalData.expirationTime.replace('m', '')} />
                 </div>
               )}
             </div>

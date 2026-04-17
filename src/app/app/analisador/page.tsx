@@ -419,6 +419,10 @@ export default function AnalisadorPage() {
     }
   }
 
+  const currentAsset = appState === 'result' && signalData ? signalData.asset : formData.asset;
+  const currentExpirationTime = appState === 'result' && signalData ? signalData.expirationTime : formData.expirationTime;
+  const isOtcAsset = currentAsset.includes('(OTC)');
+
 
   // Main content for granted access
   return (
@@ -452,32 +456,24 @@ export default function AnalisadorPage() {
           <div className="w-full max-w-md bg-background/50 backdrop-blur-sm border border-border/50 rounded-xl shadow-2xl shadow-primary/10 p-8 min-h-[480px] flex items-center justify-center">
              {renderContent()}
           </div>
-           {appState !== 'loading' && (
+           {appState !== 'loading' && !isOtcAsset && (
             <div className="w-full max-w-4xl">
               <div className="flex justify-end items-center gap-2 rounded-t-lg bg-background/50 backdrop-blur-sm border-x border-t border-border/50 p-2">
                 <div className="mr-auto flex items-center gap-1 text-sm font-semibold text-muted-foreground px-2">
-                  Timeframe: <span className="text-foreground font-bold">{
-                      appState === 'result' && signalData ? signalData.expirationTime : formData.expirationTime
-                  }</span>
+                  Timeframe: <span className="text-foreground font-bold">{currentExpirationTime}</span>
                 </div>
                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setIsChartVisible(!isChartVisible)}>
                     {isChartVisible ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     <span className="sr-only">{isChartVisible ? 'Ocultar Gráfico' : 'Mostrar Gráfico'}</span>
                 </Button>
               </div>
-              {isChartVisible && ((appState === 'result' && signalData ? signalData.asset : formData.asset).includes('(OTC)') ? (
-                <div className="rounded-b-lg overflow-hidden h-[400px] w-full flex items-center justify-center bg-background/50 backdrop-blur-sm border-x border-b border-border/50">
-                    <div className="text-center text-muted-foreground">
-                        <p>Gráficos para ativos OTC não estão disponíveis.</p>
-                    </div>
-                </div>
-              ) : (
+              {isChartVisible && (
                 <div className="rounded-b-lg overflow-hidden">
                     <TradingViewWidget
-                        asset={appState === 'result' && signalData ? signalData.asset : formData.asset}
-                        interval={(appState === 'result' && signalData ? signalData.expirationTime : formData.expirationTime).replace('m', '')} />
+                        asset={currentAsset}
+                        interval={currentExpirationTime.replace('m', '')} />
                 </div>
-              ))}
+              )}
             </div>
           )}
         </main>
@@ -541,4 +537,3 @@ export default function AnalisadorPage() {
     </>
   );
 }
-    

@@ -28,6 +28,7 @@ import AffiliateLink from '@/components/app/affiliate-link';
 import { generateSignal as generateClientSideSignal } from '@/lib/signal-generator';
 import { VipUpgradeModal } from '@/components/app/vip-upgrade-modal';
 import { AnalysisAnimation } from '@/components/app/analysis-animation';
+import TradingViewWidget from '@/components/app/tradingview-widget';
 
 export type Asset = 
   | 'EUR/USD' | 'EUR/USD (OTC)'
@@ -437,7 +438,13 @@ export default function AnalisadorPage() {
           </button>
         </header>
 
-        <main className="flex-grow flex flex-col items-center justify-center p-4 space-y-6">
+        <main className="flex-grow flex flex-col items-center p-4 pt-8 space-y-6">
+          {appState === 'idle' && (
+            <div className="w-full max-w-4xl">
+              <TradingViewWidget asset={formData.asset} />
+            </div>
+          )}
+
           {appState === 'result' && (
              <div className="text-center">
                 <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl font-headline">

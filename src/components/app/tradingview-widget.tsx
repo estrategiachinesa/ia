@@ -53,12 +53,6 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset, interval }
               length: 20,
               "StdDev": 2,
             }
-          },
-          {
-            id: "RSI@tv-basicstudies",
-            inputs: {
-              length: 14,
-            }
           }
         ],
         overrides: {
@@ -68,8 +62,8 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset, interval }
             "paneProperties.legendProperties.showStudyValues": false,
         },
         studies_overrides: {
-            "Bollinger Bands.Upper.color": "#FF5252",
-            "Bollinger Bands.Lower.color": "#22c55e",
+            "Bollinger Bands.Upper.color": "#22c55e",
+            "Bollinger Bands.Lower.color": "#FF5252",
             "Bollinger Bands.Basis.color": "#FFFFFF",
         }
       });

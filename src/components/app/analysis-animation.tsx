@@ -3,15 +3,15 @@
 
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { LineChart } from 'lucide-react';
+import { Cpu } from 'lucide-react';
 
 const analysisSteps = [
-  'Conectando aos servidores...',
-  'Analisando gráficos em tempo real...',
-  'Identificando padrões de mercado...',
+  'Conectando aos servidores quânticos...',
+  'Analisando volatilidade do mercado...',
+  'Aplicando modelos de predição neural...',
   'Calculando probabilidade de confluência...',
-  'Buscando os melhores pontos de entrada...',
-  'Finalizando análise...'
+  'Verificando zonas de liquidez assimétrica...',
+  'Finalizando análise de sinal...'
 ];
 
 export function AnalysisAnimation() {
@@ -26,27 +26,31 @@ export function AnalysisAnimation() {
         clearInterval(interval);
         return prevStep;
       });
-    }, 800); // Change text a bit faster
+    }, 800);
 
     return () => clearInterval(interval);
   }, []);
 
   return (
     <div className="flex flex-col items-center justify-center text-center h-full w-full">
-        <div className="relative w-32 h-32 flex items-center justify-center">
-            <div className="absolute inset-0 rounded-full border-2 border-primary/20"></div>
-            <div className="absolute inset-2 rounded-full border-2 border-primary/30 animate-pulse"></div>
-            <div className="absolute inset-0 rounded-full border-t-2 border-t-primary animate-spin"></div>
-            <LineChart className="h-12 w-12 text-primary" style={{ filter: 'drop-shadow(0 0 5px hsl(var(--primary)))' }} />
+        <div className="relative w-40 h-40 flex items-center justify-center">
+            {/* Outer ring */}
+            <div className="absolute inset-0 rounded-full border-2 border-primary/10 animate-[spin_4s_linear_infinite_reverse]"></div>
+            {/* Middle ring */}
+            <div className="absolute inset-6 rounded-full border-dashed border-2 border-primary/30 animate-spin-slow"></div>
+            {/* Inner ring (faster spin) */}
+            <div className="absolute inset-12 rounded-full border-t-2 border-primary animate-spin"></div>
+            {/* Icon */}
+            <Cpu className="h-12 w-12 text-primary" style={{ filter: 'drop-shadow(0 0 8px hsl(var(--primary)))' }} />
         </div>
-      <p className="mt-8 text-lg font-semibold text-foreground">
+      <p className="mt-8 text-lg font-semibold text-foreground tracking-wider">
         {analysisSteps[currentStep]}
       </p>
        <div className="w-full max-w-xs mt-4">
-        <div className="h-1 w-full bg-primary/20 rounded-full overflow-hidden">
+        <div className="h-1 w-full bg-primary/10 rounded-full overflow-hidden">
             <div 
                 className="h-full bg-primary transition-all duration-700 ease-out" 
-                style={{ width: `${(currentStep + 1) / analysisSteps.length * 100}%` }}
+                style={{ width: `${((currentStep + 1) / analysisSteps.length) * 100}%` }}
             ></div>
         </div>
       </div>

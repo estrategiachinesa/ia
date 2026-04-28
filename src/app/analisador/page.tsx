@@ -515,7 +515,7 @@ export default function AnalisadorPage() {
 
                                 {/* Loading Overlay */}
                                 {appState === 'loading' && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-card/80 backdrop-blur-md rounded-lg z-10">
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-lg z-10">
                                         <AnalysisAnimation />
                                     </div>
                                 )}

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -19,7 +18,7 @@ import YoutubePlayer from '@/components/youtube-player';
 import { SignalForm } from '@/components/app/signal-form';
 import { SignalResult } from '@/components/app/signal-result';
 import { isMarketOpenForAsset } from '@/lib/market-hours';
-import { Loader2, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, AlertTriangle, ChevronDown, ChevronUp, BarChart } from 'lucide-react';
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { useAppConfig } from '@/firebase/config-provider';
 import { Button } from '@/components/ui/button';
@@ -445,37 +444,72 @@ export default function AnalisadorPage() {
           </button>
         </header>
 
-        <main className="flex-grow flex flex-col items-center p-4 pt-8 space-y-6">
-          {appState !== 'loading' && (
-             <div className="text-center">
-                <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tight">
-                    ESTRATÉGIA<br />CHINESA
-                </h1>
-             </div>
-          )}
-          <div className="w-full max-w-md bg-card/60 backdrop-blur-lg border border-primary/20 rounded-2xl shadow-2xl shadow-primary/10 p-8 min-h-[480px] flex items-center justify-center">
-             {renderContent()}
-          </div>
-           {appState !== 'loading' && !isOtcAsset && (
-            <div className="w-full max-w-4xl">
-              <div className="flex justify-end items-center gap-2 rounded-t-lg bg-card/60 backdrop-blur-lg border-x border-t border-primary/20 p-2">
-                <div className="mr-auto flex items-center gap-1 text-sm font-semibold text-muted-foreground px-2">
-                  Timeframe: <span className="text-foreground font-bold">{currentExpirationTime}</span>
+        <main className="flex-grow container mx-auto p-4 lg:p-8">
+            <div className="w-full max-w-7xl mx-auto">
+                <div className="flex flex-col lg:flex-row gap-8 items-start">
+                    {/* Left Column */}
+                    <div className="w-full lg:w-1/3 lg:max-w-md flex flex-col items-center gap-6 lg:sticky lg:top-8">
+                        {appState !== 'loading' && (
+                            <div className="text-center">
+                                <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tight">
+                                    ESTRATÉGIA<br />CHINESA
+                                </h1>
+                            </div>
+                        )}
+                        <div className="w-full bg-card/60 backdrop-blur-lg border border-primary/20 rounded-2xl shadow-2xl shadow-primary/10 p-8 min-h-[480px] flex items-center justify-center">
+                            {renderContent()}
+                        </div>
+                    </div>
+
+                    {/* Right Column */}
+                    <div className="w-full lg:w-2/3">
+                        {appState !== 'loading' && !isOtcAsset && (
+                            <div className="w-full">
+                                <div className="flex justify-end items-center gap-2 rounded-t-lg bg-card/60 backdrop-blur-lg border-x border-t border-primary/20 p-2">
+                                    <div className="mr-auto flex items-center gap-1 text-sm font-semibold text-muted-foreground px-2">
+                                        Timeframe: <span className="text-foreground font-bold">{currentExpirationTime}</span>
+                                    </div>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setIsChartVisible(!isChartVisible)}>
+                                        {isChartVisible ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                        <span className="sr-only">{isChartVisible ? 'Ocultar Gráfico' : 'Mostrar Gráfico'}</span>
+                                    </Button>
+                                </div>
+                                {isChartVisible && (
+                                    <div className="rounded-b-lg overflow-hidden border-x border-b border-primary/20 h-[560px]">
+                                        <TradingViewWidget
+                                            asset={currentAsset}
+                                            interval={currentExpirationTime.replace('m', '')}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        {appState !== 'loading' && isOtcAsset && (
+                            <div className="w-full h-full flex items-center justify-center bg-card/60 backdrop-blur-lg border border-primary/20 rounded-2xl shadow-2xl shadow-primary/10 p-8 min-h-[480px]">
+                                <div className="text-center max-w-sm">
+                                    <BarChart className="mx-auto h-12 w-12 text-muted-foreground" />
+                                    <h3 className="mt-4 text-lg font-semibold text-foreground">Gráfico Indisponível para OTC</h3>
+                                    <p className="mt-1 text-sm text-muted-foreground">
+                                        Os gráficos para ativos OTC são proprietários de cada corretora. Abra o gráfico na sua plataforma para operar.
+                                    </p>
+                                    <div className="mt-6 space-y-3">
+                                        <Button asChild className="w-full">
+                                            <a href={config?.iqOptionUrl || '#'} target="_blank" rel="noopener noreferrer">
+                                                Abrir na IQ Option
+                                            </a>
+                                        </Button>
+                                        <Button asChild className="w-full">
+                                            <a href={config?.exnovaUrl || '#'} target="_blank" rel="noopener noreferrer">
+                                                Abrir na Exnova
+                                            </a>
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setIsChartVisible(!isChartVisible)}>
-                    {isChartVisible ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    <span className="sr-only">{isChartVisible ? 'Ocultar Gráfico' : 'Mostrar Gráfico'}</span>
-                </Button>
-              </div>
-              {isChartVisible && (
-                <div className="rounded-b-lg overflow-hidden border-x border-b border-primary/20">
-                    <TradingViewWidget
-                        asset={currentAsset}
-                        interval={currentExpirationTime.replace('m', '')} />
-                </div>
-              )}
             </div>
-          )}
         </main>
         
         <footer className="p-4 text-center text-xs text-foreground/30">

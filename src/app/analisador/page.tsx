@@ -465,14 +465,36 @@ export default function AnalisadorPage() {
                     </div>
 
                     {/* Right Column */}
-                    <div className="w-full lg:w-2/3">
-                        {appState === 'loading' && (
-                           <div className="w-full h-full flex items-center justify-center bg-card/60 backdrop-blur-lg border border-primary/20 rounded-2xl shadow-2xl shadow-primary/10 p-8 min-h-[560px]">
-                             <AnalysisAnimation />
-                           </div>
-                        )}
-                        {appState !== 'loading' && !isOtcAsset && (
-                            <div className="w-full">
+                     <div className="w-full lg:w-2/3 relative">
+                        {isOtcAsset ? (
+                            <div className="w-full h-full flex items-center justify-center bg-card/60 backdrop-blur-lg border border-primary/20 rounded-2xl shadow-2xl shadow-primary/10 p-8 min-h-[560px]">
+                                {appState === 'loading' ? (
+                                    <AnalysisAnimation />
+                                ) : (
+                                    <div className="text-center max-w-sm">
+                                        <BarChart className="mx-auto h-12 w-12 text-muted-foreground" />
+                                        <h3 className="mt-4 text-lg font-semibold text-foreground">Gráfico Indisponível para OTC</h3>
+                                        <p className="mt-1 text-sm text-muted-foreground">
+                                            Os gráficos para ativos OTC são proprietários de cada corretora. Abra o gráfico na sua plataforma para operar.
+                                        </p>
+                                        <div className="mt-6 space-y-3">
+                                            <Button asChild className="w-full">
+                                                <a href={config?.iqOptionUrl || '#'} target="_blank" rel="noopener noreferrer">
+                                                    Abrir na IQ Option
+                                                </a>
+                                            </Button>
+                                            <Button asChild className="w-full">
+                                                <a href={config?.exnovaUrl || '#'} target="_blank" rel="noopener noreferrer">
+                                                    Abrir na Exnova
+                                                </a>
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <>
+                                {/* Chart Area */}
                                 <div className="flex justify-end items-center gap-2 rounded-t-lg bg-card/60 backdrop-blur-lg border-x border-t border-primary/20 p-2">
                                     <div className="mr-auto flex items-center gap-1 text-sm font-semibold text-muted-foreground px-2">
                                         Timeframe: <span className="text-foreground font-bold">{currentExpirationTime}</span>
@@ -482,38 +504,22 @@ export default function AnalisadorPage() {
                                         <span className="sr-only">{isChartVisible ? 'Ocultar Gráfico' : 'Mostrar Gráfico'}</span>
                                     </Button>
                                 </div>
-                                {isChartVisible && (
-                                    <div className="rounded-b-lg overflow-hidden border-x border-b border-primary/20 h-[560px]">
+                                <div className="rounded-b-lg overflow-hidden border-x border-b border-primary/20 h-[560px] bg-background">
+                                    {isChartVisible && (
                                         <TradingViewWidget
                                             asset={currentAsset}
                                             interval={currentExpirationTime.replace('m', '')}
                                         />
+                                    )}
+                                </div>
+
+                                {/* Loading Overlay */}
+                                {appState === 'loading' && (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-card/80 backdrop-blur-md rounded-lg z-10">
+                                        <AnalysisAnimation />
                                     </div>
                                 )}
-                            </div>
-                        )}
-                        {appState !== 'loading' && isOtcAsset && (
-                            <div className="w-full h-full flex items-center justify-center bg-card/60 backdrop-blur-lg border border-primary/20 rounded-2xl shadow-2xl shadow-primary/10 p-8 min-h-[480px]">
-                                <div className="text-center max-w-sm">
-                                    <BarChart className="mx-auto h-12 w-12 text-muted-foreground" />
-                                    <h3 className="mt-4 text-lg font-semibold text-foreground">Gráfico Indisponível para OTC</h3>
-                                    <p className="mt-1 text-sm text-muted-foreground">
-                                        Os gráficos para ativos OTC são proprietários de cada corretora. Abra o gráfico na sua plataforma para operar.
-                                    </p>
-                                    <div className="mt-6 space-y-3">
-                                        <Button asChild className="w-full">
-                                            <a href={config?.iqOptionUrl || '#'} target="_blank" rel="noopener noreferrer">
-                                                Abrir na IQ Option
-                                            </a>
-                                        </Button>
-                                        <Button asChild className="w-full">
-                                            <a href={config?.exnovaUrl || '#'} target="_blank" rel="noopener noreferrer">
-                                                Abrir na Exnova
-                                            </a>
-                                        </Button>
-                                    </div>
-                                </div>
-                            </div>
+                            </>
                         )}
                     </div>
                 </div>

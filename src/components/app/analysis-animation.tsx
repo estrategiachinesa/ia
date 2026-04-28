@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { Progress } from '@/components/ui/progress';
 
 // Helper function to get a random number in a range
 const random = (min: number, max: number) => Math.random() * (max - min) + min;
@@ -68,14 +69,23 @@ const analysisSteps = [
 export function AnalysisAnimation() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [currentText, setCurrentText] = useState(analysisSteps[0]);
+  const [progress, setProgress] = useState(0);
   const [glitch, setGlitch] = useState(false);
 
   useEffect(() => {
     let textIndex = 0;
+    // Set initial progress based on the first step
+    setProgress((textIndex / (analysisSteps.length - 1)) * 100);
+
     const textInterval = setInterval(() => {
-      textIndex = (textIndex + 1) % analysisSteps.length;
-      setCurrentText(analysisSteps[textIndex]);
-    }, 900);
+      textIndex++;
+      if (textIndex < analysisSteps.length) {
+        setCurrentText(analysisSteps[textIndex]);
+        setProgress((textIndex / (analysisSteps.length - 1)) * 100);
+      } else {
+        clearInterval(textInterval);
+      }
+    }, 900); // This duration should align with the loading simulation
 
     const glitchInterval = setInterval(() => {
       setGlitch(true);
@@ -109,14 +119,12 @@ export function AnalysisAnimation() {
       if(!ctx) return;
       ctx.clearRect(0, 0, width, height);
 
-      // Draw lines between nearby particles
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           drawLine(ctx, particles[i], particles[j], maxDist);
         }
       }
       
-      // Draw and update particles
       particles.forEach(p => {
         p.draw(ctx);
         p.update(width, height);
@@ -141,16 +149,22 @@ export function AnalysisAnimation() {
   }, []);
 
   return (
-    <div className="relative h-[400px] w-full max-w-md overflow-hidden rounded-lg bg-black/80 border border-primary/20 flex items-center justify-center">
+    <div className="relative h-[400px] w-full max-w-md overflow-hidden rounded-lg bg-black/80 border border-primary/20 flex flex-col items-center justify-center p-6 gap-4">
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full opacity-30" />
-      <div 
-         className={cn(
-            "z-10 font-code text-sm sm:text-base text-center text-primary transition-all duration-75",
-            glitch && 'skew-x-12 skew-y-2 opacity-75'
-         )}
-      >
-        <p>{currentText}</p>
-        <div className={cn("animate-pulse", glitch && "hidden")}>_</div>
+      <div className="flex-grow w-full flex items-center justify-center">
+        <div 
+          className={cn(
+              "z-10 font-code text-sm sm:text-base text-center text-primary transition-all duration-75",
+              glitch && 'skew-x-12 skew-y-2 opacity-75'
+          )}
+        >
+          <p>{currentText}</p>
+          <div className={cn("animate-pulse", glitch && "hidden")}>_</div>
+        </div>
+      </div>
+      <div className="w-full z-10 space-y-2">
+        <Progress value={progress} className="h-1.5 bg-primary/20 border-none" />
+        <p className="text-xs text-center text-primary/50 font-code">{Math.round(progress)}%</p>
       </div>
     </div>
   );

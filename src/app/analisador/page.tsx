@@ -466,6 +466,11 @@ export default function AnalisadorPage() {
 
                     {/* Right Column */}
                     <div className="w-full lg:w-2/3">
+                        {appState === 'loading' && (
+                           <div className="w-full h-full flex items-center justify-center bg-card/60 backdrop-blur-lg border border-primary/20 rounded-2xl shadow-2xl shadow-primary/10 p-8 min-h-[560px]">
+                             <AnalysisAnimation />
+                           </div>
+                        )}
                         {appState !== 'loading' && !isOtcAsset && (
                             <div className="w-full">
                                 <div className="flex justify-end items-center gap-2 rounded-t-lg bg-card/60 backdrop-blur-lg border-x border-t border-primary/20 p-2">

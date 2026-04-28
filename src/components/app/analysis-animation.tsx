@@ -66,7 +66,7 @@ const analysisSteps = [
   'SINAL GERADO...',
 ];
 
-export function AnalysisAnimation() {
+export function AnalysisAnimation({ showProgressBar = true }: { showProgressBar?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [currentText, setCurrentText] = useState(analysisSteps[0]);
   const [progress, setProgress] = useState(0);
@@ -162,10 +162,12 @@ export function AnalysisAnimation() {
           <div className={cn("animate-pulse", glitch && "hidden")}>_</div>
         </div>
       </div>
-      <div className="w-full z-10 space-y-2">
-        <Progress value={progress} className="h-1.5 bg-primary/20 border-none" />
-        <p className="text-xs text-center text-primary/50 font-code">{Math.round(progress)}%</p>
-      </div>
+      {showProgressBar && (
+        <div className="w-full z-10 space-y-2">
+          <Progress value={progress} className="h-1.5 bg-primary/20 border-none" />
+          <p className="text-xs text-center text-primary/50 font-code">{Math.round(progress)}%</p>
+        </div>
+      )}
     </div>
   );
 }

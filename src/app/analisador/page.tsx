@@ -430,13 +430,13 @@ export default function AnalisadorPage() {
   // Main content for granted access
   return (
     <>
-      <div className="fixed inset-0 -z-20 h-full w-full animated-gradient" />
-      <div className="fixed inset-0 -z-10 h-full w-full bg-black/30" />
+      <div className="fixed inset-0 -z-20 h-full w-full grid-bg" />
+      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/80 to-background" />
 
       <div className="flex flex-col min-h-screen">
         <header className="p-4 flex justify-between items-center">
           <div className='flex items-center gap-4'>
-            <div className="px-3 py-1 text-sm font-bold bg-primary text-primary-foreground rounded-full shadow-lg">
+            <div className="px-4 py-1.5 text-sm font-bold bg-primary/10 border border-primary/30 text-primary rounded-full shadow-lg shadow-primary/20">
               {isPremium ? 'PREMIUM' : 'VIP'}
             </div>
           </div>
@@ -451,17 +451,17 @@ export default function AnalisadorPage() {
         <main className="flex-grow flex flex-col items-center p-4 pt-8 space-y-6">
           {appState !== 'loading' && (
              <div className="text-center">
-                <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl font-headline">
+                <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tight">
                     ESTRATÉGIA<br />CHINESA
                 </h1>
              </div>
           )}
-          <div className="w-full max-w-md bg-background/50 backdrop-blur-sm border border-border/50 rounded-xl shadow-2xl shadow-primary/10 p-8 min-h-[480px] flex items-center justify-center">
+          <div className="w-full max-w-md bg-card/60 backdrop-blur-lg border border-primary/20 rounded-2xl shadow-2xl shadow-primary/10 p-8 min-h-[480px] flex items-center justify-center">
              {renderContent()}
           </div>
           {appState !== 'loading' && !isOtcAsset && (
             <div className="w-full max-w-4xl">
-              <div className="flex justify-end items-center gap-2 rounded-t-lg bg-background/50 backdrop-blur-sm border-x border-t border-border/50 p-2">
+              <div className="flex justify-end items-center gap-2 rounded-t-lg bg-card/60 backdrop-blur-lg border-x border-t border-primary/20 p-2">
                 <div className="mr-auto flex items-center gap-1 text-sm font-semibold text-muted-foreground px-2">
                   Timeframe: <span className="text-foreground font-bold">{currentExpirationTime}</span>
                 </div>
@@ -471,7 +471,7 @@ export default function AnalisadorPage() {
                 </Button>
               </div>
               {isChartVisible && (
-                <div className="rounded-b-lg overflow-hidden">
+                <div className="rounded-b-lg overflow-hidden border-x border-b border-primary/20">
                     <TradingViewWidget
                         asset={currentAsset}
                         interval={currentExpirationTime.replace('m', '')} />

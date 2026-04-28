@@ -1,59 +1,68 @@
-
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
-import { Cpu } from 'lucide-react';
 
 const analysisSteps = [
-  'Conectando aos servidores quânticos...',
-  'Analisando volatilidade do mercado...',
-  'Aplicando modelos de predição neural...',
-  'Calculando probabilidade de confluência...',
-  'Verificando zonas de liquidez assimétrica...',
-  'Finalizando análise de sinal...'
+  '> INICIANDO CONEXÃO SEGURA...',
+  '> ACESSANDO KERNEL DA CORRETORA... [OK]',
+  '> INJETANDO SCRIPT DE ANÁLISE PREDITIVA...',
+  '> ANALISANDO FLUXO DE ORDENS E LIQUIDEZ...',
+  '> DESVIANDO DE VOLATILIDADE MANIPULADA... [ATIVO]',
+  '> CALCULANDO PONTO DE ENTRADA ASSIMÉTRICO...',
+  '> SINAL CONFIRMADO. PREPARANDO PARA EXIBIÇÃO...'
 ];
 
 export function AnalysisAnimation() {
-  const [currentStep, setCurrentStep] = useState(0);
+  const [visibleLines, setVisibleLines] = useState<string[]>([]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [showCursor, setShowCursor] = useState(true);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentStep((prevStep) => {
-        if (prevStep < analysisSteps.length - 1) {
-          return prevStep + 1;
-        }
-        clearInterval(interval);
-        return prevStep;
-      });
-    }, 800);
+    const timeouts: NodeJS.Timeout[] = [];
+    
+    // Animate lines appearing
+    analysisSteps.forEach((line, index) => {
+      timeouts.push(setTimeout(() => {
+        setVisibleLines(prev => [...prev, line]);
+      }, index * 700)); // A bit slower for dramatic effect
+    });
 
-    return () => clearInterval(interval);
+    // Blinking cursor effect
+    const cursorInterval = setInterval(() => {
+      setShowCursor(prev => !prev);
+    }, 530); // A classic cursor blink rate
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+      clearInterval(cursorInterval);
+    };
   }, []);
 
+  // Auto-scroll to the bottom
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
+  }, [visibleLines]);
+
   return (
-    <div className="flex flex-col items-center justify-center text-center h-full w-full">
-        <div className="relative w-40 h-40 flex items-center justify-center">
-            {/* Outer ring */}
-            <div className="absolute inset-0 rounded-full border-2 border-primary/10 animate-[spin_4s_linear_infinite_reverse]"></div>
-            {/* Middle ring */}
-            <div className="absolute inset-6 rounded-full border-dashed border-2 border-primary/30 animate-spin-slow"></div>
-            {/* Inner ring (faster spin) */}
-            <div className="absolute inset-12 rounded-full border-t-2 border-primary animate-spin"></div>
-            {/* Icon */}
-            <Cpu className="h-12 w-12 text-primary" style={{ filter: 'drop-shadow(0 0 8px hsl(var(--primary)))' }} />
-        </div>
-      <p className="mt-8 text-lg font-semibold text-foreground tracking-wider">
-        {analysisSteps[currentStep]}
-      </p>
-       <div className="w-full max-w-xs mt-4">
-        <div className="h-1 w-full bg-primary/10 rounded-full overflow-hidden">
-            <div 
-                className="h-full bg-primary transition-all duration-700 ease-out" 
-                style={{ width: `${((currentStep + 1) / analysisSteps.length) * 100}%` }}
-            ></div>
-        </div>
-      </div>
+    <div
+      ref={containerRef}
+      className="font-code text-sm sm:text-base p-4 bg-black/80 rounded-lg h-[400px] w-full max-w-md overflow-y-auto border border-primary/20 text-left"
+    >
+      {visibleLines.map((line, i) => (
+        <p
+          key={i}
+          className={cn(
+            'whitespace-pre-wrap',
+            line.includes('[OK]') || line.includes('[ATIVO]') ? 'text-green-400' : 'text-primary'
+          )}
+        >
+          {line}
+        </p>
+      ))}
+      {visibleLines.length < analysisSteps.length && showCursor && <div className="animate-pulse text-green-400">_</div>}
     </div>
   );
 }

@@ -59,35 +59,36 @@ const allAssets: Asset[] = [
   'EUR/USD', 'EUR/USD (OTC)',
 ];
 
-function CurrencyMarketPulse() {
+function CurrencyMarketPulse({ asset }: { asset: Asset }) {
+  const isOTC = asset.includes('(OTC)');
+  if (isOTC) return null;
+
+  const [curr1, curr2] = asset.split('/');
+  
+  const currencies = [
+    { code: 'EUR', sentiment: 'ESTÁVEL', icon: Minus, color: 'text-yellow-500' },
+    { code: 'USD', sentiment: 'FORTE', icon: TrendingUp, color: 'text-green-500' },
+    { code: 'JPY', sentiment: 'FRACO', icon: TrendingDown, color: 'text-red-500' },
+  ];
+
+  const filteredCurrencies = currencies.filter(c => c.code === curr1 || c.code === curr2);
+
   return (
-    <div className="w-full space-y-4 mb-8">
+    <div className="w-full space-y-4 mb-8 animate-in fade-in slide-in-from-top-2 duration-500">
       <div className="flex items-center gap-2 mb-2">
         <TrendingUp className="h-4 w-4 text-primary" />
         <h3 className="text-[0.65rem] font-bold text-muted-foreground uppercase tracking-widest">Sentiment de Moeda (H1)</h3>
       </div>
-      <div className="grid grid-cols-3 gap-3">
-        <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center group hover:bg-white/10 transition-colors">
-          <p className="text-[0.6rem] font-bold text-muted-foreground uppercase mb-1">EUR</p>
-          <div className="flex flex-col items-center gap-1">
-             <Minus className="h-4 w-4 text-yellow-500" />
-             <span className="text-[0.65rem] font-bold text-yellow-500">ESTÁVEL</span>
-          </div>
-        </div>
-        <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center group hover:bg-white/10 transition-colors">
-          <p className="text-[0.6rem] font-bold text-muted-foreground uppercase mb-1">USD</p>
-          <div className="flex flex-col items-center gap-1">
-             <TrendingUp className="h-4 w-4 text-green-500" />
-             <span className="text-[0.65rem] font-bold text-green-500">FORTE</span>
-          </div>
-        </div>
-        <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center group hover:bg-white/10 transition-colors">
-          <p className="text-[0.6rem] font-bold text-muted-foreground uppercase mb-1">JPY</p>
-          <div className="flex flex-col items-center gap-1">
-             <TrendingDown className="h-4 w-4 text-red-500" />
-             <span className="text-[0.65rem] font-bold text-red-500">FRACO</span>
-          </div>
-        </div>
+      <div className={`grid gap-3 ${filteredCurrencies.length === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+        {filteredCurrencies.map((c) => (
+            <div key={c.code} className="bg-white/5 border border-white/10 rounded-xl p-3 text-center group hover:bg-white/10 transition-colors">
+                <p className="text-[0.6rem] font-bold text-muted-foreground uppercase mb-1">{c.code}</p>
+                <div className="flex flex-col items-center gap-1">
+                    <c.icon className={`h-4 w-4 ${c.color}`} />
+                    <span className={`text-[0.65rem] font-bold ${c.color}`}>{c.sentiment}</span>
+                </div>
+            </div>
+        ))}
       </div>
     </div>
   );
@@ -121,7 +122,6 @@ export function SignalForm({
   const [waitingMessage, setWaitingMessage] = useState('');
   const [showDepositLinks, setShowDepositLinks] = useState(false);
 
-  // Filter assets based on OTC toggle
   const assets = showOTC 
     ? allAssets.filter(a => a.includes('(OTC)')) 
     : allAssets.filter(a => !a.includes('(OTC)'));
@@ -138,7 +138,6 @@ export function SignalForm({
     }
   }, [hasReachedLimit, isPremium, vipStatus, setVipModalOpen]);
 
-  // Synchronize asset when OTC switch is toggled
   useEffect(() => {
     if (showOTC && !formData.asset.includes('(OTC)')) {
       const otcAsset = `${formData.asset} (OTC)` as Asset;
@@ -490,7 +489,7 @@ export function SignalForm({
   return (
     <>
       <div className="w-full space-y-6 text-center">
-        <CurrencyMarketPulse />
+        <CurrencyMarketPulse asset={formData.asset} />
         
         <div className="space-y-2">
           <p className="text-sm text-foreground/70">

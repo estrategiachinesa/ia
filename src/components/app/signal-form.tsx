@@ -26,6 +26,46 @@ import { useAppConfig } from '@/firebase';
 import AffiliateLink from './affiliate-link';
 
 
+/**
+ * Widget de notícias reais filtrado por moeda.
+ * USA: 5, Euro Zone: 72, Japan: 35
+ */
+function CurrencyNewsWidget({ asset }: { asset: string }) {
+  if (asset.includes('(OTC)')) return null;
+
+  const isEurUsd = asset.includes('EUR/USD');
+  const isEurJpy = asset.includes('EUR/JPY');
+
+  let countries = "";
+  if (isEurUsd) countries = "5,72";
+  else if (isEurJpy) countries = "72,35";
+  else return null;
+
+  return (
+    <div className="w-full mb-6 rounded-xl overflow-hidden border border-white/5 bg-white/5 animate-in fade-in slide-in-from-top-2 duration-500">
+      <div className="px-3 py-1.5 bg-primary/10 border-b border-white/5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            <span className="text-[0.6rem] font-bold text-primary uppercase tracking-widest">Eventos de Impacto ({isEurUsd ? 'EUR/USD' : 'EUR/JPY'})</span>
+        </div>
+        <span className="text-[0.5rem] text-muted-foreground uppercase font-bold opacity-50 tracking-tighter">Live News</span>
+      </div>
+      <div className="h-[180px] w-full overflow-hidden relative">
+         <iframe 
+          src={`https://sslecal2.investing.com?columns=exc_currency,exc_importance,exc_actual&importance=2,3&features=timezone&countries=${countries}&calType=day&timeZone=12&lang=12`} 
+          width="100%" 
+          height="100%" 
+          frameBorder="0" 
+          allowTransparency={true}
+          className="filter invert hue-rotate-180 brightness-[0.8] contrast-[1.2] scale-[1.05] origin-top"
+          style={{ backgroundColor: 'transparent' }}
+        ></iframe>
+      </div>
+    </div>
+  );
+}
+
+
 type VipStatus = 'PENDING' | 'AWAITING_DEPOSIT' | 'DEPOSIT_PENDING' | 'APPROVED' | 'REJECTED' | 'PREMIUM';
 
 type FormData = {
@@ -453,6 +493,9 @@ export function SignalForm({
   return (
     <>
       <div className="w-full space-y-6 text-center">
+        
+        <CurrencyNewsWidget asset={formData.asset} />
+
         <div className="space-y-2">
           <p className="text-sm text-foreground/70">
             Escolha o ativo e o tempo de expiração para análise.

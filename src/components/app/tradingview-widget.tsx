@@ -67,7 +67,8 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset, interval }
             "control_bar",
             "timeframes_toolbar",
             "display_market_status",
-            "remove_library_container_border"
+            "remove_library_container_border",
+            "create_volume_indicator_by_default" // Explicitly disable volume
         ],
         enabled_features: [],
         overrides: {
@@ -81,7 +82,14 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset, interval }
             "paneProperties.background": "#0a0a0a",
             "paneProperties.vertGridProperties.color": "rgba(42, 46, 57, 0)",
             "paneProperties.horzGridProperties.color": "rgba(42, 46, 57, 0)",
-            "scalesProperties.textColor": "#AAA"
+            "scalesProperties.textColor": "#AAA",
+            "mainSeriesProperties.candleStyle.drawBorder": true,
+            "mainSeriesProperties.candleStyle.borderUpColor": "#22c55e",
+            "mainSeriesProperties.candleStyle.borderDownColor": "#ef4444",
+            "mainSeriesProperties.candleStyle.upColor": "#22c55e",
+            "mainSeriesProperties.candleStyle.downColor": "#ef4444",
+            "mainSeriesProperties.candleStyle.wickUpColor": "#22c55e",
+            "mainSeriesProperties.candleStyle.wickDownColor": "#ef4444",
         },
         studies_overrides: {
             "Bollinger Bands.Upper.color": "#22c55e",

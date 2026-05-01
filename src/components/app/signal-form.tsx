@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -28,8 +27,8 @@ import AffiliateLink from './affiliate-link';
 
 
 /**
- * Widget de notícias filtrado por moeda.
- * Ajustado para maior harmonia visual no cockpit.
+ * Widget de notícias filtrado por moeda para o cockpit.
+ * Refinado com zoom e recorte para melhor enquadramento técnico.
  */
 function CurrencyNewsWidget({ asset }: { asset: string }) {
   if (asset.includes('(OTC)')) return null;
@@ -43,25 +42,29 @@ function CurrencyNewsWidget({ asset }: { asset: string }) {
   else return null;
 
   return (
-    <div className="w-full mb-8 rounded-2xl overflow-hidden border border-white/10 bg-black/40 shadow-inner group animate-in fade-in slide-in-from-top-4 duration-700">
-      <div className="px-4 py-2 bg-primary/5 border-b border-white/5 flex items-center justify-between group-hover:bg-primary/10 transition-colors">
+    <div className="w-full mb-8 rounded-2xl overflow-hidden border border-white/10 bg-black/60 shadow-2xl group animate-in fade-in slide-in-from-top-4 duration-700">
+      <div className="px-5 py-3 bg-primary/5 border-b border-white/5 flex items-center justify-between group-hover:bg-primary/10 transition-colors">
         <div className="flex items-center gap-2.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(var(--primary),0.5)]" />
-            <span className="text-[0.65rem] font-black text-primary uppercase tracking-[0.15em]">Sinal de Impacto ({isEurUsd ? 'EUR/USD' : 'EUR/JPY'})</span>
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            <span className="text-[0.65rem] font-black text-primary uppercase tracking-[0.15em]">Monitor de Volatilidade</span>
         </div>
-        <span className="text-[0.55rem] text-muted-foreground uppercase font-black opacity-30 tracking-tighter">Live Monitor</span>
+        <span className="text-[0.55rem] text-muted-foreground uppercase font-black opacity-30 tracking-tighter">{isEurUsd ? 'EUR • USD' : 'EUR • JPY'}</span>
       </div>
-      <div className="h-[180px] w-full overflow-hidden relative">
-         <iframe 
-          src={`https://sslecal2.investing.com?columns=exc_currency,exc_importance,exc_actual&importance=2,3&features=timezone&countries=${countries}&calType=day&timeZone=12&lang=12`} 
-          width="100%" 
-          height="100%" 
-          frameBorder="0" 
-          allowTransparency={true}
-          className="filter invert hue-rotate-180 brightness-[0.9] contrast-[1.1] scale-[1.02] origin-top"
-          style={{ backgroundColor: 'transparent' }}
-        ></iframe>
-        <div className="absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
+      <div className="h-[200px] w-full overflow-hidden relative bg-[#0a0a0a]">
+         <div className="absolute inset-0 scale-[1.15] origin-top">
+            <iframe 
+              src={`https://sslecal2.investing.com?columns=exc_currency,exc_importance,exc_actual&importance=2,3&features=timezone&countries=${countries}&calType=day&timeZone=12&lang=12`} 
+              width="100%" 
+              height="250" 
+              frameBorder="0" 
+              allowTransparency={true}
+              className="filter invert hue-rotate-180 brightness-[0.85] contrast-[1.15] saturate-[0.9]"
+              style={{ backgroundColor: 'transparent' }}
+            ></iframe>
+         </div>
+         {/* Gradientes de desvanecimento para "enquadrar" o conteúdo dentro do cockpit */}
+         <div className="absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-[#0a0a0a] to-transparent pointer-events-none" />
+         <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#0a0a0a] to-transparent pointer-events-none" />
       </div>
     </div>
   );

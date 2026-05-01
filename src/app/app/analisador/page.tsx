@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -18,7 +19,7 @@ import YoutubePlayer from '@/components/youtube-player';
 import { SignalForm } from '@/components/app/signal-form';
 import { SignalResult } from '@/components/app/signal-result';
 import { isMarketOpenForAsset } from '@/lib/market-hours';
-import { Loader2, AlertTriangle, ChevronDown, ChevronUp, BarChart } from 'lucide-react';
+import { Loader2, AlertTriangle, ChevronDown, ChevronUp, BarChart, LogOut, User } from 'lucide-react';
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { useAppConfig } from '@/firebase/config-provider';
 import { Button } from '@/components/ui/button';
@@ -427,83 +428,124 @@ export default function AnalisadorPage() {
   return (
     <>
       <div className="fixed inset-0 -z-20 h-full w-full grid-bg" />
-      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/80 to-background" />
+      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/90 to-background" />
 
       <div className="flex flex-col min-h-screen">
-        <header className="p-4 flex justify-between items-center">
-          <div className='flex items-center gap-4'>
-            <div className="px-4 py-1.5 text-sm font-bold bg-primary/10 border border-primary/30 text-primary rounded-full shadow-lg shadow-primary/20">
-              {isPremium ? 'PREMIUM' : 'VIP'}
-            </div>
+        <header className="p-4 md:px-8 flex justify-between items-center border-b border-border/10 bg-card/30 backdrop-blur-md sticky top-0 z-50">
+          <div className="flex items-center gap-4">
+             <div className="flex flex-col">
+                <h1 className="text-xl md:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tighter leading-none">
+                    ESTRATÉGIA CHINESA
+                </h1>
+                <p className="text-[0.6rem] text-primary/60 font-bold tracking-[0.2em] uppercase">Intelligence Analyzer</p>
+             </div>
+             <div className="hidden sm:block h-6 w-px bg-border/20 mx-2" />
+             <div className="px-3 py-1 text-[0.7rem] font-bold bg-primary/10 border border-primary/30 text-primary rounded-full shadow-lg shadow-primary/10 flex items-center gap-1.5">
+               <User className="h-3 w-3" />
+               {isPremium ? 'PREMIUM ACCESS' : 'VIP MEMBER'}
+             </div>
           </div>
-           <button
-            onClick={handleLogout}
-            className="text-sm bg-destructive text-destructive-foreground hover:bg-destructive/90 px-3 py-1.5 rounded-md font-semibold"
-          >
-            Sair
-          </button>
+          
+          <div className="flex items-center gap-3">
+             <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className="text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 font-bold transition-colors"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sair
+              </Button>
+          </div>
         </header>
 
         <main className="flex-grow container mx-auto p-4 lg:p-8">
             <div className="w-full max-w-7xl mx-auto">
-                <div className="flex flex-col lg:flex-row gap-8 items-start">
-                    {/* Left Column */}
-                    <div className="w-full lg:w-1/3 lg:max-w-md flex flex-col items-center gap-6 lg:sticky lg:top-8">
-                        {appState !== 'loading' && (
-                            <div className="text-center">
-                                <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tight">
-                                    ESTRATÉGIA<br />CHINESA
-                                </h1>
-                            </div>
-                        )}
-                        <div className="w-full bg-card/60 backdrop-blur-lg border border-primary/20 rounded-2xl shadow-2xl shadow-primary/10 p-8 min-h-[480px] flex items-center justify-center">
+                <div className="flex flex-col lg:flex-row gap-6 items-stretch">
+                    {/* Left Column - Controls */}
+                    <div className="w-full lg:w-[380px] flex flex-col gap-6">
+                        <div className="w-full bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl p-6 min-h-[480px] flex items-center justify-center transition-all duration-500">
                             {renderContent()}
                         </div>
+                        
+                        {/* Summary Widget */}
+                        {!isPremium && appState !== 'loading' && (
+                             <div className="bg-gradient-to-br from-primary/20 to-transparent border border-primary/20 rounded-xl p-4 flex items-center justify-between">
+                                <div className="space-y-0.5">
+                                    <p className="text-[0.65rem] font-bold text-primary tracking-widest uppercase">Estatuto de Conta</p>
+                                    <h4 className="text-sm font-bold text-foreground">Versão VIP Limitada</h4>
+                                </div>
+                                <Button size="sm" onClick={() => setUpgradeModalOpen(true)} className="h-8 text-[0.7rem] font-bold rounded-full">UPGRADE</Button>
+                             </div>
+                        )}
                     </div>
 
-                    {/* Right Column */}
-                    <div className="w-full lg:w-2/3">
-                        {appState !== 'loading' && !isOtcAsset && (
-                            <div className="w-full">
-                                <div className="flex justify-end items-center gap-2 rounded-t-lg bg-card/60 backdrop-blur-lg border-x border-t border-primary/20 p-2">
-                                    <div className="mr-auto flex items-center gap-1 text-sm font-semibold text-muted-foreground px-2">
-                                        Timeframe: <span className="text-foreground font-bold">{currentExpirationTime}</span>
+                    {/* Right Column - Visualization */}
+                     <div className="flex-grow relative flex flex-col">
+                        {isOtcAsset ? (
+                            <div className="w-full h-full flex items-center justify-center bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl p-8 min-h-[560px]">
+                                {appState === 'loading' ? (
+                                    <AnalysisAnimation />
+                                ) : (
+                                    <div className="text-center max-w-sm">
+                                        <div className="bg-muted/10 p-6 rounded-full w-24 h-24 mx-auto mb-6 flex items-center justify-center border border-border/10">
+                                            <BarChart className="h-12 w-12 text-muted-foreground/50" />
+                                        </div>
+                                        <h3 className="text-xl font-bold text-foreground">Gráfico Indisponível (OTC)</h3>
+                                        <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                                            Os ativos de balcão (OTC) são exclusivos de cada corretora. Utilize a plataforma oficial para acompanhamento em tempo real.
+                                        </p>
+                                        <div className="mt-8 grid grid-cols-2 gap-3">
+                                            <Button asChild variant="secondary" className="font-bold">
+                                                <a href={config?.iqOptionUrl || '#'} target="_blank" rel="noopener noreferrer">
+                                                    IQ Option
+                                                </a>
+                                            </Button>
+                                            <Button asChild variant="secondary" className="font-bold">
+                                                <a href={config?.exnovaUrl || '#'} target="_blank" rel="noopener noreferrer">
+                                                    Exnova
+                                                </a>
+                                            </Button>
+                                        </div>
                                     </div>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setIsChartVisible(!isChartVisible)}>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="flex flex-col h-full min-h-[560px] bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl overflow-hidden transition-all duration-500">
+                                {/* Chart Header */}
+                                <div className="flex justify-between items-center px-4 py-3 border-b border-white/5 bg-white/5">
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-2">
+                                            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                            <span className="text-[0.65rem] font-bold text-muted-foreground uppercase tracking-widest">Market Live</span>
+                                        </div>
+                                        <div className="h-4 w-px bg-border/10" />
+                                        <div className="flex items-center gap-1.5 text-xs font-semibold">
+                                            <span className="text-muted-foreground">Timeframe:</span>
+                                            <span className="text-primary">{currentExpirationTime}</span>
+                                        </div>
+                                    </div>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-white/10" onClick={() => setIsChartVisible(!isChartVisible)}>
                                         {isChartVisible ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                                         <span className="sr-only">{isChartVisible ? 'Ocultar Gráfico' : 'Mostrar Gráfico'}</span>
                                     </Button>
                                 </div>
-                                {isChartVisible && (
-                                    <div className="rounded-b-lg overflow-hidden border-x border-b border-primary/20 h-[560px]">
+
+                                {/* Chart Content */}
+                                <div className="flex-grow bg-background/50 relative">
+                                    {isChartVisible && (
                                         <TradingViewWidget
                                             asset={currentAsset}
                                             interval={currentExpirationTime.replace('m', '')}
                                         />
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                        {appState !== 'loading' && isOtcAsset && (
-                            <div className="w-full h-full flex items-center justify-center bg-card/60 backdrop-blur-lg border border-primary/20 rounded-2xl shadow-2xl shadow-primary/10 p-8 min-h-[480px]">
-                                <div className="text-center max-w-sm">
-                                    <BarChart className="mx-auto h-12 w-12 text-muted-foreground" />
-                                    <h3 className="mt-4 text-lg font-semibold text-foreground">Gráfico Indisponível para OTC</h3>
-                                    <p className="mt-1 text-sm text-muted-foreground">
-                                        Os gráficos para ativos OTC são proprietários de cada corretora. Abra o gráfico na sua plataforma para operar.
-                                    </p>
-                                    <div className="mt-6 space-y-3">
-                                        <Button asChild className="w-full">
-                                            <a href={config?.iqOptionUrl || '#'} target="_blank" rel="noopener noreferrer">
-                                                Abrir na IQ Option
-                                            </a>
-                                        </Button>
-                                        <Button asChild className="w-full">
-                                            <a href={config?.exnovaUrl || '#'} target="_blank" rel="noopener noreferrer">
-                                                Abrir na Exnova
-                                            </a>
-                                        </Button>
-                                    </div>
+                                    )}
+                                    
+                                    {/* Loading Overlay */}
+                                    {appState === 'loading' && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-md z-10 transition-all duration-300">
+                                            <AnalysisAnimation showProgressBar={false} />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -512,14 +554,19 @@ export default function AnalisadorPage() {
             </div>
         </main>
         
-        <footer className="p-4 text-center text-xs text-foreground/30">
-          <p>© 2026 ESTRATÉGIA CHINESA. Todos os direitos reservados.</p>
-          <AffiliateLink href="/legal" className="underline underline-offset-2">
-            Termos de Uso e Privacidade
-          </AffiliateLink>
-          <p className="max-w-xl mx-auto text-[0.6rem] mt-2">Aviso Legal: Todas as estratégias e investimentos envolvem risco de perda. Nenhuma informação contida neste produto deve ser interpretada como uma garantia de resultados.</p>
+        <footer className="p-6 text-center border-t border-border/5 bg-card/10 backdrop-blur-sm">
+          <p className="text-[0.65rem] font-bold text-muted-foreground tracking-[0.1em]">© 2026 ESTRATÉGIA CHINESA • TODOS OS DIREITOS RESERVADOS</p>
+          <div className="flex justify-center gap-6 mt-3">
+            <AffiliateLink href="/legal#terms" className="text-[0.6rem] uppercase tracking-widest font-bold text-muted-foreground hover:text-primary transition-colors">Termos de Uso</AffiliateLink>
+            <AffiliateLink href="/legal#privacy" className="text-[0.6rem] uppercase tracking-widest font-bold text-muted-foreground hover:text-primary transition-colors">Privacidade</AffiliateLink>
+            <AffiliateLink href="/legal#cookies" className="text-[0.6rem] uppercase tracking-widest font-bold text-muted-foreground hover:text-primary transition-colors">Cookies</AffiliateLink>
+          </div>
+          <p className="max-w-3xl mx-auto text-[0.55rem] text-muted-foreground/40 mt-4 leading-relaxed uppercase tracking-tighter">
+            Aviso de Risco: O trading de opções binárias envolve riscos elevados e pode resultar na perda total do seu capital. Opere com responsabilidade.
+          </p>
         </footer>
       </div>
+
       <VipUpgradeModal
         isOpen={isUpgradeModalOpen}
         onOpenChange={setUpgradeModalOpen}
@@ -527,28 +574,29 @@ export default function AnalisadorPage() {
         firestore={firestore}
         config={config}
       />
-       <Dialog open={isNewsWarningModalOpen} onOpenChange={setIsNewsWarningModalOpen}>
-        <DialogContent className="max-w-lg">
+
+      <Dialog open={isNewsWarningModalOpen} onOpenChange={setIsNewsWarningModalOpen}>
+        <DialogContent className="max-w-lg bg-card/95 backdrop-blur-xl border-white/10">
             <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
-                    <AlertTriangle className="text-yellow-400" />
-                    Atenção! Mercado Volátil?
+                <DialogTitle className="flex items-center gap-2 text-xl font-headline">
+                    <AlertTriangle className="text-yellow-400 h-6 w-6" />
+                    Atenção: Volatilidade do Mercado
                 </DialogTitle>
-                <DialogDescription>
-                    Operar durante notícias de alto impacto (3 touros) pode invalidar os sinais. Veja o vídeo e verifique o calendário antes de prosseguir.
+                <DialogDescription className="text-muted-foreground">
+                    Operar durante notícias de alto impacto (3 touros) pode invalidar as análises estatísticas.
                 </DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-4">
                 <YoutubePlayer videoId="81HihzJWVwk" />
-                <Button asChild variant="outline" className="w-full">
+                <Button asChild variant="outline" className="w-full h-11 font-bold">
                     <a href="https://br.investing.com/economic-calendar" target="_blank" rel="noopener noreferrer">
-                        Abrir Calendário Económico
+                        Ver Calendário Económico
                     </a>
                 </Button>
-                <div className="flex items-center space-x-2 pt-2">
+                <div className="flex items-center space-x-3 pt-2 p-3 bg-white/5 rounded-lg border border-white/5">
                     <Checkbox id="news-agreement" checked={hasAgreedToNewsWarning} onCheckedChange={(checked) => setHasAgreedToNewsWarning(checked as boolean)} />
-                    <label htmlFor="news-agreement" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                        Eu verifiquei o calendário e entendo os riscos.
+                    <label htmlFor="news-agreement" className="text-xs font-bold leading-tight cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70 uppercase tracking-tight">
+                        Confirmo que verifiquei o calendário e entendo os riscos operacionais.
                     </label>
                 </div>
             </div>
@@ -556,14 +604,16 @@ export default function AnalisadorPage() {
                 <Button
                     variant="secondary"
                     onClick={() => setIsNewsWarningModalOpen(false)}
+                    className="font-bold"
                 >
                     Cancelar
                 </Button>
                 <Button
                     onClick={proceedWithAnalysis}
                     disabled={!hasAgreedToNewsWarning}
+                    className="font-bold"
                 >
-                    Analisar Mesmo Assim
+                    Prosseguir para Análise
                 </Button>
             </DialogFooter>
         </DialogContent>

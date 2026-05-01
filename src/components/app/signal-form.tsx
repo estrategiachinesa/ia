@@ -35,7 +35,7 @@ type FormData = {
 
 type SignalFormProps = {
   formData: FormData;
-  setFormData: (data: FormData) => void;
+  setFormData: (data: FormData | ((prev: FormData) => FormData)) => void;
   onSubmit: () => void;
   isLoading: boolean;
   showOTC: boolean;
@@ -121,8 +121,10 @@ export function SignalForm({
   const [waitingMessage, setWaitingMessage] = useState('');
   const [showDepositLinks, setShowDepositLinks] = useState(false);
 
-
-  const assets = showOTC ? allAssets : allAssets.filter(a => !a.includes('(OTC)'));
+  // Filter assets based on OTC toggle
+  const assets = showOTC 
+    ? allAssets.filter(a => a.includes('(OTC)')) 
+    : allAssets.filter(a => !a.includes('(OTC)'));
 
   useEffect(() => {
     if (hasReachedLimit && !isPremium) {
@@ -136,11 +138,20 @@ export function SignalForm({
     }
   }, [hasReachedLimit, isPremium, vipStatus, setVipModalOpen]);
 
+  // Synchronize asset when OTC switch is toggled
   useEffect(() => {
-    if (!showOTC && formData.asset.includes('(OTC)')) {
-      setFormData({ ...formData, asset: 'EUR/JPY' });
+    if (showOTC && !formData.asset.includes('(OTC)')) {
+      const otcAsset = `${formData.asset} (OTC)` as Asset;
+      if (allAssets.includes(otcAsset)) {
+        setFormData(prev => ({ ...prev, asset: otcAsset }));
+      }
+    } else if (!showOTC && formData.asset.includes('(OTC)')) {
+      const normalAsset = formData.asset.replace(' (OTC)', '') as Asset;
+      if (allAssets.includes(normalAsset)) {
+        setFormData(prev => ({ ...prev, asset: normalAsset }));
+      }
     }
-  }, [showOTC, formData, setFormData]);
+  }, [showOTC, setFormData]);
 
   useEffect(() => {
     if (vipStatus === 'PENDING') {
@@ -623,4 +634,3 @@ export function SignalForm({
     </>
   );
 }
-

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -421,27 +422,27 @@ export default function AnalisadorPage() {
       <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/90 to-background" />
 
       <div className="flex flex-col min-h-screen">
-        <header className="p-4 md:px-8 flex justify-between items-center border-b border-border/10 bg-card/30 backdrop-blur-md sticky top-0 z-50">
-          <div className="flex items-center gap-4">
+        <header className="px-6 py-3 flex justify-between items-center border-b border-border/10 bg-card/30 backdrop-blur-md sticky top-0 z-50">
+          <div className="flex items-center gap-6">
              <div className="flex flex-col">
-                <h1 className="text-xl md:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tighter leading-none">
+                <h1 className="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tighter leading-tight">
                     ESTRATÉGIA CHINESA
                 </h1>
-                <p className="text-[0.6rem] text-primary/60 font-bold tracking-[0.2em] uppercase">Intelligence Analyzer</p>
+                <p className="text-[0.6rem] text-primary/60 font-bold tracking-[0.2em] uppercase mt-[-2px]">Intelligence Analyzer</p>
              </div>
-             <div className="hidden sm:block h-6 w-px bg-border/20 mx-2" />
-             <div className="px-3 py-1 text-[0.7rem] font-bold bg-primary/10 border border-primary/30 text-primary rounded-full shadow-lg shadow-primary/10 flex items-center gap-1.5">
+             <div className="hidden sm:block h-8 w-px bg-border/20" />
+             <div className="px-4 py-1.5 text-[0.7rem] font-bold bg-primary/10 border border-primary/20 text-primary rounded-full shadow-lg shadow-primary/5 flex items-center gap-2">
                <User className="h-3 w-3" />
                {isPremium ? 'PREMIUM ACCESS' : 'VIP MEMBER'}
              </div>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
              <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleLogout}
-                className="text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 font-bold transition-colors"
+                className="text-xs font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all rounded-full px-4"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 Sair
@@ -449,46 +450,46 @@ export default function AnalisadorPage() {
           </div>
         </header>
 
-        <main className="flex-grow container mx-auto p-4 lg:p-8 space-y-8">
-            <div className="w-full max-w-7xl mx-auto">
-                <div className="flex flex-col lg:flex-row gap-8 items-stretch justify-center">
-                    <div className="w-full lg:w-[420px] flex flex-col gap-6">
-                        <div className="w-full bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl p-8 min-h-[600px] flex flex-col items-center justify-center transition-all duration-500">
+        <main className="flex-grow container max-w-[1400px] mx-auto p-4 lg:p-10 space-y-12">
+            <div className="w-full">
+                <div className="flex flex-col lg:flex-row gap-8 items-start justify-center">
+                    <div className="w-full lg:w-[450px] flex flex-col gap-6">
+                        <div className="w-full bg-card/50 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl p-10 min-h-[620px] flex flex-col items-center justify-center transition-all duration-500 overflow-hidden relative shine-effect">
                             {renderContent()}
                         </div>
                         
                         {!isPremium && appState !== 'loading' && (
-                             <div className="bg-gradient-to-br from-primary/20 to-transparent border border-primary/20 rounded-xl p-4 flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <p className="text-[0.65rem] font-bold text-primary tracking-widest uppercase">Estatuto de Conta</p>
+                             <div className="bg-gradient-to-br from-primary/20 to-transparent border border-primary/20 rounded-2xl p-5 flex items-center justify-between shadow-xl">
+                                <div className="space-y-1">
+                                    <p className="text-[0.6rem] font-bold text-primary tracking-[0.15em] uppercase opacity-80">Estatuto de Conta</p>
                                     <h4 className="text-sm font-bold text-foreground">Versão VIP Limitada</h4>
                                 </div>
-                                <Button size="sm" onClick={() => setUpgradeModalOpen(true)} className="h-8 text-[0.7rem] font-bold rounded-full">UPGRADE</Button>
+                                <Button size="sm" onClick={() => setUpgradeModalOpen(true)} className="h-9 px-6 text-[0.7rem] font-black rounded-full shadow-lg shadow-primary/20 hover:scale-105 transition-transform">UPGRADE</Button>
                              </div>
                         )}
                     </div>
 
-                     <div className="flex-grow relative flex flex-col min-w-0">
+                     <div className="flex-grow relative flex flex-col min-w-0 self-stretch">
                         {isOtcAsset ? (
-                            <div className="w-full h-full flex items-center justify-center bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl p-8 min-h-[600px]">
+                            <div className="w-full h-full flex items-center justify-center bg-card/40 backdrop-blur-xl border border-white/5 rounded-3xl shadow-2xl p-10 min-h-[620px]">
                                 {appState === 'loading' ? (
                                     <AnalysisAnimation />
                                 ) : (
-                                    <div className="text-center max-w-sm">
-                                        <div className="bg-muted/10 p-6 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center border border-border/10">
-                                            <BarChart className="h-10 w-10 text-muted-foreground/50" />
+                                    <div className="text-center max-w-md">
+                                        <div className="bg-muted/10 p-8 rounded-full w-24 h-24 mx-auto mb-8 flex items-center justify-center border border-border/10">
+                                            <BarChart className="h-12 w-12 text-muted-foreground/50" />
                                         </div>
-                                        <h3 className="text-xl font-bold text-foreground">Gráfico Indisponível (OTC)</h3>
-                                        <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                                            Os ativos de balcão (OTC) são exclusivos de cada corretora. Utilize a plataforma oficial para acompanhamento em tempo real.
+                                        <h3 className="text-2xl font-bold text-foreground">Gráfico Indisponível (OTC)</h3>
+                                        <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
+                                            Os ativos de balcão (OTC) são exclusivos de cada corretora. Utilize a plataforma oficial para acompanhamento em tempo real das movimentações.
                                         </p>
-                                        <div className="mt-8 grid grid-cols-2 gap-3">
-                                            <Button asChild variant="secondary" className="font-bold">
+                                        <div className="mt-10 grid grid-cols-2 gap-4">
+                                            <Button asChild variant="secondary" className="font-bold h-12 rounded-xl border border-border/50">
                                                 <a href={config?.iqOptionUrl || '#'} target="_blank" rel="noopener noreferrer">
                                                     IQ Option
                                                 </a>
                                             </Button>
-                                            <Button asChild variant="secondary" className="font-bold">
+                                            <Button asChild variant="secondary" className="font-bold h-12 rounded-xl border border-border/50">
                                                 <a href={config?.exnovaUrl || '#'} target="_blank" rel="noopener noreferrer">
                                                     Exnova
                                                 </a>
@@ -498,22 +499,21 @@ export default function AnalisadorPage() {
                                 )}
                             </div>
                         ) : (
-                            <div className="flex flex-col h-full min-h-[600px] bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl overflow-hidden transition-all duration-500">
-                                <div className="flex justify-between items-center px-4 py-2.5 border-b border-white/5 bg-white/5">
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex items-center gap-2">
-                                            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                                            <span className="text-[0.65rem] font-bold text-muted-foreground uppercase tracking-widest">Market Live</span>
+                            <div className="flex flex-col h-full bg-card/40 backdrop-blur-xl border border-white/5 rounded-3xl shadow-2xl overflow-hidden transition-all duration-500">
+                                <div className="flex justify-between items-center px-6 py-4 border-b border-white/5 bg-white/5">
+                                    <div className="flex items-center gap-6">
+                                        <div className="flex items-center gap-2.5">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
+                                            <span className="text-[0.7rem] font-black text-muted-foreground uppercase tracking-[0.2em]">Market Live</span>
                                         </div>
-                                        <div className="h-4 w-px bg-border/10" />
-                                        <div className="flex items-center gap-1.5 text-xs font-semibold">
-                                            <span className="text-muted-foreground">Timeframe:</span>
-                                            <span className="text-primary">{currentExpirationTime}</span>
+                                        <div className="h-5 w-px bg-border/20" />
+                                        <div className="flex items-center gap-2 text-[0.75rem] font-bold">
+                                            <span className="text-muted-foreground">TIME:</span>
+                                            <span className="text-primary bg-primary/10 px-2 py-0.5 rounded-md">{currentExpirationTime}</span>
                                         </div>
                                     </div>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-white/10" onClick={() => setIsChartVisible(!isChartVisible)}>
-                                        {isChartVisible ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                                        <span className="sr-only">{isChartVisible ? 'Ocultar Gráfico' : 'Mostrar Gráfico'}</span>
+                                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-white/10" onClick={() => setIsChartVisible(!isChartVisible)}>
+                                        {isChartVisible ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
                                     </Button>
                                 </div>
 
@@ -526,7 +526,7 @@ export default function AnalisadorPage() {
                                     )}
                                     
                                     {appState === 'loading' && (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-md z-10 transition-all duration-300">
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-md z-10 transition-all duration-300">
                                             <AnalysisAnimation showProgressBar={false} />
                                         </div>
                                     )}
@@ -537,20 +537,20 @@ export default function AnalisadorPage() {
                 </div>
             </div>
 
-            <div className="w-full max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+            <div className="w-full animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-300">
                 <EconomicCalendar asset={currentAsset} />
             </div>
         </main>
         
-        <footer className="p-6 text-center border-t border-border/5 bg-card/10 backdrop-blur-sm">
-          <p className="text-[0.65rem] font-bold text-muted-foreground tracking-[0.1em]">© 2026 ESTRATÉGIA CHINESA • TODOS OS DIREITOS RESERVADOS</p>
-          <div className="flex justify-center gap-6 mt-3">
-            <AffiliateLink href="/legal#terms" className="text-[0.6rem] uppercase tracking-widest font-bold text-muted-foreground hover:text-primary transition-colors">Termos de Uso</AffiliateLink>
-            <AffiliateLink href="/legal#privacy" className="text-[0.6rem] uppercase tracking-widest font-bold text-muted-foreground hover:text-primary transition-colors">Privacidade</AffiliateLink>
-            <AffiliateLink href="/legal#cookies" className="text-[0.6rem] uppercase tracking-widest font-bold text-muted-foreground hover:text-primary transition-colors">Cookies</AffiliateLink>
+        <footer className="p-8 text-center border-t border-border/5 bg-card/20 backdrop-blur-md">
+          <p className="text-[0.7rem] font-black text-muted-foreground tracking-[0.2em] opacity-60">© 2026 ESTRATÉGIA CHINESA • TODOS OS DIREITOS RESERVADOS</p>
+          <div className="flex justify-center gap-8 mt-5">
+            <AffiliateLink href="/legal#terms" className="text-[0.65rem] uppercase tracking-widest font-black text-muted-foreground hover:text-primary transition-colors">Termos de Uso</AffiliateLink>
+            <AffiliateLink href="/legal#privacy" className="text-[0.65rem] uppercase tracking-widest font-black text-muted-foreground hover:text-primary transition-colors">Privacidade</AffiliateLink>
+            <AffiliateLink href="/legal#cookies" className="text-[0.65rem] uppercase tracking-widest font-black text-muted-foreground hover:text-primary transition-colors">Cookies</AffiliateLink>
           </div>
-          <p className="max-w-3xl mx-auto text-[0.55rem] text-muted-foreground/40 mt-4 leading-relaxed uppercase tracking-tighter">
-            Aviso de Risco: O trading de opções binárias envolve riscos elevados e pode resultar na perda total do seu capital. Opere com responsabilidade.
+          <p className="max-w-4xl mx-auto text-[0.6rem] text-muted-foreground/30 mt-6 leading-relaxed uppercase tracking-tight font-bold">
+            Aviso de Risco: O trading de opções binárias envolve riscos elevados. A performance passada não garante lucros futuros. Opere sempre dentro da sua gestão de risco.
           </p>
         </footer>
       </div>
@@ -564,44 +564,44 @@ export default function AnalisadorPage() {
       />
 
       <Dialog open={isNewsWarningModalOpen} onOpenChange={setIsNewsWarningModalOpen}>
-        <DialogContent className="max-w-lg bg-card/95 backdrop-blur-xl border-white/10">
+        <DialogContent className="max-w-lg bg-card/95 backdrop-blur-2xl border-white/10 rounded-3xl shadow-2xl">
             <DialogHeader>
-                <DialogTitle className="flex items-center gap-2 text-xl font-headline">
-                    <AlertTriangle className="text-yellow-400 h-6 w-6" />
-                    Atenção: Volatilidade do Mercado
+                <DialogTitle className="flex items-center gap-3 text-2xl font-headline">
+                    <AlertTriangle className="text-yellow-400 h-8 w-8" />
+                    Alta Volatilidade
                 </DialogTitle>
-                <DialogDescription className="text-muted-foreground">
-                    Operar durante notícias de alto impacto (3 touros) pode invalidar as análises estatísticas.
+                <DialogDescription className="text-muted-foreground text-base leading-relaxed">
+                    Detectámos eventos de alto impacto no calendário económico. Operar nestes momentos pode comprometer as análises estatísticas da IA.
                 </DialogDescription>
             </DialogHeader>
-            <div className="py-4 space-y-4">
+            <div className="py-6 space-y-6">
                 <YoutubePlayer videoId="81HihzJWVwk" />
-                <Button asChild variant="outline" className="w-full h-11 font-bold">
+                <Button asChild variant="outline" className="w-full h-12 font-bold rounded-xl border-primary/20 hover:bg-primary/5">
                     <a href="https://br.investing.com/economic-calendar" target="_blank" rel="noopener noreferrer">
-                        Ver Calendário Económico
+                        Ver Calendário Completo
                     </a>
                 </Button>
-                <div className="flex items-center space-x-3 pt-2 p-3 bg-white/5 rounded-lg border border-white/5">
+                <div className="flex items-center space-x-4 pt-2 p-4 bg-white/5 rounded-2xl border border-white/10">
                     <Checkbox id="news-agreement" checked={hasAgreedToNewsWarning} onCheckedChange={(checked) => setHasAgreedToNewsWarning(checked as boolean)} />
-                    <label htmlFor="news-agreement" className="text-xs font-bold leading-tight cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70 uppercase tracking-tight">
-                        Confirmo que verifiquei o calendário e entendo os riscos operacionais.
+                    <label htmlFor="news-agreement" className="text-xs font-bold leading-tight cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70 uppercase tracking-wide opacity-80">
+                        Estou ciente dos riscos e verifiquei o impacto das notícias.
                     </label>
                 </div>
             </div>
-            <DialogFooter className="gap-2 sm:gap-0">
+            <DialogFooter className="gap-3 sm:gap-0">
                 <Button
                     variant="secondary"
                     onClick={() => setIsNewsWarningModalOpen(false)}
-                    className="font-bold"
+                    className="font-bold h-12 rounded-xl px-8"
                 >
                     Cancelar
                 </Button>
                 <Button
                     onClick={proceedWithAnalysis}
                     disabled={!hasAgreedToNewsWarning}
-                    className="font-bold"
+                    className="font-bold h-12 rounded-xl px-10 shadow-lg shadow-primary/20"
                 >
-                    Prosseguir para Análise
+                    Entendido, Prosseguir
                 </Button>
             </DialogFooter>
         </DialogContent>

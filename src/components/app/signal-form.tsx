@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -27,8 +28,8 @@ import AffiliateLink from './affiliate-link';
 
 
 /**
- * Widget de notícias reais filtrado por moeda.
- * USA: 5, Euro Zone: 72, Japan: 35
+ * Widget de notícias filtrado por moeda.
+ * Ajustado para maior harmonia visual no cockpit.
  */
 function CurrencyNewsWidget({ asset }: { asset: string }) {
   if (asset.includes('(OTC)')) return null;
@@ -42,13 +43,13 @@ function CurrencyNewsWidget({ asset }: { asset: string }) {
   else return null;
 
   return (
-    <div className="w-full mb-6 rounded-xl overflow-hidden border border-white/5 bg-white/5 animate-in fade-in slide-in-from-top-2 duration-500">
-      <div className="px-3 py-1.5 bg-primary/10 border-b border-white/5 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            <span className="text-[0.6rem] font-bold text-primary uppercase tracking-widest">Eventos de Impacto ({isEurUsd ? 'EUR/USD' : 'EUR/JPY'})</span>
+    <div className="w-full mb-8 rounded-2xl overflow-hidden border border-white/10 bg-black/40 shadow-inner group animate-in fade-in slide-in-from-top-4 duration-700">
+      <div className="px-4 py-2 bg-primary/5 border-b border-white/5 flex items-center justify-between group-hover:bg-primary/10 transition-colors">
+        <div className="flex items-center gap-2.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(var(--primary),0.5)]" />
+            <span className="text-[0.65rem] font-black text-primary uppercase tracking-[0.15em]">Sinal de Impacto ({isEurUsd ? 'EUR/USD' : 'EUR/JPY'})</span>
         </div>
-        <span className="text-[0.5rem] text-muted-foreground uppercase font-bold opacity-50 tracking-tighter">Live News</span>
+        <span className="text-[0.55rem] text-muted-foreground uppercase font-black opacity-30 tracking-tighter">Live Monitor</span>
       </div>
       <div className="h-[180px] w-full overflow-hidden relative">
          <iframe 
@@ -57,9 +58,10 @@ function CurrencyNewsWidget({ asset }: { asset: string }) {
           height="100%" 
           frameBorder="0" 
           allowTransparency={true}
-          className="filter invert hue-rotate-180 brightness-[0.8] contrast-[1.2] scale-[1.05] origin-top"
+          className="filter invert hue-rotate-180 brightness-[0.9] contrast-[1.1] scale-[1.02] origin-top"
           style={{ backgroundColor: 'transparent' }}
         ></iframe>
+        <div className="absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
       </div>
     </div>
   );
@@ -158,11 +160,11 @@ export function SignalForm({
 
   useEffect(() => {
     if (vipStatus === 'PENDING') {
-      setWaitingMessage('Analisando seu cadastro para ser PREMIUM e ter acesso prioritário, e evitar filas.');
+      setWaitingMessage('Analisando cadastro para prioridade PREMIUM.');
     } else if (vipStatus === 'AWAITING_DEPOSIT') {
-      setWaitingMessage('Cadastro verificado! Aguardando depósito para liberar seu acesso PREMIUM.');
+      setWaitingMessage('Cadastro ok! Aguardando depósito para liberar acesso.');
     } else if (vipStatus === 'DEPOSIT_PENDING') {
-      setWaitingMessage('Confirmação de depósito em análise. Em breve seu acesso PREMIUM será liberado.');
+      setWaitingMessage('Verificando confirmação de depósito.');
     } else {
       setWaitingMessage('');
     }
@@ -492,31 +494,32 @@ export function SignalForm({
 
   return (
     <>
-      <div className="w-full space-y-6 text-center">
+      <div className="w-full space-y-8 text-center">
         
         <CurrencyNewsWidget asset={formData.asset} />
 
-        <div className="space-y-2">
-          <p className="text-sm text-foreground/70">
-            Escolha o ativo e o tempo de expiração para análise.
+        <div className="space-y-3">
+          <p className="text-[0.75rem] text-foreground/50 font-bold uppercase tracking-widest">
+            Configuração de Ativo
           </p>
+          <div className="h-px w-12 bg-primary/30 mx-auto" />
         </div>
 
         {waitingMessage && (
-            <Alert className="text-center">
-                <Timer className="h-4 w-4" />
-                <AlertDescription>
+            <Alert className="text-center bg-primary/5 border-primary/20 py-2.5 rounded-xl">
+                <Timer className="h-4 w-4 text-primary" />
+                <AlertDescription className="text-[0.7rem] font-bold text-primary/80">
                     {waitingMessage}
                 </AlertDescription>
             </Alert>
         )}
 
         <div className="space-y-6 text-left">
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <Label htmlFor="asset-select">Ativo:</Label>
-              <div className="flex items-center space-x-2">
-                <Label htmlFor="otc-switch" className="text-xs text-muted-foreground">
+          <div className="space-y-3">
+            <div className="flex justify-between items-center px-1">
+              <Label htmlFor="asset-select" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Ativo Selecionado:</Label>
+              <div className="flex items-center space-x-3 bg-white/5 px-3 py-1.5 rounded-full border border-white/5">
+                <Label htmlFor="otc-switch" className="text-[0.6rem] font-black text-muted-foreground uppercase tracking-widest">
                   exibir (OTC)
                 </Label>
                 <Switch
@@ -524,6 +527,7 @@ export function SignalForm({
                   checked={showOTC}
                   onCheckedChange={setShowOTC}
                   disabled={isLoading}
+                  className="scale-75"
                 />
               </div>
             </div>
@@ -532,98 +536,91 @@ export function SignalForm({
               onValueChange={(value) => setFormData({ ...formData, asset: value as Asset })}
               disabled={isLoading}
             >
-              <SelectTrigger className="h-12 text-base" id="asset-select">
+              <SelectTrigger className="h-14 text-base rounded-2xl bg-white/5 border-white/10 hover:bg-white/10 transition-all shadow-lg" id="asset-select">
                 <SelectValue asChild>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <CurrencyFlags asset={formData.asset} />
-                    <span>{formData.asset}</span>
+                    <span className="font-bold tracking-tight">{formData.asset}</span>
                   </div>
                 </SelectValue>
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="rounded-2xl border-white/10 bg-card/95 backdrop-blur-xl">
                 {assets.map(asset => (
-                  <SelectItem key={asset} value={asset}>
-                    <div className="flex items-center gap-2">
+                  <SelectItem key={asset} value={asset} className="rounded-xl focus:bg-primary/10">
+                    <div className="flex items-center gap-3">
                       <CurrencyFlags asset={asset} />
-                      <span>{asset}</span>
+                      <span className="font-bold">{asset}</span>
                     </div>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             {showOTC && config && (
-              <Alert className="mt-4 border-primary/20 bg-primary/10">
+              <Alert className="mt-4 border-primary/20 bg-primary/10 rounded-2xl">
                 <Info className="h-4 w-4 text-primary" />
-                <AlertDescription className="text-xs text-primary/80">
-                  <span className="sm:inline">Sinais OTC são para as corretoras</span>
-                  <br className="sm:hidden" />
-                  <AffiliateLink href={config.iqOptionUrl} target="_blank" className="font-bold underline hover:text-primary mx-1">
-                    IQ Option
-                  </AffiliateLink>
-                  e
-                  <AffiliateLink href={config.exnovaUrl} target="_blank" className="font-bold underline hover:text-primary ml-1">
-                    Exnova
-                  </AffiliateLink>
-                  .
+                <AlertDescription className="text-[0.65rem] text-primary font-bold leading-relaxed">
+                  MODO OTC ATIVO: Sinais exclusivos para corretoras{' '}
+                  <AffiliateLink href={config.iqOptionUrl} target="_blank" className="underline hover:opacity-80">IQ Option</AffiliateLink> ou{' '}
+                  <AffiliateLink href={config.exnovaUrl} target="_blank" className="underline hover:opacity-80">Exnova</AffiliateLink>.
                 </AlertDescription>
               </Alert>
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="expiration-select">Tempo de expiração:</Label>
+          <div className="space-y-3">
+            <Label htmlFor="expiration-select" className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">Tempo de Expiração:</Label>
             <Select
               value={formData.expirationTime}
               onValueChange={(value) => setFormData({ ...formData, expirationTime: value as '1m' | '5m' })}
               disabled={isLoading}
             >
-              <SelectTrigger className="h-12 text-base" id="expiration-select">
-                <SelectValue placeholder="Selecione o Tempo de Expiração" />
+              <SelectTrigger className="h-14 text-base rounded-2xl bg-white/5 border-white/10 hover:bg-white/10 transition-all shadow-lg" id="expiration-select">
+                <SelectValue placeholder="Selecione o Tempo" />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1m">1 minuto (1m)</SelectItem>
-                <SelectItem value="5m">5 minutos (5m)</SelectItem>
+              <SelectContent className="rounded-2xl border-white/10 bg-card/95 backdrop-blur-xl">
+                <SelectItem value="1m" className="rounded-xl focus:bg-primary/10 font-bold">1 minuto (M1)</SelectItem>
+                <SelectItem value="5m" className="rounded-xl focus:bg-primary/10 font-bold">5 minutos (M5)</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
 
-        <div className="w-full space-y-2">
+        <div className="w-full space-y-4 pt-4">
             <Button
               size="lg"
-              className="w-full h-14 text-lg font-bold bg-primary text-primary-foreground shadow-lg transition-all duration-300 transform hover:scale-105 disabled:hover:scale-100 pulse-strong"
+              className="w-full h-16 text-lg font-black bg-primary text-primary-foreground shadow-2xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100 pulse-strong rounded-2xl uppercase tracking-tighter"
               onClick={onSubmit}
               disabled={buttonDisabled}
             >
               {isLoading ? (
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                <Loader2 className="mr-3 h-6 w-6 animate-spin" />
               ) : !isMarketOpen ? (
-                <Lock className="mr-2 h-5 w-5" />
+                <Lock className="mr-3 h-6 w-6" />
               ) : (hasReachedLimit && !isPremium) || waitingMessage ? (
-                 <Timer className="mr-2 h-5 w-5" />
+                 <Timer className="mr-3 h-6 w-6" />
               ) : (
-                <BarChart className="mr-2 h-5 w-5" />
+                <BarChart className="mr-3 h-6 w-6" />
               )}
-              {isLoading ? 'Analisando...' : !isMarketOpen ? 'Mercado Fechado' : (hasReachedLimit && !isPremium) || waitingMessage ? 'Aguardando...' : 'Analisar Mercado'}
+              {isLoading ? 'Analisando Mercado...' : !isMarketOpen ? 'Mercado Fechado' : (hasReachedLimit && !isPremium) || waitingMessage ? 'Aguardando Liberação' : 'Analisar Agora'}
             </Button>
             {!isPremium && (
               isFreeSignalPage ? (
-                <Button variant="link" className="w-full flex-col h-auto text-yellow-400 hover:text-yellow-300" asChild>
+                <Button variant="link" className="w-full flex-col h-auto text-yellow-400 hover:text-yellow-300 group" asChild>
                   <AffiliateLink href="/vip">
-                    <Trophy className="h-5 w-5 mb-0.5" />
-                    SEJA VIP
+                    <Trophy className="h-5 w-5 mb-1 group-hover:scale-110 transition-transform" />
+                    <span className="text-[0.6rem] font-black uppercase tracking-[0.2em]">Upgrade para VIP</span>
                   </AffiliateLink>
                 </Button>
               ) : (
-                <Button variant="link" className="w-full flex-col h-auto text-purple-400 hover:text-purple-300" onClick={() => {
+                <Button variant="link" className="w-full flex-col h-auto text-purple-400 hover:text-purple-300 group" onClick={() => {
                   if (vipStatus) {
                     setVipModalOpen(true);
                   } else {
                     setUpgradeModalOpen(true);
                   }
                 }}>
-                    <Crown className="h-5 w-5 mb-0.5" />
-                    SEJA PREMIUM
+                    <Crown className="h-5 w-5 mb-1 group-hover:scale-110 transition-transform" />
+                    <span className="text-[0.6rem] font-black uppercase tracking-[0.2em]">Seja Membro PREMIUM</span>
                 </Button>
               )
             )}
@@ -631,7 +628,7 @@ export function SignalForm({
       </div>
 
       <Dialog open={isVipModalOpen} onOpenChange={setVipModalOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg rounded-3xl border-white/10 bg-card/95 backdrop-blur-2xl">
           {getVipModalContent()}
         </DialogContent>
       </Dialog>

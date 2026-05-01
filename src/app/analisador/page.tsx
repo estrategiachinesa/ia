@@ -538,7 +538,7 @@ export default function AnalisadorPage() {
             </div>
 
             <div className="w-full max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
-                <EconomicCalendar />
+                <EconomicCalendar asset={currentAsset} />
             </div>
         </main>
         

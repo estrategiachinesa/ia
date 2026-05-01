@@ -27,8 +27,8 @@ import AffiliateLink from './affiliate-link';
 
 
 /**
- * Widget de Calendário Económico detalhado, integrado diretamente no painel de comando.
- * Filtra por moedas e importância, focado em EUR, USD e JPY.
+ * Widget de Calendário Económico ultra-clean, integrado diretamente no painel de comando.
+ * Exibe apenas Hora, Moeda e Relevância (Touros).
  */
 function EconomicCalendarWidget({ asset }: { asset: string }) {
   if (asset.includes('(OTC)')) return null;
@@ -42,40 +42,40 @@ function EconomicCalendarWidget({ asset }: { asset: string }) {
   else if (isEurJpy) countries = "72,35";
 
   return (
-    <div className="w-full mb-8 rounded-2xl overflow-hidden border border-white/10 bg-black/60 shadow-2xl group animate-in fade-in slide-in-from-top-4 duration-700">
-      <div className="px-5 py-3 bg-primary/5 border-b border-white/5 flex items-center justify-between group-hover:bg-primary/10 transition-colors">
+    <div className="w-full mb-6 rounded-2xl overflow-hidden border border-white/10 bg-black/60 shadow-2xl group animate-in fade-in slide-in-from-top-4 duration-700">
+      <div className="px-5 py-2.5 bg-primary/5 border-b border-white/5 flex items-center justify-between group-hover:bg-primary/10 transition-colors">
         <div className="flex items-center gap-2.5">
             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            <span className="text-[0.65rem] font-black text-primary uppercase tracking-[0.15em]">Calendário Económico Real</span>
+            <span className="text-[0.6rem] font-black text-primary uppercase tracking-[0.2em]">Notícias em Tempo Real</span>
         </div>
-        <span className="text-[0.55rem] text-muted-foreground uppercase font-black opacity-30 tracking-tighter">Live Feed</span>
+        <span className="text-[0.5rem] text-muted-foreground uppercase font-black opacity-30">Live</span>
       </div>
-      <div className="h-[320px] w-full overflow-hidden relative bg-[#0a0a0a]">
-         <div className="absolute inset-0 scale-[1.1] origin-top">
+      <div className="h-[280px] w-full overflow-hidden relative bg-[#0a0a0a]">
+         <div className="absolute inset-0 scale-[1.15] origin-top translate-y-[-5px]">
             <iframe 
-              src={`https://sslecal2.investing.com?columns=exc_flags,exc_currency,exc_importance,exc_actual,exc_forecast,exc_previous&importance=2,3&features=timezone&countries=${countries}&calType=day&timeZone=12&lang=12`} 
+              src={`https://sslecal2.investing.com?columns=exc_flags,exc_currency,exc_importance&importance=2,3&features=timezone&countries=${countries}&calType=day&timeZone=12&lang=12`} 
               width="100%" 
-              height="400" 
+              height="350" 
               frameBorder="0" 
               allowTransparency={true}
-              className="filter invert hue-rotate-180 brightness-[0.7] contrast-[1.3] saturate-[0.8]"
+              className="filter invert hue-rotate-180 brightness-[0.75] contrast-[1.4] saturate-[0.8]"
               style={{ backgroundColor: 'transparent' }}
             ></iframe>
          </div>
-         {/* Gradientes de desvanecimento para integração visual */}
-         <div className="absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-[#0a0a0a] to-transparent pointer-events-none" />
-         <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-[#0a0a0a] to-transparent pointer-events-none" />
+         {/* Gradientes de desvanecimento para integração visual premium */}
+         <div className="absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-[#0a0a0a] to-transparent pointer-events-none" />
+         <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#0a0a0a] to-transparent pointer-events-none" />
       </div>
       <div className="px-5 py-2 bg-white/5 flex justify-between items-center">
-         <span className="text-[0.55rem] text-primary/50 font-bold uppercase tracking-widest">Fonte: Investing.com</span>
+         <span className="text-[0.5rem] text-primary/40 font-bold uppercase tracking-widest">Impacto: EUR • USD • JPY</span>
          <div className="flex gap-2">
             <div className="flex items-center gap-1">
                 <div className="w-1 h-1 rounded-full bg-yellow-500" />
-                <span className="text-[0.5rem] text-muted-foreground font-bold">MED</span>
+                <span className="text-[0.45rem] text-muted-foreground font-black">MED</span>
             </div>
             <div className="flex items-center gap-1">
                 <div className="w-1 h-1 rounded-full bg-red-500" />
-                <span className="text-[0.5rem] text-muted-foreground font-bold">ALTA</span>
+                <span className="text-[0.45rem] text-muted-foreground font-black">ALTA</span>
             </div>
          </div>
       </div>
@@ -510,15 +510,15 @@ export function SignalForm({
 
   return (
     <>
-      <div className="w-full space-y-8 text-center">
+      <div className="w-full space-y-6 text-center">
         
         <EconomicCalendarWidget asset={formData.asset} />
 
-        <div className="space-y-3">
-          <p className="text-[0.75rem] text-foreground/50 font-bold uppercase tracking-widest">
-            Configuração de Ativo
+        <div className="space-y-2">
+          <p className="text-[0.65rem] text-foreground/40 font-bold uppercase tracking-[0.25em]">
+            Configuração Operacional
           </p>
-          <div className="h-px w-12 bg-primary/30 mx-auto" />
+          <div className="h-px w-8 bg-primary/20 mx-auto" />
         </div>
 
         {waitingMessage && (
@@ -530,20 +530,20 @@ export function SignalForm({
             </Alert>
         )}
 
-        <div className="space-y-6 text-left">
-          <div className="space-y-3">
+        <div className="space-y-5 text-left">
+          <div className="space-y-2.5">
             <div className="flex justify-between items-center px-1">
-              <Label htmlFor="asset-select" className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Ativo Selecionado:</Label>
-              <div className="flex items-center space-x-3 bg-white/5 px-3 py-1.5 rounded-full border border-white/5">
-                <Label htmlFor="otc-switch" className="text-[0.6rem] font-black text-muted-foreground uppercase tracking-widest">
-                  exibir (OTC)
+              <Label htmlFor="asset-select" className="text-[0.65rem] font-black text-muted-foreground uppercase tracking-widest opacity-60">Ativo:</Label>
+              <div className="flex items-center space-x-2.5 bg-white/5 px-2.5 py-1 rounded-full border border-white/5">
+                <Label htmlFor="otc-switch" className="text-[0.55rem] font-black text-muted-foreground uppercase tracking-widest opacity-50">
+                  OTC
                 </Label>
                 <Switch
                   id="otc-switch"
                   checked={showOTC}
                   onCheckedChange={setShowOTC}
                   disabled={isLoading}
-                  className="scale-75"
+                  className="scale-50"
                 />
               </div>
             </div>
@@ -552,7 +552,7 @@ export function SignalForm({
               onValueChange={(value) => setFormData({ ...formData, asset: value as Asset })}
               disabled={isLoading}
             >
-              <SelectTrigger className="h-14 text-base rounded-2xl bg-white/5 border-white/10 hover:bg-white/10 transition-all shadow-lg" id="asset-select">
+              <SelectTrigger className="h-12 text-sm rounded-xl bg-white/5 border-white/5 hover:bg-white/10 transition-all" id="asset-select">
                 <SelectValue asChild>
                   <div className="flex items-center gap-3">
                     <CurrencyFlags asset={formData.asset} />
@@ -560,9 +560,9 @@ export function SignalForm({
                   </div>
                 </SelectValue>
               </SelectTrigger>
-              <SelectContent className="rounded-2xl border-white/10 bg-card/95 backdrop-blur-xl">
+              <SelectContent className="rounded-xl border-white/10 bg-card/95 backdrop-blur-xl">
                 {assets.map(asset => (
-                  <SelectItem key={asset} value={asset} className="rounded-xl focus:bg-primary/10">
+                  <SelectItem key={asset} value={asset} className="rounded-lg focus:bg-primary/10">
                     <div className="flex items-center gap-3">
                       <CurrencyFlags asset={asset} />
                       <span className="font-bold">{asset}</span>
@@ -571,31 +571,21 @@ export function SignalForm({
                 ))}
               </SelectContent>
             </Select>
-            {showOTC && config && (
-              <Alert className="mt-4 border-primary/20 bg-primary/10 rounded-2xl">
-                <Info className="h-4 w-4 text-primary" />
-                <AlertDescription className="text-[0.65rem] text-primary font-bold leading-relaxed">
-                  MODO OTC ATIVO: Sinais exclusivos para corretoras{' '}
-                  <AffiliateLink href={config.iqOptionUrl} target="_blank" className="underline hover:opacity-80">IQ Option</AffiliateLink> ou{' '}
-                  <AffiliateLink href={config.exnovaUrl} target="_blank" className="underline hover:opacity-80">Exnova</AffiliateLink>.
-                </AlertDescription>
-              </Alert>
-            )}
           </div>
 
-          <div className="space-y-3">
-            <Label htmlFor="expiration-select" className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">Tempo de Expiração:</Label>
+          <div className="space-y-2.5">
+            <Label htmlFor="expiration-select" className="text-[0.65rem] font-black text-muted-foreground uppercase tracking-widest opacity-60 px-1">Expiração:</Label>
             <Select
               value={formData.expirationTime}
               onValueChange={(value) => setFormData({ ...formData, expirationTime: value as '1m' | '5m' })}
               disabled={isLoading}
             >
-              <SelectTrigger className="h-14 text-base rounded-2xl bg-white/5 border-white/10 hover:bg-white/10 transition-all shadow-lg" id="expiration-select">
+              <SelectTrigger className="h-12 text-sm rounded-xl bg-white/5 border-white/5 hover:bg-white/10 transition-all" id="expiration-select">
                 <SelectValue placeholder="Selecione o Tempo" />
               </SelectTrigger>
-              <SelectContent className="rounded-2xl border-white/10 bg-card/95 backdrop-blur-xl">
-                <SelectItem value="1m" className="rounded-xl focus:bg-primary/10 font-bold">1 minuto (M1)</SelectItem>
-                <SelectItem value="5m" className="rounded-xl focus:bg-primary/10 font-bold">5 minutos (M5)</SelectItem>
+              <SelectContent className="rounded-xl border-white/10 bg-card/95 backdrop-blur-xl">
+                <SelectItem value="1m" className="rounded-lg focus:bg-primary/10 font-bold">1 minuto (M1)</SelectItem>
+                <SelectItem value="5m" className="rounded-lg focus:bg-primary/10 font-bold">5 minutos (M5)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -604,27 +594,27 @@ export function SignalForm({
         <div className="w-full space-y-4 pt-4">
             <Button
               size="lg"
-              className="w-full h-16 text-lg font-black bg-primary text-primary-foreground shadow-2xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100 pulse-strong rounded-2xl uppercase tracking-tighter"
+              className="w-full h-14 text-base font-black bg-primary text-primary-foreground shadow-2xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100 pulse-strong rounded-xl uppercase tracking-tighter"
               onClick={onSubmit}
               disabled={buttonDisabled}
             >
               {isLoading ? (
-                <Loader2 className="mr-3 h-6 w-6 animate-spin" />
+                <Loader2 className="mr-3 h-5 w-5 animate-spin" />
               ) : !isMarketOpen ? (
-                <Lock className="mr-3 h-6 w-6" />
+                <Lock className="mr-3 h-5 w-5" />
               ) : (hasReachedLimit && !isPremium) || waitingMessage ? (
-                 <Timer className="mr-3 h-6 w-6" />
+                 <Timer className="mr-3 h-5 w-5" />
               ) : (
-                <BarChart className="mr-3 h-6 w-6" />
+                <BarChart className="mr-3 h-5 w-5" />
               )}
-              {isLoading ? 'Analisando Mercado...' : !isMarketOpen ? 'Mercado Fechado' : (hasReachedLimit && !isPremium) || waitingMessage ? 'Aguardando Liberação' : 'Analisar Agora'}
+              {isLoading ? 'Analisando...' : !isMarketOpen ? 'Mercado Fechado' : (hasReachedLimit && !isPremium) || waitingMessage ? 'Aguardando Liberação' : 'Analisar Agora'}
             </Button>
             {!isPremium && (
               isFreeSignalPage ? (
                 <Button variant="link" className="w-full flex-col h-auto text-yellow-400 hover:text-yellow-300 group" asChild>
                   <AffiliateLink href="/vip">
                     <Trophy className="h-5 w-5 mb-1 group-hover:scale-110 transition-transform" />
-                    <span className="text-[0.6rem] font-black uppercase tracking-[0.2em]">Upgrade para VIP</span>
+                    <span className="text-[0.55rem] font-black uppercase tracking-[0.2em]">Upgrade VIP</span>
                   </AffiliateLink>
                 </Button>
               ) : (
@@ -636,7 +626,7 @@ export function SignalForm({
                   }
                 }}>
                     <Crown className="h-5 w-5 mb-1 group-hover:scale-110 transition-transform" />
-                    <span className="text-[0.6rem] font-black uppercase tracking-[0.2em]">Seja Membro PREMIUM</span>
+                    <span className="text-[0.55rem] font-black uppercase tracking-[0.2em]">Acesso PREMIUM</span>
                 </Button>
               )
             )}

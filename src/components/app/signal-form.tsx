@@ -27,8 +27,9 @@ import AffiliateLink from './affiliate-link';
 
 
 /**
- * Widget de Calendário Económico ultra-clean, integrado diretamente no painel de comando.
+ * Widget de Calendário Económico ultra-focado.
  * Exibe apenas Hora, Moeda e Relevância (Touros).
+ * Recorte preciso para remover branding e ruído do iframe original.
  */
 function EconomicCalendarWidget({ asset }: { asset: string }) {
   if (asset.includes('(OTC)')) return null;
@@ -42,42 +43,44 @@ function EconomicCalendarWidget({ asset }: { asset: string }) {
   else if (isEurJpy) countries = "72,35";
 
   return (
-    <div className="w-full mb-6 rounded-2xl overflow-hidden border border-white/10 bg-black/60 shadow-2xl group animate-in fade-in slide-in-from-top-4 duration-700">
-      <div className="px-5 py-2.5 bg-primary/5 border-b border-white/5 flex items-center justify-between group-hover:bg-primary/10 transition-colors">
+    <div className="w-full mb-6 rounded-2xl overflow-hidden border border-white/10 bg-black/60 shadow-2xl animate-in fade-in slide-in-from-top-4 duration-700">
+      <div className="px-5 py-3 bg-primary/5 border-b border-white/5 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            <span className="text-[0.6rem] font-black text-primary uppercase tracking-[0.2em]">Notícias em Tempo Real</span>
+            <span className="text-[0.65rem] font-black text-primary uppercase tracking-[0.2em]">Monitor de Volatilidade</span>
         </div>
-        <span className="text-[0.5rem] text-muted-foreground uppercase font-black opacity-30">Live</span>
+        <span className="text-[0.5rem] text-muted-foreground uppercase font-black opacity-40 italic">Real-Time</span>
       </div>
-      <div className="h-[280px] w-full overflow-hidden relative bg-[#0a0a0a]">
-         <div className="absolute inset-0 scale-[1.15] origin-top translate-y-[-5px]">
+      
+      <div className="h-[150px] w-full overflow-hidden relative bg-[#0a0a0a]">
+         {/* Container de recorte: esconde logo, cabeçalho e colunas de texto */}
+         <div className="absolute w-[130%] left-[-15%] top-[-108px]">
             <iframe 
-              src={`https://sslecal2.investing.com?columns=exc_flags,exc_currency,exc_importance&importance=2,3&features=timezone&countries=${countries}&calType=day&timeZone=12&lang=12`} 
+              src={`https://sslecal2.investing.com?columns=exc_flags,exc_currency,exc_importance&importance=2,3&countries=${countries}&calType=day&timeZone=12&lang=12`} 
               width="100%" 
               height="350" 
               frameBorder="0" 
               allowTransparency={true}
-              className="filter invert hue-rotate-180 brightness-[0.75] contrast-[1.4] saturate-[0.8]"
+              className="filter invert hue-rotate-180 brightness-[0.75] contrast-[1.6] saturate-[0.7] scale-[1.3] origin-top"
               style={{ backgroundColor: 'transparent' }}
             ></iframe>
          </div>
+         
          {/* Gradientes de desvanecimento para integração visual premium */}
-         <div className="absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-[#0a0a0a] to-transparent pointer-events-none" />
-         <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#0a0a0a] to-transparent pointer-events-none" />
+         <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-[#0a0a0a] to-transparent pointer-events-none" />
+         <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-[#0a0a0a] to-transparent pointer-events-none" />
+         <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_30px_rgba(0,0,0,0.9)]" />
       </div>
-      <div className="px-5 py-2 bg-white/5 flex justify-between items-center">
-         <span className="text-[0.5rem] text-primary/40 font-bold uppercase tracking-widest">Impacto: EUR • USD • JPY</span>
-         <div className="flex gap-2">
-            <div className="flex items-center gap-1">
-                <div className="w-1 h-1 rounded-full bg-yellow-500" />
-                <span className="text-[0.45rem] text-muted-foreground font-black">MED</span>
+
+      <div className="px-5 py-2.5 bg-white/5 flex justify-center items-center gap-6">
+            <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.3)]" />
+                <span className="text-[0.55rem] text-muted-foreground font-black uppercase">Impacto Médio</span>
             </div>
-            <div className="flex items-center gap-1">
-                <div className="w-1 h-1 rounded-full bg-red-500" />
-                <span className="text-[0.45rem] text-muted-foreground font-black">ALTA</span>
+            <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.3)]" />
+                <span className="text-[0.55rem] text-muted-foreground font-black uppercase">Alto Impacto</span>
             </div>
-         </div>
       </div>
     </div>
   );

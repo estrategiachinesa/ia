@@ -41,10 +41,12 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset, interval }
         theme: "dark",
         style: "1",
         locale: "br",
+        toolbar_bg: "#000000",
         enable_publishing: false,
         hide_side_toolbar: true,
-        hide_volume: true,
-        allow_symbol_change: false,
+        hide_legend: true,
+        hide_top_toolbar: true,
+        save_image: false,
         container_id: widgetContainerId,
         studies: [
           {
@@ -55,16 +57,39 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset, interval }
             }
           }
         ],
+        disabled_features: [
+            "header_widget",
+            "left_toolbar",
+            "footer_widget",
+            "legend_context_menu",
+            "edit_buttons_in_legend",
+            "context_menus",
+            "control_bar",
+            "timeframes_toolbar",
+            "display_market_status",
+            "remove_library_container_border"
+        ],
+        enabled_features: [],
         overrides: {
             "mainSeriesProperties.showOHLC": false,
             "paneProperties.legendProperties.showStudyArguments": false,
             "paneProperties.legendProperties.showStudyTitles": false,
             "paneProperties.legendProperties.showStudyValues": false,
+            "paneProperties.legendProperties.showSeriesTitle": false,
+            "paneProperties.legendProperties.showSeriesOHLC": false,
+            "paneProperties.legendProperties.showLegend": false,
+            "paneProperties.background": "#0a0a0a",
+            "paneProperties.vertGridProperties.color": "rgba(42, 46, 57, 0)",
+            "paneProperties.horzGridProperties.color": "rgba(42, 46, 57, 0)",
+            "scalesProperties.textColor": "#AAA"
         },
         studies_overrides: {
             "Bollinger Bands.Upper.color": "#22c55e",
             "Bollinger Bands.Lower.color": "#FF5252",
             "Bollinger Bands.Basis.color": "#FFFFFF",
+            "Bollinger Bands.Upper.linewidth": 1,
+            "Bollinger Bands.Lower.linewidth": 1,
+            "Bollinger Bands.Background.transparency": 95,
         }
       });
     };

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -459,12 +458,12 @@ export default function AnalisadorPage() {
           </div>
         </header>
 
-        <main className="flex-grow container mx-auto p-4 lg:p-8">
-            <div className="w-full max-w-7xl mx-auto">
-                <div className="flex flex-col lg:flex-row gap-6 items-stretch">
+        <main className="flex-grow container mx-auto p-4 lg:p-8 flex items-center justify-center">
+            <div className="w-full max-w-6xl mx-auto">
+                <div className="flex flex-col lg:flex-row gap-6 items-stretch justify-center">
                     {/* Left Column - Controls */}
-                    <div className="w-full lg:w-[380px] flex flex-col gap-6">
-                        <div className="w-full bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl p-6 min-h-[480px] flex items-center justify-center transition-all duration-500">
+                    <div className="w-full lg:w-[360px] flex flex-col gap-6">
+                        <div className="w-full bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl p-6 min-h-[460px] flex items-center justify-center transition-all duration-500">
                             {renderContent()}
                         </div>
                         
@@ -481,19 +480,19 @@ export default function AnalisadorPage() {
                     </div>
 
                     {/* Right Column - Visualization */}
-                     <div className="flex-grow relative flex flex-col">
+                     <div className="flex-grow relative flex flex-col min-w-0">
                         {isOtcAsset ? (
-                            <div className="w-full h-full flex items-center justify-center bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl p-8 min-h-[560px]">
+                            <div className="w-full h-full flex items-center justify-center bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl p-8 min-h-[460px]">
                                 {appState === 'loading' ? (
                                     <AnalysisAnimation />
                                 ) : (
                                     <div className="text-center max-w-sm">
-                                        <div className="bg-muted/10 p-6 rounded-full w-24 h-24 mx-auto mb-6 flex items-center justify-center border border-border/10">
-                                            <BarChart className="h-12 w-12 text-muted-foreground/50" />
+                                        <div className="bg-muted/10 p-6 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center border border-border/10">
+                                            <BarChart className="h-10 w-10 text-muted-foreground/50" />
                                         </div>
                                         <h3 className="text-xl font-bold text-foreground">Gráfico Indisponível (OTC)</h3>
                                         <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                                            Os ativos de balcão (OTC) são exclusivos de cada corretora. Utilize a plataforma oficial para acompanhamento em tempo real.
+                                            Os ativos de balcão (OTC) são exclusivos de cada corretora. Utilize a plataforma oficial para acompanhamento.
                                         </p>
                                         <div className="mt-8 grid grid-cols-2 gap-3">
                                             <Button asChild variant="secondary" className="font-bold">
@@ -511,9 +510,9 @@ export default function AnalisadorPage() {
                                 )}
                             </div>
                         ) : (
-                            <div className="flex flex-col h-full min-h-[560px] bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl overflow-hidden transition-all duration-500">
+                            <div className="flex flex-col h-full min-h-[460px] bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl overflow-hidden transition-all duration-500">
                                 {/* Chart Header */}
-                                <div className="flex justify-between items-center px-4 py-3 border-b border-white/5 bg-white/5">
+                                <div className="flex justify-between items-center px-4 py-2.5 border-b border-white/5 bg-white/5">
                                     <div className="flex items-center gap-4">
                                         <div className="flex items-center gap-2">
                                             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
@@ -532,7 +531,7 @@ export default function AnalisadorPage() {
                                 </div>
 
                                 {/* Chart Content */}
-                                <div className="flex-grow bg-background/50 relative">
+                                <div className="flex-grow bg-[#0a0a0a] relative">
                                     {isChartVisible && (
                                         <TradingViewWidget
                                             asset={currentAsset}

@@ -149,12 +149,12 @@ export function AnalysisAnimation({ showProgressBar = true }: { showProgressBar?
   }, []);
 
   return (
-    <div className="relative h-[400px] w-full max-w-md overflow-hidden rounded-lg bg-black/80 border border-primary/20 flex flex-col items-center justify-center p-6 gap-4">
+    <div className="relative h-full w-full max-w-2xl overflow-hidden rounded-lg bg-black/80 border border-primary/20 flex flex-col items-center justify-center p-8 gap-6">
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full opacity-30" />
       <div className="flex-grow w-full flex items-center justify-center">
         <div 
           className={cn(
-              "z-10 font-code text-sm sm:text-base text-center text-primary transition-all duration-75",
+              "z-10 font-code text-base sm:text-xl text-center text-primary transition-all duration-75",
               glitch && 'skew-x-12 skew-y-2 opacity-75'
           )}
         >
@@ -163,9 +163,9 @@ export function AnalysisAnimation({ showProgressBar = true }: { showProgressBar?
         </div>
       </div>
       {showProgressBar && (
-        <div className="w-full z-10 space-y-2">
-          <Progress value={progress} className="h-1.5 bg-primary/20 border-none" />
-          <p className="text-xs text-center text-primary/50 font-code">{Math.round(progress)}%</p>
+        <div className="w-full z-10 space-y-3">
+          <Progress value={progress} className="h-2 bg-primary/20 border-none" />
+          <p className="text-sm text-center text-primary/50 font-code">{Math.round(progress)}%</p>
         </div>
       )}
     </div>

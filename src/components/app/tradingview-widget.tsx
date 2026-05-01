@@ -68,7 +68,10 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset, interval }
             "timeframes_toolbar",
             "display_market_status",
             "remove_library_container_border",
-            "create_volume_indicator_by_default" // Explicitly disable volume
+            "create_volume_indicator_by_default",
+            "show_legend",
+            "study_buttons_in_legend",
+            "pane_context_menu"
         ],
         enabled_features: [],
         overrides: {

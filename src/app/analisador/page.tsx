@@ -462,11 +462,11 @@ export default function AnalisadorPage() {
         </header>
 
         <main className="flex-grow container mx-auto p-4 lg:p-8 flex items-center justify-center">
-            <div className="w-full max-w-6xl mx-auto">
-                <div className="flex flex-col lg:flex-row gap-6 items-stretch justify-center">
+            <div className="w-full max-w-7xl mx-auto">
+                <div className="flex flex-col lg:flex-row gap-8 items-stretch justify-center">
                     {/* Left Column - Controls */}
-                    <div className="w-full lg:w-[360px] flex flex-col gap-6">
-                        <div className="w-full bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl p-6 min-h-[460px] flex items-center justify-center transition-all duration-500">
+                    <div className="w-full lg:w-[420px] flex flex-col gap-6">
+                        <div className="w-full bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl p-8 min-h-[600px] flex items-center justify-center transition-all duration-500">
                             {renderContent()}
                         </div>
                         
@@ -485,7 +485,7 @@ export default function AnalisadorPage() {
                     {/* Right Column - Visualization */}
                      <div className="flex-grow relative flex flex-col min-w-0">
                         {isOtcAsset ? (
-                            <div className="w-full h-full flex items-center justify-center bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl p-8 min-h-[460px]">
+                            <div className="w-full h-full flex items-center justify-center bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl p-8 min-h-[600px]">
                                 {appState === 'loading' ? (
                                     <AnalysisAnimation />
                                 ) : (
@@ -513,7 +513,7 @@ export default function AnalisadorPage() {
                                 )}
                             </div>
                         ) : (
-                            <div className="flex flex-col h-full min-h-[460px] bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl overflow-hidden transition-all duration-500">
+                            <div className="flex flex-col h-full min-h-[600px] bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl overflow-hidden transition-all duration-500">
                                 {/* Chart Header */}
                                 <div className="flex justify-between items-center px-4 py-2.5 border-b border-white/5 bg-white/5">
                                     <div className="flex items-center gap-4">

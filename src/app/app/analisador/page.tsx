@@ -29,7 +29,6 @@ import { generateSignal as generateClientSideSignal } from '@/lib/signal-generat
 import { VipUpgradeModal } from '@/components/app/vip-upgrade-modal';
 import { AnalysisAnimation } from '@/components/app/analysis-animation';
 import TradingViewWidget from '@/components/app/tradingview-widget';
-import { EconomicCalendar } from '@/components/app/economic-calendar';
 
 export type Asset = 
   | 'EUR/USD' | 'EUR/USD (OTC)'
@@ -533,10 +532,6 @@ export default function AnalisadorPage() {
                         )}
                     </div>
                 </div>
-            </div>
-
-            <div className="w-full max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
-                <EconomicCalendar asset={currentAsset} />
             </div>
         </main>
         

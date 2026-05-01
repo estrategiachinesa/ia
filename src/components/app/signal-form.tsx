@@ -27,44 +27,57 @@ import AffiliateLink from './affiliate-link';
 
 
 /**
- * Widget de notícias filtrado por moeda para o cockpit.
- * Refinado com zoom e recorte para melhor enquadramento técnico.
+ * Widget de Calendário Económico detalhado, integrado diretamente no painel de comando.
+ * Filtra por moedas e importância, focado em EUR, USD e JPY.
  */
-function CurrencyNewsWidget({ asset }: { asset: string }) {
+function EconomicCalendarWidget({ asset }: { asset: string }) {
   if (asset.includes('(OTC)')) return null;
 
   const isEurUsd = asset.includes('EUR/USD');
   const isEurJpy = asset.includes('EUR/JPY');
 
-  let countries = "";
+  // IDs dos países: USA: 5, Euro Zone: 72, Japan: 35
+  let countries = "5,72,35"; 
   if (isEurUsd) countries = "5,72";
   else if (isEurJpy) countries = "72,35";
-  else return null;
 
   return (
     <div className="w-full mb-8 rounded-2xl overflow-hidden border border-white/10 bg-black/60 shadow-2xl group animate-in fade-in slide-in-from-top-4 duration-700">
       <div className="px-5 py-3 bg-primary/5 border-b border-white/5 flex items-center justify-between group-hover:bg-primary/10 transition-colors">
         <div className="flex items-center gap-2.5">
             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            <span className="text-[0.65rem] font-black text-primary uppercase tracking-[0.15em]">Monitor de Volatilidade</span>
+            <span className="text-[0.65rem] font-black text-primary uppercase tracking-[0.15em]">Calendário Económico Real</span>
         </div>
-        <span className="text-[0.55rem] text-muted-foreground uppercase font-black opacity-30 tracking-tighter">{isEurUsd ? 'EUR • USD' : 'EUR • JPY'}</span>
+        <span className="text-[0.55rem] text-muted-foreground uppercase font-black opacity-30 tracking-tighter">Live Feed</span>
       </div>
-      <div className="h-[200px] w-full overflow-hidden relative bg-[#0a0a0a]">
-         <div className="absolute inset-0 scale-[1.15] origin-top">
+      <div className="h-[320px] w-full overflow-hidden relative bg-[#0a0a0a]">
+         <div className="absolute inset-0 scale-[1.1] origin-top">
             <iframe 
-              src={`https://sslecal2.investing.com?columns=exc_currency,exc_importance,exc_actual&importance=2,3&features=timezone&countries=${countries}&calType=day&timeZone=12&lang=12`} 
+              src={`https://sslecal2.investing.com?columns=exc_flags,exc_currency,exc_importance,exc_actual,exc_forecast,exc_previous&importance=2,3&features=timezone&countries=${countries}&calType=day&timeZone=12&lang=12`} 
               width="100%" 
-              height="250" 
+              height="400" 
               frameBorder="0" 
               allowTransparency={true}
-              className="filter invert hue-rotate-180 brightness-[0.85] contrast-[1.15] saturate-[0.9]"
+              className="filter invert hue-rotate-180 brightness-[0.7] contrast-[1.3] saturate-[0.8]"
               style={{ backgroundColor: 'transparent' }}
             ></iframe>
          </div>
-         {/* Gradientes de desvanecimento para "enquadrar" o conteúdo dentro do cockpit */}
-         <div className="absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-[#0a0a0a] to-transparent pointer-events-none" />
-         <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#0a0a0a] to-transparent pointer-events-none" />
+         {/* Gradientes de desvanecimento para integração visual */}
+         <div className="absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-[#0a0a0a] to-transparent pointer-events-none" />
+         <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-[#0a0a0a] to-transparent pointer-events-none" />
+      </div>
+      <div className="px-5 py-2 bg-white/5 flex justify-between items-center">
+         <span className="text-[0.55rem] text-primary/50 font-bold uppercase tracking-widest">Fonte: Investing.com</span>
+         <div className="flex gap-2">
+            <div className="flex items-center gap-1">
+                <div className="w-1 h-1 rounded-full bg-yellow-500" />
+                <span className="text-[0.5rem] text-muted-foreground font-bold">MED</span>
+            </div>
+            <div className="flex items-center gap-1">
+                <div className="w-1 h-1 rounded-full bg-red-500" />
+                <span className="text-[0.5rem] text-muted-foreground font-bold">ALTA</span>
+            </div>
+         </div>
       </div>
     </div>
   );
@@ -499,7 +512,7 @@ export function SignalForm({
     <>
       <div className="w-full space-y-8 text-center">
         
-        <CurrencyNewsWidget asset={formData.asset} />
+        <EconomicCalendarWidget asset={formData.asset} />
 
         <div className="space-y-3">
           <p className="text-[0.75rem] text-foreground/50 font-bold uppercase tracking-widest">

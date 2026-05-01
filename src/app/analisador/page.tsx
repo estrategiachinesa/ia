@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -31,7 +30,6 @@ import { generateSignal as generateClientSideSignal } from '@/lib/signal-generat
 import { VipUpgradeModal } from '@/components/app/vip-upgrade-modal';
 import { AnalysisAnimation } from '@/components/app/analysis-animation';
 import TradingViewWidget from '@/components/app/tradingview-widget';
-import { EconomicCalendar } from '@/components/app/economic-calendar';
 
 export type Asset = 
   | 'EUR/USD' | 'EUR/USD (OTC)'
@@ -450,7 +448,7 @@ export default function AnalisadorPage() {
           </div>
         </header>
 
-        <main className="flex-grow container max-w-[1400px] mx-auto p-4 lg:p-10 space-y-12">
+        <main className="flex-grow container max-w-[1400px] mx-auto p-4 lg:p-10">
             <div className="w-full">
                 <div className="flex flex-col lg:flex-row gap-8 items-start justify-center">
                     <div className="w-full lg:w-[450px] flex flex-col gap-6">
@@ -535,10 +533,6 @@ export default function AnalisadorPage() {
                         )}
                     </div>
                 </div>
-            </div>
-
-            <div className="w-full animate-in fade-in slide-in-from-bottom-6 duration-1000 delay-300">
-                <EconomicCalendar asset={currentAsset} />
             </div>
         </main>
         

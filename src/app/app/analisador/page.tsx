@@ -18,7 +18,7 @@ import YoutubePlayer from '@/components/youtube-player';
 import { SignalForm } from '@/components/app/signal-form';
 import { SignalResult } from '@/components/app/signal-result';
 import { isMarketOpenForAsset } from '@/lib/market-hours';
-import { Loader2, AlertTriangle, ChevronDown, ChevronUp, BarChart, LogOut, User } from 'lucide-react';
+import { Loader2, AlertTriangle, ChevronDown, ChevronUp, BarChart, LogOut, User, Calendar } from 'lucide-react';
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { useAppConfig } from '@/firebase/config-provider';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,7 @@ import { generateSignal as generateClientSideSignal } from '@/lib/signal-generat
 import { VipUpgradeModal } from '@/components/app/vip-upgrade-modal';
 import { AnalysisAnimation } from '@/components/app/analysis-animation';
 import TradingViewWidget from '@/components/app/tradingview-widget';
+import { EconomicCalendar } from '@/components/app/economic-calendar';
 
 export type Asset = 
   | 'EUR/USD' | 'EUR/USD (OTC)'
@@ -458,7 +459,7 @@ export default function AnalisadorPage() {
           </div>
         </header>
 
-        <main className="flex-grow container mx-auto p-4 lg:p-8 flex items-center justify-center">
+        <main className="flex-grow container mx-auto p-4 lg:p-8 space-y-8">
             <div className="w-full max-w-7xl mx-auto">
                 <div className="flex flex-col lg:flex-row gap-8 items-stretch justify-center">
                     {/* Left Column - Controls */}
@@ -550,6 +551,11 @@ export default function AnalisadorPage() {
                         )}
                     </div>
                 </div>
+            </div>
+
+            {/* Economic Calendar Section */}
+            <div className="w-full max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+                <EconomicCalendar />
             </div>
         </main>
         

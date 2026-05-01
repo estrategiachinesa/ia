@@ -71,7 +71,8 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset, interval }
             "create_volume_indicator_by_default",
             "show_legend",
             "study_buttons_in_legend",
-            "pane_context_menu"
+            "pane_context_menu",
+            "volume_force_overlay"
         ],
         enabled_features: [],
         overrides: {
@@ -93,6 +94,9 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset, interval }
             "mainSeriesProperties.candleStyle.downColor": "#ef4444",
             "mainSeriesProperties.candleStyle.wickUpColor": "#22c55e",
             "mainSeriesProperties.candleStyle.wickDownColor": "#ef4444",
+            "mainSeriesProperties.showPriceLine": true,
+            "mainSeriesProperties.priceLineWidth": 1,
+            "mainSeriesProperties.priceLineColor": "#666",
         },
         studies_overrides: {
             "Bollinger Bands.Upper.color": "#22c55e",
@@ -101,6 +105,7 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset, interval }
             "Bollinger Bands.Upper.linewidth": 1,
             "Bollinger Bands.Lower.linewidth": 1,
             "Bollinger Bands.Background.transparency": 95,
+            "volume.volume.visible": false,
         }
       });
     };

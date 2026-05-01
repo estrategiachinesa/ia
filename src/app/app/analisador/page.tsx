@@ -100,7 +100,6 @@ export default function AnalisadorPage() {
     expirationTime: '1m',
   });
 
-  // Effect for checking user session
   useEffect(() => {
     if (isUserLoading) {
         setAccessState('checking');
@@ -153,7 +152,6 @@ export default function AnalisadorPage() {
     };
   }, [vipData]);
 
-  // Effect for checking and updating signal usage limit
   useEffect(() => {
     if (isPremium || !usageStorageKey || !config) {
       setHasReachedLimit(false);
@@ -242,7 +240,6 @@ export default function AnalisadorPage() {
   }, [appState, signalData?.operationStatus]);
 
  const proceedWithAnalysis = async () => {
-    // Set a flag in session storage so this modal doesn't appear again during this session
     sessionStorage.setItem('hasSeenNewsWarning', 'true');
     setIsNewsWarningModalOpen(false);
     
@@ -277,11 +274,9 @@ export default function AnalisadorPage() {
 
     setAppState('loading');
     
-    // Simulate network delay for animation
     await new Promise(resolve => setTimeout(resolve, 5000));
     
     try {
-      // Use the client-side signal generator
       const result = generateClientSideSignal({
         asset: formData.asset,
         expirationTime: formData.expirationTime,
@@ -307,7 +302,6 @@ export default function AnalisadorPage() {
       setSignalData(newSignalData);
 
       if (!isPremium && usageStorageKey) {
-        // Update usage stats
         const usageString = localStorage.getItem(usageStorageKey) || '{ "timestamps": [] }';
         const currentUsage: SignalUsage = JSON.parse(usageString);
         const oneHourAgo = Date.now() - 60 * 60 * 1000;
@@ -335,14 +329,11 @@ export default function AnalisadorPage() {
   };
 
   const handleAnalyze = () => {
-    // Check if the user has already seen the warning in this session
     const hasSeenWarning = sessionStorage.getItem('hasSeenNewsWarning');
 
     if (hasSeenWarning) {
-      // If they have, proceed directly to analysis
       proceedWithAnalysis();
     } else {
-      // Otherwise, show the warning modal
       setHasAgreedToNewsWarning(false);
       setIsNewsWarningModalOpen(true);
     }
@@ -356,11 +347,10 @@ export default function AnalisadorPage() {
   const handleLogout = async () => {
     await auth.signOut();
     localStorage.removeItem('loginTimestamp');
-    localStorage.removeItem('hasSeenVipWelcome'); // Clear welcome message flag on logout
+    localStorage.removeItem('hasSeenVipWelcome');
     router.push('/app/login');
   }
 
-  // Loading screen while checking user auth
   if (accessState === 'checking' || isVipLoading || isConfigLoading) {
       return (
           <div className="flex h-screen w-full items-center justify-center">
@@ -370,7 +360,6 @@ export default function AnalisadorPage() {
       )
   }
 
-  // Access denied dialog
   if (accessState === 'denied') {
     return (
       <AlertDialog open={true}>
@@ -424,7 +413,6 @@ export default function AnalisadorPage() {
   const isOtcAsset = currentAsset.includes('(OTC)');
 
 
-  // Main content for granted access
   return (
     <>
       <div className="fixed inset-0 -z-20 h-full w-full grid-bg" />
@@ -462,13 +450,11 @@ export default function AnalisadorPage() {
         <main className="flex-grow container mx-auto p-4 lg:p-8 space-y-8">
             <div className="w-full max-w-7xl mx-auto">
                 <div className="flex flex-col lg:flex-row gap-8 items-stretch justify-center">
-                    {/* Left Column - Controls */}
                     <div className="w-full lg:w-[420px] flex flex-col gap-6">
-                        <div className="w-full bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl p-8 min-h-[600px] flex items-center justify-center transition-all duration-500">
+                        <div className="w-full bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl p-8 min-h-[600px] flex flex-col items-center justify-center transition-all duration-500">
                             {renderContent()}
                         </div>
                         
-                        {/* Summary Widget */}
                         {!isPremium && appState !== 'loading' && (
                              <div className="bg-gradient-to-br from-primary/20 to-transparent border border-primary/20 rounded-xl p-4 flex items-center justify-between">
                                 <div className="space-y-0.5">
@@ -480,7 +466,6 @@ export default function AnalisadorPage() {
                         )}
                     </div>
 
-                    {/* Right Column - Visualization */}
                      <div className="flex-grow relative flex flex-col min-w-0">
                         {isOtcAsset ? (
                             <div className="w-full h-full flex items-center justify-center bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl p-8 min-h-[600px]">
@@ -512,7 +497,6 @@ export default function AnalisadorPage() {
                             </div>
                         ) : (
                             <div className="flex flex-col h-full min-h-[600px] bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl overflow-hidden transition-all duration-500">
-                                {/* Chart Header */}
                                 <div className="flex justify-between items-center px-4 py-2.5 border-b border-white/5 bg-white/5">
                                     <div className="flex items-center gap-4">
                                         <div className="flex items-center gap-2">
@@ -531,7 +515,6 @@ export default function AnalisadorPage() {
                                     </Button>
                                 </div>
 
-                                {/* Chart Content */}
                                 <div className="flex-grow bg-[#0a0a0a] relative">
                                     {isChartVisible && (
                                         <TradingViewWidget
@@ -540,7 +523,6 @@ export default function AnalisadorPage() {
                                         />
                                     )}
                                     
-                                    {/* Loading Overlay */}
                                     {appState === 'loading' && (
                                         <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-md z-10 transition-all duration-300">
                                             <AnalysisAnimation showProgressBar={false} />
@@ -553,7 +535,6 @@ export default function AnalisadorPage() {
                 </div>
             </div>
 
-            {/* Economic Calendar Section */}
             <div className="w-full max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
                 <EconomicCalendar />
             </div>

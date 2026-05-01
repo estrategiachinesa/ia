@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -9,7 +8,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { BarChart, Info, Loader2, Lock, Send, Timer, Crown, Trophy } from 'lucide-react';
+import { BarChart, Info, Loader2, Lock, Send, Timer, Crown, Trophy, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { CurrencyFlags } from './currency-flags';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -60,6 +59,40 @@ const allAssets: Asset[] = [
   'EUR/USD', 'EUR/USD (OTC)',
 ];
 
+function CurrencyMarketPulse() {
+  return (
+    <div className="w-full space-y-4 mb-8">
+      <div className="flex items-center gap-2 mb-2">
+        <TrendingUp className="h-4 w-4 text-primary" />
+        <h3 className="text-[0.65rem] font-bold text-muted-foreground uppercase tracking-widest">Sentiment de Moeda (H1)</h3>
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center group hover:bg-white/10 transition-colors">
+          <p className="text-[0.6rem] font-bold text-muted-foreground uppercase mb-1">EUR</p>
+          <div className="flex flex-col items-center gap-1">
+             <Minus className="h-4 w-4 text-yellow-500" />
+             <span className="text-[0.65rem] font-bold text-yellow-500">ESTÁVEL</span>
+          </div>
+        </div>
+        <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center group hover:bg-white/10 transition-colors">
+          <p className="text-[0.6rem] font-bold text-muted-foreground uppercase mb-1">USD</p>
+          <div className="flex flex-col items-center gap-1">
+             <TrendingUp className="h-4 w-4 text-green-500" />
+             <span className="text-[0.65rem] font-bold text-green-500">FORTE</span>
+          </div>
+        </div>
+        <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-center group hover:bg-white/10 transition-colors">
+          <p className="text-[0.6rem] font-bold text-muted-foreground uppercase mb-1">JPY</p>
+          <div className="flex flex-col items-center gap-1">
+             <TrendingDown className="h-4 w-4 text-red-500" />
+             <span className="text-[0.65rem] font-bold text-red-500">FRACO</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 export function SignalForm({
   formData,
@@ -92,11 +125,9 @@ export function SignalForm({
   const assets = showOTC ? allAssets : allAssets.filter(a => !a.includes('(OTC)'));
 
   useEffect(() => {
-    // Open the modal if the limit is reached, the user is not vip, and the status is not PREMIUM
     if (hasReachedLimit && !isPremium) {
       setVipModalOpen(true);
     }
-     // Also open modal if user becomes approved and hasn't seen the welcome message
      if (vipStatus === 'PREMIUM' || vipStatus === 'APPROVED') {
         const hasSeenWelcome = localStorage.getItem('hasSeenVipWelcome');
         if (!hasSeenWelcome) {
@@ -106,15 +137,12 @@ export function SignalForm({
   }, [hasReachedLimit, isPremium, vipStatus, setVipModalOpen]);
 
   useEffect(() => {
-    // If OTC is turned off and an OTC asset is selected, reset to a default non-OTC asset
     if (!showOTC && formData.asset.includes('(OTC)')) {
       setFormData({ ...formData, asset: 'EUR/JPY' });
     }
   }, [showOTC, formData, setFormData]);
 
   useEffect(() => {
-    // This effect shows a contextual waiting message directly on the dashboard.
-    // It's clearer than only showing status inside a modal.
     if (vipStatus === 'PENDING') {
       setWaitingMessage('Analisando seu cadastro para ser PREMIUM e ter acesso prioritário, e evitar filas.');
     } else if (vipStatus === 'AWAITING_DEPOSIT') {
@@ -127,7 +155,6 @@ export function SignalForm({
   }, [vipStatus]);
   
   useEffect(() => {
-    // Reset showDepositLinks state when modal is closed or vipStatus changes
     if (!isVipModalOpen || vipStatus !== 'AWAITING_DEPOSIT') {
         setShowDepositLinks(false);
     }
@@ -144,7 +171,6 @@ export function SignalForm({
       return;
     }
     
-    // Check if user is re-submitting a rejected ID
     if (vipStatus === 'REJECTED' && rejectedBrokerId && brokerId === rejectedBrokerId) {
       toast({
         variant: 'destructive',
@@ -403,7 +429,7 @@ export function SignalForm({
             </DialogFooter>
           </>
         )
-      default: // No status or limit reached
+      default:
         return (
           <div className="theme-premium">
             <DialogContent>
@@ -453,9 +479,11 @@ export function SignalForm({
   return (
     <>
       <div className="w-full space-y-6 text-center">
+        <CurrencyMarketPulse />
+        
         <div className="space-y-2">
-          <p className="text-lg text-foreground/80">
-            Escolha o ativo e o tempo de expiração para receber seus sinais.
+          <p className="text-sm text-foreground/70">
+            Escolha o ativo e o tempo de expiração para análise.
           </p>
         </div>
 
@@ -596,4 +624,3 @@ export function SignalForm({
   );
 }
 
-    

@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { BarChart, Info, Loader2, Lock, Send, Timer, Crown, Trophy, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { BarChart, Info, Loader2, Lock, Send, Timer, Crown, Trophy } from 'lucide-react';
 import { CurrencyFlags } from './currency-flags';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -28,8 +28,8 @@ import AffiliateLink from './affiliate-link';
 
 /**
  * Widget de Calendário Económico ultra-focado.
- * Exibe apenas Hora, Moeda e Relevância (Touros).
- * Recorte preciso para remover branding e ruído do iframe original.
+ * Exibe apenas HORA, ATIVO e TOUROS.
+ * Design minimalista integrado ao painel.
  */
 function EconomicCalendarWidget({ asset }: { asset: string }) {
   if (asset.includes('(OTC)')) return null;
@@ -43,43 +43,47 @@ function EconomicCalendarWidget({ asset }: { asset: string }) {
   else if (isEurJpy) countries = "72,35";
 
   return (
-    <div className="w-full mb-6 rounded-2xl overflow-hidden border border-white/10 bg-black/60 shadow-2xl animate-in fade-in slide-in-from-top-4 duration-700">
-      <div className="px-5 py-3 bg-primary/5 border-b border-white/5 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
+    <div className="w-full mb-6 rounded-2xl overflow-hidden border border-white/5 bg-black/40 shadow-inner animate-in fade-in duration-500">
+      <div className="px-4 py-2.5 bg-white/5 border-b border-white/5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            <span className="text-[0.65rem] font-black text-primary uppercase tracking-[0.2em]">Monitor de Volatilidade</span>
+            <span className="text-[0.6rem] font-black text-muted-foreground uppercase tracking-[0.2em]">Live Volatility</span>
         </div>
-        <span className="text-[0.5rem] text-muted-foreground uppercase font-black opacity-40 italic">Real-Time</span>
+        <div className="flex items-center gap-4 text-[0.55rem] font-bold text-muted-foreground/40 uppercase">
+            <span>Hora</span>
+            <span>Ativo</span>
+            <span>Imp</span>
+        </div>
       </div>
       
-      <div className="h-[150px] w-full overflow-hidden relative bg-[#0a0a0a]">
-         {/* Container de recorte: esconde logo, cabeçalho e colunas de texto */}
-         <div className="absolute w-[130%] left-[-15%] top-[-108px]">
+      <div className="h-[120px] w-full overflow-hidden relative bg-[#0a0a0a]">
+         {/* Recorte preciso: foca apenas nas 3 primeiras colunas de dados */}
+         <div className="absolute w-[200%] left-[-5px] top-[-105px]">
             <iframe 
               src={`https://sslecal2.investing.com?columns=exc_flags,exc_currency,exc_importance&importance=2,3&countries=${countries}&calType=day&timeZone=12&lang=12`} 
               width="100%" 
-              height="350" 
+              height="400" 
               frameBorder="0" 
               allowTransparency={true}
-              className="filter invert hue-rotate-180 brightness-[0.75] contrast-[1.6] saturate-[0.7] scale-[1.3] origin-top"
+              className="filter invert hue-rotate-180 brightness-[0.9] contrast-[1.4] saturate-[0.8] scale-[1.1] origin-top-left"
               style={{ backgroundColor: 'transparent' }}
             ></iframe>
          </div>
          
-         {/* Gradientes de desvanecimento para integração visual premium */}
-         <div className="absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-[#0a0a0a] to-transparent pointer-events-none" />
-         <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-[#0a0a0a] to-transparent pointer-events-none" />
-         <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_30px_rgba(0,0,0,0.9)]" />
+         {/* Overlays para fundir o widget com o layout do app */}
+         <div className="absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-[#0a0a0a] to-transparent pointer-events-none" />
+         <div className="absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-[#0a0a0a] to-transparent pointer-events-none" />
+         <div className="absolute right-0 top-0 bottom-0 w-2/3 bg-gradient-to-l from-[#0a0a0a] via-[#0a0a0a]/50 to-transparent pointer-events-none" />
       </div>
 
-      <div className="px-5 py-2.5 bg-white/5 flex justify-center items-center gap-6">
-            <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 shadow-[0_0_8px_rgba(234,179,8,0.3)]" />
-                <span className="text-[0.55rem] text-muted-foreground font-black uppercase">Impacto Médio</span>
+      <div className="px-4 py-2 bg-white/5 flex justify-center gap-4 border-t border-white/5">
+            <div className="flex items-center gap-1.5 opacity-60">
+                <div className="w-1 h-1 rounded-full bg-yellow-500" />
+                <span className="text-[0.5rem] font-bold uppercase text-muted-foreground tracking-tighter">Médio</span>
             </div>
-            <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.3)]" />
-                <span className="text-[0.55rem] text-muted-foreground font-black uppercase">Alto Impacto</span>
+            <div className="flex items-center gap-1.5 opacity-60">
+                <div className="w-1 h-1 rounded-full bg-red-500" />
+                <span className="text-[0.5rem] font-bold uppercase text-muted-foreground tracking-tighter">Alto</span>
             </div>
       </div>
     </div>
@@ -310,7 +314,7 @@ export function SignalForm({
               </DialogDescription>
             </DialogHeader>
             <div className="py-4 text-center">
-              <Crown className="h-16 w-16 mx-auto text-primary animate-pulse" />
+              <Loader2 className="h-16 w-16 mx-auto text-primary animate-pulse" />
             </div>
             <DialogFooter>
               <Button onClick={() => {

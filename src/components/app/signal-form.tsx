@@ -56,7 +56,7 @@ function EconomicCalendarWidget({ asset }: { asset: string }) {
         </div>
       </div>
       
-      <div className="h-[120px] w-full overflow-hidden relative bg-[#0a0a0a]">
+      <div className="h-[140px] w-full overflow-hidden relative bg-[#0a0a0a]">
          {/* Recorte preciso: foca apenas nas 3 primeiras colunas de dados */}
          <div className="absolute w-[200%] left-[-5px] top-[-105px]">
             <iframe 
@@ -71,20 +71,9 @@ function EconomicCalendarWidget({ asset }: { asset: string }) {
          </div>
          
          {/* Overlays para fundir o widget com o layout do app */}
-         <div className="absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-[#0a0a0a] to-transparent pointer-events-none" />
-         <div className="absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-[#0a0a0a] to-transparent pointer-events-none" />
+         <div className="absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-[#0a0a0a] to-transparent pointer-events-none" />
+         <div className="absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-[#0a0a0a] to-transparent pointer-events-none" />
          <div className="absolute right-0 top-0 bottom-0 w-2/3 bg-gradient-to-l from-[#0a0a0a] via-[#0a0a0a]/50 to-transparent pointer-events-none" />
-      </div>
-
-      <div className="px-4 py-2 bg-white/5 flex justify-center gap-4 border-t border-white/5">
-            <div className="flex items-center gap-1.5 opacity-60">
-                <div className="w-1 h-1 rounded-full bg-yellow-500" />
-                <span className="text-[0.5rem] font-bold uppercase text-muted-foreground tracking-tighter">Médio</span>
-            </div>
-            <div className="flex items-center gap-1.5 opacity-60">
-                <div className="w-1 h-1 rounded-full bg-red-500" />
-                <span className="text-[0.5rem] font-bold uppercase text-muted-foreground tracking-tighter">Alto</span>
-            </div>
       </div>
     </div>
   );

@@ -29,7 +29,7 @@ import AffiliateLink from './affiliate-link';
 /**
  * Widget de Calendário Económico ultra-focado.
  * Exibe apenas HORA, ATIVO e TOUROS.
- * Design minimalista integrado ao painel.
+ * Agora com suporte a scroll vertical para ver todas as notícias do dia.
  */
 function EconomicCalendarWidget({ asset }: { asset: string }) {
   if (asset.includes('(OTC)')) return null;
@@ -56,13 +56,13 @@ function EconomicCalendarWidget({ asset }: { asset: string }) {
         </div>
       </div>
       
-      <div className="h-[140px] w-full overflow-hidden relative bg-[#0a0a0a]">
-         {/* Recorte preciso: foca apenas nas 3 primeiras colunas de dados */}
-         <div className="absolute w-[200%] left-[-5px] top-[-105px]">
+      <div className="h-[160px] w-full overflow-y-auto relative bg-[#0a0a0a] scrollbar-thin scrollbar-thumb-primary/20">
+         {/* Recorte preciso com altura expandida para permitir o scroll interno */}
+         <div className="relative w-[200%] left-[-5px] top-[-105px]">
             <iframe 
               src={`https://sslecal2.investing.com?columns=exc_flags,exc_currency,exc_importance&importance=2,3&countries=${countries}&calType=day&timeZone=12&lang=12`} 
               width="100%" 
-              height="400" 
+              height="1000" 
               frameBorder="0" 
               allowTransparency={true}
               className="filter invert hue-rotate-180 brightness-[0.9] contrast-[1.4] saturate-[0.8] scale-[1.1] origin-top-left"
@@ -70,10 +70,9 @@ function EconomicCalendarWidget({ asset }: { asset: string }) {
             ></iframe>
          </div>
          
-         {/* Overlays para fundir o widget com o layout do app */}
-         <div className="absolute inset-x-0 top-0 h-6 bg-gradient-to-b from-[#0a0a0a] to-transparent pointer-events-none" />
-         <div className="absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-[#0a0a0a] to-transparent pointer-events-none" />
-         <div className="absolute right-0 top-0 bottom-0 w-2/3 bg-gradient-to-l from-[#0a0a0a] via-[#0a0a0a]/50 to-transparent pointer-events-none" />
+         {/* Overlays para fundir o widget com o layout do app mantendo o scroll funcional */}
+         <div className="absolute inset-x-0 top-0 h-4 bg-gradient-to-b from-[#0a0a0a] to-transparent pointer-events-none z-10" />
+         <div className="absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-[#0a0a0a] to-transparent pointer-events-none z-10" />
       </div>
     </div>
   );
@@ -558,7 +557,7 @@ export function SignalForm({
               </SelectTrigger>
               <SelectContent className="rounded-xl border-white/10 bg-card/95 backdrop-blur-xl">
                 {assets.map(asset => (
-                  <SelectItem key={asset} value={asset} className="rounded-lg focus:bg-primary/10">
+                  <SelectItem key={asset} value={asset} className="rounded-lg focus:bg-primary/20 focus:text-foreground">
                     <div className="flex items-center gap-3">
                       <CurrencyFlags asset={asset} />
                       <span className="font-bold">{asset}</span>
@@ -580,8 +579,8 @@ export function SignalForm({
                 <SelectValue placeholder="Selecione o Tempo" />
               </SelectTrigger>
               <SelectContent className="rounded-xl border-white/10 bg-card/95 backdrop-blur-xl">
-                <SelectItem value="1m" className="rounded-lg focus:bg-primary/10 font-bold">1 minuto (M1)</SelectItem>
-                <SelectItem value="5m" className="rounded-lg focus:bg-primary/10 font-bold">5 minutos (M5)</SelectItem>
+                <SelectItem value="1m" className="rounded-lg focus:bg-primary/20 focus:text-foreground font-bold">1 minuto (M1)</SelectItem>
+                <SelectItem value="5m" className="rounded-lg focus:bg-primary/20 focus:text-foreground font-bold">5 minutos (M5)</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { BarChart, Info, Loader2, Lock, Send, Timer, Crown, Trophy } from 'lucide-react';
+import { BarChart, Info, Loader2, Lock, Send, Timer, Crown, Trophy, ExternalLink } from 'lucide-react';
 import { CurrencyFlags } from './currency-flags';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -48,6 +48,15 @@ function EconomicCalendarWidget({ asset }: { asset: string }) {
         <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
             <span className="text-[0.6rem] font-black text-muted-foreground uppercase tracking-[0.2em]">Live Volatility</span>
+            <a 
+              href="https://br.investing.com/economic-calendar/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="ml-1 p-0.5 rounded hover:bg-white/10 transition-all opacity-30 hover:opacity-100 text-muted-foreground hover:text-primary"
+              title="Ver Calendário Completo"
+            >
+              <ExternalLink className="h-2.5 w-2.5" />
+            </a>
         </div>
         <div className="flex items-center gap-4 text-[0.55rem] font-bold text-muted-foreground/40 uppercase">
             <span>Hora</span>

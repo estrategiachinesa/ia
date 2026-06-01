@@ -107,18 +107,17 @@ export default function AnalisadorPage() {
     expirationTime: '1m',
   });
 
-  // Check account status in real-time
+  // CRITICAL: Force immediate logout if account is disabled
   useEffect(() => {
     if (userProfile?.accountStatus === 'DISABLED') {
       setAccessState('blocked');
-      // Sign out and redirect after a short delay
-      setTimeout(() => {
-        auth.signOut();
-        router.push('/login');
-      }, 5000);
-      return;
+      // Sign out immediately to kill the session token
+      auth.signOut().then(() => {
+        localStorage.removeItem('loginTimestamp');
+        localStorage.removeItem('hasSeenVipWelcome');
+      });
     }
-  }, [userProfile, auth, router]);
+  }, [userProfile?.accountStatus, auth]);
 
   useEffect(() => {
     if (isUserLoading || isProfileLoading) {
@@ -396,7 +395,7 @@ export default function AnalisadorPage() {
            </div>
            <h2 className="text-3xl font-headline font-black text-foreground uppercase tracking-tight">Acesso Bloqueado</h2>
            <p className="text-muted-foreground leading-relaxed">Sua conta foi suspensa por um administrador. Se você acredita que isso é um erro, entre em contato com o suporte oficial.</p>
-           <Button variant="outline" onClick={handleLogout} className="w-full h-12 rounded-xl font-bold">Voltar para Início</Button>
+           <Button variant="outline" onClick={() => router.push('/login')} className="w-full h-12 rounded-xl font-bold">Voltar para Início</Button>
         </div>
       </div>
     );

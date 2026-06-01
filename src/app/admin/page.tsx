@@ -100,7 +100,7 @@ export default function AdminDashboard() {
       // Use setDoc with merge to handle users that don't have a doc in 'users' collection yet
       await setDoc(doc(firestore, 'users', userId), { 
         accountStatus: newStatus,
-        email: email,
+        email: email === '---' ? (userId + "@placeholder.com") : email,
         updatedAt: serverTimestamp()
       }, { merge: true });
       
@@ -127,7 +127,7 @@ export default function AdminDashboard() {
       await setDoc(reqRef, { 
         status: newVipStatus,
         userId: userId,
-        userEmail: email,
+        userEmail: email === '---' ? "" : email,
         submittedAt: serverTimestamp()
       }, { merge: true });
       
@@ -135,7 +135,7 @@ export default function AdminDashboard() {
       const userRef = doc(firestore, 'users', userId);
       await setDoc(userRef, { 
         subscriptionStatus: newSubStatus,
-        email: email
+        email: email === '---' ? "" : email
       }, { merge: true });
 
       toast({ 
@@ -148,6 +148,10 @@ export default function AdminDashboard() {
   };
 
   const handleResetPassword = async (email: string) => {
+    if (email === '---') {
+        toast({ variant: 'destructive', title: 'E-mail Indisponível', description: 'Este utilizador ainda não completou o perfil.' });
+        return;
+    }
     try {
       await sendPasswordResetEmail(auth, email);
       toast({ title: 'E-mail Enviado', description: `Link de redefinição enviado para ${email}` });

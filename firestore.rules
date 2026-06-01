@@ -6,69 +6,11 @@
  * This ruleset enforces access control for VIP requests, app configuration,
  * and user data. It uses ownership-based rules to protect user data and
  * prevents clients from modifying subscription statuses.
- *
- * Data Structure:
- * - `/appConfig/{doc}`: Stores global app configurations. Publicly readable.
- * - `/vipRequests/{userId}`: Stores VIP access requests. Restricted to owner.
- * - `/users/{userId}`: Main user document. Contains subscription status.
- * - `/session/{docId}`: Stores session status for 'sessaochinesa'. Publicly readable.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    /**
-     * @description Grants public read access. Write access is disabled from clients.
-     * @path /appConfig/{configDoc}
-     */
-    match /appConfig/{configDoc} {
-      allow read: if true;
-      allow write: if false; // Should be managed from Firebase Console
-    }
-
-    /**
-     * @description Rules for VIP access requests.
-     * @path /vipRequests/{userId}
-     */
-    match /vipRequests/{userId} {
-      allow get: if isSignedIn() && isOwner(userId);
-      allow list: if false;
-      allow write: if isSignedIn() && isOwner(userId) && isValidVipRequestUpdate(request, resource);
-    }
-    
-    /**
-     * @description Grants public read access to the session status and score for sessaochinesa.
-     * @path /session/{docId}
-     */
-    match /session/{docId} {
-      allow read: if true;
-      allow write: if false; // Should be managed from Firebase Console
-    }
-
-    /**
-     * @description Rules for affiliate data.
-     * @path /affiliates/{affiliateId}
-     */
-    match /affiliates/{affiliateId} {
-      allow read: if true;
-      allow write: if false; // Managed from Firebase Console only
-    }
-
-    /**
-     * @description Main user data collection.
-     * @path /users/{userId}
-     */
-    match /users/{userId} {
-      // Users can read their own data.
-      allow read: if isSignedIn() && isOwner(userId);
-      
-      // Users can create their own profile.
-      allow create: if isSignedIn() && isOwner(userId);
-      
-      // Users can update their profile, but CANNOT change their subscription status.
-      allow update: if isSignedIn() && isOwner(userId) && !isChangingSubscription();
-    }
-
     // Helper functions.
     function isSignedIn() {
       return request.auth != null;
@@ -78,9 +20,46 @@ service cloud.firestore {
       return request.auth.uid == userId;
     }
 
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email == 'chines@trader.com';
+    }
+
+    /**
+     * @description Grants public read access. Write access is disabled from clients.
+     */
+    match /appConfig/{configDoc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    /**
+     * @description Rules for VIP access requests.
+     */
+    match /vipRequests/{userId} {
+      allow get: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow list: if isAdmin();
+      allow write: if isAdmin() || (isSignedIn() && isOwner(userId) && isValidVipRequestUpdate(request, resource));
+    }
+    
+    /**
+     * @description Rules for affiliate data.
+     */
+    match /affiliates/{affiliateId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    /**
+     * @description Main user data collection.
+     */
+    match /users/{userId} {
+      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isAdmin() || (isSignedIn() && isOwner(userId) && !isChangingSubscription());
+    }
+
     /**
      * @description Prevents a user from modifying their own subscriptionStatus.
-     * This field should only be changed by a backend process (like a Firebase Function).
      */
     function isChangingSubscription() {
       return request.resource.data.subscriptionStatus != resource.data.subscriptionStatus;

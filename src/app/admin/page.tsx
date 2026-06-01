@@ -1,8 +1,9 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, doc, updateDoc, deleteDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { 
   Loader2, 
@@ -106,14 +107,32 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleUpdateSubscription = async (userId: string, currentStatus: string | undefined) => {
+  const handleUpdateSubscription = async (userId: string, currentPlan: string, email: string) => {
     if (!firestore) return;
-    const newStatus = currentStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    
+    const isNowPremium = currentPlan !== 'PREMIUM';
+    const newVipStatus = isNowPremium ? 'PREMIUM' : 'PENDING';
+    const newSubStatus = isNowPremium ? 'ACTIVE' : 'INACTIVE';
+
     try {
-      await updateDoc(doc(firestore, 'users', userId), { subscriptionStatus: newStatus });
+      // Update or Create vipRequests record
+      const reqRef = doc(firestore, 'vipRequests', userId);
+      await setDoc(reqRef, { 
+        status: newVipStatus,
+        userId: userId,
+        userEmail: email,
+        submittedAt: serverTimestamp()
+      }, { merge: true });
+      
+      // Sync with users collection
+      const userRef = doc(firestore, 'users', userId);
+      await updateDoc(userRef, { subscriptionStatus: newSubStatus }).catch(() => {
+          // If user doc doesn't exist, we skip sync (it will sync on next login)
+      });
+
       toast({ 
         title: 'Plano Alterado', 
-        description: `Usuário agora é ${newStatus === 'ACTIVE' ? 'PREMIUM' : 'VIP'}` 
+        description: `Usuário agora é ${isNowPremium ? 'PREMIUM' : 'VIP'}` 
       });
     } catch (e) {
       toast({ variant: 'destructive', title: 'Erro ao alterar plano' });
@@ -134,6 +153,7 @@ export default function AdminDashboard() {
     setIsDeleting(true);
     try {
       await deleteDoc(doc(firestore, 'users', deleteUserId));
+      await deleteDoc(doc(firestore, 'vipRequests', deleteUserId)).catch(() => {});
       toast({ title: 'Utilizador Eliminado' });
       setDeleteUserId(null);
     } catch (e) {
@@ -143,30 +163,35 @@ export default function AdminDashboard() {
     }
   };
 
-  // Robust Merging Logic to ensure NO ONE is missed
+  // Robust Merging Logic to ensure NO ONE is missed from Auth mirror (users) or Requests
   const mergedUsers = useMemo(() => {
     if (!rawUsers && !rawRequests) return [];
     
-    // Create a set of all unique IDs from both collections
     const allIds = new Set([
       ...(rawUsers?.map(u => u.id) || []),
-      ...(rawRequests?.map(r => r.id) || []),
-      ...(rawRequests?.map(r => (r as any).userId).filter(Boolean) || [])
+      ...(rawRequests?.map(r => r.id) || [])
     ]);
 
     return Array.from(allIds).map(id => {
       const u = rawUsers?.find(userDoc => userDoc.id === id);
-      const r = rawRequests?.find(reqDoc => reqDoc.id === id || (reqDoc as any).userId === id);
+      const r = rawRequests?.find(reqDoc => reqDoc.id === id);
+
+      // Email priority: User Doc -> Request Doc
+      const email = u?.email || r?.userEmail || (r as any).email || '---';
+      
+      // Plan precisely from vipRequests status
+      const vipStatus = r?.status;
+      const plan = (vipStatus === 'PREMIUM' || vipStatus === 'APPROVED') ? 'PREMIUM' : 'VIP';
 
       return {
         id,
-        email: u?.email || r?.userEmail || (r as any).email || '---',
+        email,
         createdAt: u?.createdAt || r?.submittedAt || null,
         brokerId: r?.brokerId || '---',
         accountStatus: u?.accountStatus || 'ACTIVE',
-        subscriptionStatus: u?.subscriptionStatus || (r?.status === 'PREMIUM' ? 'ACTIVE' : 'INACTIVE'),
+        subscriptionStatus: plan,
         displayName: u?.displayName || (r as any).userName || null,
-        isGhost: !u // User exists in requests but not in main app auth/users collection yet
+        isGhost: !u // Visible in requests but not in mirrored auth collection
       };
     })
     .filter(u => 
@@ -177,11 +202,9 @@ export default function AdminDashboard() {
       let valA = a[sortConfig.key as keyof typeof a] as any;
       let valB = b[sortConfig.key as keyof typeof b] as any;
       
-      // Handle timestamps
       if (valA?.seconds) valA = valA.seconds;
       if (valB?.seconds) valB = valB.seconds;
       
-      // Handle nulls in sorting
       if (valA === null || valA === undefined) valA = 0;
       if (valB === null || valB === undefined) valB = 0;
 
@@ -240,7 +263,7 @@ export default function AdminDashboard() {
             </Card>
             <Card className="bg-card/40 border-white/5 p-4 min-w-[140px]">
               <p className="text-[0.6rem] uppercase tracking-widest text-muted-foreground font-bold">Premium</p>
-              <div className="text-2xl font-black text-purple-500">{mergedUsers.filter(u => u.subscriptionStatus === 'ACTIVE').length}</div>
+              <div className="text-2xl font-black text-purple-500">{mergedUsers.filter(u => u.subscriptionStatus === 'PREMIUM').length}</div>
             </Card>
              <Card className="bg-card/40 border-white/5 p-4 min-w-[140px]">
               <p className="text-[0.6rem] uppercase tracking-widest text-muted-foreground font-bold">Suspensos</p>
@@ -315,23 +338,23 @@ export default function AdminDashboard() {
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild disabled={u.isGhost}>
+                      <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="sm" className="h-auto p-0 hover:bg-transparent">
                           <Badge 
-                            className={`cursor-pointer text-[0.6rem] font-black tracking-tighter ${
-                              u.subscriptionStatus === 'ACTIVE' 
-                                ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                                : 'bg-yellow-500 hover:bg-yellow-600 text-black'
-                            } ${u.isGhost ? 'opacity-30' : ''}`}
+                            className={`cursor-pointer text-[0.6rem] font-black tracking-tighter shadow-md ${
+                              u.subscriptionStatus === 'PREMIUM' 
+                                ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-400/30' 
+                                : 'bg-yellow-500 hover:bg-yellow-600 text-black border-yellow-400/30'
+                            }`}
                           >
-                            {u.subscriptionStatus === 'ACTIVE' ? 'PREMIUM' : 'VIP'}
+                            {u.subscriptionStatus}
                           </Badge>
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start" className="bg-black/95 border-white/10">
-                        <DropdownMenuItem onClick={() => handleUpdateSubscription(u.id, u.subscriptionStatus)} className="text-xs font-bold">
-                           {u.subscriptionStatus === 'ACTIVE' ? <UserX className="h-3 w-3 mr-2" /> : <UserCheck className="h-3 w-3 mr-2 text-green-500" />}
-                           {u.subscriptionStatus === 'ACTIVE' ? 'Rebaixar para VIP' : 'Ativar PREMIUM'}
+                        <DropdownMenuItem onClick={() => handleUpdateSubscription(u.id, u.subscriptionStatus, u.email)} className="text-xs font-bold">
+                           {u.subscriptionStatus === 'PREMIUM' ? <UserX className="h-3 w-3 mr-2" /> : <UserCheck className="h-3 w-3 mr-2 text-green-500" />}
+                           {u.subscriptionStatus === 'PREMIUM' ? 'Rebaixar para VIP' : 'Ativar PREMIUM'}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -387,7 +410,7 @@ export default function AdminDashboard() {
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-headline font-black uppercase tracking-tight">Excluir Registo?</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground leading-relaxed">
-              Esta ação é **irreversível**. O registo será removido permanentemente. Se for um utilizador do App, ele perderá o acesso imediatamente.
+              Esta ação é **irreversível**. O registo será removido permanentemente de todas as coleções.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-3">

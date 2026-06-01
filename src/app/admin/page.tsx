@@ -198,10 +198,15 @@ export default function AdminDashboard() {
         isGhost: !u
       };
     })
-    .filter(u => 
-      u.email?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      u.brokerId?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    .filter(u => {
+      if (!searchTerm) return true;
+      const search = searchTerm.toLowerCase();
+      return (
+        u.email?.toLowerCase().includes(search) || 
+        u.brokerId?.toLowerCase().includes(search) ||
+        u.id.toLowerCase().includes(search)
+      );
+    })
     .sort((a, b) => {
       let valA = a[sortConfig.key as keyof typeof a] as any;
       let valB = b[sortConfig.key as keyof typeof b] as any;

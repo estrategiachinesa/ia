@@ -19,7 +19,8 @@ import {
   UserX,
   ArrowUpDown,
   MoreVertical,
-  Mail
+  Mail,
+  AlertCircle
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -71,7 +72,7 @@ export default function AdminDashboard() {
 
   const isAdmin = user && ADMIN_EMAILS.includes(user.email || '');
 
-  // Queries - Only run if admin
+  // Queries
   const usersQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
     return collection(firestore, 'users');
@@ -83,7 +84,7 @@ export default function AdminDashboard() {
   }, [firestore, isAdmin]);
 
   const { data: rawUsers, isLoading: isUsersLoading } = useCollection(usersQuery);
-  const { data: rawRequests } = useCollection(requestsQuery);
+  const { data: rawRequests, isLoading: isRequestsLoading } = useCollection(requestsQuery);
 
   useEffect(() => {
     if (!isUserLoading && !isAdmin) {
@@ -142,22 +143,48 @@ export default function AdminDashboard() {
     }
   };
 
+  // Robust Merging Logic to ensure NO ONE is missed
   const mergedUsers = useMemo(() => {
-    if (!rawUsers) return [];
-    return rawUsers.map(u => {
-      const req = rawRequests?.find(r => r.id === u.id || r.userId === u.id);
+    if (!rawUsers && !rawRequests) return [];
+    
+    // Create a set of all unique IDs from both collections
+    const allIds = new Set([
+      ...(rawUsers?.map(u => u.id) || []),
+      ...(rawRequests?.map(r => r.id) || []),
+      ...(rawRequests?.map(r => (r as any).userId).filter(Boolean) || [])
+    ]);
+
+    return Array.from(allIds).map(id => {
+      const u = rawUsers?.find(userDoc => userDoc.id === id);
+      const r = rawRequests?.find(reqDoc => reqDoc.id === id || (reqDoc as any).userId === id);
+
       return {
-        ...u,
-        brokerId: req?.brokerId || '---',
+        id,
+        email: u?.email || r?.userEmail || (r as any).email || '---',
+        createdAt: u?.createdAt || r?.submittedAt || null,
+        brokerId: r?.brokerId || '---',
+        accountStatus: u?.accountStatus || 'ACTIVE',
+        subscriptionStatus: u?.subscriptionStatus || (r?.status === 'PREMIUM' ? 'ACTIVE' : 'INACTIVE'),
+        displayName: u?.displayName || (r as any).userName || null,
+        isGhost: !u // User exists in requests but not in main app auth/users collection yet
       };
-    }).filter(u => 
+    })
+    .filter(u => 
       u.email?.toLowerCase().includes(searchTerm.toLowerCase()) || 
       u.brokerId?.toLowerCase().includes(searchTerm.toLowerCase())
-    ).sort((a, b) => {
+    )
+    .sort((a, b) => {
       let valA = a[sortConfig.key as keyof typeof a] as any;
       let valB = b[sortConfig.key as keyof typeof b] as any;
+      
+      // Handle timestamps
       if (valA?.seconds) valA = valA.seconds;
       if (valB?.seconds) valB = valB.seconds;
+      
+      // Handle nulls in sorting
+      if (valA === null || valA === undefined) valA = 0;
+      if (valB === null || valB === undefined) valB = 0;
+
       if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
       if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
       return 0;
@@ -208,16 +235,16 @@ export default function AdminDashboard() {
         <div className="flex flex-col md:flex-row justify-between items-end gap-4">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full md:w-auto">
             <Card className="bg-card/40 border-white/5 p-4 min-w-[140px]">
-              <p className="text-[0.6rem] uppercase tracking-widest text-muted-foreground font-bold">Membros</p>
-              <div className="text-2xl font-black">{isUsersLoading ? '...' : rawUsers?.length || 0}</div>
+              <p className="text-[0.6rem] uppercase tracking-widest text-muted-foreground font-bold">Membros Totais</p>
+              <div className="text-2xl font-black">{(isUsersLoading || isRequestsLoading) ? '...' : mergedUsers.length}</div>
             </Card>
             <Card className="bg-card/40 border-white/5 p-4 min-w-[140px]">
               <p className="text-[0.6rem] uppercase tracking-widest text-muted-foreground font-bold">Premium</p>
-              <div className="text-2xl font-black text-purple-500">{rawUsers?.filter(u => u.subscriptionStatus === 'ACTIVE').length || 0}</div>
+              <div className="text-2xl font-black text-purple-500">{mergedUsers.filter(u => u.subscriptionStatus === 'ACTIVE').length}</div>
             </Card>
              <Card className="bg-card/40 border-white/5 p-4 min-w-[140px]">
               <p className="text-[0.6rem] uppercase tracking-widest text-muted-foreground font-bold">Suspensos</p>
-              <div className="text-2xl font-black text-destructive">{rawUsers?.filter(u => u.accountStatus === 'DISABLED').length || 0}</div>
+              <div className="text-2xl font-black text-destructive">{mergedUsers.filter(u => u.accountStatus === 'DISABLED').length}</div>
             </Card>
           </div>
 
@@ -235,7 +262,7 @@ export default function AdminDashboard() {
         <Card className="bg-card/40 border-white/5 overflow-hidden rounded-2xl">
           <div className="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
             <h2 className="text-sm font-black uppercase tracking-widest">Lista Única de Membros</h2>
-            <p className="text-[0.6rem] text-muted-foreground uppercase font-bold">Mostrando {mergedUsers.length} registos</p>
+            <p className="text-[0.6rem] text-muted-foreground uppercase font-bold">Mostrando {mergedUsers.length} registos encontrados</p>
           </div>
           <Table>
             <TableHeader className="bg-white/5">
@@ -258,18 +285,21 @@ export default function AdminDashboard() {
                   <TableCell className="text-[0.7rem] opacity-60">{formatDate(u.createdAt)}</TableCell>
                   <TableCell>
                     <div className="flex flex-col">
-                        <span className="text-xs font-bold">{u.email}</span>
+                        <div className="flex items-center gap-2">
+                           <span className="text-xs font-bold">{u.email}</span>
+                           {u.isGhost && <Badge variant="outline" className="text-[0.5rem] h-4 py-0 border-primary/20 text-primary/50">APENAS VIP-REQ</Badge>}
+                        </div>
                         {u.displayName && <span className="text-[0.6rem] text-muted-foreground">{u.displayName}</span>}
                     </div>
                   </TableCell>
                   <TableCell className="text-xs font-mono text-primary font-bold">{u.brokerId}</TableCell>
                   <TableCell>
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+                      <DropdownMenuTrigger asChild disabled={u.isGhost}>
                         <Button variant="ghost" size="sm" className="h-auto p-0 hover:bg-transparent">
                           <Badge 
                             variant={u.accountStatus === 'DISABLED' ? 'destructive' : 'outline'} 
-                            className="cursor-pointer text-[0.6rem] font-black tracking-tighter"
+                            className={`cursor-pointer text-[0.6rem] font-black tracking-tighter ${u.isGhost ? 'opacity-30' : ''}`}
                           >
                             {u.accountStatus === 'DISABLED' ? 'SUSPENSO' : 'ATIVA'}
                           </Badge>
@@ -285,14 +315,14 @@ export default function AdminDashboard() {
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+                      <DropdownMenuTrigger asChild disabled={u.isGhost}>
                         <Button variant="ghost" size="sm" className="h-auto p-0 hover:bg-transparent">
                           <Badge 
                             className={`cursor-pointer text-[0.6rem] font-black tracking-tighter ${
                               u.subscriptionStatus === 'ACTIVE' 
                                 ? 'bg-purple-600 hover:bg-purple-700 text-white' 
                                 : 'bg-yellow-500 hover:bg-yellow-600 text-black'
-                            }`}
+                            } ${u.isGhost ? 'opacity-30' : ''}`}
                           >
                             {u.subscriptionStatus === 'ACTIVE' ? 'PREMIUM' : 'VIP'}
                           </Badge>
@@ -314,19 +344,23 @@ export default function AdminDashboard() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-black/95 border-white/10 w-48">
-                        <DropdownMenuItem onClick={() => handleResetPassword(u.email)} className="text-xs">
-                          <Key className="h-3.5 w-3.5 mr-2 opacity-60" /> Redefinir Senha
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleToggleAccount(u.id, u.accountStatus)} className="text-xs">
-                          {u.accountStatus === 'DISABLED' ? (
-                            <><CheckCircle2 className="h-3.5 w-3.5 mr-2 text-green-500" /> Ativar Conta</>
-                          ) : (
-                            <><ShieldAlert className="h-3.5 w-3.5 mr-2 text-destructive" /> Suspender Conta</>
-                          )}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator className="bg-white/5" />
+                        {!u.isGhost && (
+                          <>
+                            <DropdownMenuItem onClick={() => handleResetPassword(u.email)} className="text-xs">
+                              <Key className="h-3.5 w-3.5 mr-2 opacity-60" /> Redefinir Senha
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleToggleAccount(u.id, u.accountStatus)} className="text-xs">
+                              {u.accountStatus === 'DISABLED' ? (
+                                <><CheckCircle2 className="h-3.5 w-3.5 mr-2 text-green-500" /> Ativar Conta</>
+                              ) : (
+                                <><ShieldAlert className="h-3.5 w-3.5 mr-2 text-destructive" /> Suspender Conta</>
+                              )}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator className="bg-white/5" />
+                          </>
+                        )}
                         <DropdownMenuItem className="text-destructive text-xs font-bold" onClick={() => setDeleteUserId(u.id)}>
-                          <Trash2 className="h-3.5 w-3.5 mr-2" /> Excluir Conta
+                          <Trash2 className="h-3.5 w-3.5 mr-2" /> Excluir Registo
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -337,8 +371,8 @@ export default function AdminDashboard() {
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-16">
                     <div className="flex flex-col items-center gap-2 opacity-30">
-                      <Mail className="h-10 w-10" />
-                      <p className="text-sm font-bold uppercase tracking-widest">Nenhum utilizador encontrado</p>
+                      <AlertCircle className="h-10 w-10" />
+                      <p className="text-sm font-bold uppercase tracking-widest">Nenhum registo encontrado para "{searchTerm}"</p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -351,9 +385,9 @@ export default function AdminDashboard() {
       <AlertDialog open={!!deleteUserId} onOpenChange={(isOpen) => !isOpen && !isDeleting && setDeleteUserId(null)}>
         <AlertDialogContent className="bg-[#0d0d0d] border-white/10 rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl font-headline font-black uppercase tracking-tight">Excluir Conta?</AlertDialogTitle>
+            <AlertDialogTitle className="text-xl font-headline font-black uppercase tracking-tight">Excluir Registo?</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground leading-relaxed">
-              Esta ação é **irreversível**. Todos os dados do utilizador serão removidos permanentemente do sistema.
+              Esta ação é **irreversível**. O registo será removido permanentemente. Se for um utilizador do App, ele perderá o acesso imediatamente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-3">

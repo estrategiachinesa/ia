@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, updateDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
+import { collection, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { 
   Loader2, 
@@ -10,7 +10,6 @@ import {
   ShieldCheck, 
   Clock, 
   CheckCircle2, 
-  XCircle, 
   LayoutDashboard,
   LogOut,
   Search,
@@ -82,7 +81,7 @@ export default function AdminDashboard() {
 
   const isAdmin = user && ADMIN_EMAILS.includes(user.email || '');
 
-  // Queries - We removed orderBy from users to ensure legacy users without createdAt show up
+  // Queries - Corrected references
   const usersQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
     return collection(firestore, 'users');
@@ -93,7 +92,7 @@ export default function AdminDashboard() {
     return collection(firestore, 'vipRequests');
   }, [firestore, isAdmin]);
 
-  const { data: rawUsers, isLoading: isUsersLoading } = useCollection(rawUsersQuery);
+  const { data: rawUsers, isLoading: isUsersLoading } = useCollection(usersQuery);
   const { data: rawRequests, isLoading: isRequestsLoading } = useCollection(requestsQuery);
 
   // Authorized check redirect

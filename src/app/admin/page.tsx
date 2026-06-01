@@ -21,7 +21,7 @@ import {
   MoreVertical,
   Mail
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -96,7 +96,10 @@ export default function AdminDashboard() {
     const newStatus = currentStatus === 'DISABLED' ? 'ACTIVE' : 'DISABLED';
     try {
       await updateDoc(doc(firestore, 'users', userId), { accountStatus: newStatus });
-      toast({ title: 'Status Alterado', description: `Conta ${newStatus === 'DISABLED' ? 'Suspensa' : 'Ativada'}` });
+      toast({ 
+        title: 'Status Alterado', 
+        description: `Conta ${newStatus === 'DISABLED' ? 'Suspensa' : 'Ativada'}` 
+      });
     } catch (e) {
       toast({ variant: 'destructive', title: 'Erro ao alterar status' });
     }
@@ -107,7 +110,10 @@ export default function AdminDashboard() {
     const newStatus = currentStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
     try {
       await updateDoc(doc(firestore, 'users', userId), { subscriptionStatus: newStatus });
-      toast({ title: 'Plano Alterado', description: `Usuário agora é ${newStatus === 'ACTIVE' ? 'PREMIUM' : 'VIP'}` });
+      toast({ 
+        title: 'Plano Alterado', 
+        description: `Usuário agora é ${newStatus === 'ACTIVE' ? 'PREMIUM' : 'VIP'}` 
+      });
     } catch (e) {
       toast({ variant: 'destructive', title: 'Erro ao alterar plano' });
     }
@@ -207,7 +213,7 @@ export default function AdminDashboard() {
             </Card>
             <Card className="bg-card/40 border-white/5 p-4 min-w-[140px]">
               <p className="text-[0.6rem] uppercase tracking-widest text-muted-foreground font-bold">Premium</p>
-              <div className="text-2xl font-black text-green-500">{rawUsers?.filter(u => u.subscriptionStatus === 'ACTIVE').length || 0}</div>
+              <div className="text-2xl font-black text-purple-500">{rawUsers?.filter(u => u.subscriptionStatus === 'ACTIVE').length || 0}</div>
             </Card>
              <Card className="bg-card/40 border-white/5 p-4 min-w-[140px]">
               <p className="text-[0.6rem] uppercase tracking-widest text-muted-foreground font-bold">Suspensos</p>
@@ -228,7 +234,7 @@ export default function AdminDashboard() {
 
         <Card className="bg-card/40 border-white/5 overflow-hidden rounded-2xl">
           <div className="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
-            <h2 className="text-sm font-black uppercase tracking-widest">Lista de Usuários</h2>
+            <h2 className="text-sm font-black uppercase tracking-widest">Lista Única de Membros</h2>
             <p className="text-[0.6rem] text-muted-foreground uppercase font-bold">Mostrando {mergedUsers.length} registos</p>
           </div>
           <Table>
@@ -258,17 +264,35 @@ export default function AdminDashboard() {
                   </TableCell>
                   <TableCell className="text-xs font-mono text-primary font-bold">{u.brokerId}</TableCell>
                   <TableCell>
-                    <Badge variant={u.accountStatus === 'DISABLED' ? 'destructive' : 'outline'} className="text-[0.6rem] font-black tracking-tighter">
-                      {u.accountStatus === 'DISABLED' ? 'SUSPENSO' : 'ATIVA'}
-                    </Badge>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-auto p-0 hover:bg-transparent">
+                          <Badge 
+                            variant={u.accountStatus === 'DISABLED' ? 'destructive' : 'outline'} 
+                            className="cursor-pointer text-[0.6rem] font-black tracking-tighter"
+                          >
+                            {u.accountStatus === 'DISABLED' ? 'SUSPENSO' : 'ATIVA'}
+                          </Badge>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="bg-black/95 border-white/10">
+                        <DropdownMenuItem onClick={() => handleToggleAccount(u.id, u.accountStatus)} className="text-xs font-bold">
+                           {u.accountStatus === 'DISABLED' ? <CheckCircle2 className="h-3 w-3 mr-2 text-green-500" /> : <ShieldAlert className="h-3 w-3 mr-2 text-destructive" />}
+                           {u.accountStatus === 'DISABLED' ? 'Ativar Conta' : 'Suspender Conta'}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-auto p-0">
+                        <Button variant="ghost" size="sm" className="h-auto p-0 hover:bg-transparent">
                           <Badge 
-                            className="cursor-pointer text-[0.6rem] font-black tracking-tighter" 
-                            variant={u.subscriptionStatus === 'ACTIVE' ? 'success' : 'secondary'}
+                            className={`cursor-pointer text-[0.6rem] font-black tracking-tighter ${
+                              u.subscriptionStatus === 'ACTIVE' 
+                                ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                                : 'bg-yellow-500 hover:bg-yellow-600 text-black'
+                            }`}
                           >
                             {u.subscriptionStatus === 'ACTIVE' ? 'PREMIUM' : 'VIP'}
                           </Badge>

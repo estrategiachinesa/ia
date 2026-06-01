@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -19,7 +20,7 @@ import YoutubePlayer from '@/components/youtube-player';
 import { SignalForm } from '@/components/app/signal-form';
 import { SignalResult } from '@/components/app/signal-result';
 import { isMarketOpenForAsset } from '@/lib/market-hours';
-import { Loader2, AlertTriangle, ChevronDown, ChevronUp, BarChart, LogOut, User, Calendar } from 'lucide-react';
+import { Loader2, AlertTriangle, ChevronDown, ChevronUp, BarChart, LogOut, User, Calendar, ShieldAlert } from 'lucide-react';
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { useAppConfig } from '@/firebase/config-provider';
 import { Button } from '@/components/ui/button';
@@ -57,7 +58,7 @@ export type SignalData = {
 };
 
 type AppState = 'idle' | 'loading' | 'result' | 'waiting';
-type AccessState = 'checking' | 'granted' | 'denied';
+type AccessState = 'checking' | 'granted' | 'denied' | 'blocked';
 
 type SignalUsage = {
   timestamps: number[];
@@ -87,21 +88,40 @@ export default function AnalisadorPage() {
   
   const [isChartVisible, setIsChartVisible] = useState(true);
 
-
+  // Real-time references for permissions and status
   const vipRequestRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, 'vipRequests', user.uid);
   }, [firestore, user]);
 
+  const userProfileRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+
   const { data: vipData, isLoading: isVipLoading } = useDoc(vipRequestRef);
+  const { data: userProfile, isLoading: isProfileLoading } = useDoc(userProfileRef);
 
   const [formData, setFormData] = useState<FormData>({
     asset: 'EUR/JPY',
     expirationTime: '1m',
   });
 
+  // Check account status in real-time
   useEffect(() => {
-    if (isUserLoading) {
+    if (userProfile?.accountStatus === 'DISABLED') {
+      setAccessState('blocked');
+      // Sign out and redirect after a short delay
+      setTimeout(() => {
+        auth.signOut();
+        router.push('/login');
+      }, 5000);
+      return;
+    }
+  }, [userProfile, auth, router]);
+
+  useEffect(() => {
+    if (isUserLoading || isProfileLoading) {
         setAccessState('checking');
         return;
     }
@@ -109,6 +129,11 @@ export default function AnalisadorPage() {
     if (!user) {
         setAccessState('denied');
         return;
+    }
+
+    if (userProfile?.accountStatus === 'DISABLED') {
+      setAccessState('blocked');
+      return;
     }
 
     const loginTime = localStorage.getItem('loginTimestamp');
@@ -130,7 +155,7 @@ export default function AnalisadorPage() {
     } else {
         setAccessState('granted');
     }
-  }, [user, isUserLoading, auth]);
+  }, [user, isUserLoading, isProfileLoading, userProfile, auth]);
 
    useEffect(() => {
     const isPremiumUser = vipData && ['PREMIUM', 'APPROVED'].includes((vipData as any).status);
@@ -353,13 +378,28 @@ export default function AnalisadorPage() {
     router.push('/login');
   }
 
-  if (accessState === 'checking' || isVipLoading || isConfigLoading) {
+  if (accessState === 'checking' || isVipLoading || isConfigLoading || isProfileLoading) {
       return (
           <div className="flex h-screen w-full items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin" />
               <p className="ml-2">Verificando acesso...</p>
           </div>
       )
+  }
+
+  if (accessState === 'blocked') {
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background p-6">
+        <div className="max-w-md w-full bg-card border border-destructive/20 rounded-3xl p-10 text-center space-y-6 shadow-2xl shadow-destructive/10 animate-in zoom-in-95 duration-300">
+           <div className="bg-destructive/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto">
+             <ShieldAlert className="h-10 w-10 text-destructive" />
+           </div>
+           <h2 className="text-3xl font-headline font-black text-foreground uppercase tracking-tight">Acesso Bloqueado</h2>
+           <p className="text-muted-foreground leading-relaxed">Sua conta foi suspensa por um administrador. Se você acredita que isso é um erro, entre em contato com o suporte oficial.</p>
+           <Button variant="outline" onClick={handleLogout} className="w-full h-12 rounded-xl font-bold">Voltar para Início</Button>
+        </div>
+      </div>
+    );
   }
 
   if (accessState === 'denied') {

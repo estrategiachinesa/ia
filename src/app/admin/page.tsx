@@ -109,7 +109,8 @@ export default function AdminDashboard() {
         description: `Conta ${newStatus === 'DISABLED' ? 'Suspensa' : 'Ativada'}` 
       });
     } catch (e) {
-      toast({ variant: 'destructive', title: 'Erro ao alterar status' });
+      console.error(e);
+      toast({ variant: 'destructive', title: 'Erro ao alterar status', description: 'Verifique as permissões de Admin.' });
     }
   };
 

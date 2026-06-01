@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -13,7 +12,10 @@ import {
   XCircle, 
   LayoutDashboard,
   LogOut,
-  Search
+  Search,
+  ChevronDown,
+  UserCheck,
+  UserX
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +30,14 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { useAffiliateRouter } from '@/hooks/use-affiliate-router';
 
@@ -72,6 +82,9 @@ export default function AdminDashboard() {
       if (newStatus === 'PREMIUM' || newStatus === 'APPROVED') {
         const userRef = doc(firestore, 'users', userId);
         await updateDoc(userRef, { subscriptionStatus: 'ACTIVE' });
+      } else if (newStatus === 'REJECTED') {
+        const userRef = doc(firestore, 'users', userId);
+        await updateDoc(userRef, { subscriptionStatus: 'INACTIVE' });
       }
 
       toast({
@@ -88,6 +101,27 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleUpdateUserSubscription = async (userId: string, newStatus: 'ACTIVE' | 'INACTIVE') => {
+    if (!firestore) return;
+
+    try {
+      const userRef = doc(firestore, 'users', userId);
+      await updateDoc(userRef, { subscriptionStatus: newStatus });
+
+      toast({
+        title: 'Assinatura Atualizada',
+        description: `O usuário agora é ${newStatus === 'ACTIVE' ? 'PREMIUM' : 'VIP'}.`,
+      });
+    } catch (error) {
+      console.error('Error updating subscription:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao atualizar',
+        description: 'Não foi possível alterar a assinatura.',
+      });
+    }
+  };
+
   if (isUserLoading || !user || user.email !== ADMIN_EMAIL) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
@@ -99,7 +133,7 @@ export default function AdminDashboard() {
     );
   }
 
-  const pendingRequests = requests?.filter(r => ['PENDING', 'DEPOSIT_PENDING'].includes(r.status)) || [];
+  const pendingRequests = requests?.filter(r => ['PENDING', 'DEPOSIT_PENDING', 'AWAITING_DEPOSIT'].includes(r.status)) || [];
   
   const filteredUsers = users?.filter(u => 
     u.email?.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -168,7 +202,7 @@ export default function AdminDashboard() {
             <Card className="bg-card/50 border-border/50">
               <CardHeader>
                 <CardTitle>Solicitações de Acesso PREMIUM</CardTitle>
-                <CardDescription>Gerencie quem submeteu o ID da corretora para upgrade.</CardDescription>
+                <CardDescription>Gerencie quem submeteu o ID da corretora para upgrade. Clique no status para mudar manualmente.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
@@ -195,13 +229,28 @@ export default function AdminDashboard() {
                           </TableCell>
                           <TableCell className="font-mono">{req.brokerId}</TableCell>
                           <TableCell>
-                            <Badge variant={
-                              req.status === 'PREMIUM' || req.status === 'APPROVED' ? 'success' :
-                              req.status === 'REJECTED' ? 'destructive' :
-                              req.status === 'PENDING' ? 'secondary' : 'outline'
-                            }>
-                              {req.status}
-                            </Badge>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-auto p-0 hover:bg-transparent">
+                                  <Badge className="cursor-pointer gap-1" variant={
+                                    req.status === 'PREMIUM' || req.status === 'APPROVED' ? 'success' :
+                                    req.status === 'REJECTED' ? 'destructive' :
+                                    req.status === 'PENDING' ? 'secondary' : 'outline'
+                                  }>
+                                    {req.status} <ChevronDown className="h-3 w-3" />
+                                  </Badge>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="start">
+                                <DropdownMenuLabel>Mudar Status</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => handleUpdateStatus(req.id, req.userId, 'PENDING')}>PENDING</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleUpdateStatus(req.id, req.userId, 'AWAITING_DEPOSIT')}>AWAITING_DEPOSIT</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleUpdateStatus(req.id, req.userId, 'DEPOSIT_PENDING')}>DEPOSIT_PENDING</DropdownMenuItem>
+                                <DropdownMenuItem className="text-green-600 font-bold" onClick={() => handleUpdateStatus(req.id, req.userId, 'PREMIUM')}>PREMIUM (Ativar)</DropdownMenuItem>
+                                <DropdownMenuItem className="text-destructive font-bold" onClick={() => handleUpdateStatus(req.id, req.userId, 'REJECTED')}>REJECTED</DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground">
                             {req.submittedAt ? new Date(req.submittedAt.seconds * 1000).toLocaleDateString() : '---'}
@@ -226,16 +275,6 @@ export default function AdminDashboard() {
                                 <CheckCircle2 className="h-4 w-4 mr-1" /> Aprovar
                               </Button>
                             )}
-                            {req.status !== 'REJECTED' && (
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                className="text-destructive hover:bg-destructive/10"
-                                onClick={() => handleUpdateStatus(req.id, req.userId, 'REJECTED')}
-                              >
-                                <XCircle className="h-4 w-4 mr-1" /> Recusar
-                              </Button>
-                            )}
                           </TableCell>
                         </TableRow>
                       ))
@@ -251,7 +290,7 @@ export default function AdminDashboard() {
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>Todos os Usuários</CardTitle>
-                  <CardDescription>Lista completa de membros cadastrados no sistema.</CardDescription>
+                  <CardDescription>Lista completa. Clique na assinatura para mudar manualmente.</CardDescription>
                 </div>
                 <div className="relative w-64">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -268,7 +307,7 @@ export default function AdminDashboard() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Usuário</TableHead>
-                      <TableHead>Assinatura</TableHead>
+                      <TableHead>Assinatura (Manual)</TableHead>
                       <TableHead>Data de Cadastro</TableHead>
                       <TableHead className="text-right">ID Interno</TableHead>
                     </TableRow>
@@ -286,9 +325,25 @@ export default function AdminDashboard() {
                             <div className="text-xs text-muted-foreground">{u.email}</div>
                           </TableCell>
                           <TableCell>
-                            <Badge variant={u.subscriptionStatus === 'ACTIVE' ? 'success' : 'secondary'}>
-                              {u.subscriptionStatus || 'INACTIVE'}
-                            </Badge>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-auto p-0 hover:bg-transparent">
+                                  <Badge className="cursor-pointer gap-1" variant={u.subscriptionStatus === 'ACTIVE' ? 'success' : 'secondary'}>
+                                    {u.subscriptionStatus === 'ACTIVE' ? 'PREMIUM' : 'VIP'} <ChevronDown className="h-3 w-3" />
+                                  </Badge>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="start">
+                                <DropdownMenuLabel>Alterar Plano</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => handleUpdateUserSubscription(u.id, 'ACTIVE')}>
+                                  <UserCheck className="h-4 w-4 mr-2 text-green-500" /> Ativar PREMIUM
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleUpdateUserSubscription(u.id, 'INACTIVE')}>
+                                  <UserX className="h-4 w-4 mr-2 text-muted-foreground" /> Rebaixar para VIP
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground">
                              {u.createdAt ? new Date(u.createdAt.seconds * 1000).toLocaleDateString() : '---'}

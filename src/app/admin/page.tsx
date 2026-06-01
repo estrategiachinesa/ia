@@ -22,7 +22,8 @@ import {
   UserMinus,
   Trash2,
   AlertTriangle,
-  ArrowUpDown
+  ArrowUpDown,
+  Calendar
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -81,7 +82,7 @@ export default function AdminDashboard() {
 
   const isAdmin = user && ADMIN_EMAILS.includes(user.email || '');
 
-  // Queries - Corrected references
+  // Queries
   const usersQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
     return collection(firestore, 'users');
@@ -475,7 +476,7 @@ export default function AdminDashboard() {
                         <div className="flex items-center">Status Conta {renderSortIcon(userSort, 'accountStatus')}</div>
                       </TableHead>
                       <TableHead className="cursor-pointer hover:text-primary transition-colors" onClick={() => toggleUserSort('createdAt')}>
-                        <div className="flex items-center">Cadastro {renderSortIcon(userSort, 'createdAt')}</div>
+                        <div className="flex items-center"><Calendar className="h-4 w-4 mr-2" /> Cadastro {renderSortIcon(userSort, 'createdAt')}</div>
                       </TableHead>
                       <TableHead className="text-right">Gerenciar</TableHead>
                     </TableRow>
@@ -519,7 +520,7 @@ export default function AdminDashboard() {
                             </Badge>
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground">
-                             {u.createdAt ? new Date(u.createdAt.seconds * 1000).toLocaleDateString() : '---'}
+                             {u.createdAt ? new Date(u.createdAt.seconds * 1000).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '---'}
                           </TableCell>
                           <TableCell className="text-right">
                              <DropdownMenu>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -12,7 +11,6 @@ import {
   ChevronDown,
   ChevronUp,
   CheckCircle2,
-  XCircle,
   ShieldAlert,
   Key,
   Trash2,
@@ -38,7 +36,6 @@ import {
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
-  DropdownMenuLabel, 
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
@@ -74,7 +71,7 @@ export default function AdminDashboard() {
 
   const isAdmin = user && ADMIN_EMAILS.includes(user.email || '');
 
-  // Queries
+  // Queries - Only run if admin
   const usersQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
     return collection(firestore, 'users');
@@ -105,7 +102,7 @@ export default function AdminDashboard() {
       }
       toast({ title: 'Sucesso', description: `Status alterado para ${newStatus}` });
     } catch (e) {
-      toast({ variant: 'destructive', title: 'Erro', description: 'Não foi possível atualizar.' });
+      toast({ variant: 'destructive', title: 'Erro ao atualizar' });
     }
   };
 
@@ -217,7 +214,7 @@ export default function AdminDashboard() {
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <LayoutDashboard className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-headline font-black tracking-tight">ADMIN GESTÃO</h1>
+            <h1 className="text-xl font-headline font-black tracking-tight uppercase">Gestão Estratégia Chinesa</h1>
           </div>
           <Button variant="ghost" size="sm" onClick={() => auth.signOut()} className="rounded-full border border-white/10">
             <LogOut className="h-4 w-4 mr-2" /> Sair
@@ -241,28 +238,25 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <TabsList className="bg-white/5 p-1 rounded-full">
-            <Tabs defaultValue="requests" className="w-full">
-              <TabsList className="bg-transparent">
-                <TabsTrigger value="requests" className="rounded-full px-6 data-[state=active]:bg-primary">Solicitações VIP</TabsTrigger>
-                <TabsTrigger value="users" className="rounded-full px-6 data-[state=active]:bg-primary">Lista de Membros</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </TabsList>
-          <div className="relative w-full md:w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="E-mail ou ID Corretora..." 
-              className="pl-10 rounded-full bg-white/5 border-white/10" 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+        <Tabs defaultValue="requests" className="w-full space-y-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <TabsList className="bg-white/5 p-1 rounded-full shrink-0">
+              <TabsTrigger value="requests" className="rounded-full px-6 data-[state=active]:bg-primary">Solicitações VIP</TabsTrigger>
+              <TabsTrigger value="users" className="rounded-full px-6 data-[state=active]:bg-primary">Lista de Membros</TabsTrigger>
+            </TabsList>
+            
+            <div className="relative w-full md:w-80">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="E-mail ou ID Corretora..." 
+                className="pl-10 rounded-full bg-white/5 border-white/10" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
           </div>
-        </div>
 
-        <Tabs defaultValue="requests" className="w-full">
-          <TabsContent value="requests">
+          <TabsContent value="requests" className="mt-0">
             <Card className="bg-card/40 border-white/5 overflow-hidden">
               <Table>
                 <TableHeader className="bg-white/5">
@@ -310,12 +304,15 @@ export default function AdminDashboard() {
                       </TableCell>
                     </TableRow>
                   ))}
+                  {sortedRequests.length === 0 && (
+                    <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground text-sm">Nenhum pedido encontrado.</TableCell></TableRow>
+                  )}
                 </TableBody>
               </Table>
             </Card>
           </TabsContent>
 
-          <TabsContent value="users">
+          <TabsContent value="users" className="mt-0">
             <Card className="bg-card/40 border-white/5 overflow-hidden">
               <Table>
                 <TableHeader className="bg-white/5">
@@ -374,6 +371,9 @@ export default function AdminDashboard() {
                       </TableCell>
                     </TableRow>
                   ))}
+                  {mergedUsers.length === 0 && (
+                    <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground text-sm">Nenhum membro encontrado.</TableCell></TableRow>
+                  )}
                 </TableBody>
               </Table>
             </Card>

@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, doc, updateDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
 import { sendPasswordResetEmail } from 'firebase/auth';
@@ -16,13 +15,15 @@ import {
   LogOut,
   Search,
   ChevronDown,
+  ChevronUp,
   UserCheck,
   UserX,
   MoreHorizontal,
   Key,
   UserMinus,
   Trash2,
-  AlertTriangle
+  AlertTriangle,
+  ArrowUpDown
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -60,12 +61,21 @@ import { useAffiliateRouter } from '@/hooks/use-affiliate-router';
 
 const ADMIN_EMAILS = ['chines@trader.com', 'estrategiachinesa@gmail.com'];
 
+type SortConfig = {
+  key: string;
+  direction: 'asc' | 'desc';
+};
+
 export default function AdminDashboard() {
   const { auth, user, isUserLoading, firestore } = useFirebase();
   const { toast } = useToast();
   const router = useAffiliateRouter();
   const [searchTerm, setSearchTerm] = useState('');
   
+  // Sort States
+  const [userSort, setUserSort] = useState<SortConfig>({ key: 'createdAt', direction: 'desc' });
+  const [requestSort, setRequestSort] = useState<SortConfig>({ key: 'submittedAt', direction: 'desc' });
+
   // States for modals
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -80,11 +90,11 @@ export default function AdminDashboard() {
 
   const requestsQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
-    return query(collection(firestore, 'vipRequests'), orderBy('submittedAt', 'desc'));
+    return collection(firestore, 'vipRequests');
   }, [firestore, isAdmin]);
 
-  const { data: users, isLoading: isUsersLoading } = useCollection(usersQuery);
-  const { data: requests, isLoading: isRequestsLoading } = useCollection(requestsQuery);
+  const { data: rawUsers, isLoading: isUsersLoading } = useCollection(rawUsersQuery);
+  const { data: rawRequests, isLoading: isRequestsLoading } = useCollection(requestsQuery);
 
   // Authorized check redirect
   useEffect(() => {
@@ -207,6 +217,71 @@ export default function AdminDashboard() {
     }
   };
 
+  // Sort Logic for Users
+  const sortedUsers = useMemo(() => {
+    if (!rawUsers) return [];
+    
+    let filtered = rawUsers.filter(u => 
+      u.email?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      u.displayName?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return filtered.sort((a, b) => {
+      let valA: any = a[userSort.key as keyof typeof a];
+      let valB: any = b[userSort.key as keyof typeof b];
+
+      // Special handling for Firestore Timestamps
+      if (valA?.seconds !== undefined) valA = valA.seconds;
+      if (valB?.seconds !== undefined) valB = valB.seconds;
+
+      if (valA === undefined || valA === null) valA = 0;
+      if (valB === undefined || valB === null) valB = 0;
+
+      if (valA < valB) return userSort.direction === 'asc' ? -1 : 1;
+      if (valA > valB) return userSort.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [rawUsers, searchTerm, userSort]);
+
+  // Sort Logic for Requests
+  const sortedRequests = useMemo(() => {
+    if (!rawRequests) return [];
+    
+    return [...rawRequests].sort((a, b) => {
+      let valA: any = a[requestSort.key as keyof typeof a];
+      let valB: any = b[requestSort.key as keyof typeof b];
+
+      if (valA?.seconds !== undefined) valA = valA.seconds;
+      if (valB?.seconds !== undefined) valB = valB.seconds;
+
+      if (valA === undefined || valA === null) valA = 0;
+      if (valB === undefined || valB === null) valB = 0;
+
+      if (valA < valB) return requestSort.direction === 'asc' ? -1 : 1;
+      if (valA > valB) return requestSort.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [rawRequests, requestSort]);
+
+  const toggleUserSort = (key: string) => {
+    setUserSort(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const toggleRequestSort = (key: string) => {
+    setRequestSort(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  const renderSortIcon = (config: SortConfig, key: string) => {
+    if (config.key !== key) return <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />;
+    return config.direction === 'asc' ? <ChevronUp className="ml-2 h-4 w-4" /> : <ChevronDown className="ml-2 h-4 w-4" />;
+  };
+
   if (isUserLoading || !user || !isAdmin) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
@@ -218,19 +293,7 @@ export default function AdminDashboard() {
     );
   }
 
-  const pendingRequests = requests?.filter(r => ['PENDING', 'DEPOSIT_PENDING', 'AWAITING_DEPOSIT'].includes(r.status)) || [];
-  
-  // Sort users in memory to ensure stability while allowing missing fields
-  const sortedUsers = [...(users || [])].sort((a, b) => {
-    const timeA = a.createdAt?.seconds || 0;
-    const timeB = b.createdAt?.seconds || 0;
-    return timeB - timeA;
-  });
-
-  const filteredUsers = sortedUsers.filter(u => 
-    u.email?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    u.displayName?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const pendingRequestsCount = sortedRequests.filter(r => ['PENDING', 'DEPOSIT_PENDING', 'AWAITING_DEPOSIT'].includes(r.status)).length;
 
   return (
     <div className="min-h-screen bg-background text-foreground font-body">
@@ -260,7 +323,7 @@ export default function AdminDashboard() {
               <Users className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{isUsersLoading ? <Loader2 className="h-4 w-4 animate-spin"/> : users?.length || 0}</div>
+              <div className="text-2xl font-bold">{isUsersLoading ? <Loader2 className="h-4 w-4 animate-spin"/> : rawUsers?.length || 0}</div>
             </CardContent>
           </Card>
           <Card className="bg-card/50 border-border/50">
@@ -269,7 +332,7 @@ export default function AdminDashboard() {
               <Clock className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{isRequestsLoading ? <Loader2 className="h-4 w-4 animate-spin"/> : pendingRequests.length}</div>
+              <div className="text-2xl font-bold">{isRequestsLoading ? <Loader2 className="h-4 w-4 animate-spin"/> : pendingRequestsCount}</div>
             </CardContent>
           </Card>
           <Card className="bg-card/50 border-border/50">
@@ -293,26 +356,32 @@ export default function AdminDashboard() {
             <Card className="bg-card/50 border-border/50">
               <CardHeader>
                 <CardTitle>Solicitações de Acesso PREMIUM</CardTitle>
-                <CardDescription>Gerencie quem submeteu o ID da corretora para upgrade. Clique no status para mudar manualmente.</CardDescription>
+                <CardDescription>Gerencie quem submeteu o ID da corretora para upgrade.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>E-mail / Usuário</TableHead>
+                      <TableHead className="cursor-pointer hover:text-primary transition-colors" onClick={() => toggleRequestSort('userEmail')}>
+                        <div className="flex items-center">E-mail / Usuário {renderSortIcon(requestSort, 'userEmail')}</div>
+                      </TableHead>
                       <TableHead>ID Corretora</TableHead>
-                      <TableHead>Status Atual</TableHead>
-                      <TableHead>Data</TableHead>
+                      <TableHead className="cursor-pointer hover:text-primary transition-colors" onClick={() => toggleRequestSort('status')}>
+                        <div className="flex items-center">Status {renderSortIcon(requestSort, 'status')}</div>
+                      </TableHead>
+                      <TableHead className="cursor-pointer hover:text-primary transition-colors" onClick={() => toggleRequestSort('submittedAt')}>
+                        <div className="flex items-center">Data {renderSortIcon(requestSort, 'submittedAt')}</div>
+                      </TableHead>
                       <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {isRequestsLoading ? (
                       <TableRow><TableCell colSpan={5} className="text-center py-8"><Loader2 className="animate-spin mx-auto" /></TableCell></TableRow>
-                    ) : requests?.length === 0 ? (
+                    ) : sortedRequests.length === 0 ? (
                       <TableRow><TableCell colSpan={5} className="text-center py-8">Nenhum pedido encontrado.</TableCell></TableRow>
                     ) : (
-                      requests?.map((req) => (
+                      sortedRequests.map((req) => (
                         <TableRow key={req.id}>
                           <TableCell>
                             <div className="font-bold">{req.userEmail}</div>
@@ -378,12 +447,12 @@ export default function AdminDashboard() {
 
           <TabsContent value="users" className="mt-6">
             <Card className="bg-card/50 border-border/50">
-              <CardHeader className="flex flex-row items-center justify-between">
+              <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <CardTitle>Todos os Usuários</CardTitle>
                   <CardDescription>Lista completa de membros registados.</CardDescription>
                 </div>
-                <div className="relative w-64">
+                <div className="relative w-full md:w-64">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input 
                     placeholder="Buscar e-mail ou nome..." 
@@ -397,20 +466,28 @@ export default function AdminDashboard() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Usuário</TableHead>
-                      <TableHead>Assinatura</TableHead>
-                      <TableHead>Status Conta</TableHead>
-                      <TableHead>Cadastro</TableHead>
+                      <TableHead className="cursor-pointer hover:text-primary transition-colors" onClick={() => toggleUserSort('email')}>
+                        <div className="flex items-center">Usuário {renderSortIcon(userSort, 'email')}</div>
+                      </TableHead>
+                      <TableHead className="cursor-pointer hover:text-primary transition-colors" onClick={() => toggleUserSort('subscriptionStatus')}>
+                        <div className="flex items-center">Assinatura {renderSortIcon(userSort, 'subscriptionStatus')}</div>
+                      </TableHead>
+                      <TableHead className="cursor-pointer hover:text-primary transition-colors" onClick={() => toggleUserSort('accountStatus')}>
+                        <div className="flex items-center">Status Conta {renderSortIcon(userSort, 'accountStatus')}</div>
+                      </TableHead>
+                      <TableHead className="cursor-pointer hover:text-primary transition-colors" onClick={() => toggleUserSort('createdAt')}>
+                        <div className="flex items-center">Cadastro {renderSortIcon(userSort, 'createdAt')}</div>
+                      </TableHead>
                       <TableHead className="text-right">Gerenciar</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {isUsersLoading ? (
                       <TableRow><TableCell colSpan={5} className="text-center py-8"><Loader2 className="animate-spin mx-auto" /></TableCell></TableRow>
-                    ) : filteredUsers.length === 0 ? (
+                    ) : sortedUsers.length === 0 ? (
                       <TableRow><TableCell colSpan={5} className="text-center py-8">Nenhum usuário encontrado.</TableCell></TableRow>
                     ) : (
-                      filteredUsers.map((u) => (
+                      sortedUsers.map((u) => (
                         <TableRow key={u.id}>
                           <TableCell>
                             <div className="font-bold">{u.displayName || 'Sem Nome'}</div>

@@ -84,13 +84,19 @@ export async function POST(request: NextRequest) {
     
     // At this point, we have a userRecord (either found or newly created).
     const userDocRef = firestore.collection('users').doc(userRecord.uid);
-    const userProfileData = {
+    const userProfileData: any = {
         email: userEmail,
         displayName: userRecord.displayName || userName,
         subscriptionStatus: newAppStatus,
         lastHotmartUpdate: admin.firestore.FieldValue.serverTimestamp(),
         lastHotmartStatus: subscriptionStatus,
     };
+    
+    // Ensure createdAt exists
+    const docSnap = await userDocRef.get();
+    if (!docSnap.exists) {
+        userProfileData.createdAt = admin.firestore.FieldValue.serverTimestamp();
+    }
     
     // Use set with merge to create the document if it doesn't exist or update it if it does.
     await userDocRef.set(userProfileData, { merge: true });

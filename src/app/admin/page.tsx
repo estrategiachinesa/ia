@@ -72,10 +72,10 @@ export default function AdminDashboard() {
 
   const isAdmin = user && ADMIN_EMAILS.includes(user.email || '');
 
-  // Queries
+  // Queries - We removed orderBy from users to ensure legacy users without createdAt show up
   const usersQuery = useMemoFirebase(() => {
     if (!firestore || !isAdmin) return null;
-    return query(collection(firestore, 'users'), orderBy('createdAt', 'desc'));
+    return collection(firestore, 'users');
   }, [firestore, isAdmin]);
 
   const requestsQuery = useMemoFirebase(() => {
@@ -220,10 +220,17 @@ export default function AdminDashboard() {
 
   const pendingRequests = requests?.filter(r => ['PENDING', 'DEPOSIT_PENDING', 'AWAITING_DEPOSIT'].includes(r.status)) || [];
   
-  const filteredUsers = users?.filter(u => 
+  // Sort users in memory to ensure stability while allowing missing fields
+  const sortedUsers = [...(users || [])].sort((a, b) => {
+    const timeA = a.createdAt?.seconds || 0;
+    const timeB = b.createdAt?.seconds || 0;
+    return timeB - timeA;
+  });
+
+  const filteredUsers = sortedUsers.filter(u => 
     u.email?.toLowerCase().includes(searchTerm.toLowerCase()) || 
     u.displayName?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  );
 
   return (
     <div className="min-h-screen bg-background text-foreground font-body">

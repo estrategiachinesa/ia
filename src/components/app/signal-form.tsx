@@ -30,6 +30,7 @@ import AffiliateLink from './affiliate-link';
  * Widget de Calendário Económico ultra-focado.
  * Exibe apenas HORA, ATIVO e TOUROS.
  * Focado na estética clean e enquadramento fixo.
+ * Inclui notícias de 1, 2 e 3 touros.
  */
 function EconomicCalendarWidget({ asset }: { asset: string }) {
   if (asset.includes('(OTC)')) return null;

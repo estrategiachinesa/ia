@@ -11,7 +11,6 @@ import {
   Clock, 
   CheckCircle2, 
   XCircle, 
-  AlertCircle,
   LayoutDashboard,
   LogOut,
   Search
@@ -40,26 +39,26 @@ export default function AdminDashboard() {
   const router = useAffiliateRouter();
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Authorized check
+  // Queries - Only run if user is confirmed as Admin
+  const usersQuery = useMemoFirebase(() => {
+    if (!firestore || !user || user.email !== ADMIN_EMAIL) return null;
+    return query(collection(firestore, 'users'), orderBy('createdAt', 'desc'));
+  }, [firestore, user]);
+
+  const requestsQuery = useMemoFirebase(() => {
+    if (!firestore || !user || user.email !== ADMIN_EMAIL) return null;
+    return query(collection(firestore, 'vipRequests'), orderBy('submittedAt', 'desc'));
+  }, [firestore, user]);
+
+  const { data: users, isLoading: isUsersLoading } = useCollection(usersQuery);
+  const { data: requests, isLoading: isRequestsLoading } = useCollection(requestsQuery);
+
+  // Authorized check redirect
   useEffect(() => {
     if (!isUserLoading && (!user || user.email !== ADMIN_EMAIL)) {
       router.push('/login');
     }
   }, [user, isUserLoading, router]);
-
-  // Queries
-  const usersQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'users'), orderBy('createdAt', 'desc'));
-  }, [firestore]);
-
-  const requestsQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'vipRequests'), orderBy('submittedAt', 'desc'));
-  }, [firestore]);
-
-  const { data: users, isLoading: isUsersLoading } = useCollection(usersQuery);
-  const { data: requests, isLoading: isRequestsLoading } = useCollection(requestsQuery);
 
   const handleUpdateStatus = async (requestId: string, userId: string, newStatus: string) => {
     if (!firestore) return;
@@ -92,8 +91,10 @@ export default function AdminDashboard() {
   if (isUserLoading || !user || user.email !== ADMIN_EMAIL) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-2">Autenticando administrador...</p>
+        <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Autenticando administrador...</p>
+        </div>
       </div>
     );
   }
@@ -134,7 +135,7 @@ export default function AdminDashboard() {
               <Users className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{isUsersLoading ? '...' : users?.length || 0}</div>
+              <div className="text-2xl font-bold">{isUsersLoading ? <Loader2 className="h-4 w-4 animate-spin"/> : users?.length || 0}</div>
             </CardContent>
           </Card>
           <Card className="bg-card/50 border-border/50">
@@ -143,7 +144,7 @@ export default function AdminDashboard() {
               <Clock className="h-4 w-4 text-yellow-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{isRequestsLoading ? '...' : pendingRequests.length}</div>
+              <div className="text-2xl font-bold">{isRequestsLoading ? <Loader2 className="h-4 w-4 animate-spin"/> : pendingRequests.length}</div>
             </CardContent>
           </Card>
           <Card className="bg-card/50 border-border/50">
@@ -275,6 +276,8 @@ export default function AdminDashboard() {
                   <TableBody>
                     {isUsersLoading ? (
                       <TableRow><TableCell colSpan={4} className="text-center py-8"><Loader2 className="animate-spin mx-auto" /></TableCell></TableRow>
+                    ) : filteredUsers.length === 0 ? (
+                      <TableRow><TableCell colSpan={4} className="text-center py-8">Nenhum usuário encontrado.</TableCell></TableRow>
                     ) : (
                       filteredUsers.map((u) => (
                         <TableRow key={u.id}>

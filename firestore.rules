@@ -1,12 +1,4 @@
 
-/**
- * @fileoverview Firestore Security Rules for Estratégia Chinesa.
- *
- * Core Philosophy:
- * This ruleset enforces access control for VIP requests, app configuration,
- * and user data. It uses ownership-based rules to protect user data and
- * prevents clients from modifying subscription statuses.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -17,7 +9,7 @@ service cloud.firestore {
     }
 
     function isOwner(userId) {
-      return request.auth.uid == userId;
+      return isSignedIn() && request.auth.uid == userId;
     }
 
     function isAdmin() {
@@ -25,7 +17,7 @@ service cloud.firestore {
     }
 
     /**
-     * @description Grants public read access. Write access is disabled from clients.
+     * Rules for App Configuration
      */
     match /appConfig/{configDoc} {
       allow read: if true;
@@ -33,59 +25,29 @@ service cloud.firestore {
     }
 
     /**
-     * @description Rules for VIP access requests.
+     * Rules for VIP access requests.
      */
     match /vipRequests/{userId} {
       allow get: if isSignedIn() && (isOwner(userId) || isAdmin());
       allow list: if isAdmin();
-      allow write: if isAdmin() || (isSignedIn() && isOwner(userId) && isValidVipRequestUpdate(request, resource));
+      allow write: if isAdmin() || (isSignedIn() && isOwner(userId));
     }
     
     /**
-     * @description Rules for affiliate data.
-     */
-    match /affiliates/{affiliateId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    /**
-     * @description Main user data collection.
+     * Main user data collection.
      */
     match /users/{userId} {
-      allow read: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow get: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow list: if isAdmin();
       allow create: if isSignedIn() && isOwner(userId);
       allow update: if isAdmin() || (isSignedIn() && isOwner(userId) && !isChangingSubscription());
     }
 
     /**
-     * @description Prevents a user from modifying their own subscriptionStatus.
+     * Prevents a user from modifying their own subscriptionStatus.
      */
     function isChangingSubscription() {
       return request.resource.data.subscriptionStatus != resource.data.subscriptionStatus;
-    }
-
-    /**
-     * @description Validates the data for a VIP request during creation or update.
-     */
-    function isValidVipRequestUpdate(req, res) {
-      let isBrokerIdValid = req.resource.data.brokerId is string &&
-                           req.resource.data.brokerId.matches("^[0-9]{8,}$");
-      
-      let isCreating = req.method == 'create' && 
-                       req.resource.data.status == 'PENDING' &&
-                       isBrokerIdValid;
-      
-      let isConfirmingDeposit = req.method == 'update' && 
-                                req.resource.data.status == 'DEPOSIT_PENDING' &&
-                                res.data.status == 'AWAITING_DEPOSIT';
-                                       
-      let isResubmittingRejected = req.method == 'update' &&
-                                   res.data.status == 'REJECTED' &&
-                                   req.resource.data.status == 'PENDING' &&
-                                   isBrokerIdValid;
-
-      return isCreating || isConfirmingDeposit || isResubmittingRejected;
     }
   }
 }

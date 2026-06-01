@@ -37,108 +37,6 @@
       },
       "required": ["email", "createdAt", "termsAccepted", "termsAcceptedAt"]
     },
-    "LinkConfig": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "LinkConfig",
-      "type": "object",
-      "description": "Stores application affiliate and support links.",
-      "properties": {
-        "hotmartUrl": {
-          "type": "string",
-          "format": "uri",
-          "description": "The affiliate link for the Hotmart product."
-        },
-        "exnovaUrl": {
-          "type": "string",
-          "format": "uri",
-          "description": "The affiliate link for the Exnova broker."
-        },
-        "iqOptionUrl": {
-          "type": "string",
-          "format": "uri",
-          "description": "The affiliate link for the IQ Option broker."
-        },
-        "telegramUrl": {
-          "type": "string",
-          "format": "uri",
-          "description": "The link to the support group on Telegram."
-        }
-      },
-      "required": [
-        "hotmartUrl",
-        "exnovaUrl",
-        "iqOptionUrl",
-        "telegramUrl"
-      ]
-    },
-    "LimitConfig": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "LimitConfig",
-      "type": "object",
-      "description": "Stores usage limits for the application.",
-      "properties": {
-        "hourlySignalLimit": {
-          "type": "number",
-          "description": "The number of signals a non-premium user can generate per hour."
-        }
-      },
-      "required": [
-        "hourlySignalLimit"
-      ]
-    },
-    "TimeConfig": {
-      "title": "Time Config",
-      "description": "Stores the signal generation wait times for different user tiers.",
-      "type": "object",
-      "properties": {
-        "vipMinWait": {
-          "type": "number",
-          "description": "The minimum wait time in minutes for VIP users."
-        },
-        "vipMaxWait": {
-          "type": "number",
-          "description": "The maximum wait time in minutes for VIP users."
-        },
-        "premiumMinWait": {
-          "type": "number",
-          "description": "The minimum wait time in minutes for Premium users."
-        },
-        "premiumMaxWait": {
-          "type": "number",
-          "description": "The maximum wait time in minutes for Premium users."
-        }
-      },
-      "required": [
-        "vipMinWait",
-        "vipMaxWait",
-        "premiumMinWait",
-        "premiumMaxWait"
-      ]
-    },
-    "RegistrationConfig": {
-      "title": "Registration Config",
-      "description": "Stores the secret code for app registration.",
-      "type": "object",
-      "properties": {
-        "registrationSecret": {
-          "type": "string",
-          "description": "A secret code that users must enter to register."
-        }
-      },
-      "required": ["registrationSecret"]
-    },
-    "OfferConfig": {
-      "title": "Offer Config",
-      "description": "Stores the price for the VIP offer.",
-      "type": "object",
-      "properties": {
-        "price": {
-          "type": "string",
-          "description": "The formatted price string for the VIP offer (e.g., 'R$ 197')."
-        }
-      },
-      "required": ["price"]
-    },
     "VipRequest": {
       "title": "VIP Access Request",
       "description": "Stores a user's request for VIP access after signing up through an affiliate link.",
@@ -182,25 +80,11 @@
         "status",
         "submittedAt"
       ]
-    },
-     "Affiliate": {
-      "title": "Affiliate",
-      "description": "Stores information about an affiliate, including their custom checkout link.",
-      "type": "object",
-      "properties": {
-        "checkoutUrl": {
-          "type": "string",
-          "format": "uri",
-          "description": "The custom Hotmart checkout URL for this specific affiliate."
-        }
-      },
-      "required": ["checkoutUrl"]
     }
   },
   "auth": {
     "providers": [
-      "password",
-      "anonymous"
+      "password"
     ]
   },
   "firestore": {
@@ -216,90 +100,16 @@
         }
       },
       {
-        "path": "/appConfig/links",
-        "definition": {
-          "entityName": "LinkConfig",
-          "schema": {
-            "$ref": "#/backend/entities/LinkConfig"
-          },
-          "description": "Stores global application affiliate links. This is a single document."
-        }
-      },
-      {
-        "path": "/appConfig/limitation",
-        "definition": {
-          "entityName": "LimitConfig",
-          "schema": {
-            "$ref": "#/backend/entities/LimitConfig"
-          },
-          "description": "Stores global application usage limits. This is a single document."
-        }
-      },
-       {
-        "path": "/appConfig/time",
-        "definition": {
-          "entityName": "TimeConfig",
-          "schema": {
-            "$ref": "#/backend/entities/TimeConfig"
-          },
-          "description": "Stores global signal generation wait times. This is a single document."
-        }
-      },
-       {
-        "path": "/appConfig/registration",
-        "definition": {
-          "entityName": "RegistrationConfig",
-          "schema": {
-            "$ref": "#/backend/entities/RegistrationConfig"
-          },
-          "description": "Stores the global registration secret. This is a single document."
-        }
-      },
-      {
-        "path": "/appConfig/offer",
-        "definition": {
-          "entityName": "OfferConfig",
-          "schema": {
-            "$ref": "#/backend/entities/OfferConfig"
-          },
-          "description": "Stores the VIP offer price. This is a single document."
-        }
-      },
-      {
         "path": "/vipRequests/{userId}",
         "definition": {
           "entityName": "VipRequest",
           "schema": {
             "$ref": "#/backend/entities/VipRequest"
           },
-          "description": "Stores VIP access requests from users inside the /app section. The document ID is the user's Firebase UID.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The Firebase Authentication UID of the user."
-            }
-          ]
-        }
-      },
-       {
-        "path": "/affiliates/{affiliateId}",
-        "definition": {
-          "entityName": "Affiliate",
-          "schema": {
-            "$ref": "#/backend/entities/Affiliate"
-          },
-          "description": "Stores custom checkout links for affiliates. Used in pages like /demo/vip. The document ID is the affiliate's code (e.g., 'wm').",
-           "params": [
-            {
-              "name": "affiliateId",
-              "description": "The unique identifier for the affiliate."
-            }
-          ]
+          "description": "Stores VIP access requests. The document ID is the user's Firebase UID."
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to handle user profiles, VIP access requests, and global app configurations. The user's subscription status is now part of their profile. Global configurations are in single documents under /appConfig. The signalFeedbacks collection and entity have been removed to simplify the data model."
+    "reasoning": "Standard data structure for user profiles and VIP upgrade requests, with administrative access control."
   }
 }
-
-    

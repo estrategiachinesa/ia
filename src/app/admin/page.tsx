@@ -93,11 +93,17 @@ export default function AdminDashboard() {
     }
   }, [isAdmin, isUserLoading, router]);
 
-  const handleToggleAccount = async (userId: string, currentStatus: string | undefined) => {
+  const handleToggleAccount = async (userId: string, currentStatus: string | undefined, email: string) => {
     if (!firestore) return;
     const newStatus = currentStatus === 'DISABLED' ? 'ACTIVE' : 'DISABLED';
     try {
-      await updateDoc(doc(firestore, 'users', userId), { accountStatus: newStatus });
+      // Use setDoc with merge to handle users that don't have a doc in 'users' collection yet
+      await setDoc(doc(firestore, 'users', userId), { 
+        accountStatus: newStatus,
+        email: email,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      
       toast({ 
         title: 'Status Alterado', 
         description: `Conta ${newStatus === 'DISABLED' ? 'Suspensa' : 'Ativada'}` 
@@ -126,9 +132,10 @@ export default function AdminDashboard() {
       
       // Sync with users collection
       const userRef = doc(firestore, 'users', userId);
-      await updateDoc(userRef, { subscriptionStatus: newSubStatus }).catch(() => {
-          // If user doc doesn't exist, we skip sync (it will sync on next login)
-      });
+      await setDoc(userRef, { 
+        subscriptionStatus: newSubStatus,
+        email: email
+      }, { merge: true });
 
       toast({ 
         title: 'Plano Alterado', 
@@ -163,7 +170,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // Robust Merging Logic to ensure NO ONE is missed from Auth mirror (users) or Requests
   const mergedUsers = useMemo(() => {
     if (!rawUsers && !rawRequests) return [];
     
@@ -176,10 +182,8 @@ export default function AdminDashboard() {
       const u = rawUsers?.find(userDoc => userDoc.id === id);
       const r = rawRequests?.find(reqDoc => reqDoc.id === id);
 
-      // Email priority: User Doc -> Request Doc
       const email = u?.email || r?.userEmail || (r as any).email || '---';
       
-      // Plan precisely from vipRequests status
       const vipStatus = r?.status;
       const plan = (vipStatus === 'PREMIUM' || vipStatus === 'APPROVED') ? 'PREMIUM' : 'VIP';
 
@@ -191,7 +195,7 @@ export default function AdminDashboard() {
         accountStatus: u?.accountStatus || 'ACTIVE',
         subscriptionStatus: plan,
         displayName: u?.displayName || (r as any).userName || null,
-        isGhost: !u // Visible in requests but not in mirrored auth collection
+        isGhost: !u
       };
     })
     .filter(u => 
@@ -246,7 +250,7 @@ export default function AdminDashboard() {
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <LayoutDashboard className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-headline font-black tracking-tight uppercase">Gestão Estratégia Chinesa</h1>
+            <h1 className="text-xl md:text-2xl font-headline font-black tracking-tight uppercase">Gestão Estratégia Chinesa</h1>
           </div>
           <Button variant="ghost" size="sm" onClick={() => auth.signOut()} className="rounded-full border border-white/10">
             <LogOut className="h-4 w-4 mr-2" /> Sair
@@ -310,7 +314,7 @@ export default function AdminDashboard() {
                     <div className="flex flex-col">
                         <div className="flex items-center gap-2">
                            <span className="text-xs font-bold">{u.email}</span>
-                           {u.isGhost && <Badge variant="outline" className="text-[0.5rem] h-4 py-0 border-primary/20 text-primary/50">APENAS VIP-REQ</Badge>}
+                           {u.isGhost && <Badge variant="outline" className="text-[0.5rem] h-4 py-0 border-primary/20 text-primary/50">LEAD AUTH</Badge>}
                         </div>
                         {u.displayName && <span className="text-[0.6rem] text-muted-foreground">{u.displayName}</span>}
                     </div>
@@ -318,18 +322,18 @@ export default function AdminDashboard() {
                   <TableCell className="text-xs font-mono text-primary font-bold">{u.brokerId}</TableCell>
                   <TableCell>
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild disabled={u.isGhost}>
+                      <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="sm" className="h-auto p-0 hover:bg-transparent">
                           <Badge 
                             variant={u.accountStatus === 'DISABLED' ? 'destructive' : 'outline'} 
-                            className={`cursor-pointer text-[0.6rem] font-black tracking-tighter ${u.isGhost ? 'opacity-30' : ''}`}
+                            className="cursor-pointer text-[0.6rem] font-black tracking-tighter"
                           >
                             {u.accountStatus === 'DISABLED' ? 'SUSPENSO' : 'ATIVA'}
                           </Badge>
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="start" className="bg-black/95 border-white/10">
-                        <DropdownMenuItem onClick={() => handleToggleAccount(u.id, u.accountStatus)} className="text-xs font-bold">
+                        <DropdownMenuItem onClick={() => handleToggleAccount(u.id, u.accountStatus, u.email)} className="text-xs font-bold">
                            {u.accountStatus === 'DISABLED' ? <CheckCircle2 className="h-3 w-3 mr-2 text-green-500" /> : <ShieldAlert className="h-3 w-3 mr-2 text-destructive" />}
                            {u.accountStatus === 'DISABLED' ? 'Ativar Conta' : 'Suspender Conta'}
                         </DropdownMenuItem>
@@ -367,21 +371,17 @@ export default function AdminDashboard() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-black/95 border-white/10 w-48">
-                        {!u.isGhost && (
-                          <>
-                            <DropdownMenuItem onClick={() => handleResetPassword(u.email)} className="text-xs">
-                              <Key className="h-3.5 w-3.5 mr-2 opacity-60" /> Redefinir Senha
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleToggleAccount(u.id, u.accountStatus)} className="text-xs">
-                              {u.accountStatus === 'DISABLED' ? (
-                                <><CheckCircle2 className="h-3.5 w-3.5 mr-2 text-green-500" /> Ativar Conta</>
-                              ) : (
-                                <><ShieldAlert className="h-3.5 w-3.5 mr-2 text-destructive" /> Suspender Conta</>
-                              )}
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator className="bg-white/5" />
-                          </>
-                        )}
+                        <DropdownMenuItem onClick={() => handleResetPassword(u.email)} className="text-xs">
+                          <Key className="h-3.5 w-3.5 mr-2 opacity-60" /> Redefinir Senha
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleToggleAccount(u.id, u.accountStatus, u.email)} className="text-xs">
+                          {u.accountStatus === 'DISABLED' ? (
+                            <><CheckCircle2 className="h-3.5 w-3.5 mr-2 text-green-500" /> Ativar Conta</>
+                          ) : (
+                            <><ShieldAlert className="h-3.5 w-3.5 mr-2 text-destructive" /> Suspender Conta</>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator className="bg-white/5" />
                         <DropdownMenuItem className="text-destructive text-xs font-bold" onClick={() => setDeleteUserId(u.id)}>
                           <Trash2 className="h-3.5 w-3.5 mr-2" /> Excluir Registo
                         </DropdownMenuItem>

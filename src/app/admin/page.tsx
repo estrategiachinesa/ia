@@ -17,7 +17,9 @@ import {
   LayoutDashboard,
   UserCheck,
   UserX,
-  ArrowUpDown
+  ArrowUpDown,
+  MoreVertical,
+  Mail
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,7 +32,6 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { 
   DropdownMenu, 
@@ -64,8 +65,7 @@ export default function AdminDashboard() {
   const { toast } = useToast();
   const router = useAffiliateRouter();
   const [searchTerm, setSearchTerm] = useState('');
-  const [userSort, setUserSort] = useState<SortConfig>({ key: 'createdAt', direction: 'desc' });
-  const [requestSort, setRequestSort] = useState<SortConfig>({ key: 'submittedAt', direction: 'desc' });
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'createdAt', direction: 'desc' });
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -83,28 +83,13 @@ export default function AdminDashboard() {
   }, [firestore, isAdmin]);
 
   const { data: rawUsers, isLoading: isUsersLoading } = useCollection(usersQuery);
-  const { data: rawRequests, isLoading: isRequestsLoading } = useCollection(requestsQuery);
+  const { data: rawRequests } = useCollection(requestsQuery);
 
   useEffect(() => {
     if (!isUserLoading && !isAdmin) {
       router.push('/login');
     }
   }, [isAdmin, isUserLoading, router]);
-
-  const handleUpdateStatus = async (requestId: string, userId: string, newStatus: string) => {
-    if (!firestore) return;
-    try {
-      const requestRef = doc(firestore, 'vipRequests', requestId);
-      await updateDoc(requestRef, { status: newStatus });
-      if (newStatus === 'PREMIUM' || newStatus === 'APPROVED') {
-        const userRef = doc(firestore, 'users', userId);
-        await updateDoc(userRef, { subscriptionStatus: 'ACTIVE' });
-      }
-      toast({ title: 'Sucesso', description: `Status alterado para ${newStatus}` });
-    } catch (e) {
-      toast({ variant: 'destructive', title: 'Erro ao atualizar' });
-    }
-  };
 
   const handleToggleAccount = async (userId: string, currentStatus: string | undefined) => {
     if (!firestore) return;
@@ -117,8 +102,9 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleUpdateSubscription = async (userId: string, newStatus: 'ACTIVE' | 'INACTIVE') => {
+  const handleUpdateSubscription = async (userId: string, currentStatus: string | undefined) => {
     if (!firestore) return;
+    const newStatus = currentStatus === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
     try {
       await updateDoc(doc(firestore, 'users', userId), { subscriptionStatus: newStatus });
       toast({ title: 'Plano Alterado', description: `Usuário agora é ${newStatus === 'ACTIVE' ? 'PREMIUM' : 'VIP'}` });
@@ -153,51 +139,41 @@ export default function AdminDashboard() {
   const mergedUsers = useMemo(() => {
     if (!rawUsers) return [];
     return rawUsers.map(u => {
-      const req = rawRequests?.find(r => r.id === u.id);
+      const req = rawRequests?.find(r => r.id === u.id || r.userId === u.id);
       return {
         ...u,
         brokerId: req?.brokerId || '---',
-        requestStatus: req?.status || 'NONE'
       };
     }).filter(u => 
       u.email?.toLowerCase().includes(searchTerm.toLowerCase()) || 
       u.brokerId?.toLowerCase().includes(searchTerm.toLowerCase())
     ).sort((a, b) => {
-      let valA = a[userSort.key as keyof typeof a] as any;
-      let valB = b[userSort.key as keyof typeof b] as any;
+      let valA = a[sortConfig.key as keyof typeof a] as any;
+      let valB = b[sortConfig.key as keyof typeof b] as any;
       if (valA?.seconds) valA = valA.seconds;
       if (valB?.seconds) valB = valB.seconds;
-      if (valA < valB) return userSort.direction === 'asc' ? -1 : 1;
-      if (valA > valB) return userSort.direction === 'asc' ? 1 : -1;
+      if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [rawUsers, rawRequests, searchTerm, userSort]);
-
-  const sortedRequests = useMemo(() => {
-    if (!rawRequests) return [];
-    return rawRequests.filter(r => 
-      r.userEmail?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      r.brokerId?.toLowerCase().includes(searchTerm.toLowerCase())
-    ).sort((a, b) => {
-      let valA = a[requestSort.key as keyof typeof a] as any;
-      let valB = b[requestSort.key as keyof typeof b] as any;
-      if (valA?.seconds) valA = valA.seconds;
-      if (valB?.seconds) valB = valB.seconds;
-      if (valA < valB) return requestSort.direction === 'asc' ? -1 : 1;
-      if (valA > valB) return requestSort.direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-  }, [rawRequests, searchTerm, requestSort]);
+  }, [rawUsers, rawRequests, searchTerm, sortConfig]);
 
   const formatDate = (ts: any) => {
     if (!ts) return '---';
     const date = ts.seconds ? new Date(ts.seconds * 1000) : new Date(ts);
-    return date.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    return date.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
   };
 
-  const renderSortIcon = (config: SortConfig, key: string) => {
-    if (config.key !== key) return <ArrowUpDown className="ml-1 h-3 w-3 opacity-30" />;
-    return config.direction === 'asc' ? <ChevronUp className="ml-1 h-3 w-3 text-primary" /> : <ChevronDown className="ml-1 h-3 w-3 text-primary" />;
+  const renderSortIcon = (key: string) => {
+    if (sortConfig.key !== key) return <ArrowUpDown className="ml-1 h-3 w-3 opacity-30" />;
+    return sortConfig.direction === 'asc' ? <ChevronUp className="ml-1 h-3 w-3 text-primary" /> : <ChevronDown className="ml-1 h-3 w-3 text-primary" />;
+  };
+
+  const toggleSort = (key: string) => {
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'desc' ? 'asc' : 'desc'
+    }));
   };
 
   if (isUserLoading || !user || !isAdmin) {
@@ -222,175 +198,148 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      <main className="container mx-auto p-6 space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="bg-card/40 border-white/5">
-            <CardHeader className="pb-2"><CardTitle className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">Total Usuários</CardTitle></CardHeader>
-            <CardContent><div className="text-3xl font-black">{isUsersLoading ? '...' : rawUsers?.length || 0}</div></CardContent>
-          </Card>
-          <Card className="bg-card/40 border-white/5">
-            <CardHeader className="pb-2"><CardTitle className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">Pedidos Pendentes</CardTitle></CardHeader>
-            <CardContent><div className="text-3xl font-black text-yellow-500">{isRequestsLoading ? '...' : rawRequests?.filter(r => ['PENDING', 'DEPOSIT_PENDING'].includes(r.status)).length || 0}</div></CardContent>
-          </Card>
-          <Card className="bg-card/40 border-white/5">
-            <CardHeader className="pb-2"><CardTitle className="text-[0.6rem] uppercase tracking-widest text-muted-foreground">Contas Suspensas</CardTitle></CardHeader>
-            <CardContent><div className="text-3xl font-black text-destructive">{rawUsers?.filter(u => u.accountStatus === 'DISABLED').length || 0}</div></CardContent>
-          </Card>
-        </div>
-
-        <Tabs defaultValue="requests" className="w-full space-y-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <TabsList className="bg-white/5 p-1 rounded-full shrink-0">
-              <TabsTrigger value="requests" className="rounded-full px-6 data-[state=active]:bg-primary">Solicitações VIP</TabsTrigger>
-              <TabsTrigger value="users" className="rounded-full px-6 data-[state=active]:bg-primary">Lista de Membros</TabsTrigger>
-            </TabsList>
-            
-            <div className="relative w-full md:w-80">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="E-mail ou ID Corretora..." 
-                className="pl-10 rounded-full bg-white/5 border-white/10" 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
+      <main className="container mx-auto p-6 space-y-6">
+        <div className="flex flex-col md:flex-row justify-between items-end gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full md:w-auto">
+            <Card className="bg-card/40 border-white/5 p-4 min-w-[140px]">
+              <p className="text-[0.6rem] uppercase tracking-widest text-muted-foreground font-bold">Membros</p>
+              <div className="text-2xl font-black">{isUsersLoading ? '...' : rawUsers?.length || 0}</div>
+            </Card>
+            <Card className="bg-card/40 border-white/5 p-4 min-w-[140px]">
+              <p className="text-[0.6rem] uppercase tracking-widest text-muted-foreground font-bold">Premium</p>
+              <div className="text-2xl font-black text-green-500">{rawUsers?.filter(u => u.subscriptionStatus === 'ACTIVE').length || 0}</div>
+            </Card>
+             <Card className="bg-card/40 border-white/5 p-4 min-w-[140px]">
+              <p className="text-[0.6rem] uppercase tracking-widest text-muted-foreground font-bold">Suspensos</p>
+              <div className="text-2xl font-black text-destructive">{rawUsers?.filter(u => u.accountStatus === 'DISABLED').length || 0}</div>
+            </Card>
           </div>
 
-          <TabsContent value="requests" className="mt-0">
-            <Card className="bg-card/40 border-white/5 overflow-hidden">
-              <Table>
-                <TableHeader className="bg-white/5">
-                  <TableRow className="border-white/5">
-                    <TableHead className="cursor-pointer" onClick={() => setRequestSort({ key: 'submittedAt', direction: requestSort.direction === 'asc' ? 'desc' : 'asc' })}>
-                      <div className="flex items-center text-[0.6rem] uppercase font-bold">Data/Hora {renderSortIcon(requestSort, 'submittedAt')}</div>
-                    </TableHead>
-                    <TableHead className="text-[0.6rem] uppercase font-bold">Identificador</TableHead>
-                    <TableHead className="text-[0.6rem] uppercase font-bold">ID Corretora</TableHead>
-                    <TableHead className="text-[0.6rem] uppercase font-bold">Status Atual</TableHead>
-                    <TableHead className="text-[0.6rem] uppercase font-bold">Plano</TableHead>
-                    <TableHead className="text-right text-[0.6rem] uppercase font-bold">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedRequests.map((req) => (
-                    <TableRow key={req.id} className="border-white/5 hover:bg-white/5">
-                      <TableCell className="text-xs">{formatDate(req.submittedAt)}</TableCell>
-                      <TableCell className="text-xs font-bold">{req.userEmail}</TableCell>
-                      <TableCell className="text-xs font-mono text-primary">{req.brokerId}</TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-auto p-0">
-                              <Badge className="cursor-pointer text-[0.6rem]" variant={req.status === 'PREMIUM' || req.status === 'APPROVED' ? 'success' : req.status === 'REJECTED' ? 'destructive' : 'secondary'}>
-                                {req.status}
-                              </Badge>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent className="bg-black/90 border-white/10">
-                            <DropdownMenuItem onClick={() => handleUpdateStatus(req.id, req.userId, 'PENDING')}>Pendente</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleUpdateStatus(req.id, req.userId, 'AWAITING_DEPOSIT')}>Aguardando Depósito</DropdownMenuItem>
-                            <DropdownMenuItem className="text-green-500 font-bold" onClick={() => handleUpdateStatus(req.id, req.userId, 'PREMIUM')}>Aprovar PREMIUM</DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive" onClick={() => handleUpdateStatus(req.id, req.userId, 'REJECTED')}>Rejeitar</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                      <TableCell><Badge variant="outline" className="text-[0.6rem]">---</Badge></TableCell>
-                      <TableCell className="text-right">
-                        {['PENDING', 'DEPOSIT_PENDING', 'AWAITING_DEPOSIT'].includes(req.status) && (
-                          <Button size="sm" className="h-7 px-3 text-[0.6rem] bg-green-600 hover:bg-green-700" onClick={() => handleUpdateStatus(req.id, req.userId, 'PREMIUM')}>
-                            <CheckCircle2 className="h-3 w-3 mr-1" /> Aprovar
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {sortedRequests.length === 0 && (
-                    <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground text-sm">Nenhum pedido encontrado.</TableCell></TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </Card>
-          </TabsContent>
+          <div className="relative w-full md:w-80">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+              placeholder="Pesquisar E-mail ou ID..." 
+              className="pl-10 rounded-xl bg-white/5 border-white/10 h-11" 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
 
-          <TabsContent value="users" className="mt-0">
-            <Card className="bg-card/40 border-white/5 overflow-hidden">
-              <Table>
-                <TableHeader className="bg-white/5">
-                  <TableRow className="border-white/5">
-                    <TableHead className="cursor-pointer" onClick={() => setUserSort({ key: 'createdAt', direction: userSort.direction === 'asc' ? 'desc' : 'asc' })}>
-                      <div className="flex items-center text-[0.6rem] uppercase font-bold">Data/Hora {renderSortIcon(userSort, 'createdAt')}</div>
-                    </TableHead>
-                    <TableHead className="text-[0.6rem] uppercase font-bold">Identificador</TableHead>
-                    <TableHead className="text-[0.6rem] uppercase font-bold">ID Corretora</TableHead>
-                    <TableHead className="text-[0.6rem] uppercase font-bold">Status Atual</TableHead>
-                    <TableHead className="text-[0.6rem] uppercase font-bold">Plano</TableHead>
-                    <TableHead className="text-right text-[0.6rem] uppercase font-bold">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mergedUsers.map((u) => (
-                    <TableRow key={u.id} className="border-white/5 hover:bg-white/5">
-                      <TableCell className="text-xs">{formatDate(u.createdAt)}</TableCell>
-                      <TableCell className="text-xs font-bold">{u.email}</TableCell>
-                      <TableCell className="text-xs font-mono opacity-60">{u.brokerId}</TableCell>
-                      <TableCell>
-                        <Badge variant={u.accountStatus === 'DISABLED' ? 'destructive' : 'outline'} className="text-[0.6rem]">
-                          {u.accountStatus === 'DISABLED' ? 'SUSPENSO' : 'ATIVO'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-auto p-0">
-                              <Badge className="cursor-pointer text-[0.6rem]" variant={u.subscriptionStatus === 'ACTIVE' ? 'success' : 'secondary'}>
-                                {u.subscriptionStatus === 'ACTIVE' ? 'PREMIUM' : 'VIP'}
-                              </Badge>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent className="bg-black/90 border-white/10">
-                            <DropdownMenuItem onClick={() => handleUpdateSubscription(u.id, 'ACTIVE')}><UserCheck className="h-3 w-3 mr-2 text-green-500" /> Ativar PREMIUM</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleUpdateSubscription(u.id, 'INACTIVE')}><UserX className="h-3 w-3 mr-2 text-muted-foreground" /> Rebaixar para VIP</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0"><ChevronDown className="h-4 w-4" /></Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="bg-black/90 border-white/10">
-                            <DropdownMenuItem onClick={() => handleResetPassword(u.email)}><Key className="h-3 w-3 mr-2" /> Reset Senha</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleToggleAccount(u.id, u.accountStatus)}>
-                              {u.accountStatus === 'DISABLED' ? <CheckCircle2 className="h-3 w-3 mr-2 text-green-500" /> : <ShieldAlert className="h-3 w-3 mr-2 text-destructive" />}
-                              {u.accountStatus === 'DISABLED' ? 'Reativar' : 'Suspender'}
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator className="bg-white/5" />
-                            <DropdownMenuItem className="text-destructive font-bold" onClick={() => setDeleteUserId(u.id)}><Trash2 className="h-3 w-3 mr-2" /> Excluir</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {mergedUsers.length === 0 && (
-                    <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground text-sm">Nenhum membro encontrado.</TableCell></TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        <Card className="bg-card/40 border-white/5 overflow-hidden rounded-2xl">
+          <div className="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
+            <h2 className="text-sm font-black uppercase tracking-widest">Lista de Usuários</h2>
+            <p className="text-[0.6rem] text-muted-foreground uppercase font-bold">Mostrando {mergedUsers.length} registos</p>
+          </div>
+          <Table>
+            <TableHeader className="bg-white/5">
+              <TableRow className="border-white/5">
+                <TableHead className="cursor-pointer" onClick={() => toggleSort('createdAt')}>
+                  <div className="flex items-center text-[0.6rem] uppercase font-bold">Data/Hora {renderSortIcon('createdAt')}</div>
+                </TableHead>
+                <TableHead className="cursor-pointer" onClick={() => toggleSort('email')}>
+                  <div className="flex items-center text-[0.6rem] uppercase font-bold">Identificador {renderSortIcon('email')}</div>
+                </TableHead>
+                <TableHead className="text-[0.6rem] uppercase font-bold">ID Corretora</TableHead>
+                <TableHead className="text-[0.6rem] uppercase font-bold">Status Atual</TableHead>
+                <TableHead className="text-[0.6rem] uppercase font-bold">Plano</TableHead>
+                <TableHead className="text-right text-[0.6rem] uppercase font-bold">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {mergedUsers.map((u) => (
+                <TableRow key={u.id} className="border-white/5 hover:bg-white/5 transition-colors group">
+                  <TableCell className="text-[0.7rem] opacity-60">{formatDate(u.createdAt)}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                        <span className="text-xs font-bold">{u.email}</span>
+                        {u.displayName && <span className="text-[0.6rem] text-muted-foreground">{u.displayName}</span>}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-xs font-mono text-primary font-bold">{u.brokerId}</TableCell>
+                  <TableCell>
+                    <Badge variant={u.accountStatus === 'DISABLED' ? 'destructive' : 'outline'} className="text-[0.6rem] font-black tracking-tighter">
+                      {u.accountStatus === 'DISABLED' ? 'SUSPENSO' : 'ATIVA'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-auto p-0">
+                          <Badge 
+                            className="cursor-pointer text-[0.6rem] font-black tracking-tighter" 
+                            variant={u.subscriptionStatus === 'ACTIVE' ? 'success' : 'secondary'}
+                          >
+                            {u.subscriptionStatus === 'ACTIVE' ? 'PREMIUM' : 'VIP'}
+                          </Badge>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" className="bg-black/95 border-white/10">
+                        <DropdownMenuItem onClick={() => handleUpdateSubscription(u.id, u.subscriptionStatus)} className="text-xs font-bold">
+                           {u.subscriptionStatus === 'ACTIVE' ? <UserX className="h-3 w-3 mr-2" /> : <UserCheck className="h-3 w-3 mr-2 text-green-500" />}
+                           {u.subscriptionStatus === 'ACTIVE' ? 'Rebaixar para VIP' : 'Ativar PREMIUM'}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-white/10">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="bg-black/95 border-white/10 w-48">
+                        <DropdownMenuItem onClick={() => handleResetPassword(u.email)} className="text-xs">
+                          <Key className="h-3.5 w-3.5 mr-2 opacity-60" /> Redefinir Senha
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleToggleAccount(u.id, u.accountStatus)} className="text-xs">
+                          {u.accountStatus === 'DISABLED' ? (
+                            <><CheckCircle2 className="h-3.5 w-3.5 mr-2 text-green-500" /> Ativar Conta</>
+                          ) : (
+                            <><ShieldAlert className="h-3.5 w-3.5 mr-2 text-destructive" /> Suspender Conta</>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator className="bg-white/5" />
+                        <DropdownMenuItem className="text-destructive text-xs font-bold" onClick={() => setDeleteUserId(u.id)}>
+                          <Trash2 className="h-3.5 w-3.5 mr-2" /> Excluir Conta
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {mergedUsers.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-16">
+                    <div className="flex flex-col items-center gap-2 opacity-30">
+                      <Mail className="h-10 w-10" />
+                      <p className="text-sm font-bold uppercase tracking-widest">Nenhum utilizador encontrado</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </Card>
       </main>
 
-      <AlertDialog open={!!deleteUserId} onOpenChange={() => !isDeleting && setDeleteUserId(null)}>
-        <AlertDialogContent className="bg-[#0d0d0d] border-destructive/20">
+      <AlertDialog open={!!deleteUserId} onOpenChange={(isOpen) => !isOpen && !isDeleting && setDeleteUserId(null)}>
+        <AlertDialogContent className="bg-[#0d0d0d] border-white/10 rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir Usuário?</AlertDialogTitle>
-            <AlertDialogDescription>Esta ação é permanente e removerá todos os dados do utilizador do sistema.</AlertDialogDescription>
+            <AlertDialogTitle className="text-xl font-headline font-black uppercase tracking-tight">Excluir Conta?</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground leading-relaxed">
+              Esta ação é **irreversível**. Todos os dados do utilizador serão removidos permanentemente do sistema.
+            </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteUser} disabled={isDeleting} className="bg-destructive text-white">
-              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Sim, Excluir'}
+          <AlertDialogFooter className="gap-3">
+            <AlertDialogCancel disabled={isDeleting} className="rounded-xl border-white/5">Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteUser} 
+              disabled={isDeleting} 
+              className="bg-destructive text-white hover:bg-destructive/90 rounded-xl px-8"
+            >
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirmar Exclusão'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

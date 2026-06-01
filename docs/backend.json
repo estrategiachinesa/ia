@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -18,6 +19,11 @@
           "type": "string",
           "description": "The current status of the user's subscription.",
           "enum": ["ACTIVE", "INACTIVE", "CANCELED"]
+        },
+        "accountStatus": {
+          "type": "string",
+          "description": "The administrative status of the user account.",
+          "enum": ["ACTIVE", "DISABLED"]
         },
         "createdAt": {
             "type": "string",

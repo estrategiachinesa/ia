@@ -1,8 +1,10 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, updateDoc, query, orderBy } from 'firebase/firestore';
+import { collection, doc, updateDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
+import { sendPasswordResetEmail } from 'firebase/auth';
 import { 
   Loader2, 
   Users, 
@@ -15,7 +17,12 @@ import {
   Search,
   ChevronDown,
   UserCheck,
-  UserX
+  UserX,
+  MoreHorizontal,
+  Key,
+  UserMinus,
+  Trash2,
+  AlertTriangle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,47 +45,61 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { useAffiliateRouter } from '@/hooks/use-affiliate-router';
 
-const ADMIN_EMAIL = 'chines@trader.com';
+const ADMIN_EMAILS = ['chines@trader.com', 'estrategiachinesa@gmail.com'];
 
 export default function AdminDashboard() {
   const { auth, user, isUserLoading, firestore } = useFirebase();
   const { toast } = useToast();
   const router = useAffiliateRouter();
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // States for modals
+  const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Queries - Only run if user is confirmed as Admin
+  const isAdmin = user && ADMIN_EMAILS.includes(user.email || '');
+
+  // Queries
   const usersQuery = useMemoFirebase(() => {
-    if (!firestore || !user || user.email !== ADMIN_EMAIL) return null;
+    if (!firestore || !isAdmin) return null;
     return query(collection(firestore, 'users'), orderBy('createdAt', 'desc'));
-  }, [firestore, user]);
+  }, [firestore, isAdmin]);
 
   const requestsQuery = useMemoFirebase(() => {
-    if (!firestore || !user || user.email !== ADMIN_EMAIL) return null;
+    if (!firestore || !isAdmin) return null;
     return query(collection(firestore, 'vipRequests'), orderBy('submittedAt', 'desc'));
-  }, [firestore, user]);
+  }, [firestore, isAdmin]);
 
   const { data: users, isLoading: isUsersLoading } = useCollection(usersQuery);
   const { data: requests, isLoading: isRequestsLoading } = useCollection(requestsQuery);
 
   // Authorized check redirect
   useEffect(() => {
-    if (!isUserLoading && (!user || user.email !== ADMIN_EMAIL)) {
+    if (!isUserLoading && !isAdmin) {
       router.push('/login');
     }
-  }, [user, isUserLoading, router]);
+  }, [isAdmin, isUserLoading, router]);
 
   const handleUpdateStatus = async (requestId: string, userId: string, newStatus: string) => {
     if (!firestore) return;
 
     try {
-      // Update request status
       const requestRef = doc(firestore, 'vipRequests', requestId);
       await updateDoc(requestRef, { status: newStatus });
 
-      // If approved, update user subscriptionStatus
       if (newStatus === 'PREMIUM' || newStatus === 'APPROVED') {
         const userRef = doc(firestore, 'users', userId);
         await updateDoc(userRef, { subscriptionStatus: 'ACTIVE' });
@@ -122,7 +143,71 @@ export default function AdminDashboard() {
     }
   };
 
-  if (isUserLoading || !user || user.email !== ADMIN_EMAIL) {
+  const handleResetPassword = async (email: string) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      toast({
+        title: 'E-mail enviado',
+        description: `Um link de redefinição de senha foi enviado para ${email}.`,
+      });
+    } catch (error) {
+      console.error('Error sending reset email:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao enviar',
+        description: 'Não foi possível enviar o e-mail de redefinição.',
+      });
+    }
+  };
+
+  const handleToggleUserAccountStatus = async (userId: string, currentStatus: string | undefined) => {
+    if (!firestore) return;
+    const newStatus = currentStatus === 'DISABLED' ? 'ACTIVE' : 'DISABLED';
+
+    try {
+      const userRef = doc(firestore, 'users', userId);
+      await updateDoc(userRef, { accountStatus: newStatus });
+
+      toast({
+        title: newStatus === 'DISABLED' ? 'Conta Desativada' : 'Conta Ativada',
+        description: `O status da conta foi alterado com sucesso.`,
+      });
+    } catch (error) {
+      console.error('Error toggling status:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro na operação',
+        description: 'Não foi possível alterar o status administrativo.',
+      });
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!firestore || !deleteUserId) return;
+    setIsDeleting(true);
+
+    try {
+      const userRef = doc(firestore, 'users', deleteUserId);
+      await deleteDoc(userRef);
+
+      toast({
+        title: 'Usuário Excluído',
+        description: 'O registro foi removido do banco de dados.',
+      });
+      setDeleteUserId(null);
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao excluir',
+        description: 'Não foi possível remover o usuário.',
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  if (isUserLoading || !user || !isAdmin) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <div className="text-center">
@@ -161,7 +246,6 @@ export default function AdminDashboard() {
       </header>
 
       <main className="container mx-auto p-4 lg:p-8 space-y-8">
-        {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <Card className="bg-card/50 border-border/50">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -290,7 +374,7 @@ export default function AdminDashboard() {
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>Todos os Usuários</CardTitle>
-                  <CardDescription>Lista completa. Clique na assinatura para mudar manualmente.</CardDescription>
+                  <CardDescription>Lista completa de membros registados.</CardDescription>
                 </div>
                 <div className="relative w-64">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -307,16 +391,17 @@ export default function AdminDashboard() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Usuário</TableHead>
-                      <TableHead>Assinatura (Manual)</TableHead>
-                      <TableHead>Data de Cadastro</TableHead>
-                      <TableHead className="text-right">ID Interno</TableHead>
+                      <TableHead>Assinatura</TableHead>
+                      <TableHead>Status Conta</TableHead>
+                      <TableHead>Cadastro</TableHead>
+                      <TableHead className="text-right">Gerenciar</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {isUsersLoading ? (
-                      <TableRow><TableCell colSpan={4} className="text-center py-8"><Loader2 className="animate-spin mx-auto" /></TableCell></TableRow>
+                      <TableRow><TableCell colSpan={5} className="text-center py-8"><Loader2 className="animate-spin mx-auto" /></TableCell></TableRow>
                     ) : filteredUsers.length === 0 ? (
-                      <TableRow><TableCell colSpan={4} className="text-center py-8">Nenhum usuário encontrado.</TableCell></TableRow>
+                      <TableRow><TableCell colSpan={5} className="text-center py-8">Nenhum usuário encontrado.</TableCell></TableRow>
                     ) : (
                       filteredUsers.map((u) => (
                         <TableRow key={u.id}>
@@ -345,11 +430,47 @@ export default function AdminDashboard() {
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>
+                          <TableCell>
+                            <Badge variant={u.accountStatus === 'DISABLED' ? 'destructive' : 'outline'}>
+                              {u.accountStatus === 'DISABLED' ? 'DESATIVADA' : 'ATIVA'}
+                            </Badge>
+                          </TableCell>
                           <TableCell className="text-xs text-muted-foreground">
                              {u.createdAt ? new Date(u.createdAt.seconds * 1000).toLocaleDateString() : '---'}
                           </TableCell>
-                          <TableCell className="text-right font-mono text-[10px] text-muted-foreground">
-                            {u.id}
+                          <TableCell className="text-right">
+                             <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuLabel>Ações de Conta</DropdownMenuLabel>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => handleResetPassword(u.email)}>
+                                    <Key className="h-4 w-4 mr-2" /> Redefinir Senha
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleToggleUserAccountStatus(u.id, u.accountStatus)}>
+                                    {u.accountStatus === 'DISABLED' ? (
+                                      <>
+                                        <UserCheck className="h-4 w-4 mr-2 text-green-500" /> Ativar Conta
+                                      </>
+                                    ) : (
+                                      <>
+                                        <UserMinus className="h-4 w-4 mr-2 text-yellow-500" /> Desativar Conta
+                                      </>
+                                    )}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem 
+                                    className="text-destructive font-bold"
+                                    onClick={() => setDeleteUserId(u.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" /> Excluir permanentemente
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                             </DropdownMenu>
                           </TableCell>
                         </TableRow>
                       ))
@@ -361,6 +482,35 @@ export default function AdminDashboard() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Delete Confirmation Modal */}
+      <AlertDialog open={!!deleteUserId} onOpenChange={() => !isDeleting && setDeleteUserId(null)}>
+        <AlertDialogContent className="bg-card border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="text-destructive h-5 w-5" />
+              Excluir Usuário?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação é irreversível. O perfil do usuário será removido permanentemente do banco de dados. 
+              O acesso será revogado imediatamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={(e) => {
+                e.preventDefault();
+                handleDeleteUser();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isDeleting}
+            >
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirmar Exclusão'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

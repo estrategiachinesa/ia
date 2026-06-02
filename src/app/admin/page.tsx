@@ -683,8 +683,11 @@ export default function AdminDashboard() {
                 <TableHead className="cursor-pointer" onClick={() => toggleSort('createdAt')}>
                   <div className="flex items-center text-[0.6rem] uppercase font-bold">Registo {renderSortIcon('createdAt')}</div>
                 </TableHead>
+                <TableHead className="cursor-pointer" onClick={() => toggleSort('email')}>
+                  <div className="flex items-center text-[0.6rem] uppercase font-bold">Membro {renderSortIcon('email')}</div>
+                </TableHead>
                 <TableHead className="cursor-pointer" onClick={() => toggleSort('lastActivity')}>
-                  <div className="flex items-center text-[0.6rem] uppercase font-bold">Membro {renderSortIcon('lastActivity')}</div>
+                  <div className="flex items-center text-[0.6rem] uppercase font-bold">Atividade {renderSortIcon('lastActivity')}</div>
                 </TableHead>
                 <TableHead className="cursor-pointer" onClick={() => toggleSort('brokerId')}>
                   <div className="flex items-center text-[0.6rem] uppercase font-bold">ID Corretora {renderSortIcon('brokerId')}</div>
@@ -706,20 +709,20 @@ export default function AdminDashboard() {
                 <TableRow key={u.id} className="border-white/5 hover:bg-white/5 transition-colors group">
                   <TableCell className="text-[0.7rem] opacity-60 font-mono">{formatDate(u.createdAt)}</TableCell>
                   <TableCell>
+                    <div className="flex items-center gap-2">
+                       <span className="text-xs font-bold">{u.email}</span>
+                       {u.isNew && (
+                          <Badge className="bg-emerald-500/15 hover:bg-emerald-500/20 text-emerald-500 border-emerald-500/30 text-[0.5rem] px-1.5 h-4 font-black tracking-widest uppercase">
+                            <Sparkles className="h-2 w-2 mr-0.5 fill-emerald-500" /> NOVO {u.daysSince}D
+                          </Badge>
+                       )}
+                       {u.isGhost && <Badge variant="outline" className="text-[0.5rem] h-4 py-0 border-primary/20 text-primary/50">LEAD AUTH</Badge>}
+                    </div>
+                  </TableCell>
+                  <TableCell>
                     <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                           <span className="text-xs font-bold">{u.email}</span>
-                           {u.isNew && (
-                              <Badge className="bg-emerald-500/15 hover:bg-emerald-500/20 text-emerald-500 border-emerald-500/30 text-[0.5rem] px-1.5 h-4 font-black tracking-widest uppercase">
-                                <Sparkles className="h-2 w-2 mr-0.5 fill-emerald-500" /> NOVO {u.daysSince}D
-                              </Badge>
-                           )}
-                           {u.isGhost && <Badge variant="outline" className="text-[0.5rem] h-4 py-0 border-primary/20 text-primary/50">LEAD AUTH</Badge>}
-                        </div>
-                        <div className="flex items-center gap-1 mt-0.5">
-                            <span className="text-[0.55rem] text-muted-foreground uppercase font-black opacity-40">Última Ativ:</span>
-                            <span className="text-[0.55rem] text-muted-foreground font-bold">{formatDate(u.lastActivity)}</span>
-                        </div>
+                        <span className="text-[0.7rem] font-mono opacity-80">{formatDate(u.lastActivity)}</span>
+                        <span className="text-[0.5rem] text-muted-foreground uppercase font-black opacity-30">Última Ativ.</span>
                     </div>
                   </TableCell>
                   <TableCell className="text-xs font-mono text-primary font-bold">{u.brokerId}</TableCell>
@@ -809,7 +812,7 @@ export default function AdminDashboard() {
               ))}
               {mergedUsers.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-20">
+                  <TableCell colSpan={8} className="text-center py-20">
                     <div className="flex flex-col items-center gap-3 opacity-20">
                       <Search className="h-12 w-12" />
                       <p className="text-xs font-black uppercase tracking-[0.2em]">Nenhum registo encontrado</p>

@@ -275,7 +275,7 @@ export default function AdminDashboard() {
       if (createdAt) {
           const date = (createdAt as any).seconds ? new Date((createdAt as any).seconds * 1000) : new Date(createdAt as any);
           const diffTime = Math.abs(Date.now() - date.getTime());
-          diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
           isNew = diffDays <= 8;
       }
 

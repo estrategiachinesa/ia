@@ -18,7 +18,7 @@ import YoutubePlayer from '@/components/youtube-player';
 import { SignalForm } from '@/components/app/signal-form';
 import { SignalResult } from '@/components/app/signal-result';
 import { isMarketOpenForAsset } from '@/lib/market-hours';
-import { Loader2, AlertTriangle, ChevronDown, ChevronUp, BarChart, LogOut, User, Calendar } from 'lucide-react';
+import { Loader2, AlertTriangle, ChevronDown, ChevronUp, BarChart, LogOut, User, Calendar, ExternalLink } from 'lucide-react';
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { useAppConfig } from '@/firebase/config-provider';
 import { Button } from '@/components/ui/button';
@@ -452,6 +452,22 @@ export default function AnalisadorPage() {
                     <div className="w-full lg:w-[420px] flex flex-col gap-6">
                         <div className="w-full bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl shadow-2xl p-8 min-h-[600px] flex flex-col items-center justify-center transition-all duration-500">
                             {renderContent()}
+                        </div>
+
+                        <div className="w-full bg-card/40 backdrop-blur-xl border border-white/5 rounded-xl p-5 shadow-xl space-y-3">
+                            <h3 className="text-[0.6rem] font-black text-muted-foreground uppercase tracking-widest opacity-60">Plataformas Operacionais</h3>
+                            <div className="grid grid-cols-2 gap-2">
+                                <Button asChild variant="outline" size="sm" className="h-10 rounded-xl font-bold border-white/10 bg-white/5 hover:bg-white/10 transition-all text-xs">
+                                    <a href={config?.iqOptionUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1.5">
+                                        <ExternalLink className="h-3.5 w-3.5" /> IQ Option
+                                    </a>
+                                </Button>
+                                <Button asChild variant="outline" size="sm" className="h-10 rounded-xl font-bold border-white/10 bg-white/5 hover:bg-white/10 transition-all text-xs">
+                                    <a href={config?.exnovaUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1.5">
+                                        <ExternalLink className="h-3.5 w-3.5" /> Exnova
+                                    </a>
+                                </Button>
+                            </div>
                         </div>
                         
                         {!isPremium && appState !== 'loading' && (

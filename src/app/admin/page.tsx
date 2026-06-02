@@ -106,7 +106,7 @@ export default function AdminDashboard() {
   // State for user list
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState<QuickFilter>('ALL');
-  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'createdAt', direction: 'desc' });
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'lastActivity', direction: 'desc' });
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -321,6 +321,7 @@ export default function AdminDashboard() {
       if (isRejected) planLabel = 'RECUSADO';
 
       const createdAt = u?.createdAt || r?.submittedAt || null;
+      const lastActivity = u?.updatedAt || r?.updatedAt || u?.createdAt || r?.submittedAt || null;
       
       let isNew = false;
       let diffDays = 0;
@@ -335,7 +336,7 @@ export default function AdminDashboard() {
         id,
         email,
         createdAt,
-        lastActivity: u?.updatedAt || r?.updatedAt || u?.createdAt || r?.submittedAt || null,
+        lastActivity,
         brokerId: r?.brokerId || '---',
         accountStatus: u?.accountStatus || 'ACTIVE',
         subscriptionStatus: planLabel,
@@ -376,8 +377,8 @@ export default function AdminDashboard() {
       if (valA?.seconds) valA = valA.seconds;
       if (valB?.seconds) valB = valB.seconds;
       
-      if (valA === null || valA === undefined) valA = '';
-      if (valB === null || valB === undefined) valB = '';
+      if (valA === null || valA === undefined) valA = 0;
+      if (valB === null || valB === undefined) valB = 0;
 
       if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
       if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
@@ -682,8 +683,8 @@ export default function AdminDashboard() {
                 <TableHead className="cursor-pointer" onClick={() => toggleSort('createdAt')}>
                   <div className="flex items-center text-[0.6rem] uppercase font-bold">Registo {renderSortIcon('createdAt')}</div>
                 </TableHead>
-                <TableHead className="cursor-pointer" onClick={() => toggleSort('email')}>
-                  <div className="flex items-center text-[0.6rem] uppercase font-bold">Membro {renderSortIcon('email')}</div>
+                <TableHead className="cursor-pointer" onClick={() => toggleSort('lastActivity')}>
+                  <div className="flex items-center text-[0.6rem] uppercase font-bold">Membro {renderSortIcon('lastActivity')}</div>
                 </TableHead>
                 <TableHead className="cursor-pointer" onClick={() => toggleSort('brokerId')}>
                   <div className="flex items-center text-[0.6rem] uppercase font-bold">ID Corretora {renderSortIcon('brokerId')}</div>

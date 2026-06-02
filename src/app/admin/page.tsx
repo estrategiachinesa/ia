@@ -42,7 +42,8 @@ import {
   Eye,
   MousePointer2,
   Info,
-  ExternalLink
+  ExternalLink,
+  History
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -114,6 +115,10 @@ export default function AdminDashboard() {
   const [regSecret, setRegSecret] = useState('');
   const [invertSignals, setInvertSignals] = useState(false);
   const [signalLimit, setSignalLimit] = useState(3);
+  
+  // State for Stats Reset
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
 
   // Analytics Modals
   const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
@@ -158,6 +163,23 @@ export default function AdminDashboard() {
       toast({ variant: 'destructive', title: 'Erro ao Salvar', description: 'Verifique as permissões de rede.' });
     } finally {
       setIsConfigSaving(false);
+    }
+  };
+
+  const handleResetStats = async () => {
+    if (!firestore) return;
+    setIsResetting(true);
+    try {
+      await setDoc(doc(firestore, 'appConfig', 'analytics'), {
+        visitCount: 0,
+        checkoutClickCount: 0
+      });
+      toast({ title: 'Estatísticas Zeradas', description: 'Todos os contadores de visitas e cliques foram resetados.' });
+      setIsResetDialogOpen(false);
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Erro ao Resetar', description: 'Ocorreu um erro ao tentar limpar os dados.' });
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -300,7 +322,6 @@ export default function AdminDashboard() {
 
       const createdAt = u?.createdAt || r?.submittedAt || null;
       
-      // Lógica para selo NOVO (8 dias)
       let isNew = false;
       let diffDays = 0;
       if (createdAt) {
@@ -442,7 +463,7 @@ export default function AdminDashboard() {
       return 'bg-cyan-500 hover:bg-cyan-600 text-black border-cyan-400/30';
     }
     if (rawStatus === 'DEPOSIT_PENDING') {
-      return 'bg-blue-500 hover:bg-blue-600 text-white border-blue-400/30';
+      return 'bg-emerald-500 hover:bg-emerald-600 text-black border-emerald-400/30';
     }
     if (rawStatus === 'REJECTED') {
         return 'bg-red-600 hover:bg-red-700 text-white border-red-400/30';
@@ -497,7 +518,7 @@ export default function AdminDashboard() {
 
       <main className="container mx-auto p-6 space-y-8">
         
-        {/* STATS BAR - ORDEM: Pendentes / Total Visitas / Cliques Checkout / Total Membros / Premium / Recusados / Suspensos */}
+        {/* STATS BAR - ORDEM: Pendentes / Visitas VIP / Cliques Checkout / Total Membros / Premium / Recusados / Suspensos */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
              {[
                  { label: 'Pendentes', value: stats.pending, icon: Timer, color: 'text-orange-500', clickable: false },
@@ -535,9 +556,19 @@ export default function AdminDashboard() {
 
         {/* GLOBAL CONFIGS SECTION */}
         <Card className="bg-card/40 border-white/5 p-6 rounded-2xl">
-          <div className="flex items-center gap-2 mb-6">
-            <Settings2 className="h-5 w-5 text-primary" />
-            <h2 className="text-sm font-black uppercase tracking-widest">Configurações Globais</h2>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-2">
+              <Settings2 className="h-5 w-5 text-primary" />
+              <h2 className="text-sm font-black uppercase tracking-widest">Configurações Globais</h2>
+            </div>
+            <Button 
+                variant="destructive" 
+                size="sm" 
+                onClick={() => setIsResetDialogOpen(true)}
+                className="h-9 px-4 rounded-xl font-bold bg-red-600/10 text-red-500 border border-red-500/20 hover:bg-red-600 hover:text-white transition-all"
+            >
+                <History className="h-4 w-4 mr-2" /> Zerar Estatísticas
+            </Button>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
@@ -729,7 +760,7 @@ export default function AdminDashboard() {
                         <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'APPROVED', u.email)} className="text-xs font-bold text-purple-400">
                            <UserCheck className="h-3 w-3 mr-2" /> Aprovar para PREMIUM
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'DEPOSIT_PENDING', u.email)} className="text-xs text-blue-400">
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'DEPOSIT_PENDING', u.email)} className="text-xs text-emerald-400">
                            <RefreshCw className="h-3 w-3 mr-2" /> Mudar: Depósito Pendente
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'AWAITING_DEPOSIT', u.email)} className="text-xs text-cyan-400">
@@ -842,6 +873,27 @@ export default function AdminDashboard() {
               className="bg-destructive text-white hover:bg-destructive/90 rounded-xl px-8"
             >
               {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirmar Exclusão'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+        <AlertDialogContent className="bg-[#0d0d0d] border-white/10 rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-headline font-black uppercase tracking-tight text-red-500">Zerar Estatísticas?</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground leading-relaxed">
+              Esta ação limpará todos os contadores de **Visitas** e **Cliques** acumulados até ao momento. Esta operação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-3">
+            <AlertDialogCancel disabled={isResetting} className="rounded-xl border-white/5">Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleResetStats} 
+              disabled={isResetting} 
+              className="bg-red-600 text-white hover:bg-red-700 rounded-xl px-8"
+            >
+              {isResetting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirmar Reset'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

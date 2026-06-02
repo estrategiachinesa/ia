@@ -12,7 +12,10 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() && (request.auth.token.email == 'chines@trader.com' || request.auth.token.email == 'estrategiachinesa@gmail.com');
+      return isSignedIn() && (
+        request.auth.token.email == 'chines@trader.com' || 
+        request.auth.token.email == 'estrategiachinesa@gmail.com'
+      );
     }
 
     /**
@@ -20,8 +23,8 @@ service cloud.firestore {
      */
     match /appConfig/{configDoc} {
       allow read: if true;
-      // Permite que qualquer pessoa atualize as estatísticas (visitas e cliques)
-      allow update: if configDoc == 'analytics' || isAdmin();
+      // Permite que qualquer pessoa incremente as estatísticas de analytics
+      allow create, update: if configDoc == 'analytics' || isAdmin();
       allow write: if isAdmin();
     }
 
@@ -54,7 +57,7 @@ service cloud.firestore {
     }
 
     /**
-     * Generic rules for other collections like 'session' or 'affiliates'
+     * Generic rules for other collections
      */
     match /session/{sessionDoc} {
       allow read: if true;

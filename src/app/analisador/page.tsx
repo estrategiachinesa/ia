@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -501,7 +500,19 @@ export default function AnalisadorPage() {
                                     <p className="text-[0.6rem] font-bold text-primary tracking-[0.15em] uppercase opacity-80">Estatuto de Conta</p>
                                     <h4 className="text-sm font-bold text-foreground">Versão VIP Limitada</h4>
                                 </div>
-                                <Button size="sm" onClick={() => setUpgradeModalOpen(true)} className="h-9 px-6 text-[0.7rem] font-black rounded-full shadow-lg shadow-primary/20 hover:scale-105 transition-transform">UPGRADE</Button>
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => {
+                                    if (vipData) {
+                                      setVipModalOpen(true);
+                                    } else {
+                                      setUpgradeModalOpen(true);
+                                    }
+                                  }} 
+                                  className="h-9 px-6 text-[0.7rem] font-black rounded-full shadow-lg shadow-primary/20 hover:scale-105 transition-transform"
+                                >
+                                  UPGRADE
+                                </Button>
                              </div>
                         )}
                     </div>

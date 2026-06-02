@@ -460,7 +460,19 @@ export default function AnalisadorPage() {
                                     <p className="text-[0.65rem] font-bold text-primary tracking-widest uppercase">Estatuto de Conta</p>
                                     <h4 className="text-sm font-bold text-foreground">Versão VIP Limitada</h4>
                                 </div>
-                                <Button size="sm" onClick={() => setUpgradeModalOpen(true)} className="h-8 text-[0.7rem] font-bold rounded-full">UPGRADE</Button>
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => {
+                                    if (vipData) {
+                                      setVipModalOpen(true);
+                                    } else {
+                                      setUpgradeModalOpen(true);
+                                    }
+                                  }} 
+                                  className="h-8 text-[0.7rem] font-bold rounded-full"
+                                >
+                                  UPGRADE
+                                </Button>
                              </div>
                         )}
                     </div>

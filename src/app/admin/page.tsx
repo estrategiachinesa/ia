@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -39,7 +38,8 @@ import {
   Star,
   ShieldOff,
   XCircle,
-  Sparkles
+  Sparkles,
+  Eye
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -74,6 +74,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAffiliateRouter } from '@/hooks/use-affiliate-router';
+import { useAppConfig } from '@/firebase/config-provider';
 import { cn } from '@/lib/utils';
 
 const ADMIN_EMAILS = ['chines@trader.com', 'estrategiachinesa@gmail.com'];
@@ -87,6 +88,7 @@ type QuickFilter = 'ALL' | 'PENDING' | 'PREMIUM' | 'SUSPENDED' | 'REJECTED';
 
 export default function AdminDashboard() {
   const { auth, user, isUserLoading, firestore } = useFirebase();
+  const { config } = useAppConfig();
   const { toast } = useToast();
   const router = useAffiliateRouter();
   
@@ -466,11 +468,12 @@ export default function AdminDashboard() {
       <main className="container mx-auto p-6 space-y-8">
         
         {/* STATS BAR */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
              {[
                  { label: 'Total Membros', value: stats.total, icon: Users, color: 'text-primary' },
                  { label: 'Pendentes', value: stats.pending, icon: Timer, color: 'text-orange-500' },
                  { label: 'Premium', value: stats.premium, icon: Star, color: 'text-purple-500' },
+                 { label: 'Total Visitas', value: config?.visitCount || 0, icon: Eye, color: 'text-emerald-500' },
                  { label: 'Recusados', value: stats.rejected, icon: Ban, color: 'text-red-500' },
                  { label: 'Suspensos', value: stats.suspended, icon: ShieldOff, color: 'text-zinc-500' },
              ].map((s, i) => (

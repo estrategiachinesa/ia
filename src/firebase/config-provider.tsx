@@ -1,9 +1,8 @@
-
 'use client';
 
 import React, { createContext, useContext, ReactNode, useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { doc, onSnapshot, collection } from 'firebase/firestore';
+import { doc, onSnapshot, collection, updateDoc, increment } from 'firebase/firestore';
 import { initializeFirebase } from '.';
 
 // Define the shape of the configuration object
@@ -24,6 +23,7 @@ export interface AppConfig {
   vipMaxWait: number;
   premiumMinWait: number;
   premiumMaxWait: number;
+  visitCount?: number;
 }
 
 // Define the state for the config context
@@ -54,6 +54,7 @@ const defaultConfig: AppConfig = {
     premiumMaxWait: 10,
     registrationSecret: "chines_2026",
     price: "R$ 197",
+    visitCount: 0,
     afiliados: {
       "wm": "https://go.hotmart.com/D103007301M?dp=1"
     },
@@ -93,10 +94,26 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
   useEffect(() => {
     if (!firestore) return;
 
+    // Tracker logic: increment visit count once per session
+    const trackVisit = async () => {
+        const hasTracked = sessionStorage.getItem('site_visited');
+        if (!hasTracked) {
+            try {
+                const analyticsRef = doc(firestore, 'appConfig', 'analytics');
+                await updateDoc(analyticsRef, { visitCount: increment(1) });
+                sessionStorage.setItem('site_visited', 'true');
+            } catch (e) {
+                // If doc doesn't exist, it might fail, we can handle it if needed
+                console.error("Tracking visit failed", e);
+            }
+        }
+    };
+    trackVisit();
+
     const unsubscribers: (() => void)[] = [];
 
     // Real-time listener for appConfig documents
-    const docPaths = ['links', 'limitation', 'time', 'remoteValues', 'registration', 'offer'];
+    const docPaths = ['links', 'limitation', 'time', 'remoteValues', 'registration', 'offer', 'analytics'];
     
     let loadedDocs = 0;
     const totalDocs = docPaths.length;
@@ -115,7 +132,6 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
                 if (snap.exists()) {
                     handleDocUpdate(path, snap.data());
                 } else {
-                    // Even if doc doesn't exist, count it as "loaded" to clear loader
                     if (loadedDocs < totalDocs) {
                         loadedDocs++;
                         if (loadedDocs === totalDocs) setIsConfigLoading(false);
@@ -142,7 +158,6 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
     );
     unsubscribers.push(unsubAffiliates);
 
-    // Timeout fallback if Firestore is unresponsive
     const timeout = setTimeout(() => {
         if (isConfigLoading) {
             setIsConfigLoading(false);

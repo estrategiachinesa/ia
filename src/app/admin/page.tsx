@@ -709,14 +709,16 @@ export default function AdminDashboard() {
                 <TableRow key={u.id} className="border-white/5 hover:bg-white/5 transition-colors group">
                   <TableCell className="text-[0.7rem] opacity-60 font-mono">{formatDate(u.createdAt)}</TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col gap-1">
                        <span className="text-xs font-bold">{u.email}</span>
-                       {u.isNew && (
-                          <Badge className="bg-emerald-500/15 hover:bg-emerald-500/20 text-emerald-500 border-emerald-500/30 text-[0.5rem] px-1.5 h-4 font-black tracking-widest uppercase">
-                            <Sparkles className="h-2 w-2 mr-0.5 fill-emerald-500" /> NOVO {u.daysSince}D
-                          </Badge>
-                       )}
-                       {u.isGhost && <Badge variant="outline" className="text-[0.5rem] h-4 py-0 border-primary/20 text-primary/50">LEAD AUTH</Badge>}
+                       <div className="flex items-center gap-1.5">
+                          {u.isNew && (
+                              <Badge className="bg-emerald-500/15 hover:bg-emerald-500/20 text-emerald-500 border-emerald-500/30 text-[0.5rem] px-1.5 h-4 font-black tracking-widest uppercase">
+                                <Sparkles className="h-2 w-2 mr-0.5 fill-emerald-500" /> NOVO {u.daysSince}D
+                              </Badge>
+                          )}
+                          {u.isGhost && <Badge variant="outline" className="text-[0.5rem] h-4 py-0 border-primary/20 text-primary/50">SEM PERFIL</Badge>}
+                       </div>
                     </div>
                   </TableCell>
                   <TableCell>

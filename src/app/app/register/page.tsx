@@ -10,11 +10,11 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { LineChart, Loader2, Eye, EyeOff } from 'lucide-react';
 import AffiliateLink from '@/components/app/affiliate-link';
-import { useFirebase, useAppConfig } from '@/firebase';
+import { useFirebase, useAppConfig, setDocumentNonBlocking } from '@/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-
+import { doc, serverTimestamp } from 'firebase/firestore';
 
 type RegistrationStep = 'codeValidation' | 'terms' | 'form';
 
@@ -39,25 +39,27 @@ export default function RegisterPage() {
   }, [user, isUserLoading, router]);
 
   const handleCodeValidation = async () => {
-    if (!activationCode) {
-      toast({ variant: 'destructive', title: 'Código Inválido', description: 'Por favor, insira um código de ativação.' });
+    const trimmedCode = activationCode.trim();
+    
+    if (!trimmedCode) {
+      toast({ variant: 'destructive', title: 'Código Inválido', description: 'Por favor, insira o código de ativação.' });
       return;
     }
     
     setIsCodeLoading(true);
 
     if (isConfigLoading || !config) {
-        toast({ variant: 'destructive', title: 'Aguarde', description: 'A configuração ainda está a carregar. Tente novamente.' });
+        toast({ variant: 'destructive', title: 'Aguarde', description: 'Sistema a carregar... Tente em instantes.' });
         setIsCodeLoading(false);
         return;
     }
 
-    if (activationCode === config.registrationSecret) {
+    if (trimmedCode === config.registrationSecret.trim()) {
         localStorage.setItem('activationCodeValidated', 'true');
         setRegistrationStep('terms');
-        toast({ title: 'Código Validado!', description: 'Prossiga para o próximo passo.' });
+        toast({ title: 'Código Validado!', description: 'Licença confirmada com sucesso.' });
     } else {
-        toast({ variant: 'destructive', title: 'Código Inválido', description: 'O código de ativação está incorreto. Verifique e tente novamente.' });
+        toast({ variant: 'destructive', title: 'Código Inválido', description: 'O código de ativação está incorreto. Verifique se copiou corretamente da Hotmart.' });
     }
     
     setIsCodeLoading(false);
@@ -70,7 +72,7 @@ export default function RegisterPage() {
   };
 
   const handleRegister = useCallback(async () => {
-    if (isLoading) return;
+    if (isLoading || !firestore) return;
 
     if (!credentials.email || !credentials.password || !credentials.confirmPassword) {
         toast({ variant: 'destructive', title: 'Campos Vazios', description: 'Por favor, preencha todos os campos.' });
@@ -94,17 +96,29 @@ export default function RegisterPage() {
 
     setIsLoading(true);
     try {
-        await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
+        const userCredential = await createUserWithEmailAndPassword(auth, credentials.email, credentials.password);
         
+        const userDocRef = doc(firestore, 'users', userCredential.user.uid);
+        const userProfileData = {
+            email: userCredential.user.email,
+            displayName: userCredential.user.email?.split('@')[0],
+            subscriptionStatus: 'ACTIVE', 
+            createdAt: serverTimestamp(),
+            termsAccepted: true,
+            termsAcceptedAt: serverTimestamp(),
+            accountStatus: 'ACTIVE'
+        };
+
+        setDocumentNonBlocking(userDocRef, userProfileData, { merge: true });
+
         localStorage.setItem('loginTimestamp', Date.now().toString());
-        localStorage.setItem('showPremiumUpgradeOnLoad', 'true'); // Flag to show modal
-        localStorage.removeItem('activationCodeValidated'); // Clean up
+        localStorage.setItem('showPremiumUpgradeOnLoad', 'true');
+        localStorage.removeItem('activationCodeValidated');
 
         toast({
           title: 'Cadastro bem-sucedido!',
-          description: 'Redirecionando para o analisador...',
+          description: 'A sua licença vitalícia foi ativada.',
         });
-        // The useEffect hook will handle the redirect
     } catch (error: any) {
       console.error("Registration error:", error);
       let description = 'Ocorreu um erro inesperado.';
@@ -138,41 +152,41 @@ export default function RegisterPage() {
     };
   }, [handleRegister, handleCodeValidation, registrationStep]);
 
-  if (isUserLoading || isConfigLoading) {
+  if (isUserLoading) {
       return (
-          <div className="flex h-screen w-full items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin" />
-              <p className="ml-2">Carregando...</p>
+          <div className="flex h-screen w-full items-center justify-center bg-black">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
       )
   }
   
   if (user) {
-      return null; // Redirects are handled in useEffect
+      return null;
   }
 
   const renderCodeValidation = () => (
       <Dialog open={true} onOpenChange={(isOpen) => !isOpen && router.push('/app/login')}>
-        <DialogContent hideCloseButton={false}>
+        <DialogContent className="bg-[#0a0a0a] border-white/10" hideCloseButton={false}>
           <DialogHeader className="text-center items-center">
-            <DialogTitle className="text-2xl font-headline">Ativação de Licença</DialogTitle>
-            <DialogDescription className="text-base">
-              Para criar sua conta, por favor, insira o código de ativação que você recebeu após a compra na Hotmart.
+            <DialogTitle className="text-2xl font-headline font-black uppercase tracking-tighter">Ativação de Licença</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Insira o código de ativação enviado para o seu e-mail após a confirmação da compra na Hotmart.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2 pt-2">
-            <Label htmlFor="activation-code">Código de Ativação</Label>
+          <div className="space-y-2 pt-4">
+            <Label htmlFor="activation-code" className="text-[0.65rem] font-bold uppercase opacity-50">Código de Ativação</Label>
             <Input
                 id="activation-code"
                 placeholder="Insira seu código aqui"
                 value={activationCode}
                 onChange={(e) => setActivationCode(e.target.value)}
                 disabled={isCodeLoading}
+                className="h-12 bg-white/5 border-white/10 text-center font-mono tracking-widest text-lg"
             />
           </div>
-          <DialogFooter className="pt-4">
-              <Button className="w-full" onClick={handleCodeValidation} disabled={isCodeLoading}>
-                {isCodeLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Validar Código'}
+          <DialogFooter className="pt-6">
+              <Button className="w-full h-12 font-black uppercase tracking-tighter" onClick={handleCodeValidation} disabled={isCodeLoading}>
+                {isCodeLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Validar Código Vitalício'}
               </Button>
           </DialogFooter>
         </DialogContent>
@@ -181,25 +195,25 @@ export default function RegisterPage() {
 
   const renderTerms = () => (
       <Dialog open={true}>
-        <DialogContent hideCloseButton={true}>
+        <DialogContent className="bg-[#0a0a0a] border-white/10" hideCloseButton={true}>
           <DialogHeader className="text-center items-center">
-            <DialogTitle className="text-2xl font-headline">Atenção!</DialogTitle>
-            <DialogDescription className="text-base">
-              Para garantir que sua licença seja ativada corretamente, utilize no campo de e-mail o mesmo endereço de e-mail que você usou para comprar o acesso vitalício na Hotmart.
+            <DialogTitle className="text-2xl font-headline font-black uppercase">Importante!</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Para garantir o acesso vitalício, use o **mesmo e-mail** que utilizou para adquirir a sua licença na Hotmart.
             </DialogDescription>
           </DialogHeader>
-           <div className="flex items-center space-x-2 pt-4">
+           <div className="flex items-center space-x-3 pt-6 p-4 bg-white/5 rounded-xl border border-white/5">
                 <Checkbox id="terms" checked={hasAgreed} onCheckedChange={(checked) => setHasAgreed(checked as boolean)} />
                 <label
                     htmlFor="terms"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    className="text-xs font-bold leading-tight cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70 uppercase opacity-80"
                 >
                     Li e concordo com os <AffiliateLink href="/legal" target="_blank" className="text-primary underline">Termos de Uso</AffiliateLink>.
                 </label>
             </div>
-          <DialogFooter className="pt-4">
-              <Button className="w-full" onClick={() => setRegistrationStep('form')} disabled={!hasAgreed}>
-                Entendido
+          <DialogFooter className="pt-6">
+              <Button className="w-full h-12 font-black uppercase tracking-tighter" onClick={() => setRegistrationStep('form')} disabled={!hasAgreed}>
+                Confirmar e Avançar
               </Button>
           </DialogFooter>
         </DialogContent>
@@ -216,15 +230,15 @@ export default function RegisterPage() {
       </div>
 
       <div className="flex flex-col min-h-screen items-center justify-center p-4">
-        <Card className="w-full max-w-sm bg-background/50 backdrop-blur-sm border-border/50">
+        <Card className="w-full max-w-sm bg-background/50 backdrop-blur-md border-white/10 shadow-2xl">
           <CardHeader className="text-center">
             <div className="flex justify-center items-center gap-2 mb-4">
                <div className="p-3 bg-primary/10 rounded-full border border-primary/20">
                   <LineChart className="h-8 w-8 text-primary" />
                </div>
             </div>
-            <CardTitle className="font-headline text-3xl">Criar Conta</CardTitle>
-            <CardDescription>Crie sua conta para acessar a Estratégia Chinesa.</CardDescription>
+            <CardTitle className="font-headline text-3xl font-black uppercase tracking-tighter">Criar Conta</CardTitle>
+            <CardDescription className="text-xs font-bold opacity-50 uppercase tracking-widest">Acesso à Estratégia Chinesa</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -237,6 +251,7 @@ export default function RegisterPage() {
                 value={credentials.email}
                 onChange={handleInputChange}
                 disabled={isLoading}
+                className="bg-white/5 border-white/10 h-11"
               />
             </div>
             <div className="space-y-2 relative">
@@ -249,7 +264,7 @@ export default function RegisterPage() {
                 value={credentials.password}
                 onChange={handleInputChange}
                 disabled={isLoading}
-                className="pr-10"
+                className="pr-10 bg-white/5 border-white/10 h-11"
               />
               <Button
                 type="button"
@@ -271,28 +286,29 @@ export default function RegisterPage() {
                 value={credentials.confirmPassword}
                 onChange={handleInputChange}
                 disabled={isLoading}
+                className="bg-white/5 border-white/10 h-11"
               />
             </div>
-            <div className="space-y-2 pt-2">
-              <Button onClick={handleRegister} disabled={isLoading} className="w-full bg-primary/90 hover:bg-primary text-primary-foreground font-bold">
+            <div className="space-y-2 pt-4">
+              <Button onClick={handleRegister} disabled={isLoading} className="w-full h-12 bg-primary text-black font-black uppercase tracking-tighter hover:bg-primary/90">
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Criar Conta
+                  Criar Conta Vitalícia
               </Button>
             </div>
 
-            <div className="relative my-4">
+            <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
+                    <span className="w-full border-t border-white/10" />
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
+                <div className="relative flex justify-center text-[0.6rem] uppercase font-black tracking-widest">
+                    <span className="bg-[#0a0a0a] px-3 text-muted-foreground">
                     Já tem uma conta?
                     </span>
                 </div>
             </div>
 
              <div className="text-center">
-                 <Button variant="outline" asChild>
+                 <Button variant="outline" className="w-full border-white/10 rounded-xl font-bold h-11" asChild>
                     <AffiliateLink href="/app/login">
                       Fazer Login
                     </AffiliateLink>

@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, ReactNode, useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { doc, getDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, onSnapshot, collection } from 'firebase/firestore';
 import { initializeFirebase } from '.';
 
 // Define the shape of the configuration object
@@ -37,50 +37,23 @@ interface ConfigContextState {
 // Create the context with an initial undefined value
 const ConfigContext = createContext<ConfigContextState | undefined>(undefined);
 
-// Default configs to be used as a fallback and for initial creation
-const defaultLinkConfig = {
+// Default configs to be used as a fallback
+const defaultConfig: AppConfig = {
     hotmartUrl: "https://pay.hotmart.com/G102999657C",
     exnovaUrl: "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=",
     iqOptionUrl: "https://affiliate.iqoption.net/redir/?aff=198544&aff_model=revenue&afftrack=",
     telegramUrl: "https://t.me/Trader_Chines",
     blackFridayUrl: "https://pay.hotmart.com/E101943327K?checkoutMode=2&off=cy5v5mrr",
-    vipUrl: "https://pay.hotmart.com/T101931662P?checkoutMode=2"
-};
-
-const defaultLimitConfig = {
-    hourlySignalLimit: 3
-};
-
-// New remote config for correlation
-const defaultRemoteValuesConfig = {
+    vipUrl: "https://pay.hotmart.com/T101931662P?checkoutMode=2",
+    hourlySignalLimit: 3,
     correlationChance: 0.7,
-    invertSignal: false
-};
-
-const defaultTimeConfig = {
+    invertSignal: false,
     vipMinWait: 5,
     vipMaxWait: 15,
     premiumMinWait: 1,
-    premiumMaxWait: 10
-};
-
-const defaultRegistrationConfig = {
-    registrationSecret: "changeme"
-};
-
-const defaultOfferConfig = {
-    price: "R$ 197"
-};
-
-
-// This is the fallback config used if Firestore is unreachable or docs are missing.
-const defaultConfig: AppConfig = {
-    ...defaultLinkConfig,
-    ...defaultLimitConfig,
-    ...defaultRemoteValuesConfig,
-    ...defaultTimeConfig,
-    ...defaultRegistrationConfig,
-    ...defaultOfferConfig,
+    premiumMaxWait: 10,
+    registrationSecret: "chines_2026",
+    price: "R$ 197",
     afiliados: {
       "wm": "https://go.hotmart.com/D103007301M?dp=1"
     },
@@ -111,98 +84,89 @@ const AffiliateIdManager: React.FC<{
   return <>{children}</>;
 };
 
-// Create the provider component
 export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: string | null }> = ({ children, affiliateId }) => {
   const { firestore } = initializeFirebase();
-  const [configState, setConfigState] = useState<Omit<ConfigContextState, 'affiliateId'>>({
-    config: null,
-    isConfigLoading: true,
-    configError: null,
-  });
+  const [config, setConfig] = useState<AppConfig>(defaultConfig);
+  const [isConfigLoading, setIsConfigLoading] = useState(true);
+  const [configError, setConfigError] = useState<Error | null>(null);
 
   useEffect(() => {
-    const fetchAndInitializeConfig = async () => {
-      if (!firestore) return;
-      
-      setConfigState(prevState => ({ ...prevState, isConfigLoading: true, configError: null }));
+    if (!firestore) return;
 
-      try {
-        const docRefs = {
-          links: doc(firestore, 'appConfig', 'links'),
-          limitation: doc(firestore, 'appConfig', 'limitation'),
-          time: doc(firestore, 'appConfig', 'time'),
-          remoteValues: doc(firestore, 'appConfig', 'remoteValues'),
-          registration: doc(firestore, 'appConfig', 'registration'),
-          offer: doc(firestore, 'appConfig', 'offer'),
-        };
+    const unsubscribers: (() => void)[] = [];
 
-        const [
-          linksSnap, 
-          limitationSnap, 
-          timeSnap, 
-          remoteValuesSnap, 
-          registrationSnap, 
-          offerSnap,
-          affiliatesSnapshot
-        ] = await Promise.all([
-          getDoc(docRefs.links),
-          getDoc(docRefs.limitation),
-          getDoc(docRefs.time),
-          getDoc(docRefs.remoteValues),
-          getDoc(docRefs.registration),
-          getDoc(docRefs.offer),
-          getDocs(collection(firestore, 'affiliates')),
-        ]);
-        
-        const affiliatesData: { [key: string]: string } = {};
-        affiliatesSnapshot.forEach(doc => {
-            affiliatesData[doc.id] = doc.data().checkoutUrl;
-        });
+    // Real-time listener for appConfig documents
+    const docPaths = ['links', 'limitation', 'time', 'remoteValues', 'registration', 'offer'];
+    
+    let loadedDocs = 0;
+    const totalDocs = docPaths.length;
 
-        // Start with the local fallback defaults
-        let combinedConfig: AppConfig = { ...defaultConfig };
-
-        // Layer existing Firestore documents over the defaults
-        if (linksSnap.exists()) combinedConfig = { ...combinedConfig, ...linksSnap.data() };
-        if (limitationSnap.exists()) combinedConfig = { ...combinedConfig, ...limitationSnap.data() };
-        if (timeSnap.exists()) combinedConfig = { ...combinedConfig, ...timeSnap.data() };
-        if (remoteValuesSnap.exists()) combinedConfig = { ...combinedConfig, ...remoteValuesSnap.data() };
-        if (registrationSnap.exists()) combinedConfig = { ...combinedConfig, ...registrationSnap.data() };
-        if (offerSnap.exists()) combinedConfig = { ...combinedConfig, ...offerSnap.data() };
-        
-        // Add affiliates data
-        combinedConfig.afiliados = affiliatesData;
-
-        setConfigState({ config: combinedConfig, isConfigLoading: false, configError: null });
-
-      } catch (error) {
-        console.error("Error fetching remote config, using local fallback:", error);
-        setConfigState({
-          config: defaultConfig, // Fallback to default on error
-          isConfigLoading: false,
-          configError: error instanceof Error ? error : new Error('An unknown error occurred'),
-        });
-      }
+    const handleDocUpdate = (docName: string, data: any) => {
+        setConfig(prev => ({ ...prev, ...data }));
+        if (loadedDocs < totalDocs) {
+            loadedDocs++;
+            if (loadedDocs === totalDocs) setIsConfigLoading(false);
+        }
     };
 
-    fetchAndInitializeConfig();
+    docPaths.forEach(path => {
+        const unsub = onSnapshot(doc(firestore, 'appConfig', path), 
+            (snap) => {
+                if (snap.exists()) {
+                    handleDocUpdate(path, snap.data());
+                } else {
+                    // Even if doc doesn't exist, count it as "loaded" to clear loader
+                    if (loadedDocs < totalDocs) {
+                        loadedDocs++;
+                        if (loadedDocs === totalDocs) setIsConfigLoading(false);
+                    }
+                }
+            },
+            (err) => {
+                console.error(`Error loading config ${path}:`, err);
+                setConfigError(err);
+            }
+        );
+        unsubscribers.push(unsub);
+    });
 
+    // Real-time listener for affiliates
+    const unsubAffiliates = onSnapshot(collection(firestore, 'affiliates'), 
+        (snap) => {
+            const affiliatesData: { [key: string]: string } = {};
+            snap.forEach(doc => {
+                affiliatesData[doc.id] = doc.data().checkoutUrl;
+            });
+            setConfig(prev => ({ ...prev, afiliados: affiliatesData }));
+        }
+    );
+    unsubscribers.push(unsubAffiliates);
+
+    // Timeout fallback if Firestore is unresponsive
+    const timeout = setTimeout(() => {
+        if (isConfigLoading) {
+            setIsConfigLoading(false);
+        }
+    }, 5000);
+
+    return () => {
+        unsubscribers.forEach(unsub => unsub());
+        clearTimeout(timeout);
+    };
   }, [firestore]);
 
-
   return (
-    <ConfigContext.Provider value={{ ...configState, affiliateId: affiliateId !== undefined ? affiliateId : null }}>
+    <ConfigContext.Provider value={{ config, isConfigLoading, configError, affiliateId: affiliateId || null }}>
       {children}
     </ConfigContext.Provider>
   );
 };
 
-// Main provider to be used in the layout.
 export const AppConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [affiliateId, setAffiliateId] = useState<string | null>(null);
 
     return (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={null}>
             <AffiliateIdManager setAffiliateId={setAffiliateId}>
                 <ConfigProvider affiliateId={affiliateId}>
                     {children}
@@ -212,8 +176,6 @@ export const AppConfigProvider: React.FC<{ children: ReactNode }> = ({ children 
     );
 };
 
-
-// Create the hook to use the config context
 export const useAppConfig = (): ConfigContextState => {
   const context = useContext(ConfigContext);
   if (context === undefined) {

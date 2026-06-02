@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -115,12 +116,15 @@ export default function AdminDashboard() {
     if (!firestore) return;
     setIsConfigSaving(true);
     try {
+      // Limpeza de espaços antes de salvar o segredo
+      const cleanSecret = regSecret.trim();
+      
       await Promise.all([
-        setDoc(doc(firestore, 'appConfig', 'registration'), { registrationSecret: regSecret }, { merge: true }),
+        setDoc(doc(firestore, 'appConfig', 'registration'), { registrationSecret: cleanSecret }, { merge: true }),
         setDoc(doc(firestore, 'appConfig', 'remoteValues'), { invertSignal: invertSignals }, { merge: true }),
         setDoc(doc(firestore, 'appConfig', 'limitation'), { hourlySignalLimit: signalLimit }, { merge: true })
       ]);
-      toast({ title: 'Configurações Salvas', description: 'O sistema foi atualizado com sucesso.' });
+      toast({ title: 'Configurações Salvas', description: 'O sistema foi atualizado em tempo real para todos.' });
     } catch (e) {
       toast({ variant: 'destructive', title: 'Erro ao Salvar', description: 'Verifique as permissões de rede.' });
     } finally {

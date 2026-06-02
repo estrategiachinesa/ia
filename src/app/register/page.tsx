@@ -39,23 +39,31 @@ export default function RegisterPage() {
   }, [user, isUserLoading, router]);
 
   const handleCodeValidation = async () => {
-    if (!activationCode) {
-        toast({ variant: 'destructive', title: 'Código Inválido', description: 'Por favor, insira um código de ativação.' });
+    const trimmedCode = activationCode.trim();
+    
+    if (!trimmedCode) {
+        toast({ variant: 'destructive', title: 'Código Inválido', description: 'Por favor, insira o código de ativação enviado pela Hotmart.' });
         return;
     }
+    
     if (isConfigLoading || !config) {
-        toast({ variant: 'destructive', title: 'Aguarde', description: 'A configuração ainda está a carregar. Tente novamente em um instante.' });
+        toast({ variant: 'destructive', title: 'Aguarde', description: 'A validar sistema... Tente novamente em 2 segundos.' });
         return;
     }
 
     setIsCodeLoading(true);
-    // Client-side validation against the secret from config
-    if (activationCode === config.registrationSecret) {
+    
+    // Comparação exata e limpa
+    if (trimmedCode === config.registrationSecret.trim()) {
         localStorage.setItem('activationCodeValidated', 'true');
         setRegistrationStep('terms');
-        toast({ title: 'Código Validado!', description: 'Prossiga para o próximo passo.' });
+        toast({ title: 'Código Validado!', description: 'Siga as instruções para finalizar o cadastro.' });
     } else {
-        toast({ variant: 'destructive', title: 'Código Inválido', description: 'O código de ativação está incorreto. Verifique e tente novamente.' });
+        toast({ 
+            variant: 'destructive', 
+            title: 'Código Inválido', 
+            description: 'O código inserido não corresponde a uma licença ativa. Verifique se copiou corretamente.' 
+        });
     }
     setIsCodeLoading(false);
   };
@@ -84,7 +92,7 @@ export default function RegisterPage() {
 
     const isValidated = localStorage.getItem('activationCodeValidated');
     if (isValidated !== 'true') {
-        toast({ variant: 'destructive', title: 'Validação Necessária', description: 'Ocorreu um erro. Por favor, valide seu código novamente.' });
+        toast({ variant: 'destructive', title: 'Validação Necessária', description: 'Por favor, valide seu código de ativação novamente.' });
         setRegistrationStep('codeValidation');
         return;
     }
@@ -97,23 +105,23 @@ export default function RegisterPage() {
         const userProfileData = {
             email: userCredential.user.email,
             displayName: userCredential.user.email?.split('@')[0],
-            subscriptionStatus: 'ACTIVE', // Initial status
+            subscriptionStatus: 'ACTIVE', 
             createdAt: serverTimestamp(),
             termsAccepted: true,
             termsAcceptedAt: serverTimestamp(),
+            accountStatus: 'ACTIVE'
         };
 
         setDocumentNonBlocking(userDocRef, userProfileData, { merge: true });
 
         localStorage.setItem('loginTimestamp', Date.now().toString());
-        localStorage.setItem('showPremiumUpgradeOnLoad', 'true'); // Flag to show modal
-        localStorage.removeItem('activationCodeValidated'); // Clean up
+        localStorage.setItem('showPremiumUpgradeOnLoad', 'true');
+        localStorage.removeItem('activationCodeValidated');
 
         toast({
-          title: 'Cadastro bem-sucedido!',
-          description: 'Redirecionando para o analisador...',
+          title: 'Cadastro Realizado!',
+          description: 'A sua licença foi ativada com sucesso.',
         });
-        // The useEffect hook will handle the redirect
     } catch (error: any) {
       console.error("Registration error:", error);
       let description = 'Ocorreu um erro inesperado.';
@@ -147,41 +155,41 @@ export default function RegisterPage() {
     };
   }, [handleRegister, handleCodeValidation, registrationStep]);
 
-  if (isUserLoading || isConfigLoading) {
+  if (isUserLoading) {
       return (
-          <div className="flex h-screen w-full items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin" />
-              <p className="ml-2">Carregando...</p>
+          <div className="flex h-screen w-full items-center justify-center bg-black">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
       )
   }
   
   if (user) {
-      return null; // Redirects are handled in useEffect
+      return null;
   }
 
   const renderCodeValidation = () => (
       <Dialog open={true} onOpenChange={(isOpen) => !isOpen && router.push('/login')}>
-        <DialogContent hideCloseButton={false}>
+        <DialogContent className="bg-[#0a0a0a] border-white/10" hideCloseButton={false}>
           <DialogHeader className="text-center items-center">
-            <DialogTitle className="text-2xl font-headline">Ativação de Licença</DialogTitle>
-            <DialogDescription className="text-base">
-              Para criar sua conta, por favor, insira o código de ativação que você recebeu após a compra na Hotmart.
+            <DialogTitle className="text-2xl font-headline font-black uppercase">Ativação de Licença</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Insira o código de ativação vitalícia que recebeu no seu e-mail após a compra.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2 pt-2">
-            <Label htmlFor="activation-code">Código de Ativação</Label>
+          <div className="space-y-2 pt-4">
+            <Label htmlFor="activation-code" className="text-[0.65rem] font-black uppercase tracking-widest opacity-60">Código de Ativação</Label>
             <Input
                 id="activation-code"
-                placeholder="Insira seu código aqui"
+                placeholder="XXXX-XXXX-XXXX"
                 value={activationCode}
                 onChange={(e) => setActivationCode(e.target.value)}
                 disabled={isCodeLoading}
+                className="h-12 bg-white/5 border-white/10 font-mono text-center tracking-widest text-lg"
             />
           </div>
-          <DialogFooter className="pt-4">
-              <Button className="w-full" onClick={handleCodeValidation} disabled={isCodeLoading}>
-                {isCodeLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Validar Código'}
+          <DialogFooter className="pt-6">
+              <Button className="w-full h-12 font-black uppercase tracking-tighter" onClick={handleCodeValidation} disabled={isCodeLoading}>
+                {isCodeLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Validar Licença Vitalícia'}
               </Button>
           </DialogFooter>
         </DialogContent>
@@ -190,25 +198,25 @@ export default function RegisterPage() {
 
   const renderTerms = () => (
       <Dialog open={true}>
-        <DialogContent hideCloseButton={true}>
+        <DialogContent className="bg-[#0a0a0a] border-white/10" hideCloseButton={true}>
           <DialogHeader className="text-center items-center">
-            <DialogTitle className="text-2xl font-headline">Atenção!</DialogTitle>
-            <DialogDescription className="text-base">
-              Para garantir que sua licença seja ativada corretamente, utilize no campo de e-mail o mesmo endereço de e-mail que você usou para comprar o acesso vitalício na Hotmart.
+            <DialogTitle className="text-2xl font-headline font-black uppercase">Atenção!</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Utilize obrigatoriamente o **mesmo e-mail** da sua compra na Hotmart para que o sistema valide o seu acesso vitalício.
             </DialogDescription>
           </DialogHeader>
-           <div className="flex items-center space-x-2 pt-4">
+           <div className="flex items-center space-x-3 pt-6 p-4 bg-white/5 rounded-xl border border-white/5">
                 <Checkbox id="terms" checked={hasAgreed} onCheckedChange={(checked) => setHasAgreed(checked as boolean)} />
                 <label
                     htmlFor="terms"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    className="text-xs font-bold leading-tight cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70 uppercase opacity-80"
                 >
                     Li e concordo com os <AffiliateLink href="/legal" target="_blank" className="text-primary underline">Termos de Uso</AffiliateLink>.
                 </label>
             </div>
-          <DialogFooter className="pt-4">
-              <Button className="w-full" onClick={() => setRegistrationStep('form')} disabled={!hasAgreed}>
-                Entendido
+          <DialogFooter className="pt-6">
+              <Button className="w-full h-12 font-black uppercase tracking-tighter" onClick={() => setRegistrationStep('form')} disabled={!hasAgreed}>
+                Prosseguir para Cadastro
               </Button>
           </DialogFooter>
         </DialogContent>
@@ -225,19 +233,19 @@ export default function RegisterPage() {
       </div>
 
       <div className="flex flex-col min-h-screen items-center justify-center p-4">
-        <Card className="w-full max-w-sm bg-background/50 backdrop-blur-sm border-border/50">
+        <Card className="w-full max-w-sm bg-background/50 backdrop-blur-md border-white/10 shadow-2xl">
           <CardHeader className="text-center">
             <div className="flex justify-center items-center gap-2 mb-4">
                <div className="p-3 bg-primary/10 rounded-full border border-primary/20">
                   <LineChart className="h-8 w-8 text-primary" />
                </div>
             </div>
-            <CardTitle className="font-headline text-3xl">Criar Conta</CardTitle>
-            <CardDescription>Crie sua conta para acessar a Estratégia Chinesa.</CardDescription>
+            <CardTitle className="font-headline text-3xl font-black uppercase tracking-tighter">Criar Conta</CardTitle>
+            <CardDescription className="text-xs font-bold uppercase tracking-widest opacity-50">Estratégia Chinesa V.2026</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
+              <Label htmlFor="email">E-mail Hotmart</Label>
               <Input
                 id="email"
                 name="email"
@@ -246,10 +254,11 @@ export default function RegisterPage() {
                 value={credentials.email}
                 onChange={handleInputChange}
                 disabled={isLoading}
+                className="bg-white/5 border-white/10 h-11"
               />
             </div>
             <div className="space-y-2 relative">
-              <Label htmlFor="password">Senha</Label>
+              <Label htmlFor="password">Senha de Acesso</Label>
               <Input
                 id="password"
                 name="password"
@@ -258,7 +267,7 @@ export default function RegisterPage() {
                 value={credentials.password}
                 onChange={handleInputChange}
                 disabled={isLoading}
-                className="pr-10"
+                className="pr-10 bg-white/5 border-white/10 h-11"
               />
               <Button
                 type="button"
@@ -280,28 +289,29 @@ export default function RegisterPage() {
                 value={credentials.confirmPassword}
                 onChange={handleInputChange}
                 disabled={isLoading}
+                className="bg-white/5 border-white/10 h-11"
               />
             </div>
-            <div className="space-y-2 pt-2">
-              <Button onClick={handleRegister} disabled={isLoading} className="w-full bg-primary/90 hover:bg-primary text-primary-foreground font-bold">
+            <div className="space-y-2 pt-4">
+              <Button onClick={handleRegister} disabled={isLoading} className="w-full h-12 bg-primary text-black font-black uppercase tracking-tighter hover:bg-primary/90 shadow-lg shadow-primary/20">
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Criar Conta
+                  Finalizar Ativação
               </Button>
             </div>
 
-            <div className="relative my-4">
+            <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
+                    <span className="w-full border-t border-white/10" />
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                    Já tem uma conta?
+                <div className="relative flex justify-center text-[0.6rem] uppercase font-black tracking-widest">
+                    <span className="bg-[#0a0a0a] px-3 text-muted-foreground">
+                    Já possui acesso?
                     </span>
                 </div>
             </div>
 
              <div className="text-center">
-                 <Button variant="outline" asChild>
+                 <Button variant="outline" className="w-full border-white/10 rounded-xl font-bold h-11" asChild>
                     <AffiliateLink href="/login">
                       Fazer Login
                     </AffiliateLink>
@@ -314,5 +324,3 @@ export default function RegisterPage() {
     </>
   );
 }
-
-    

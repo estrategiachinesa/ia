@@ -340,6 +340,21 @@ export default function AdminDashboard() {
     }));
   };
 
+  const getPlanBadgeStyles = (status: string) => {
+    switch (status) {
+      case 'PREMIUM':
+        return 'bg-purple-600 hover:bg-purple-700 text-white border-purple-400/30';
+      case 'PENDING':
+        return 'bg-orange-500 hover:bg-orange-600 text-white border-orange-400/30';
+      case 'DEPOSIT_PENDING':
+        return 'bg-blue-500 hover:bg-blue-600 text-white border-blue-400/30';
+      case 'AWAITING_DEPOSIT':
+        return 'bg-orange-400 hover:bg-orange-500 text-white border-orange-300/30';
+      default: // VIP e outros
+        return 'bg-yellow-500 hover:bg-yellow-600 text-black border-yellow-400/30';
+    }
+  };
+
   if (isUserLoading || !user || !isAdmin) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-[#0a0a0a]">
@@ -541,11 +556,7 @@ export default function AdminDashboard() {
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="sm" className="h-auto p-0 hover:bg-transparent">
                           <Badge 
-                            className={`cursor-pointer text-[0.6rem] font-black tracking-tighter shadow-md px-2 py-0.5 border ${
-                              u.isPremium 
-                                ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-400/30' 
-                                : 'bg-yellow-500 hover:bg-yellow-600 text-black border-yellow-400/30'
-                            }`}
+                            className={`cursor-pointer text-[0.6rem] font-black tracking-tighter shadow-md px-2 py-0.5 border ${getPlanBadgeStyles(u.subscriptionStatus)}`}
                           >
                             {u.subscriptionStatus}
                           </Badge>
@@ -555,10 +566,13 @@ export default function AdminDashboard() {
                         <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'APPROVED', u.email)} className="text-xs font-bold text-purple-400">
                            <UserCheck className="h-3 w-3 mr-2" /> Aprovar para PREMIUM
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'AWAITING_DEPOSIT', u.email)} className="text-xs">
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'DEPOSIT_PENDING', u.email)} className="text-xs text-blue-400">
+                           <RefreshCw className="h-3 w-3 mr-2" /> Mudar: Depósito Pendente
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'AWAITING_DEPOSIT', u.email)} className="text-xs text-orange-300">
                            <Timer className="h-3 w-3 mr-2" /> Mudar: Aguard. Depósito
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'PENDING', u.email)} className="text-xs">
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'PENDING', u.email)} className="text-xs text-orange-500">
                            <RefreshCw className="h-3 w-3 mr-2" /> Mudar: Pendente
                         </DropdownMenuItem>
                         <DropdownMenuSeparator className="bg-white/5" />

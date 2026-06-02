@@ -1,9 +1,8 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, updateDoc, deleteDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, updateDoc, deleteDoc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { 
   Loader2, 
@@ -21,7 +20,12 @@ import {
   ArrowUpDown,
   MoreVertical,
   Mail,
-  AlertCircle
+  AlertCircle,
+  Settings2,
+  Save,
+  Zap,
+  LockKeyhole,
+  Activity
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -52,6 +56,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAffiliateRouter } from '@/hooks/use-affiliate-router';
 
@@ -66,12 +72,56 @@ export default function AdminDashboard() {
   const { auth, user, isUserLoading, firestore } = useFirebase();
   const { toast } = useToast();
   const router = useAffiliateRouter();
+  
+  // State for user list
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'createdAt', direction: 'desc' });
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // State for Global Configs
+  const [isConfigSaving, setIsConfigSaving] = useState(false);
+  const [regSecret, setRegSecret] = useState('');
+  const [invertSignals, setInvertSignals] = useState(false);
+  const [signalLimit, setSignalLimit] = useState(3);
+
   const isAdmin = user && ADMIN_EMAILS.includes(user.email || '');
+
+  // Fetch Global Configs
+  useEffect(() => {
+    const fetchConfigs = async () => {
+      if (!firestore || !isAdmin) return;
+      try {
+        const regSnap = await getDoc(doc(firestore, 'appConfig', 'registration'));
+        const remoteSnap = await getDoc(doc(firestore, 'appConfig', 'remoteValues'));
+        const limitSnap = await getDoc(doc(firestore, 'appConfig', 'limitation'));
+
+        if (regSnap.exists()) setRegSecret(regSnap.data().registrationSecret || '');
+        if (remoteSnap.exists()) setInvertSignals(remoteSnap.data().invertSignal || false);
+        if (limitSnap.exists()) setSignalLimit(limitSnap.data().hourlySignalLimit || 3);
+      } catch (e) {
+        console.error("Error fetching configs:", e);
+      }
+    };
+    fetchConfigs();
+  }, [firestore, isAdmin]);
+
+  const handleSaveConfigs = async () => {
+    if (!firestore) return;
+    setIsConfigSaving(true);
+    try {
+      await Promise.all([
+        setDoc(doc(firestore, 'appConfig', 'registration'), { registrationSecret: regSecret }, { merge: true }),
+        setDoc(doc(firestore, 'appConfig', 'remoteValues'), { invertSignal: invertSignals }, { merge: true }),
+        setDoc(doc(firestore, 'appConfig', 'limitation'), { hourlySignalLimit: signalLimit }, { merge: true })
+      ]);
+      toast({ title: 'Configurações Salvas', description: 'O sistema foi atualizado com sucesso.' });
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Erro ao Salvar', description: 'Verifique as permissões de rede.' });
+    } finally {
+      setIsConfigSaving(false);
+    }
+  };
 
   // Queries
   const usersQuery = useMemoFirebase(() => {
@@ -97,10 +147,9 @@ export default function AdminDashboard() {
     if (!firestore) return;
     const newStatus = currentStatus === 'DISABLED' ? 'ACTIVE' : 'DISABLED';
     try {
-      // Use setDoc with merge to handle users that don't have a doc in 'users' collection yet
       await setDoc(doc(firestore, 'users', userId), { 
         accountStatus: newStatus,
-        email: email === '---' ? (userId + "@placeholder.com") : email,
+        email: email === '---' ? (userId + "@lead.com") : email,
         updatedAt: serverTimestamp()
       }, { merge: true });
       
@@ -109,8 +158,7 @@ export default function AdminDashboard() {
         description: `Conta ${newStatus === 'DISABLED' ? 'Suspensa' : 'Ativada'}` 
       });
     } catch (e) {
-      console.error(e);
-      toast({ variant: 'destructive', title: 'Erro ao alterar status', description: 'Verifique as permissões de Admin.' });
+      toast({ variant: 'destructive', title: 'Erro ao alterar status' });
     }
   };
 
@@ -122,18 +170,14 @@ export default function AdminDashboard() {
     const newSubStatus = isNowPremium ? 'ACTIVE' : 'INACTIVE';
 
     try {
-      // Update or Create vipRequests record
-      const reqRef = doc(firestore, 'vipRequests', userId);
-      await setDoc(reqRef, { 
+      await setDoc(doc(firestore, 'vipRequests', userId), { 
         status: newVipStatus,
         userId: userId,
         userEmail: email === '---' ? "" : email,
         submittedAt: serverTimestamp()
       }, { merge: true });
       
-      // Sync with users collection
-      const userRef = doc(firestore, 'users', userId);
-      await setDoc(userRef, { 
+      await setDoc(doc(firestore, 'users', userId), { 
         subscriptionStatus: newSubStatus,
         email: email === '---' ? "" : email
       }, { merge: true });
@@ -149,12 +193,12 @@ export default function AdminDashboard() {
 
   const handleResetPassword = async (email: string) => {
     if (email === '---') {
-        toast({ variant: 'destructive', title: 'E-mail Indisponível', description: 'Este utilizador ainda não completou o perfil.' });
+        toast({ variant: 'destructive', title: 'E-mail Indisponível' });
         return;
     }
     try {
       await sendPasswordResetEmail(auth, email);
-      toast({ title: 'E-mail Enviado', description: `Link de redefinição enviado para ${email}` });
+      toast({ title: 'E-mail Enviado', description: `Link enviado para ${email}` });
     } catch (e) {
       toast({ variant: 'destructive', title: 'Erro ao enviar e-mail' });
     }
@@ -248,7 +292,7 @@ export default function AdminDashboard() {
 
   if (isUserLoading || !user || !isAdmin) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
+      <div className="flex h-screen w-full items-center justify-center bg-[#0a0a0a]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -262,13 +306,71 @@ export default function AdminDashboard() {
             <LayoutDashboard className="h-6 w-6 text-primary" />
             <h1 className="text-xl md:text-2xl font-headline font-black tracking-tight uppercase">Gestão Estratégia Chinesa</h1>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => auth.signOut()} className="rounded-full border border-white/10">
+          <Button variant="ghost" size="sm" onClick={() => auth.signOut()} className="rounded-full border border-white/10 hover:bg-white/5">
             <LogOut className="h-4 w-4 mr-2" /> Sair
           </Button>
         </div>
       </header>
 
-      <main className="container mx-auto p-6 space-y-6">
+      <main className="container mx-auto p-6 space-y-8">
+        
+        {/* GLOBAL CONFIGS SECTION */}
+        <Card className="bg-card/40 border-white/5 p-6 rounded-2xl">
+          <div className="flex items-center gap-2 mb-6">
+            <Settings2 className="h-5 w-5 text-primary" />
+            <h2 className="text-sm font-black uppercase tracking-widest">Configurações Globais</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 items-end">
+            <div className="space-y-2">
+              <Label className="text-[0.65rem] font-bold text-muted-foreground uppercase flex items-center gap-2">
+                <LockKeyhole className="h-3 w-3" /> Chave de Registo (Secret)
+              </Label>
+              <Input 
+                value={regSecret} 
+                onChange={(e) => setRegSecret(e.target.value)}
+                className="bg-white/5 border-white/10 h-11 rounded-xl font-mono text-sm"
+                placeholder="Ex: chines_2026"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[0.65rem] font-bold text-muted-foreground uppercase flex items-center gap-2">
+                <Activity className="h-3 w-3" /> Limite de Trades (Hora)
+              </Label>
+              <Input 
+                type="number"
+                value={signalLimit} 
+                onChange={(e) => setSignalLimit(parseInt(e.target.value))}
+                className="bg-white/5 border-white/10 h-11 rounded-xl"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label className="text-[0.65rem] font-bold text-muted-foreground uppercase flex items-center gap-2">
+                <Zap className="h-3 w-3" /> Inverter Sinais
+              </Label>
+              <div className="h-11 flex items-center px-4 bg-white/5 border border-white/10 rounded-xl justify-between">
+                <span className="text-xs font-medium">{invertSignals ? 'ATIVO' : 'DESATIVO'}</span>
+                <Switch 
+                  checked={invertSignals} 
+                  onCheckedChange={setInvertSignals} 
+                  className="data-[state=checked]:bg-primary"
+                />
+              </div>
+            </div>
+
+            <Button 
+              onClick={handleSaveConfigs} 
+              disabled={isConfigSaving}
+              className="h-11 rounded-xl font-black uppercase tracking-tighter bg-primary text-black hover:bg-primary/90 shadow-lg shadow-primary/10"
+            >
+              {isConfigSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Save className="h-4 w-4 mr-2" /> Salvar Configs</>}
+            </Button>
+          </div>
+        </Card>
+
+        {/* STATS AND SEARCH */}
         <div className="flex flex-col md:flex-row justify-between items-end gap-4">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full md:w-auto">
             <Card className="bg-card/40 border-white/5 p-4 min-w-[140px]">
@@ -288,7 +390,7 @@ export default function AdminDashboard() {
           <div className="relative w-full md:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
-              placeholder="Pesquisar E-mail ou ID..." 
+              placeholder="E-mail ou ID..." 
               className="pl-10 rounded-xl bg-white/5 border-white/10 h-11" 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -296,10 +398,11 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* MEMBERS TABLE */}
         <Card className="bg-card/40 border-white/5 overflow-hidden rounded-2xl">
           <div className="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
             <h2 className="text-sm font-black uppercase tracking-widest">Lista Única de Membros</h2>
-            <p className="text-[0.6rem] text-muted-foreground uppercase font-bold">Mostrando {mergedUsers.length} registos encontrados</p>
+            <p className="text-[0.6rem] text-muted-foreground uppercase font-bold">{mergedUsers.length} registos</p>
           </div>
           <Table>
             <TableHeader className="bg-white/5">
@@ -405,7 +508,7 @@ export default function AdminDashboard() {
                   <TableCell colSpan={6} className="text-center py-16">
                     <div className="flex flex-col items-center gap-2 opacity-30">
                       <AlertCircle className="h-10 w-10" />
-                      <p className="text-sm font-bold uppercase tracking-widest">Nenhum registo encontrado para "{searchTerm}"</p>
+                      <p className="text-sm font-bold uppercase tracking-widest">Nenhum registo encontrado</p>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -420,7 +523,7 @@ export default function AdminDashboard() {
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-headline font-black uppercase tracking-tight">Excluir Registo?</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground leading-relaxed">
-              Esta ação é **irreversível**. O registo será removido permanentemente de todas as coleções.
+              Esta ação é **irreversível**. O registo será removido permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-3">

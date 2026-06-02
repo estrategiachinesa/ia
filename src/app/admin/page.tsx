@@ -87,7 +87,6 @@ export default function AdminDashboard() {
   const [regSecret, setRegSecret] = useState('');
   const [invertSignals, setInvertSignals] = useState(false);
   const [signalLimit, setSignalLimit] = useState(3);
-  const [correlationChance, setCorrelationChance] = useState(0.7);
 
   const isAdmin = user && ADMIN_EMAILS.includes(user.email || '');
 
@@ -103,7 +102,6 @@ export default function AdminDashboard() {
         if (regSnap.exists()) setRegSecret(regSnap.data().registrationSecret || '');
         if (remoteSnap.exists()) {
             setInvertSignals(remoteSnap.data().invertSignal || false);
-            setCorrelationChance(remoteSnap.data().correlationChance || 0.7);
         }
         if (limitSnap.exists()) setSignalLimit(limitSnap.data().hourlySignalLimit || 3);
       } catch (e) {
@@ -119,7 +117,7 @@ export default function AdminDashboard() {
     try {
       await Promise.all([
         setDoc(doc(firestore, 'appConfig', 'registration'), { registrationSecret: regSecret }, { merge: true }),
-        setDoc(doc(firestore, 'appConfig', 'remoteValues'), { invertSignal: invertSignals, correlationChance: correlationChance }, { merge: true }),
+        setDoc(doc(firestore, 'appConfig', 'remoteValues'), { invertSignal: invertSignals }, { merge: true }),
         setDoc(doc(firestore, 'appConfig', 'limitation'), { hourlySignalLimit: signalLimit }, { merge: true })
       ]);
       toast({ title: 'Configurações Salvas', description: 'O sistema foi atualizado com sucesso.' });
@@ -273,8 +271,8 @@ export default function AdminDashboard() {
       if (valA?.seconds) valA = valA.seconds;
       if (valB?.seconds) valB = valB.seconds;
       
-      if (valA === null || valA === undefined) valA = 0;
-      if (valB === null || valB === undefined) valB = 0;
+      if (valA === null || valA === undefined) valA = '';
+      if (valB === null || valB === undefined) valB = '';
 
       if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
       if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
@@ -331,7 +329,7 @@ export default function AdminDashboard() {
             <h2 className="text-sm font-black uppercase tracking-widest">Configurações Globais</h2>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
             <div className="space-y-2">
               <Label className="text-[0.65rem] font-bold text-muted-foreground uppercase flex items-center gap-2">
                 <LockKeyhole className="h-3 w-3" /> Chave de Registo (Secret)
@@ -352,21 +350,6 @@ export default function AdminDashboard() {
                 type="number"
                 value={signalLimit} 
                 onChange={(e) => setSignalLimit(parseInt(e.target.value))}
-                className="bg-white/5 border-white/10 h-11 rounded-xl"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-[0.65rem] font-bold text-muted-foreground uppercase flex items-center gap-2">
-                <SlidersHorizontal className="h-3 w-3" /> Correlação (0 a 1)
-              </Label>
-              <Input 
-                type="number"
-                step="0.1"
-                min="0"
-                max="1"
-                value={correlationChance} 
-                onChange={(e) => setCorrelationChance(parseFloat(e.target.value))}
                 className="bg-white/5 border-white/10 h-11 rounded-xl"
               />
             </div>
@@ -438,9 +421,15 @@ export default function AdminDashboard() {
                 <TableHead className="cursor-pointer" onClick={() => toggleSort('email')}>
                   <div className="flex items-center text-[0.6rem] uppercase font-bold">Identificador {renderSortIcon('email')}</div>
                 </TableHead>
-                <TableHead className="text-[0.6rem] uppercase font-bold">ID Corretora</TableHead>
-                <TableHead className="text-[0.6rem] uppercase font-bold">Status Atual</TableHead>
-                <TableHead className="text-[0.6rem] uppercase font-bold">Plano</TableHead>
+                <TableHead className="cursor-pointer" onClick={() => toggleSort('brokerId')}>
+                  <div className="flex items-center text-[0.6rem] uppercase font-bold">ID Corretora {renderSortIcon('brokerId')}</div>
+                </TableHead>
+                <TableHead className="cursor-pointer" onClick={() => toggleSort('accountStatus')}>
+                  <div className="flex items-center text-[0.6rem] uppercase font-bold">Status Atual {renderSortIcon('accountStatus')}</div>
+                </TableHead>
+                <TableHead className="cursor-pointer" onClick={() => toggleSort('subscriptionStatus')}>
+                  <div className="flex items-center text-[0.6rem] uppercase font-bold">Plano {renderSortIcon('subscriptionStatus')}</div>
+                </TableHead>
                 <TableHead className="text-right text-[0.6rem] uppercase font-bold">Ações</TableHead>
               </TableRow>
             </TableHeader>

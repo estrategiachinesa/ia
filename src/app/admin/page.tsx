@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -37,7 +36,8 @@ import {
   Ban,
   Users,
   Star,
-  ShieldOff
+  ShieldOff,
+  XCircle
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -80,7 +80,7 @@ type SortConfig = {
   direction: 'asc' | 'desc';
 };
 
-type QuickFilter = 'ALL' | 'PENDING' | 'PREMIUM' | 'SUSPENDED';
+type QuickFilter = 'ALL' | 'PENDING' | 'PREMIUM' | 'SUSPENDED' | 'REJECTED';
 
 export default function AdminDashboard() {
   const { auth, user, isUserLoading, firestore } = useFirebase();
@@ -297,6 +297,7 @@ export default function AdminDashboard() {
       if (activeFilter === 'PENDING') return u.isPending || u.isDepositPending || u.isAwaitingDeposit;
       if (activeFilter === 'PREMIUM') return u.isPremium;
       if (activeFilter === 'SUSPENDED') return u.accountStatus === 'DISABLED';
+      if (activeFilter === 'REJECTED') return u.isRejected;
       
       return true;
     })
@@ -322,6 +323,7 @@ export default function AdminDashboard() {
         pending: mergedUsers.filter(u => u.isPending || u.isDepositPending || u.isAwaitingDeposit).length,
         premium: mergedUsers.filter(u => u.isPremium).length,
         suspended: mergedUsers.filter(u => u.accountStatus === 'DISABLED').length,
+        rejected: mergedUsers.filter(u => u.isRejected).length,
     };
   }, [mergedUsers]);
 
@@ -409,12 +411,13 @@ export default function AdminDashboard() {
       <main className="container mx-auto p-6 space-y-8">
         
         {/* STATS BAR */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
              {[
                  { label: 'Total Membros', value: stats.total, icon: Users, color: 'text-primary' },
                  { label: 'Pendentes', value: stats.pending, icon: Timer, color: 'text-orange-500' },
                  { label: 'Premium', value: stats.premium, icon: Star, color: 'text-purple-500' },
-                 { label: 'Suspensos', value: stats.suspended, icon: ShieldOff, color: 'text-red-500' },
+                 { label: 'Recusados', value: stats.rejected, icon: Ban, color: 'text-red-500' },
+                 { label: 'Suspensos', value: stats.suspended, icon: ShieldOff, color: 'text-zinc-500' },
              ].map((s, i) => (
                 <Card key={i} className="bg-card/30 border-white/5 p-4 flex items-center gap-4">
                     <div className={`p-2 rounded-xl bg-white/5 ${s.color}`}>
@@ -493,6 +496,7 @@ export default function AdminDashboard() {
                         { id: 'ALL', label: 'Todos', icon: UserCircle },
                         { id: 'PENDING', label: 'Pendentes', icon: Timer },
                         { id: 'PREMIUM', label: 'Premium', icon: Zap },
+                        { id: 'REJECTED', label: 'Recusados', icon: Ban },
                         { id: 'SUSPENDED', label: 'Suspensos', icon: ShieldAlert },
                     ].map((f) => (
                         <Button 

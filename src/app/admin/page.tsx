@@ -32,7 +32,9 @@ import {
   SlidersHorizontal,
   Download,
   Filter,
-  UserCircle
+  UserCircle,
+  CreditCard,
+  Ban
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -161,8 +163,6 @@ export default function AdminDashboard() {
     if (!firestore) return;
     const newStatus = currentStatus === 'DISABLED' ? 'ACTIVE' : 'DISABLED';
     try {
-      // Usamos setDoc com merge para garantir que o campo accountStatus seja atualizado
-      // Se o documento não existir (usuário LEAD AUTH), ele será criado com o status correto.
       await setDoc(doc(firestore, 'users', userId), { 
         accountStatus: newStatus,
         email: email === '---' ? (userId + "@lead.com") : email,
@@ -171,7 +171,7 @@ export default function AdminDashboard() {
       
       toast({ 
         title: 'Status Alterado', 
-        description: `Conta ${newStatus === 'DISABLED' ? 'Suspensa (Desativada no Firestore)' : 'Ativada'}` 
+        description: `Conta ${newStatus === 'DISABLED' ? 'Suspensa' : 'Ativada'}` 
       });
     } catch (e) {
       toast({ variant: 'destructive', title: 'Erro ao alterar status' });
@@ -255,11 +255,16 @@ export default function AdminDashboard() {
       
       const isPremium = vipStatus === 'PREMIUM' || vipStatus === 'APPROVED';
       const isPending = vipStatus === 'PENDING';
-      const isDepositPending = vipStatus === 'DEPOSIT_PENDING' || vipStatus === 'AWAITING_DEPOSIT';
+      const isAwaitingDeposit = vipStatus === 'AWAITING_DEPOSIT';
+      const isDepositPending = vipStatus === 'DEPOSIT_PENDING';
+      const isRejected = vipStatus === 'REJECTED';
 
       // Definimos o rótulo para exibição na UI
       let planLabel = vipStatus === 'NENHUM' ? 'VIP' : vipStatus;
       if (isPremium) planLabel = 'PREMIUM';
+      if (isAwaitingDeposit) planLabel = 'AGUARD. DEPÓSITO';
+      if (isDepositPending) planLabel = 'DEPÓSITO PENDENTE';
+      if (isRejected) planLabel = 'RECUSADO';
 
       return {
         id,
@@ -272,7 +277,9 @@ export default function AdminDashboard() {
         rawStatus: vipStatus,
         isPremium,
         isPending,
+        isAwaitingDeposit,
         isDepositPending,
+        isRejected,
         displayName: u?.displayName || (r as any).userName || null,
         isGhost: !u
       };
@@ -289,7 +296,7 @@ export default function AdminDashboard() {
       // Quick Filters
       if (!matchesSearch) return false;
       
-      if (activeFilter === 'PENDING') return u.isPending || u.isDepositPending;
+      if (activeFilter === 'PENDING') return u.isPending || u.isDepositPending || u.isAwaitingDeposit;
       if (activeFilter === 'PREMIUM') return u.isPremium;
       if (activeFilter === 'SUSPENDED') return u.accountStatus === 'DISABLED';
       
@@ -323,7 +330,7 @@ export default function AdminDashboard() {
         formatDate(u.createdAt),
         u.email,
         u.brokerId,
-        u.accountStatus,
+        u.accountStatus === 'DISABLED' ? 'SUSPENSO' : 'ATIVO',
         u.subscriptionStatus,
         u.id
     ]);
@@ -358,8 +365,14 @@ export default function AdminDashboard() {
     if (rawStatus === 'PENDING') {
       return 'bg-orange-500 hover:bg-orange-600 text-white border-orange-400/30';
     }
-    if (rawStatus === 'DEPOSIT_PENDING' || rawStatus === 'AWAITING_DEPOSIT') {
+    if (rawStatus === 'AWAITING_DEPOSIT') {
+      return 'bg-cyan-500 hover:bg-cyan-600 text-black border-cyan-400/30';
+    }
+    if (rawStatus === 'DEPOSIT_PENDING') {
       return 'bg-blue-500 hover:bg-blue-600 text-white border-blue-400/30';
+    }
+    if (rawStatus === 'REJECTED') {
+        return 'bg-red-600 hover:bg-red-700 text-white border-red-400/30';
     }
     return 'bg-yellow-500 hover:bg-yellow-600 text-black border-yellow-400/30';
   };
@@ -451,7 +464,7 @@ export default function AdminDashboard() {
                 <div className="flex flex-wrap gap-2">
                     {[
                         { id: 'ALL', label: 'Todos', count: mergedUsers.length, icon: UserCircle },
-                        { id: 'PENDING', label: 'Pendentes', count: mergedUsers.filter(u => u.isPending || u.isDepositPending).length, icon: Timer },
+                        { id: 'PENDING', label: 'Pendentes', count: mergedUsers.filter(u => u.isPending || u.isDepositPending || u.isAwaitingDeposit).length, icon: Timer },
                         { id: 'PREMIUM', label: 'Premium', count: mergedUsers.filter(u => u.isPremium).length, icon: Zap },
                         { id: 'SUSPENDED', label: 'Suspensos', count: mergedUsers.filter(u => u.accountStatus === 'DISABLED').length, icon: ShieldAlert },
                     ].map((f) => (
@@ -571,22 +584,25 @@ export default function AdminDashboard() {
                           </Badge>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start" className="bg-black/95 border-white/10 w-48">
+                      <DropdownMenuContent align="start" className="bg-black/95 border-white/10 w-56">
                         <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'APPROVED', u.email)} className="text-xs font-bold text-purple-400">
                            <UserCheck className="h-3 w-3 mr-2" /> Aprovar para PREMIUM
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'DEPOSIT_PENDING', u.email)} className="text-xs text-blue-400">
                            <RefreshCw className="h-3 w-3 mr-2" /> Mudar: Depósito Pendente
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'AWAITING_DEPOSIT', u.email)} className="text-xs text-orange-300">
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'AWAITING_DEPOSIT', u.email)} className="text-xs text-cyan-400">
                            <Timer className="h-3 w-3 mr-2" /> Mudar: Aguard. Depósito
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'PENDING', u.email)} className="text-xs text-orange-500">
                            <RefreshCw className="h-3 w-3 mr-2" /> Mudar: Pendente
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'VIP', u.email)} className="text-xs text-yellow-500">
+                           <Zap className="h-3 w-3 mr-2" /> Tornar VIP (Reset)
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator className="bg-white/5" />
-                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'REJECTED', u.email)} className="text-xs text-destructive font-bold">
-                           <UserX className="h-3 w-3 mr-2" /> Recusar / Rebaixar
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'REJECTED', u.email)} className="text-xs text-red-500 font-bold">
+                           <Ban className="h-3 w-3 mr-2" /> Recusar / Rebaixar
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

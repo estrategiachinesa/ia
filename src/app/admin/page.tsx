@@ -29,7 +29,10 @@ import {
   Activity,
   RefreshCw,
   Timer,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Download,
+  Filter,
+  UserCircle
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -72,6 +75,8 @@ type SortConfig = {
   direction: 'asc' | 'desc';
 };
 
+type QuickFilter = 'ALL' | 'PENDING' | 'PREMIUM' | 'SUSPENDED';
+
 export default function AdminDashboard() {
   const { auth, user, isUserLoading, firestore } = useFirebase();
   const { toast } = useToast();
@@ -79,6 +84,7 @@ export default function AdminDashboard() {
   
   // State for user list
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeFilter, setActiveFilter] = useState<QuickFilter>('ALL');
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'createdAt', direction: 'desc' });
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -116,7 +122,6 @@ export default function AdminDashboard() {
     if (!firestore) return;
     setIsConfigSaving(true);
     try {
-      // Limpeza de espaços antes de salvar o segredo
       const cleanSecret = regSecret.trim();
       
       await Promise.all([
@@ -174,7 +179,6 @@ export default function AdminDashboard() {
   const handleUpdateVipStatus = async (userId: string, newStatus: string, email: string) => {
     if (!firestore) return;
     
-    // PREMIUM and APPROVED are treated as Premium (Purple)
     const isPremiumStatus = newStatus === 'PREMIUM' || newStatus === 'APPROVED';
     const subStatus = isPremiumStatus ? 'ACTIVE' : 'INACTIVE';
 
@@ -186,10 +190,10 @@ export default function AdminDashboard() {
         updatedAt: serverTimestamp()
       }, { merge: true });
       
-      // Sync subscriptionStatus in the main profile as well
       await setDoc(doc(firestore, 'users', userId), { 
         subscriptionStatus: subStatus,
-        email: email === '---' ? "" : email
+        email: email === '---' ? "" : email,
+        updatedAt: serverTimestamp()
       }, { merge: true });
 
       toast({ 
@@ -246,27 +250,39 @@ export default function AdminDashboard() {
       
       const isPremium = vipStatus === 'PREMIUM' || vipStatus === 'APPROVED';
       const planLabel = isPremium ? 'PREMIUM' : (vipStatus === 'NENHUM' ? 'VIP' : vipStatus);
+      const isPending = vipStatus === 'PENDING' || vipStatus === 'DEPOSIT_PENDING' || vipStatus === 'AWAITING_DEPOSIT';
 
       return {
         id,
         email,
         createdAt: u?.createdAt || r?.submittedAt || null,
+        lastActivity: u?.updatedAt || r?.updatedAt || u?.createdAt || r?.submittedAt || null,
         brokerId: r?.brokerId || '---',
         accountStatus: u?.accountStatus || 'ACTIVE',
         subscriptionStatus: planLabel,
         isPremium,
+        isPending,
         displayName: u?.displayName || (r as any).userName || null,
         isGhost: !u
       };
     })
     .filter(u => {
-      if (!searchTerm) return true;
+      // Primary Search Filter
       const search = searchTerm.toLowerCase();
-      return (
+      const matchesSearch = !searchTerm || (
         u.email?.toLowerCase().includes(search) || 
         u.brokerId?.toLowerCase().includes(search) ||
         u.id.toLowerCase().includes(search)
       );
+
+      // Quick Filters
+      if (!matchesSearch) return false;
+      
+      if (activeFilter === 'PENDING') return u.isPending;
+      if (activeFilter === 'PREMIUM') return u.isPremium;
+      if (activeFilter === 'SUSPENDED') return u.accountStatus === 'DISABLED';
+      
+      return true;
     })
     .sort((a, b) => {
       let valA = a[sortConfig.key as keyof typeof a] as any;
@@ -282,12 +298,34 @@ export default function AdminDashboard() {
       if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
       return 0;
     });
-  }, [rawUsers, rawRequests, searchTerm, sortConfig]);
+  }, [rawUsers, rawRequests, searchTerm, sortConfig, activeFilter]);
 
   const formatDate = (ts: any) => {
     if (!ts) return '---';
     const date = ts.seconds ? new Date(ts.seconds * 1000) : new Date(ts);
     return date.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+  };
+
+  const handleExportCSV = () => {
+    const headers = ['Data/Hora', 'E-mail', 'ID Corretora', 'Status', 'Plano', 'UID'];
+    const rows = mergedUsers.map(u => [
+        formatDate(u.createdAt),
+        u.email,
+        u.brokerId,
+        u.accountStatus,
+        u.subscriptionStatus,
+        u.id
+    ]);
+
+    const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `membros_estrategia_chinesa_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const renderSortIcon = (key: string) => {
@@ -382,54 +420,78 @@ export default function AdminDashboard() {
           </div>
         </Card>
 
-        {/* STATS AND SEARCH */}
-        <div className="flex flex-col md:flex-row justify-between items-end gap-4">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 w-full md:w-auto">
-            <Card className="bg-card/40 border-white/5 p-4 min-w-[140px]">
-              <p className="text-[0.6rem] uppercase tracking-widest text-muted-foreground font-bold">Membros Totais</p>
-              <div className="text-2xl font-black">{(isUsersLoading || isRequestsLoading) ? '...' : mergedUsers.length}</div>
-            </Card>
-            <Card className="bg-card/40 border-white/5 p-4 min-w-[140px]">
-              <p className="text-[0.6rem] uppercase tracking-widest text-muted-foreground font-bold">Premium</p>
-              <div className="text-2xl font-black text-purple-500">{mergedUsers.filter(u => u.isPremium).length}</div>
-            </Card>
-             <Card className="bg-card/40 border-white/5 p-4 min-w-[140px]">
-              <p className="text-[0.6rem] uppercase tracking-widest text-muted-foreground font-bold">Suspensos</p>
-              <div className="text-2xl font-black text-destructive">{mergedUsers.filter(u => u.accountStatus === 'DISABLED').length}</div>
-            </Card>
-          </div>
+        {/* QUICK FILTERS AND EXPORT */}
+        <div className="flex flex-col xl:flex-row gap-6 items-start xl:items-end justify-between">
+            <div className="flex flex-col gap-4 w-full xl:w-auto">
+                <Label className="text-[0.65rem] font-black uppercase tracking-widest text-muted-foreground opacity-60">Filtros Rápidos</Label>
+                <div className="flex flex-wrap gap-2">
+                    {[
+                        { id: 'ALL', label: 'Todos', count: mergedUsers.length, icon: UserCircle },
+                        { id: 'PENDING', label: 'Pendentes', count: mergedUsers.filter(u => u.isPending).length, icon: Timer },
+                        { id: 'PREMIUM', label: 'Premium', count: mergedUsers.filter(u => u.isPremium).length, icon: Zap },
+                        { id: 'SUSPENDED', label: 'Suspensos', count: mergedUsers.filter(u => u.accountStatus === 'DISABLED').length, icon: ShieldAlert },
+                    ].map((f) => (
+                        <Button 
+                            key={f.id}
+                            variant={activeFilter === f.id ? 'default' : 'outline'}
+                            onClick={() => setActiveFilter(f.id as QuickFilter)}
+                            className={`h-10 px-4 rounded-xl border-white/5 flex items-center gap-2 transition-all ${
+                                activeFilter === f.id ? 'bg-primary text-black shadow-lg shadow-primary/10' : 'bg-white/5 hover:bg-white/10'
+                            }`}
+                        >
+                            <f.icon className="h-3.5 w-3.5" />
+                            <span className="text-xs font-bold">{f.label}</span>
+                            <Badge variant="outline" className={`ml-1 h-5 py-0 border-none ${activeFilter === f.id ? 'bg-black/10' : 'bg-white/10'}`}>
+                                {f.count}
+                            </Badge>
+                        </Button>
+                    ))}
+                </div>
+            </div>
 
-          <div className="relative w-full md:w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="E-mail ou ID..." 
-              className="pl-10 rounded-xl bg-white/5 border-white/10 h-11" 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+            <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
+                 <div className="relative flex-grow sm:w-80">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                    placeholder="E-mail ou ID..." 
+                    className="pl-10 rounded-xl bg-white/5 border-white/10 h-11" 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+                <Button 
+                    variant="outline" 
+                    onClick={handleExportCSV}
+                    className="h-11 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 px-6 font-bold"
+                >
+                    <Download className="h-4 w-4 mr-2" /> Exportar CSV
+                </Button>
+            </div>
         </div>
 
         {/* MEMBERS TABLE */}
         <Card className="bg-card/40 border-white/5 overflow-hidden rounded-2xl">
           <div className="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
-            <h2 className="text-sm font-black uppercase tracking-widest">Lista Única de Membros</h2>
-            <p className="text-[0.6rem] text-muted-foreground uppercase font-bold">{mergedUsers.length} registos</p>
+            <div className="flex items-center gap-3">
+                 <h2 className="text-sm font-black uppercase tracking-widest">Membros Estratégia Chinesa</h2>
+                 <Badge variant="outline" className="text-[0.6rem] h-5 py-0 border-primary/20 text-primary/70">SYNC REALTIME</Badge>
+            </div>
+            <p className="text-[0.6rem] text-muted-foreground uppercase font-bold">{mergedUsers.length} registos filtrados</p>
           </div>
           <Table>
             <TableHeader className="bg-white/5">
               <TableRow className="border-white/5">
                 <TableHead className="cursor-pointer" onClick={() => toggleSort('createdAt')}>
-                  <div className="flex items-center text-[0.6rem] uppercase font-bold">Data/Hora {renderSortIcon('createdAt')}</div>
+                  <div className="flex items-center text-[0.6rem] uppercase font-bold">Registo {renderSortIcon('createdAt')}</div>
                 </TableHead>
                 <TableHead className="cursor-pointer" onClick={() => toggleSort('email')}>
-                  <div className="flex items-center text-[0.6rem] uppercase font-bold">Identificador {renderSortIcon('email')}</div>
+                  <div className="flex items-center text-[0.6rem] uppercase font-bold">Membro {renderSortIcon('email')}</div>
                 </TableHead>
                 <TableHead className="cursor-pointer" onClick={() => toggleSort('brokerId')}>
                   <div className="flex items-center text-[0.6rem] uppercase font-bold">ID Corretora {renderSortIcon('brokerId')}</div>
                 </TableHead>
                 <TableHead className="cursor-pointer" onClick={() => toggleSort('accountStatus')}>
-                  <div className="flex items-center text-[0.6rem] uppercase font-bold">Status Atual {renderSortIcon('accountStatus')}</div>
+                  <div className="flex items-center text-[0.6rem] uppercase font-bold">Status {renderSortIcon('accountStatus')}</div>
                 </TableHead>
                 <TableHead className="cursor-pointer" onClick={() => toggleSort('subscriptionStatus')}>
                   <div className="flex items-center text-[0.6rem] uppercase font-bold">Plano {renderSortIcon('subscriptionStatus')}</div>
@@ -440,14 +502,17 @@ export default function AdminDashboard() {
             <TableBody>
               {mergedUsers.map((u) => (
                 <TableRow key={u.id} className="border-white/5 hover:bg-white/5 transition-colors group">
-                  <TableCell className="text-[0.7rem] opacity-60">{formatDate(u.createdAt)}</TableCell>
+                  <TableCell className="text-[0.7rem] opacity-60 font-mono">{formatDate(u.createdAt)}</TableCell>
                   <TableCell>
                     <div className="flex flex-col">
                         <div className="flex items-center gap-2">
                            <span className="text-xs font-bold">{u.email}</span>
                            {u.isGhost && <Badge variant="outline" className="text-[0.5rem] h-4 py-0 border-primary/20 text-primary/50">LEAD AUTH</Badge>}
                         </div>
-                        {u.displayName && <span className="text-[0.6rem] text-muted-foreground">{u.displayName}</span>}
+                        <div className="flex items-center gap-1 mt-0.5">
+                            <span className="text-[0.55rem] text-muted-foreground uppercase font-black opacity-40">Última Ativ:</span>
+                            <span className="text-[0.55rem] text-muted-foreground font-bold">{formatDate(u.lastActivity)}</span>
+                        </div>
                     </div>
                   </TableCell>
                   <TableCell className="text-xs font-mono text-primary font-bold">{u.brokerId}</TableCell>
@@ -457,7 +522,7 @@ export default function AdminDashboard() {
                         <Button variant="ghost" size="sm" className="h-auto p-0 hover:bg-transparent">
                           <Badge 
                             variant={u.accountStatus === 'DISABLED' ? 'destructive' : 'outline'} 
-                            className="cursor-pointer text-[0.6rem] font-black tracking-tighter"
+                            className="cursor-pointer text-[0.6rem] font-black tracking-tighter px-2 py-0.5"
                           >
                             {u.accountStatus === 'DISABLED' ? 'SUSPENSO' : 'ATIVA'}
                           </Badge>
@@ -476,7 +541,7 @@ export default function AdminDashboard() {
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="sm" className="h-auto p-0 hover:bg-transparent">
                           <Badge 
-                            className={`cursor-pointer text-[0.6rem] font-black tracking-tighter shadow-md ${
+                            className={`cursor-pointer text-[0.6rem] font-black tracking-tighter shadow-md px-2 py-0.5 border ${
                               u.isPremium 
                                 ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-400/30' 
                                 : 'bg-yellow-500 hover:bg-yellow-600 text-black border-yellow-400/30'
@@ -532,10 +597,10 @@ export default function AdminDashboard() {
               ))}
               {mergedUsers.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-16">
-                    <div className="flex flex-col items-center gap-2 opacity-30">
-                      <AlertCircle className="h-10 w-10" />
-                      <p className="text-sm font-bold uppercase tracking-widest">Nenhum registo encontrado</p>
+                  <TableCell colSpan={6} className="text-center py-20">
+                    <div className="flex flex-col items-center gap-3 opacity-20">
+                      <Search className="h-12 w-12" />
+                      <p className="text-xs font-black uppercase tracking-[0.2em]">Nenhum registo encontrado</p>
                     </div>
                   </TableCell>
                 </TableRow>

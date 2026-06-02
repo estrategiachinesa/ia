@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, ReactNode, useState, useEffect, Suspense, useCallback } from 'react';
@@ -118,7 +119,7 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
     // Tracker logic: increment visit count once per session per page
     const trackVisit = async () => {
         const path = window.location.pathname;
-        if (path.startsWith('/admin')) return; // Don't track admin visits
+        if (path.startsWith('/adm')) return; // Don't track admin visits
 
         const sessionKey = `visited_${path.replace(/\//g, '_')}`;
         const hasTracked = sessionStorage.getItem(sessionKey);

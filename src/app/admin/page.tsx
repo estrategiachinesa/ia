@@ -37,7 +37,8 @@ import {
   Users,
   Star,
   ShieldOff,
-  XCircle
+  XCircle,
+  Sparkles
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -266,10 +267,21 @@ export default function AdminDashboard() {
       if (isDepositPending) planLabel = 'DEPÓSITO PENDENTE';
       if (isRejected) planLabel = 'RECUSADO';
 
+      const createdAt = u?.createdAt || r?.submittedAt || null;
+      
+      // Lógica para selo NOVO (8 dias)
+      let isNew = false;
+      if (createdAt) {
+          const date = (createdAt as any).seconds ? new Date((createdAt as any).seconds * 1000) : new Date(createdAt as any);
+          const diffTime = Math.abs(Date.now() - date.getTime());
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          isNew = diffDays <= 8;
+      }
+
       return {
         id,
         email,
-        createdAt: u?.createdAt || r?.submittedAt || null,
+        createdAt,
         lastActivity: u?.updatedAt || r?.updatedAt || u?.createdAt || r?.submittedAt || null,
         brokerId: r?.brokerId || '---',
         accountStatus: u?.accountStatus || 'ACTIVE',
@@ -280,6 +292,7 @@ export default function AdminDashboard() {
         isAwaitingDeposit,
         isDepositPending,
         isRejected,
+        isNew,
         displayName: u?.displayName || (r as any).userName || null,
         isGhost: !u
       };
@@ -572,6 +585,11 @@ export default function AdminDashboard() {
                     <div className="flex flex-col">
                         <div className="flex items-center gap-2">
                            <span className="text-xs font-bold">{u.email}</span>
+                           {u.isNew && (
+                              <Badge className="bg-emerald-500/15 hover:bg-emerald-500/20 text-emerald-500 border-emerald-500/30 text-[0.5rem] px-1.5 h-4 font-black tracking-widest uppercase">
+                                <Sparkles className="h-2 w-2 mr-0.5 fill-emerald-500" /> NOVO
+                              </Badge>
+                           )}
                            {u.isGhost && <Badge variant="outline" className="text-[0.5rem] h-4 py-0 border-primary/20 text-primary/50">LEAD AUTH</Badge>}
                         </div>
                         <div className="flex items-center gap-1 mt-0.5">

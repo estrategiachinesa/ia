@@ -47,6 +47,10 @@
           "type": "string",
           "format": "date-time",
           "description": "The timestamp of the last Hotmart update."
+        },
+        "rating": {
+          "type": "number",
+          "description": "User rating assigned by admin (0-5 stars)."
         }
       },
       "required": ["email", "createdAt"]

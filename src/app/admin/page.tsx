@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -73,6 +74,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAffiliateRouter } from '@/hooks/use-affiliate-router';
+import { cn } from '@/lib/utils';
 
 const ADMIN_EMAILS = ['chines@trader.com', 'estrategiachinesa@gmail.com'];
 
@@ -211,6 +213,19 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleUpdateRating = async (userId: string, rating: number) => {
+    if (!firestore) return;
+    try {
+      await setDoc(doc(firestore, 'users', userId), { 
+        rating: rating,
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      toast({ title: 'Avaliação Atualizada', description: `${rating} estrelas atribuídas.` });
+    } catch (e) {
+      toast({ variant: 'destructive', title: 'Erro ao avaliar' });
+    }
+  };
+
   const handleResetPassword = async (email: string) => {
     if (email === '---') {
         toast({ variant: 'destructive', title: 'E-mail Indisponível' });
@@ -288,6 +303,7 @@ export default function AdminDashboard() {
         accountStatus: u?.accountStatus || 'ACTIVE',
         subscriptionStatus: planLabel,
         rawStatus: vipStatus,
+        rating: u?.rating || 0,
         isPremium,
         isPending,
         isAwaitingDeposit,
@@ -349,13 +365,14 @@ export default function AdminDashboard() {
   };
 
   const handleExportCSV = () => {
-    const headers = ['Data/Hora', 'E-mail', 'ID Corretora', 'Status', 'Plano', 'UID'];
+    const headers = ['Data/Hora', 'E-mail', 'ID Corretora', 'Status', 'Plano', 'Avaliação', 'UID'];
     const rows = mergedUsers.map(u => [
         formatDate(u.createdAt),
         u.email,
         u.brokerId,
         u.accountStatus === 'DISABLED' ? 'SUSPENSO' : 'ATIVO',
         u.subscriptionStatus,
+        `${u.rating} Estrelas`,
         u.id
     ]);
 
@@ -399,6 +416,29 @@ export default function AdminDashboard() {
         return 'bg-red-600 hover:bg-red-700 text-white border-red-400/30';
     }
     return 'bg-yellow-500 hover:bg-yellow-600 text-black border-yellow-400/30';
+  };
+
+  const renderRatingStars = (userId: string, currentRating: number) => {
+    return (
+      <div className="flex items-center gap-0.5">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <button
+            key={star}
+            onClick={() => handleUpdateRating(userId, star)}
+            className="focus:outline-none group/star"
+          >
+            <Star 
+              className={cn(
+                "h-3.5 w-3.5 transition-all",
+                star <= currentRating 
+                  ? "text-yellow-400 fill-yellow-400" 
+                  : "text-zinc-600 hover:text-yellow-400/50"
+              )}
+            />
+          </button>
+        ))}
+      </div>
+    );
   };
 
   if (isUserLoading || !user || !isAdmin) {
@@ -570,6 +610,9 @@ export default function AdminDashboard() {
                 <TableHead className="cursor-pointer" onClick={() => toggleSort('brokerId')}>
                   <div className="flex items-center text-[0.6rem] uppercase font-bold">ID Corretora {renderSortIcon('brokerId')}</div>
                 </TableHead>
+                <TableHead className="cursor-pointer" onClick={() => toggleSort('rating')}>
+                  <div className="flex items-center text-[0.6rem] uppercase font-bold">Avaliação {renderSortIcon('rating')}</div>
+                </TableHead>
                 <TableHead className="cursor-pointer" onClick={() => toggleSort('accountStatus')}>
                   <div className="flex items-center text-[0.6rem] uppercase font-bold">Status {renderSortIcon('accountStatus')}</div>
                 </TableHead>
@@ -601,6 +644,9 @@ export default function AdminDashboard() {
                     </div>
                   </TableCell>
                   <TableCell className="text-xs font-mono text-primary font-bold">{u.brokerId}</TableCell>
+                  <TableCell>
+                    {renderRatingStars(u.id, u.rating)}
+                  </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -684,7 +730,7 @@ export default function AdminDashboard() {
               ))}
               {mergedUsers.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-20">
+                  <TableCell colSpan={7} className="text-center py-20">
                     <div className="flex flex-col items-center gap-3 opacity-20">
                       <Search className="h-12 w-12" />
                       <p className="text-xs font-black uppercase tracking-[0.2em]">Nenhum registo encontrado</p>

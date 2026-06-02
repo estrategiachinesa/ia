@@ -34,7 +34,10 @@ import {
   Filter,
   UserCircle,
   CreditCard,
-  Ban
+  Ban,
+  Users,
+  Star,
+  ShieldOff
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -224,9 +227,7 @@ export default function AdminDashboard() {
     if (!firestore || !deleteUserId) return;
     setIsDeleting(true);
     try {
-      // Exclui o documento da coleção principal de usuários
       await deleteDoc(doc(firestore, 'users', deleteUserId));
-      // Exclui o documento da coleção de pedidos VIP (se existir)
       await deleteDoc(doc(firestore, 'vipRequests', deleteUserId)).catch(() => {});
       
       toast({ title: 'Registo Excluído', description: 'O utilizador foi removido permanentemente do Firestore.' });
@@ -259,7 +260,6 @@ export default function AdminDashboard() {
       const isDepositPending = vipStatus === 'DEPOSIT_PENDING';
       const isRejected = vipStatus === 'REJECTED';
 
-      // Definimos o rótulo para exibição na UI
       let planLabel = vipStatus === 'NENHUM' ? 'VIP' : vipStatus;
       if (isPremium) planLabel = 'PREMIUM';
       if (isAwaitingDeposit) planLabel = 'AGUARD. DEPÓSITO';
@@ -285,7 +285,6 @@ export default function AdminDashboard() {
       };
     })
     .filter(u => {
-      // Primary Search Filter
       const search = searchTerm.toLowerCase();
       const matchesSearch = !searchTerm || (
         u.email?.toLowerCase().includes(search) || 
@@ -293,7 +292,6 @@ export default function AdminDashboard() {
         u.id.toLowerCase().includes(search)
       );
 
-      // Quick Filters
       if (!matchesSearch) return false;
       
       if (activeFilter === 'PENDING') return u.isPending || u.isDepositPending || u.isAwaitingDeposit;
@@ -317,6 +315,15 @@ export default function AdminDashboard() {
       return 0;
     });
   }, [rawUsers, rawRequests, searchTerm, sortConfig, activeFilter]);
+
+  const stats = useMemo(() => {
+    return {
+        total: mergedUsers.length,
+        pending: mergedUsers.filter(u => u.isPending || u.isDepositPending || u.isAwaitingDeposit).length,
+        premium: mergedUsers.filter(u => u.isPremium).length,
+        suspended: mergedUsers.filter(u => u.accountStatus === 'DISABLED').length,
+    };
+  }, [mergedUsers]);
 
   const formatDate = (ts: any) => {
     if (!ts) return '---';
@@ -401,6 +408,26 @@ export default function AdminDashboard() {
 
       <main className="container mx-auto p-6 space-y-8">
         
+        {/* STATS BAR */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+             {[
+                 { label: 'Total Membros', value: stats.total, icon: Users, color: 'text-primary' },
+                 { label: 'Pendentes', value: stats.pending, icon: Timer, color: 'text-orange-500' },
+                 { label: 'Premium', value: stats.premium, icon: Star, color: 'text-purple-500' },
+                 { label: 'Suspensos', value: stats.suspended, icon: ShieldOff, color: 'text-red-500' },
+             ].map((s, i) => (
+                <Card key={i} className="bg-card/30 border-white/5 p-4 flex items-center gap-4">
+                    <div className={`p-2 rounded-xl bg-white/5 ${s.color}`}>
+                        <s.icon className="h-5 w-5" />
+                    </div>
+                    <div>
+                        <p className="text-[0.6rem] font-black uppercase tracking-widest opacity-40">{s.label}</p>
+                        <p className="text-xl font-headline font-black">{s.value}</p>
+                    </div>
+                </Card>
+             ))}
+        </div>
+
         {/* GLOBAL CONFIGS SECTION */}
         <Card className="bg-card/40 border-white/5 p-6 rounded-2xl">
           <div className="flex items-center gap-2 mb-6">
@@ -463,10 +490,10 @@ export default function AdminDashboard() {
                 <Label className="text-[0.65rem] font-black uppercase tracking-widest text-muted-foreground opacity-60">Filtros Rápidos</Label>
                 <div className="flex flex-wrap gap-2">
                     {[
-                        { id: 'ALL', label: 'Todos', count: mergedUsers.length, icon: UserCircle },
-                        { id: 'PENDING', label: 'Pendentes', count: mergedUsers.filter(u => u.isPending || u.isDepositPending || u.isAwaitingDeposit).length, icon: Timer },
-                        { id: 'PREMIUM', label: 'Premium', count: mergedUsers.filter(u => u.isPremium).length, icon: Zap },
-                        { id: 'SUSPENDED', label: 'Suspensos', count: mergedUsers.filter(u => u.accountStatus === 'DISABLED').length, icon: ShieldAlert },
+                        { id: 'ALL', label: 'Todos', icon: UserCircle },
+                        { id: 'PENDING', label: 'Pendentes', icon: Timer },
+                        { id: 'PREMIUM', label: 'Premium', icon: Zap },
+                        { id: 'SUSPENDED', label: 'Suspensos', icon: ShieldAlert },
                     ].map((f) => (
                         <Button 
                             key={f.id}
@@ -478,9 +505,6 @@ export default function AdminDashboard() {
                         >
                             <f.icon className="h-3.5 w-3.5" />
                             <span className="text-xs font-bold">{f.label}</span>
-                            <Badge variant="outline" className={`ml-1 h-5 py-0 border-none ${activeFilter === f.id ? 'bg-black/10' : 'bg-white/10'}`}>
-                                {f.count}
-                            </Badge>
                         </Button>
                     ))}
                 </div>

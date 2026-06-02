@@ -25,7 +25,10 @@ import {
   Save,
   Zap,
   LockKeyhole,
-  Activity
+  Activity,
+  RefreshCw,
+  Timer,
+  SlidersHorizontal
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -84,6 +87,7 @@ export default function AdminDashboard() {
   const [regSecret, setRegSecret] = useState('');
   const [invertSignals, setInvertSignals] = useState(false);
   const [signalLimit, setSignalLimit] = useState(3);
+  const [correlationChance, setCorrelationChance] = useState(0.7);
 
   const isAdmin = user && ADMIN_EMAILS.includes(user.email || '');
 
@@ -97,7 +101,10 @@ export default function AdminDashboard() {
         const limitSnap = await getDoc(doc(firestore, 'appConfig', 'limitation'));
 
         if (regSnap.exists()) setRegSecret(regSnap.data().registrationSecret || '');
-        if (remoteSnap.exists()) setInvertSignals(remoteSnap.data().invertSignal || false);
+        if (remoteSnap.exists()) {
+            setInvertSignals(remoteSnap.data().invertSignal || false);
+            setCorrelationChance(remoteSnap.data().correlationChance || 0.7);
+        }
         if (limitSnap.exists()) setSignalLimit(limitSnap.data().hourlySignalLimit || 3);
       } catch (e) {
         console.error("Error fetching configs:", e);
@@ -112,7 +119,7 @@ export default function AdminDashboard() {
     try {
       await Promise.all([
         setDoc(doc(firestore, 'appConfig', 'registration'), { registrationSecret: regSecret }, { merge: true }),
-        setDoc(doc(firestore, 'appConfig', 'remoteValues'), { invertSignal: invertSignals }, { merge: true }),
+        setDoc(doc(firestore, 'appConfig', 'remoteValues'), { invertSignal: invertSignals, correlationChance: correlationChance }, { merge: true }),
         setDoc(doc(firestore, 'appConfig', 'limitation'), { hourlySignalLimit: signalLimit }, { merge: true })
       ]);
       toast({ title: 'Configurações Salvas', description: 'O sistema foi atualizado com sucesso.' });
@@ -162,29 +169,30 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleUpdateSubscription = async (userId: string, currentPlan: string, email: string) => {
+  const handleUpdateVipStatus = async (userId: string, newStatus: string, email: string) => {
     if (!firestore) return;
     
-    const isNowPremium = currentPlan !== 'PREMIUM';
-    const newVipStatus = isNowPremium ? 'PREMIUM' : 'PENDING';
-    const newSubStatus = isNowPremium ? 'ACTIVE' : 'INACTIVE';
+    // PREMIUM and APPROVED are treated as Premium (Purple)
+    const isPremiumStatus = newStatus === 'PREMIUM' || newStatus === 'APPROVED';
+    const subStatus = isPremiumStatus ? 'ACTIVE' : 'INACTIVE';
 
     try {
       await setDoc(doc(firestore, 'vipRequests', userId), { 
-        status: newVipStatus,
+        status: newStatus,
         userId: userId,
         userEmail: email === '---' ? "" : email,
-        submittedAt: serverTimestamp()
+        updatedAt: serverTimestamp()
       }, { merge: true });
       
+      // Sync subscriptionStatus in the main profile as well
       await setDoc(doc(firestore, 'users', userId), { 
-        subscriptionStatus: newSubStatus,
+        subscriptionStatus: subStatus,
         email: email === '---' ? "" : email
       }, { merge: true });
 
       toast({ 
-        title: 'Plano Alterado', 
-        description: `Usuário agora é ${isNowPremium ? 'PREMIUM' : 'VIP'}` 
+        title: 'Plano Atualizado', 
+        description: `Status alterado para: ${newStatus}` 
       });
     } catch (e) {
       toast({ variant: 'destructive', title: 'Erro ao alterar plano' });
@@ -232,9 +240,10 @@ export default function AdminDashboard() {
       const r = rawRequests?.find(reqDoc => reqDoc.id === id);
 
       const email = u?.email || r?.userEmail || (r as any).email || '---';
+      const vipStatus = r?.status || 'NENHUM';
       
-      const vipStatus = r?.status;
-      const plan = (vipStatus === 'PREMIUM' || vipStatus === 'APPROVED') ? 'PREMIUM' : 'VIP';
+      const isPremium = vipStatus === 'PREMIUM' || vipStatus === 'APPROVED';
+      const planLabel = isPremium ? 'PREMIUM' : (vipStatus === 'NENHUM' ? 'VIP' : vipStatus);
 
       return {
         id,
@@ -242,7 +251,8 @@ export default function AdminDashboard() {
         createdAt: u?.createdAt || r?.submittedAt || null,
         brokerId: r?.brokerId || '---',
         accountStatus: u?.accountStatus || 'ACTIVE',
-        subscriptionStatus: plan,
+        subscriptionStatus: planLabel,
+        isPremium,
         displayName: u?.displayName || (r as any).userName || null,
         isGhost: !u
       };
@@ -321,7 +331,7 @@ export default function AdminDashboard() {
             <h2 className="text-sm font-black uppercase tracking-widest">Configurações Globais</h2>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 items-end">
             <div className="space-y-2">
               <Label className="text-[0.65rem] font-bold text-muted-foreground uppercase flex items-center gap-2">
                 <LockKeyhole className="h-3 w-3" /> Chave de Registo (Secret)
@@ -336,12 +346,27 @@ export default function AdminDashboard() {
 
             <div className="space-y-2">
               <Label className="text-[0.65rem] font-bold text-muted-foreground uppercase flex items-center gap-2">
-                <Activity className="h-3 w-3" /> Limite de Trades (Hora)
+                <Activity className="h-3 w-3" /> Limite Trades (Hora)
               </Label>
               <Input 
                 type="number"
                 value={signalLimit} 
                 onChange={(e) => setSignalLimit(parseInt(e.target.value))}
+                className="bg-white/5 border-white/10 h-11 rounded-xl"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[0.65rem] font-bold text-muted-foreground uppercase flex items-center gap-2">
+                <SlidersHorizontal className="h-3 w-3" /> Correlação (0 a 1)
+              </Label>
+              <Input 
+                type="number"
+                step="0.1"
+                min="0"
+                max="1"
+                value={correlationChance} 
+                onChange={(e) => setCorrelationChance(parseFloat(e.target.value))}
                 className="bg-white/5 border-white/10 h-11 rounded-xl"
               />
             </div>
@@ -379,7 +404,7 @@ export default function AdminDashboard() {
             </Card>
             <Card className="bg-card/40 border-white/5 p-4 min-w-[140px]">
               <p className="text-[0.6rem] uppercase tracking-widest text-muted-foreground font-bold">Premium</p>
-              <div className="text-2xl font-black text-purple-500">{mergedUsers.filter(u => u.subscriptionStatus === 'PREMIUM').length}</div>
+              <div className="text-2xl font-black text-purple-500">{mergedUsers.filter(u => u.isPremium).length}</div>
             </Card>
              <Card className="bg-card/40 border-white/5 p-4 min-w-[140px]">
               <p className="text-[0.6rem] uppercase tracking-widest text-muted-foreground font-bold">Suspensos</p>
@@ -459,7 +484,7 @@ export default function AdminDashboard() {
                         <Button variant="ghost" size="sm" className="h-auto p-0 hover:bg-transparent">
                           <Badge 
                             className={`cursor-pointer text-[0.6rem] font-black tracking-tighter shadow-md ${
-                              u.subscriptionStatus === 'PREMIUM' 
+                              u.isPremium 
                                 ? 'bg-purple-600 hover:bg-purple-700 text-white border-purple-400/30' 
                                 : 'bg-yellow-500 hover:bg-yellow-600 text-black border-yellow-400/30'
                             }`}
@@ -468,10 +493,19 @@ export default function AdminDashboard() {
                           </Badge>
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start" className="bg-black/95 border-white/10">
-                        <DropdownMenuItem onClick={() => handleUpdateSubscription(u.id, u.subscriptionStatus, u.email)} className="text-xs font-bold">
-                           {u.subscriptionStatus === 'PREMIUM' ? <UserX className="h-3 w-3 mr-2" /> : <UserCheck className="h-3 w-3 mr-2 text-green-500" />}
-                           {u.subscriptionStatus === 'PREMIUM' ? 'Rebaixar para VIP' : 'Ativar PREMIUM'}
+                      <DropdownMenuContent align="start" className="bg-black/95 border-white/10 w-48">
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'APPROVED', u.email)} className="text-xs font-bold text-purple-400">
+                           <UserCheck className="h-3 w-3 mr-2" /> Aprovar para PREMIUM
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'AWAITING_DEPOSIT', u.email)} className="text-xs">
+                           <Timer className="h-3 w-3 mr-2" /> Mudar: Aguard. Depósito
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'PENDING', u.email)} className="text-xs">
+                           <RefreshCw className="h-3 w-3 mr-2" /> Mudar: Pendente
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator className="bg-white/5" />
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'REJECTED', u.email)} className="text-xs text-destructive font-bold">
+                           <UserX className="h-3 w-3 mr-2" /> Recusar / Rebaixar
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -485,7 +519,7 @@ export default function AdminDashboard() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-black/95 border-white/10 w-48">
                         <DropdownMenuItem onClick={() => handleResetPassword(u.email)} className="text-xs">
-                          <Key className="h-3.5 w-3.5 mr-2 opacity-60" /> Redefinir Senha
+                          <Mail className="h-3.5 w-3.5 mr-2 opacity-60" /> Redefinir Senha
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleToggleAccount(u.id, u.accountStatus, u.email)} className="text-xs">
                           {u.accountStatus === 'DISABLED' ? (
@@ -523,7 +557,7 @@ export default function AdminDashboard() {
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-headline font-black uppercase tracking-tight">Excluir Registo?</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground leading-relaxed">
-              Esta ação é **irreversível**. O registo será removido permanentemente.
+              Esta ação é **irreversível**. O registo será removido permanentemente de todas as tabelas.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-3">

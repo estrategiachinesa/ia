@@ -161,6 +161,8 @@ export default function AdminDashboard() {
     if (!firestore) return;
     const newStatus = currentStatus === 'DISABLED' ? 'ACTIVE' : 'DISABLED';
     try {
+      // Usamos setDoc com merge para garantir que o campo accountStatus seja atualizado
+      // Se o documento não existir (usuário LEAD AUTH), ele será criado com o status correto.
       await setDoc(doc(firestore, 'users', userId), { 
         accountStatus: newStatus,
         email: email === '---' ? (userId + "@lead.com") : email,
@@ -169,7 +171,7 @@ export default function AdminDashboard() {
       
       toast({ 
         title: 'Status Alterado', 
-        description: `Conta ${newStatus === 'DISABLED' ? 'Suspensa' : 'Ativada'}` 
+        description: `Conta ${newStatus === 'DISABLED' ? 'Suspensa (Desativada no Firestore)' : 'Ativada'}` 
       });
     } catch (e) {
       toast({ variant: 'destructive', title: 'Erro ao alterar status' });
@@ -222,9 +224,12 @@ export default function AdminDashboard() {
     if (!firestore || !deleteUserId) return;
     setIsDeleting(true);
     try {
+      // Exclui o documento da coleção principal de usuários
       await deleteDoc(doc(firestore, 'users', deleteUserId));
+      // Exclui o documento da coleção de pedidos VIP (se existir)
       await deleteDoc(doc(firestore, 'vipRequests', deleteUserId)).catch(() => {});
-      toast({ title: 'Utilizador Eliminado' });
+      
+      toast({ title: 'Registo Excluído', description: 'O utilizador foi removido permanentemente do Firestore.' });
       setDeleteUserId(null);
     } catch (e) {
       toast({ variant: 'destructive', title: 'Erro ao eliminar' });
@@ -249,8 +254,12 @@ export default function AdminDashboard() {
       const vipStatus = r?.status || 'NENHUM';
       
       const isPremium = vipStatus === 'PREMIUM' || vipStatus === 'APPROVED';
-      const planLabel = isPremium ? 'PREMIUM' : (vipStatus === 'NENHUM' ? 'VIP' : vipStatus);
-      const isPending = vipStatus === 'PENDING' || vipStatus === 'DEPOSIT_PENDING' || vipStatus === 'AWAITING_DEPOSIT';
+      const isPending = vipStatus === 'PENDING';
+      const isDepositPending = vipStatus === 'DEPOSIT_PENDING' || vipStatus === 'AWAITING_DEPOSIT';
+
+      // Definimos o rótulo para exibição na UI
+      let planLabel = vipStatus === 'NENHUM' ? 'VIP' : vipStatus;
+      if (isPremium) planLabel = 'PREMIUM';
 
       return {
         id,
@@ -260,8 +269,10 @@ export default function AdminDashboard() {
         brokerId: r?.brokerId || '---',
         accountStatus: u?.accountStatus || 'ACTIVE',
         subscriptionStatus: planLabel,
+        rawStatus: vipStatus,
         isPremium,
         isPending,
+        isDepositPending,
         displayName: u?.displayName || (r as any).userName || null,
         isGhost: !u
       };
@@ -278,7 +289,7 @@ export default function AdminDashboard() {
       // Quick Filters
       if (!matchesSearch) return false;
       
-      if (activeFilter === 'PENDING') return u.isPending;
+      if (activeFilter === 'PENDING') return u.isPending || u.isDepositPending;
       if (activeFilter === 'PREMIUM') return u.isPremium;
       if (activeFilter === 'SUSPENDED') return u.accountStatus === 'DISABLED';
       
@@ -340,19 +351,17 @@ export default function AdminDashboard() {
     }));
   };
 
-  const getPlanBadgeStyles = (status: string) => {
-    switch (status) {
-      case 'PREMIUM':
-        return 'bg-purple-600 hover:bg-purple-700 text-white border-purple-400/30';
-      case 'PENDING':
-        return 'bg-orange-500 hover:bg-orange-600 text-white border-orange-400/30';
-      case 'DEPOSIT_PENDING':
-        return 'bg-blue-500 hover:bg-blue-600 text-white border-blue-400/30';
-      case 'AWAITING_DEPOSIT':
-        return 'bg-orange-400 hover:bg-orange-500 text-white border-orange-300/30';
-      default: // VIP e outros
-        return 'bg-yellow-500 hover:bg-yellow-600 text-black border-yellow-400/30';
+  const getPlanBadgeStyles = (status: string, rawStatus: string) => {
+    if (rawStatus === 'PREMIUM' || rawStatus === 'APPROVED') {
+      return 'bg-purple-600 hover:bg-purple-700 text-white border-purple-400/30';
     }
+    if (rawStatus === 'PENDING') {
+      return 'bg-orange-500 hover:bg-orange-600 text-white border-orange-400/30';
+    }
+    if (rawStatus === 'DEPOSIT_PENDING' || rawStatus === 'AWAITING_DEPOSIT') {
+      return 'bg-blue-500 hover:bg-blue-600 text-white border-blue-400/30';
+    }
+    return 'bg-yellow-500 hover:bg-yellow-600 text-black border-yellow-400/30';
   };
 
   if (isUserLoading || !user || !isAdmin) {
@@ -442,7 +451,7 @@ export default function AdminDashboard() {
                 <div className="flex flex-wrap gap-2">
                     {[
                         { id: 'ALL', label: 'Todos', count: mergedUsers.length, icon: UserCircle },
-                        { id: 'PENDING', label: 'Pendentes', count: mergedUsers.filter(u => u.isPending).length, icon: Timer },
+                        { id: 'PENDING', label: 'Pendentes', count: mergedUsers.filter(u => u.isPending || u.isDepositPending).length, icon: Timer },
                         { id: 'PREMIUM', label: 'Premium', count: mergedUsers.filter(u => u.isPremium).length, icon: Zap },
                         { id: 'SUSPENDED', label: 'Suspensos', count: mergedUsers.filter(u => u.accountStatus === 'DISABLED').length, icon: ShieldAlert },
                     ].map((f) => (
@@ -556,7 +565,7 @@ export default function AdminDashboard() {
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="sm" className="h-auto p-0 hover:bg-transparent">
                           <Badge 
-                            className={`cursor-pointer text-[0.6rem] font-black tracking-tighter shadow-md px-2 py-0.5 border ${getPlanBadgeStyles(u.subscriptionStatus)}`}
+                            className={`cursor-pointer text-[0.6rem] font-black tracking-tighter shadow-md px-2 py-0.5 border ${getPlanBadgeStyles(u.subscriptionStatus, u.rawStatus)}`}
                           >
                             {u.subscriptionStatus}
                           </Badge>
@@ -629,7 +638,7 @@ export default function AdminDashboard() {
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl font-headline font-black uppercase tracking-tight">Excluir Registo?</AlertDialogTitle>
             <AlertDialogDescription className="text-sm text-muted-foreground leading-relaxed">
-              Esta ação é **irreversível**. O registo será removido permanentemente de todas as tabelas.
+              Esta ação é **irreversível**. O registo será removido permanentemente do Firestore (Perfil e Pedido VIP).
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-3">

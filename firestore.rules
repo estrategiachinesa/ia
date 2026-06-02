@@ -20,6 +20,8 @@ service cloud.firestore {
      */
     match /appConfig/{configDoc} {
       allow read: if true;
+      // Permite que qualquer pessoa atualize as estatísticas (visitas e cliques)
+      allow update: if configDoc == 'analytics' || isAdmin();
       allow write: if isAdmin();
     }
 
@@ -49,6 +51,19 @@ service cloud.firestore {
      */
     function isChangingSubscription() {
       return request.resource.data.subscriptionStatus != resource.data.subscriptionStatus;
+    }
+
+    /**
+     * Generic rules for other collections like 'session' or 'affiliates'
+     */
+    match /session/{sessionDoc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /affiliates/{affDoc} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }

@@ -40,7 +40,9 @@ import {
   XCircle,
   Sparkles,
   Eye,
-  MousePointer2
+  MousePointer2,
+  Info,
+  ExternalLink
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -71,6 +73,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { 
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
@@ -105,6 +114,10 @@ export default function AdminDashboard() {
   const [regSecret, setRegSecret] = useState('');
   const [invertSignals, setInvertSignals] = useState(false);
   const [signalLimit, setSignalLimit] = useState(3);
+
+  // Analytics Modals
+  const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
+  const [analyticsType, setAnalyticsType] = useState<'VISITS' | 'CLICKS'>('VISITS');
 
   const isAdmin = user && ADMIN_EMAILS.includes(user.email || '');
 
@@ -361,6 +374,22 @@ export default function AdminDashboard() {
     };
   }, [mergedUsers]);
 
+  const analyticsBreakdown = useMemo(() => {
+    if (!config) return [];
+    
+    const prefix = analyticsType === 'VISITS' ? 'visits_' : 'clicks_';
+    
+    return Object.entries(config)
+      .filter(([key]) => key.startsWith(prefix))
+      .map(([key, value]) => {
+          let label = key.replace(prefix, '');
+          if (label === 'home') label = '/';
+          else label = '/' + label;
+          return { label, value: Number(value) };
+      })
+      .sort((a, b) => b.value - a.value);
+  }, [config, analyticsType]);
+
   const formatDate = (ts: any) => {
     if (!ts) return '---';
     const date = ts.seconds ? new Date(ts.seconds * 1000) : new Date(ts);
@@ -471,17 +500,30 @@ export default function AdminDashboard() {
         {/* STATS BAR - ORDEM: Pendentes / Total Visitas / Cliques Checkout / Total Membros / Premium / Recusados / Suspensos */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
              {[
-                 { label: 'Pendentes', value: stats.pending, icon: Timer, color: 'text-orange-500' },
-                 { label: 'Total Visitas', value: config?.visitCount || 0, icon: Eye, color: 'text-emerald-500' },
-                 { label: 'Cliques Checkout', value: config?.checkoutClickCount || 0, icon: MousePointer2, color: 'text-blue-400' },
-                 { label: 'Total Membros', value: stats.total, icon: Users, color: 'text-primary' },
-                 { label: 'Premium', value: stats.premium, icon: Star, color: 'text-purple-500' },
-                 { label: 'Recusados', value: stats.rejected, icon: Ban, color: 'text-red-500' },
-                 { label: 'Suspensos', value: stats.suspended, icon: ShieldOff, color: 'text-zinc-500' },
+                 { label: 'Pendentes', value: stats.pending, icon: Timer, color: 'text-orange-500', clickable: false },
+                 { label: 'Visitas VIP', value: config?.visitCount || 0, icon: Eye, color: 'text-emerald-500', clickable: true, type: 'VISITS' },
+                 { label: 'Cliques Checkout', value: config?.checkoutClickCount || 0, icon: MousePointer2, color: 'text-blue-400', clickable: true, type: 'CLICKS' },
+                 { label: 'Total Membros', value: stats.total, icon: Users, color: 'text-primary', clickable: false },
+                 { label: 'Premium', value: stats.premium, icon: Star, color: 'text-purple-500', clickable: false },
+                 { label: 'Recusados', value: stats.rejected, icon: Ban, color: 'text-red-500', clickable: false },
+                 { label: 'Suspensos', value: stats.suspended, icon: ShieldOff, color: 'text-zinc-500', clickable: false },
              ].map((s, i) => (
-                <Card key={i} className="bg-card/30 border-white/5 p-4 flex items-center gap-4">
-                    <div className={`p-2 rounded-xl bg-white/5 ${s.color}`}>
+                <Card 
+                    key={i} 
+                    className={cn(
+                        "bg-card/30 border-white/5 p-4 flex items-center gap-4 transition-all",
+                        s.clickable && "cursor-pointer hover:bg-white/10 hover:border-white/20 active:scale-95"
+                    )}
+                    onClick={() => {
+                        if (s.clickable && s.type) {
+                            setAnalyticsType(s.type as 'VISITS' | 'CLICKS');
+                            setIsAnalyticsModalOpen(true);
+                        }
+                    }}
+                >
+                    <div className={cn("p-2 rounded-xl bg-white/5 relative", s.color)}>
                         <s.icon className="h-5 w-5" />
+                        {s.clickable && <ExternalLink className="absolute -top-1 -right-1 h-2.5 w-2.5 opacity-40" />}
                     </div>
                     <div>
                         <p className="text-[0.6rem] font-black uppercase tracking-widest opacity-40">{s.label}</p>
@@ -747,6 +789,42 @@ export default function AdminDashboard() {
           </Table>
         </Card>
       </main>
+
+      {/* ANALYTICS DETAILS DIALOG */}
+      <Dialog open={isAnalyticsModalOpen} onOpenChange={setIsAnalyticsModalOpen}>
+        <DialogContent className="bg-[#0d0d0d] border-white/10 rounded-2xl max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 uppercase tracking-tighter font-black">
+                {analyticsType === 'VISITS' ? <Eye className="h-5 w-5 text-emerald-500" /> : <MousePointer2 className="h-5 w-5 text-blue-400" />}
+                Detalhamento por Página
+            </DialogTitle>
+            <DialogDescription className="text-xs font-bold uppercase opacity-40">
+                {analyticsType === 'VISITS' ? 'Volume de visitas únicas por sessão' : 'Cliques em botões de checkout'}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-3">
+             {analyticsBreakdown.length > 0 ? (
+                 analyticsBreakdown.map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                        <div className="flex items-center gap-3">
+                            <Badge variant="outline" className="font-mono text-[0.6rem] py-0">{idx + 1}º</Badge>
+                            <span className="text-xs font-bold font-mono text-primary">{item.label}</span>
+                        </div>
+                        <span className="text-sm font-black">{item.value.toLocaleString()}</span>
+                    </div>
+                 ))
+             ) : (
+                <div className="text-center py-8 opacity-20">
+                    <Info className="h-8 w-8 mx-auto mb-2" />
+                    <p className="text-[0.6rem] font-black uppercase">Nenhum dado capturado</p>
+                </div>
+             )}
+          </div>
+          <div className="pt-2 text-center">
+             <p className="text-[0.55rem] text-muted-foreground uppercase font-bold opacity-30 italic">Dados sincronizados em tempo real do Firestore</p>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!deleteUserId} onOpenChange={(isOpen) => !isOpen && !isDeleting && setDeleteUserId(null)}>
         <AlertDialogContent className="bg-[#0d0d0d] border-white/10 rounded-2xl">

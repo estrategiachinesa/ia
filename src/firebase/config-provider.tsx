@@ -25,6 +25,8 @@ export interface AppConfig {
   premiumMaxWait: number;
   visitCount?: number;
   checkoutClickCount?: number;
+  // Detalhamento por página
+  [key: string]: any; 
 }
 
 // Define the state for the config context
@@ -96,9 +98,15 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
 
   const trackCheckoutClick = useCallback(async () => {
     if (!firestore) return;
+    const path = window.location.pathname;
+    const fieldName = `clicks_${path.replace(/\//g, '') || 'home'}`;
+    
     try {
         const analyticsRef = doc(firestore, 'appConfig', 'analytics');
-        await updateDoc(analyticsRef, { checkoutClickCount: increment(1) });
+        await updateDoc(analyticsRef, { 
+            checkoutClickCount: increment(1),
+            [fieldName]: increment(1)
+        });
     } catch (e) {
         console.error("Tracking checkout click failed", e);
     }
@@ -107,19 +115,39 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
   useEffect(() => {
     if (!firestore) return;
 
-    // Tracker logic: increment visit count once per session
+    // Tracker logic: increment visit count once per session per page
     const trackVisit = async () => {
-        const hasTracked = sessionStorage.getItem('site_visited');
+        const path = window.location.pathname;
+        if (path.startsWith('/admin')) return; // Don't track admin visits
+
+        const sessionKey = `visited_${path.replace(/\//g, '_')}`;
+        const hasTracked = sessionStorage.getItem(sessionKey);
+
         if (!hasTracked) {
             try {
                 const analyticsRef = doc(firestore, 'appConfig', 'analytics');
+                const fieldName = `visits_${path.replace(/\//g, '') || 'home'}`;
+                
+                const updates: any = { 
+                    [fieldName]: increment(1) 
+                };
+
+                // Regra: Total Visitas no dashboard admin (campo visitCount) é só para a página /vip
+                if (path === '/vip') {
+                    updates.visitCount = increment(1);
+                }
+
                 const snap = await getDoc(analyticsRef);
                 if (!snap.exists()) {
-                    await setDoc(analyticsRef, { visitCount: 1, checkoutClickCount: 0 });
+                    await setDoc(analyticsRef, { 
+                        visitCount: path === '/vip' ? 1 : 0, 
+                        checkoutClickCount: 0,
+                        [fieldName]: 1 
+                    });
                 } else {
-                    await updateDoc(analyticsRef, { visitCount: increment(1) });
+                    await updateDoc(analyticsRef, updates);
                 }
-                sessionStorage.setItem('site_visited', 'true');
+                sessionStorage.setItem(sessionKey, 'true');
             } catch (e) {
                 console.error("Tracking visit failed", e);
             }

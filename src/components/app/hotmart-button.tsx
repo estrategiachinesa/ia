@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useAppConfig } from '@/firebase';
@@ -11,17 +10,24 @@ type HotmartButtonProps = {
 };
 
 export const HotmartButton = ({ className, url }: HotmartButtonProps) => {
-  const { affiliateId } = useAppConfig();
+  const { affiliateId, trackCheckoutClick } = useAppConfig();
   let finalUrl = url;
 
-  // This logic is simplified to prioritize the provided URL but still adds afftrack if needed.
   if (affiliateId && !finalUrl.includes('afftrack=')) {
     const separator = finalUrl.includes('?') ? '&' : '?';
     finalUrl = `${finalUrl}${separator}afftrack=${affiliateId}`;
   }
 
+  const handleClick = () => {
+    trackCheckoutClick();
+  };
+
   return (
-    <a href={finalUrl} className={cn('block w-fit mx-auto', className)}>
+    <a 
+      href={finalUrl} 
+      onClick={handleClick}
+      className={cn('block w-fit mx-auto transition-transform hover:scale-105 active:scale-95', className)}
+    >
       <Image
         src="https://static.hotmart.com/img/btn-buy-green.png"
         alt="Comprar agora"

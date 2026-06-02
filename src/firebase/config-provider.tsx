@@ -1,8 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, ReactNode, useState, useEffect, Suspense } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { doc, onSnapshot, collection, updateDoc, increment } from 'firebase/firestore';
+import { doc, onSnapshot, collection, updateDoc, increment, getDoc, setDoc } from 'firebase/firestore';
 import { initializeFirebase } from '.';
 
 // Define the shape of the configuration object
@@ -24,6 +24,7 @@ export interface AppConfig {
   premiumMinWait: number;
   premiumMaxWait: number;
   visitCount?: number;
+  checkoutClickCount?: number;
 }
 
 // Define the state for the config context
@@ -32,6 +33,7 @@ interface ConfigContextState {
   isConfigLoading: boolean;
   configError: Error | null;
   affiliateId: string | null;
+  trackCheckoutClick: () => void;
 }
 
 // Create the context with an initial undefined value
@@ -55,6 +57,7 @@ const defaultConfig: AppConfig = {
     registrationSecret: "chines_2026",
     price: "R$ 197",
     visitCount: 0,
+    checkoutClickCount: 0,
     afiliados: {
       "wm": "https://go.hotmart.com/D103007301M?dp=1"
     },
@@ -91,6 +94,16 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
   const [isConfigLoading, setIsConfigLoading] = useState(true);
   const [configError, setConfigError] = useState<Error | null>(null);
 
+  const trackCheckoutClick = useCallback(async () => {
+    if (!firestore) return;
+    try {
+        const analyticsRef = doc(firestore, 'appConfig', 'analytics');
+        await updateDoc(analyticsRef, { checkoutClickCount: increment(1) });
+    } catch (e) {
+        console.error("Tracking checkout click failed", e);
+    }
+  }, [firestore]);
+
   useEffect(() => {
     if (!firestore) return;
 
@@ -100,10 +113,14 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
         if (!hasTracked) {
             try {
                 const analyticsRef = doc(firestore, 'appConfig', 'analytics');
-                await updateDoc(analyticsRef, { visitCount: increment(1) });
+                const snap = await getDoc(analyticsRef);
+                if (!snap.exists()) {
+                    await setDoc(analyticsRef, { visitCount: 1, checkoutClickCount: 0 });
+                } else {
+                    await updateDoc(analyticsRef, { visitCount: increment(1) });
+                }
                 sessionStorage.setItem('site_visited', 'true');
             } catch (e) {
-                // If doc doesn't exist, it might fail, we can handle it if needed
                 console.error("Tracking visit failed", e);
             }
         }
@@ -171,7 +188,7 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
   }, [firestore]);
 
   return (
-    <ConfigContext.Provider value={{ config, isConfigLoading, configError, affiliateId: affiliateId || null }}>
+    <ConfigContext.Provider value={{ config, isConfigLoading, configError, affiliateId: affiliateId || null, trackCheckoutClick }}>
       {children}
     </ConfigContext.Provider>
   );

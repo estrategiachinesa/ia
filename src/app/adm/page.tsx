@@ -104,10 +104,10 @@ export default function AdminDashboard() {
   const { toast } = useToast();
   const router = useAffiliateRouter();
   
-  // State for user list
+  // State for user list - Default sort: createdAt DESC (last registered first)
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState<QuickFilter>('ALL');
-  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'lastActivity', direction: 'desc' });
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'createdAt', direction: 'desc' });
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 

@@ -29,7 +29,8 @@ import {
   Ban,
   ShieldOff,
   UserPlus,
-  AlertCircle
+  AlertCircle,
+  Zap
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -186,9 +187,9 @@ export default function AdminDashboard() {
   };
 
   const handleCopyRegisterLink = () => {
-    const link = window.location.origin + '/register';
+    const link = 'https://estrategiachinesa.com.br/register';
     navigator.clipboard.writeText(link);
-    toast({ title: 'Copiado!', description: 'Link de cadastro copiado.' });
+    toast({ title: 'Copiado!', description: 'Link de cadastro oficial copiado.' });
   };
 
   const usersQuery = useMemoFirebase(() => {
@@ -535,7 +536,17 @@ export default function AdminDashboard() {
                 <TableRow key={u.id} className="border-white/5 hover:bg-white/5">
                   <TableCell className="text-[0.7rem] font-mono opacity-50">{formatDate(u.createdAt)}</TableCell>
                   <TableCell>
-                    <div className="flex flex-col"><span className="text-xs font-bold">{u.email}</span>{u.isGhost && <Badge variant="outline" className="text-[0.5rem] py-0 border-primary/20 text-primary/50 w-fit mt-1">SEM PERFIL</Badge>}</div>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold">{u.email}</span>
+                        {u.isNew && (
+                           <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20 text-[0.5rem] px-1.5 h-4 flex items-center gap-1 animate-pulse">
+                              <Star className="h-2 w-2 fill-yellow-500" /> NOVO
+                           </Badge>
+                        )}
+                      </div>
+                      {u.isGhost && <Badge variant="outline" className="text-[0.5rem] py-0 border-primary/20 text-primary/50 w-fit">SEM PERFIL</Badge>}
+                    </div>
                   </TableCell>
                   <TableCell className="text-[0.7rem] font-mono opacity-80">{formatDate(u.lastActivity)}</TableCell>
                   <TableCell className="text-xs font-mono text-primary font-bold">{u.brokerId}</TableCell>

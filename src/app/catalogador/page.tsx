@@ -230,7 +230,7 @@ export default function CatalogadorPage() {
         </div>
       </header>
 
-      <main className="container mx-auto p-4 md:p-8 max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <main className="container mx-auto p-4 md:p-8 max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-8 pb-32">
         
         <div className="lg:col-span-4 space-y-6">
           <Card className="bg-card/40 border-white/5 shadow-2xl backdrop-blur-xl rounded-3xl overflow-hidden shine-effect">

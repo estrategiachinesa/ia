@@ -196,7 +196,7 @@ export default function SessaoChinesaPage() {
             <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/80 to-background" />
 
             <div className="flex flex-col min-h-screen items-center justify-center p-4">
-                <div className="w-full max-w-md space-y-6">
+                <div className="w-full max-w-md space-y-6 pb-24">
                     
                     <div className="flex justify-center mb-2">
                         <div className="p-4 bg-primary/10 rounded-full border border-primary/20 shadow-2xl shadow-primary/10 animate-pulse">
@@ -290,12 +290,24 @@ export default function SessaoChinesaPage() {
                             </p>
                         </div>
                     </div>
-
-                    <footer className="text-center space-y-2">
-                      <p className="text-[0.6rem] font-black text-muted-foreground uppercase tracking-[0.2em] opacity-40">© 2026 ESTRATÉGIA CHINESA • V.PRO</p>
-                    </footer>
                 </div>
             </div>
+
+            <footer className="fixed bottom-0 left-0 right-0 p-4 bg-black/80 backdrop-blur-2xl border-t border-white/5 flex justify-center gap-10 z-40">
+               <Button variant="ghost" className="text-[0.6rem] font-black uppercase tracking-[0.2em] opacity-30 hover:opacity-100 hover:text-primary transition-all" asChild>
+                  <a href="/analisador">Analisador Live</a>
+               </Button>
+               <Button variant="ghost" className="text-[0.6rem] font-black uppercase tracking-[0.2em] opacity-30 hover:opacity-100 hover:text-primary transition-all" asChild>
+                  <a href="/catalogador">Scanner de Elite</a>
+               </Button>
+               <Button variant="ghost" className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-primary relative" disabled>
+                  Sessão Chinesa
+                  <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                  </span>
+               </Button>
+            </footer>
 
             <Dialog open={isFailureAlertOpen} onOpenChange={setFailureAlertOpen}>
                 <DialogContent className="bg-[#0a0a0a] border-white/10 max-w-sm rounded-3xl">

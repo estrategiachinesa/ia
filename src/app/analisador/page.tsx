@@ -480,7 +480,7 @@ export default function AnalisadorPage() {
           </div>
         </header>
 
-        <main className="flex-grow container max-w-[1400px] mx-auto p-4 lg:p-10">
+        <main className="flex-grow container max-w-[1400px] mx-auto p-4 lg:p-10 pb-32">
             <div className="w-full">
                 <div className="flex flex-col lg:flex-row gap-8 items-start justify-center">
                     <div className="w-full lg:w-[450px] flex flex-col gap-6">
@@ -596,16 +596,20 @@ export default function AnalisadorPage() {
             </div>
         </main>
         
-        <footer className="p-8 text-center border-t border-border/5 bg-card/20 backdrop-blur-md">
-          <p className="text-[0.7rem] font-black text-muted-foreground tracking-[0.2em] opacity-60">© 2026 ESTRATÉGIA CHINESA • TODOS OS DIREITOS RESERVADOS</p>
-          <div className="flex justify-center gap-8 mt-5">
-            <AffiliateLink href="/legal#terms" className="text-[0.65rem] uppercase tracking-widest font-black text-muted-foreground hover:text-primary transition-colors">Termos de Uso</AffiliateLink>
-            <AffiliateLink href="/legal#privacy" className="text-[0.65rem] uppercase tracking-widest font-black text-muted-foreground hover:text-primary transition-colors">Privacidade</AffiliateLink>
-            <AffiliateLink href="/legal#cookies" className="text-[0.65rem] uppercase tracking-widest font-black text-muted-foreground hover:text-primary transition-colors">Cookies</AffiliateLink>
-          </div>
-          <p className="max-w-4xl mx-auto text-[0.6rem] text-muted-foreground/30 mt-6 leading-relaxed uppercase tracking-tight font-bold">
-            Aviso de Risco: O trading de opções binárias envolve riscos elevados. A performance passada não garante lucros futuros. Opere sempre dentro da sua gestão de risco.
-          </p>
+        <footer className="fixed bottom-0 left-0 right-0 p-4 bg-black/80 backdrop-blur-2xl border-t border-white/5 flex justify-center gap-10 z-40">
+           <Button variant="ghost" className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-primary relative" disabled>
+              Analisador Live
+              <span className="absolute -top-1 -right-1 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+              </span>
+           </Button>
+           <Button variant="ghost" className="text-[0.6rem] font-black uppercase tracking-[0.2em] opacity-30 hover:opacity-100 hover:text-primary transition-all" asChild>
+              <a href="/catalogador">Scanner de Elite</a>
+           </Button>
+           <Button variant="ghost" className="text-[0.6rem] font-black uppercase tracking-[0.2em] opacity-30 hover:opacity-100 hover:text-primary transition-all" asChild>
+              <a href="/sessaochinesa">Sessão Chinesa</a>
+           </Button>
         </footer>
       </div>
 

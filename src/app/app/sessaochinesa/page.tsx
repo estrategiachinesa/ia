@@ -5,7 +5,7 @@ import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { doc, getDoc, writeBatch } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { Loader2, ShieldCheck, XCircle, CheckCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -37,7 +37,6 @@ import { useFirebase, useDoc, useMemoFirebase, useAppConfig } from '@/firebase';
 import AffiliateLink from '@/components/app/affiliate-link';
 import { useToast } from '@/hooks/use-toast';
 
-// Schema for form validation
 const formSchema = z.object({
   userId: z.string()
   .min(8, {
@@ -51,13 +50,12 @@ const formSchema = z.object({
   })
 });
 
-// Component for Status Indicator
 function StatusIndicator({ isOnline, isLoading }: { isOnline: boolean | undefined, isLoading: boolean }) {
     if (isLoading) {
         return (
             <div className="flex items-center gap-2 text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Verificando status...</span>
+                <span>Status...</span>
             </div>
         )
     }
@@ -73,7 +71,6 @@ function StatusIndicator({ isOnline, isLoading }: { isOnline: boolean | undefine
     )
 }
 
-// Component for Scoreboard
 function Scoreboard({ wins, losses, isLoading }: { wins: number | undefined, losses: number | undefined, isLoading: boolean }) {
     if (isLoading) {
         return <Loader2 className="h-6 w-6 animate-spin text-primary" />;
@@ -89,7 +86,7 @@ function Scoreboard({ wins, losses, isLoading }: { wins: number | undefined, los
                 <span>:</span>
                 <span className="text-red-400">{losses ?? 0}</span>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">Assertividade: {assertiveness}%</p>
+            <p className="text-[0.6rem] text-muted-foreground mt-1 uppercase font-black opacity-40">Assertividade: {assertiveness}%</p>
         </div>
     )
 }
@@ -103,7 +100,6 @@ export default function SessaoChinesaPage() {
     const [isFailureAlertOpen, setFailureAlertOpen] = React.useState(false);
     const [isIdConfirmed, setIsIdConfirmed] = React.useState(false);
     
-    // Firebase real-time data subscriptions
     const statusRef = useMemoFirebase(() => firestore ? doc(firestore, 'session', 'status') : null, [firestore]);
     const scoreRef = useMemoFirebase(() => firestore ? doc(firestore, 'session', 'monthly_score') : null, [firestore]);
 
@@ -113,48 +109,6 @@ export default function SessaoChinesaPage() {
     const isOnline = (statusData as { isOnline: boolean } | null)?.isOnline;
     const wins = (scoreData as { wins: number } | null)?.wins;
     const losses = (scoreData as { losses: number } | null)?.losses;
-    
-    // Effect to initialize documents if they don't exist
-    React.useEffect(() => {
-        const initializeSessionDocs = async () => {
-            if (!firestore || !statusRef || !scoreRef) return;
-
-            // This check ensures we don't re-run this logic while data is loading.
-            // We wait until the initial fetch is complete.
-            if (isStatusLoading || isScoreLoading) return;
-
-            try {
-                const statusDoc = await getDoc(statusRef);
-                const scoreDoc = await getDoc(scoreRef);
-                
-                const batch = writeBatch(firestore);
-                let needsCommit = false;
-
-                if (!statusDoc.exists()) {
-                    batch.set(statusRef, { isOnline: true });
-                    needsCommit = true;
-                }
-
-                if (!scoreDoc.exists()) {
-                    batch.set(scoreRef, { wins: 0, losses: 0 });
-                    needsCommit = true;
-                }
-
-                if (needsCommit) {
-                    await batch.commit();
-                    console.log("Documentos da sessão inicializados no Firestore.");
-                }
-            } catch (error) {
-                // This might be a permission error if rules are not set yet.
-                // It will be handled by the useDoc error state.
-                console.error("Erro ao verificar ou inicializar documentos da sessão:", error);
-            }
-        };
-
-        initializeSessionDocs();
-
-    }, [firestore, statusRef, scoreRef, isStatusLoading, isScoreLoading]);
-
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -165,18 +119,14 @@ export default function SessaoChinesaPage() {
 
     function onSubmit(values: z.infer<typeof formSchema>) {
         setIsSubmitting(true);
-        // Simulate API call
         setTimeout(() => {
             setIsSubmitting(false);
-
-            // Simulate success if ID is '12345678'
             if (values.userId === '12345678') {
                 setIsIdConfirmed(true);
                 toast({
                     title: 'ID Confirmado!',
                     description: 'Seu acesso foi verificado. Clique em "Entrar na Sessão".',
-                    className: 'bg-green-600 border-green-600 text-white',
-                    icon: <CheckCircle className="h-5 w-5 text-white" />,
+                    icon: <CheckCircle className="h-5 w-5 text-green-500" />,
                 })
             } else {
                 setFailureAlertOpen(true);
@@ -186,12 +136,10 @@ export default function SessaoChinesaPage() {
     }
     
     function handleEnterSession() {
-        // Here you would add the logic to redirect the user to the session page
         toast({
             title: 'Entrando na Sessão...',
             description: 'Você será redirecionado em breve.',
-        })
-        // Exemplo: router.push('/caminho-da-sessao-real');
+        });
     }
 
     return (
@@ -205,23 +153,21 @@ export default function SessaoChinesaPage() {
                         <div className="flex justify-center items-center gap-2 mb-2">
                             <ShieldCheck className="h-10 w-10 text-primary" />
                         </div>
-                        <CardTitle className="font-headline text-3xl">Sessão Chinesa</CardTitle>
-                        <CardDescription>Acesso exclusivo para membros verificados</CardDescription>
+                        <CardTitle className="font-headline text-3xl font-black uppercase tracking-tighter">Sessão Chinesa</CardTitle>
+                        <CardDescription className="text-xs font-bold uppercase opacity-50">Membros Verificados</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4 text-center">
-                             <Card className='p-3 bg-card/50'>
-                                <h3 className="text-sm font-semibold text-muted-foreground mb-2">Status da Sessão</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                             <Card className='p-4 bg-white/5 border-white/5 flex flex-col items-center justify-center'>
                                 <StatusIndicator isOnline={isOnline} isLoading={isStatusLoading} />
                              </Card>
-                             <Card className='p-3 bg-card/50'>
-                                 <h3 className="text-sm font-semibold text-muted-foreground mb-2">Placar do Mês</h3>
+                             <Card className='p-4 bg-white/5 border-white/5'>
                                  <Scoreboard wins={wins} losses={losses} isLoading={isScoreLoading} />
                              </Card>
                         </div>
                         
-                        <div className='text-center'>
-                           <p className='text-sm text-muted-foreground'>Insira seu ID da corretora para tentar o acesso.</p>
+                        <div className='text-center p-2'>
+                           <p className='text-xs font-bold text-muted-foreground uppercase tracking-widest'>Insira o ID da corretora para acesso:</p>
                         </div>
 
                         <Form {...form}>
@@ -231,15 +177,15 @@ export default function SessaoChinesaPage() {
                                     name="userId"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>ID de Usuário</FormLabel>
                                             <FormControl>
                                                 <Input 
-                                                    placeholder="Apenas números" 
+                                                    placeholder="Seu ID Corretora" 
                                                     {...field}
                                                     type="text"
                                                     pattern="[0-9]*"
                                                     inputMode="numeric"
                                                     disabled={isIdConfirmed}
+                                                    className="bg-white/5 border-white/10 h-12 text-center text-lg font-mono tracking-widest"
                                                     onChange={(e) => {
                                                         const val = e.target.value;
                                                         if (/^\d{0,20}$/.test(val)) {
@@ -252,50 +198,44 @@ export default function SessaoChinesaPage() {
                                         </FormItem>
                                     )}
                                 />
-                                <Button type="submit" className="w-full" disabled={isSubmitting || isIdConfirmed}>
-                                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    {isIdConfirmed ? 'ID Confirmado' : 'Confirmar ID'}
+                                <Button type="submit" className="w-full h-12 font-black uppercase tracking-tighter bg-primary text-black hover:bg-primary/90" disabled={isSubmitting || isIdConfirmed}>
+                                    {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : (isIdConfirmed ? 'ID Confirmado' : 'Confirmar ID')}
                                 </Button>
                             </form>
                         </Form>
                          <Button
                             onClick={handleEnterSession}
-                            className="w-full"
+                            className="w-full h-12 font-black uppercase tracking-tighter"
                             disabled={!isIdConfirmed}
                             variant={isIdConfirmed ? 'default' : 'outline'}
                         >
-                            Entrar na Sessão
+                            Entrar na Sala VIP
                         </Button>
                     </CardContent>
                 </Card>
                 <footer className="w-full text-center text-xs text-foreground/50 p-4 mt-8">
-                  <p>© 2026 ESTRATÉGIA CHINESA. Todos os direitos reservados.</p>
+                  <p>© 2026 ESTRATÉGIA CHINESA • Todos os direitos reservados.</p>
                 </footer>
             </div>
 
             <Dialog open={isFailureAlertOpen} onOpenChange={setFailureAlertOpen}>
-                <DialogContent>
+                <DialogContent className="bg-[#0a0a0a] border-white/10">
                     <DialogHeader className="text-center items-center">
                         <XCircle className="h-12 w-12 text-destructive mb-2"/>
-                        <DialogTitle className="font-headline text-2xl">Falha ao entrar ❌</DialogTitle>
-                        <DialogDescription className="text-base">
-                            Não encontramos seu cadastro no sistema. É preciso se cadastrar e realizar um depósito para ter acesso à Sessão Chinesa.
+                        <DialogTitle className="font-headline text-2xl font-black uppercase">Falha no Acesso</DialogTitle>
+                        <DialogDescription className="text-sm">
+                            Este ID não está registado sob o nosso link de afiliado. É necessário criar uma nova conta e realizar um depósito para aceder à Sessão Chinesa.
                         </DialogDescription>
                     </DialogHeader>
-                    <DialogFooter className="flex-col sm:flex-col sm:space-x-0 gap-2 pt-4">
-                        <Button asChild>
+                    <DialogFooter className="flex flex-col gap-2 sm:flex-col sm:space-x-0 pt-4">
+                        <Button asChild className="w-full h-11 font-bold">
                             <AffiliateLink href={config?.exnovaUrl || '#'} target="_blank">
                                 Cadastrar na Exnova
                             </AffiliateLink>
                         </Button>
-                         <Button asChild>
+                         <Button asChild variant="outline" className="w-full h-11 font-bold">
                             <AffiliateLink href={config?.iqOptionUrl || '#'} target="_blank">
                                 Cadastrar na IQ Option
-                            </AffiliateLink>
-                        </Button>
-                        <Button asChild variant="secondary">
-                            <AffiliateLink href={config?.telegramUrl || '#'} target="_blank">
-                                Falar com Suporte
                             </AffiliateLink>
                         </Button>
                     </DialogFooter>
@@ -304,5 +244,3 @@ export default function SessaoChinesaPage() {
         </>
     );
 }
-
-    

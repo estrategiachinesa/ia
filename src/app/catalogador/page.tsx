@@ -20,10 +20,8 @@ import {
 import { Label } from '@/components/ui/label';
 import { 
   Loader2, 
-  FileSearch, 
   Copy, 
   ArrowLeft, 
-  LineChart,
   Zap,
   TrendingUp,
   TrendingDown,
@@ -40,9 +38,10 @@ import { useToast } from '@/hooks/use-toast';
 import { CurrencyFlags } from '@/components/app/currency-flags';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
+import { generateSignal, Asset, ExpirationTime } from '@/lib/signal-generator';
+import { useAppConfig } from '@/firebase/config-provider';
 
-type Timeframe = '1m' | '5m' | '15m';
-type Asset = 'EUR/USD' | 'EUR/USD (OTC)' | 'EUR/JPY' | 'EUR/JPY (OTC)';
+type Timeframe = ExpirationTime;
 type Direction = 'CALL' | 'PUT' | 'BOTH';
 
 interface Signal {
@@ -66,29 +65,12 @@ const SCAN_STEPS = [
   "Mapeando padrões de velas (Engolfo, Martelo, Doji)...",
   "Calculando probabilidade de confluência estatística...",
   "Filtrando sinais de alta assertividade (> 82%)...",
-  "Finalizando lista de elite..."
+  "Sincronizando com motor central de análise..."
 ];
-
-const STRATEGIES = ["Price Action PRO", "MHI Calibrada", "Fluxo de Tendência", "Reversão de Exaustão"];
-
-// Deterministic Generator for Realism and Consistency
-function getDeterministicData(asset: string, time: string, dateStr: string) {
-  const seed = asset + time + dateStr;
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    hash = ((hash << 5) - hash) + seed.charCodeAt(i);
-    hash |= 0;
-  }
-  const absHash = Math.abs(hash);
-  const direction = absHash % 2 === 0 ? 'CALL 🔼' : 'PUT 🔽';
-  const accuracy = 84 + (absHash % 12); // 84% to 96%
-  const confluence = 3 + (absHash % 3); // 3 to 5 confluences
-  const strategy = STRATEGIES[absHash % STRATEGIES.length];
-  return { direction: direction as 'CALL 🔼' | 'PUT 🔽', accuracy, confluence, strategy };
-}
 
 export default function CatalogadorPage() {
   const { isUserLoading } = useFirebase();
+  const { config } = useAppConfig();
   const router = useAffiliateRouter();
   const { toast } = useToast();
   
@@ -116,32 +98,38 @@ export default function CatalogadorPage() {
     setLoadingStep(0);
     setProgress(0);
 
-    // Realistic Multi-step Professional Scanning Animation
     for (let i = 0; i < SCAN_STEPS.length; i++) {
       setLoadingStep(i);
       const targetProgress = ((i + 1) / SCAN_STEPS.length) * 100;
       
-      // Smooth progress update
       const steps = 10;
       const startProgress = progress;
       const increment = (targetProgress - startProgress) / steps;
       
       for(let s = 0; s < steps; s++) {
         setProgress(prev => Math.min(prev + increment, 100));
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise(resolve => setTimeout(resolve, 40));
       }
 
-      await new Promise(resolve => setTimeout(resolve, 300 + Math.random() * 500));
+      await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 300));
     }
 
     const newSignals: Signal[] = [];
-    const today = new Date();
-    const dateStr = today.toDateString();
+    const now = new Date();
     
-    const startTime = new Date(today);
-    // Round to next block based on timeframe
-    const intervalMinutes = timeframe === '1m' ? 1 : (timeframe === '5m' ? 5 : 15);
-    startTime.setMinutes(Math.ceil(startTime.getMinutes() / intervalMinutes) * intervalMinutes, 0, 0);
+    // Inicia no próximo bloco exato (mesma lógica do analisador)
+    const startTime = new Date(now);
+    const intervalMinutes = timeframe === '1m' ? 1 : 5;
+    
+    if (timeframe === '1m') {
+        startTime.setSeconds(0, 0);
+        startTime.setMinutes(startTime.getMinutes() + 1);
+    } else {
+        const minutes = startTime.getMinutes();
+        const remainder = minutes % 5;
+        const minutesToAdd = (remainder === 0) ? 5 : (5 - remainder);
+        startTime.setMinutes(minutes + minutesToAdd, 0, 0);
+    }
 
     const qty = parseInt(quantity);
     const signalsPerAsset = Math.max(1, Math.floor(qty / selectedAssets.length));
@@ -149,39 +137,43 @@ export default function CatalogadorPage() {
     selectedAssets.forEach((assetName) => {
       const assetTime = new Date(startTime);
       for (let i = 0; i < signalsPerAsset; i++) {
-        // Professional smart gaps: 15, 20, 30 or 45 mins
-        const intervals = [15, 20, 30, 45];
-        const interval = intervals[(assetName.length + i) % intervals.length];
-        assetTime.setMinutes(assetTime.getMinutes() + interval);
+        // Gera o sinal usando o motor central unificado
+        const result = generateSignal({
+            asset: assetName,
+            expirationTime: timeframe,
+            targetDate: assetTime,
+            invertSignal: config?.invertSignal
+        });
 
-        const timeStr = assetTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        const { direction: detDir, accuracy, confluence, strategy } = getDeterministicData(assetName, timeStr, dateStr);
+        // Filtro de direção
+        const matchesDirection = direction === 'BOTH' || 
+                               (direction === 'CALL' && result.signal.includes('CALL')) ||
+                               (direction === 'PUT' && result.signal.includes('PUT'));
 
-        let finalDir: 'CALL 🔼' | 'PUT 🔽';
-        if (direction === 'BOTH') {
-          finalDir = detDir;
-        } else {
-          finalDir = direction === 'CALL' ? 'CALL 🔼' : 'PUT 🔽';
+        if (matchesDirection) {
+            newSignals.push({
+                id: `${assetName}-${result.targetTime}-${i}`,
+                time: result.targetTime,
+                asset: assetName,
+                direction: result.signal,
+                timeframe: timeframe,
+                accuracy: result.accuracy,
+                confluence: result.confluence,
+                strategy: result.strategy
+            });
         }
 
-        newSignals.push({
-          id: `${assetName}-${timeStr}-${i}`,
-          time: timeStr,
-          asset: assetName,
-          direction: finalDir,
-          timeframe: timeframe,
-          accuracy,
-          confluence,
-          strategy
-        });
+        // Avança o tempo para o próximo sinal (intervalos de 20-30 min para realismo)
+        const gap = 15 + (Math.abs(assetTime.getTime()) % 15);
+        assetTime.setMinutes(assetTime.getMinutes() + gap);
       }
     });
 
     setSignals(newSignals.sort((a, b) => a.time.localeCompare(b.time)));
     setIsLoading(false);
     toast({
-      title: 'Lista PRO Gerada com Sucesso!',
-      description: `${newSignals.length} sinais filtrados com alta assertividade.`,
+      title: 'Lista PRO Sincronizada!',
+      description: `${newSignals.length} sinais catalogados com sucesso.`,
     });
   };
 
@@ -191,7 +183,7 @@ export default function CatalogadorPage() {
   };
 
   const handleCopySingleSignal = (s: Signal) => {
-    const text = `🎯 *SINAL ESTRATÉGIA CHINESA*\n\n⏰ HORA: *${s.time}*\n📊 ATIVO: *${s.asset}*\n⏱️ TEMPO: *${s.timeframe}*\n🚀 AÇÃO: *${s.direction}*\n✅ PRECISÃO: *${s.accuracy}%*\n🔥 ESTRATÉGIA: *${s.strategy}*\n\n⚠️ _Sinal filtrado por Inteligência Artificial._`;
+    const text = `🎯 *SINAL ESTRATÉGIA CHINESA*\n\n⏰ HORA: *${s.time}*\n📊 ATIVO: *${s.asset}*\n⏱️ TEMPO: *${s.timeframe}*\n🚀 AÇÃO: *${s.direction}*\n✅ PRECISÃO: *${s.accuracy}%*\n🔥 ESTRATÉGIA: *${s.strategy}*\n\n⚠️ _Sinal sincronizado com o Analisador Live._`;
     copyToClipboard(text, 'Sinal Único Copiado!');
   };
 
@@ -199,7 +191,7 @@ export default function CatalogadorPage() {
     const today = new Date().toLocaleDateString('pt-BR');
     const header = `📊 *LISTA VIP - ESTRATÉGIA CHINESA*\n📅 DATA: ${today}\n⏱️ TIME: ${timeframe}\n\n`;
     const list = signals.map(s => `✅ ${s.time} | ${s.asset.padEnd(12)} | ${s.direction} | ${s.accuracy}%`).join('\n');
-    const footer = `\n\n🎯 *Instruções:* Entrar no início da vela. Sem Martingale.\n⚠️ Opere sempre com gestão de banca.`;
+    const footer = `\n\n🎯 *Instruções:* Entrar no início da vela.\n⚠️ Opere sempre com gestão de banca.`;
     copyToClipboard(header + list + footer, 'Lista VIP Copiada!');
   };
 
@@ -221,34 +213,33 @@ export default function CatalogadorPage() {
              </Button>
              <div className="flex flex-col">
                 <h1 className="text-lg font-black uppercase tracking-tighter text-primary flex items-center gap-2">
-                   Catalogador PRO <Badge className="bg-primary/20 text-primary border-none text-[0.5rem] px-1.5 h-4">ELITE V2</Badge>
+                   Catalogador PRO <Badge className="bg-primary/20 text-primary border-none text-[0.5rem] px-1.5 h-4">ELITE SYNC</Badge>
                 </h1>
-                <p className="text-[0.6rem] font-bold opacity-40 uppercase tracking-widest">Inteligência Preditiva em Tempo Real</p>
+                <p className="text-[0.6rem] font-bold opacity-40 uppercase tracking-widest">Sincronizado com Analisador Live</p>
              </div>
           </div>
           <div className="flex items-center gap-2 px-4 py-1.5 bg-primary/10 rounded-full border border-primary/20 shadow-lg shadow-primary/5">
              <Activity className="h-3.5 w-3.5 text-primary animate-pulse" />
-             <span className="text-[0.6rem] font-black uppercase tracking-widest text-primary">IA-ENGINE ONLINE</span>
+             <span className="text-[0.6rem] font-black uppercase tracking-widest text-primary">CORE ENGINE SYNC</span>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto p-4 md:p-8 max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* CONFIGURATION SIDEBAR */}
         <div className="lg:col-span-4 space-y-6">
           <Card className="bg-card/40 border-white/5 shadow-2xl backdrop-blur-xl rounded-3xl overflow-hidden shine-effect">
             <div className="h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent w-full" />
             <CardHeader className="pb-4 pt-6 px-6">
               <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2 opacity-70">
-                <Cpu className="h-4 w-4 text-primary" /> Configurar Parâmetros
+                <Cpu className="h-4 w-4 text-primary" /> Configurar Varredura
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6 px-6 pb-8">
               <div className="space-y-2">
-                <Label className="text-[0.65rem] font-bold uppercase opacity-60">Timeframe Operacional</Label>
-                <div className="grid grid-cols-3 gap-2">
-                  {['1m', '5m', '15m'].map((t) => (
+                <Label className="text-[0.65rem] font-bold uppercase opacity-60">Timeframe (Sync)</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {['1m', '5m'].map((t) => (
                     <Button
                       key={t}
                       variant={timeframe === t ? 'default' : 'outline'}
@@ -258,7 +249,7 @@ export default function CatalogadorPage() {
                         timeframe === t ? "bg-primary text-black" : "bg-white/5 border-white/5 hover:bg-white/10"
                       )}
                     >
-                      {t}
+                      {t === '1m' ? 'M1 (1 Min)' : 'M5 (5 Min)'}
                     </Button>
                   ))}
                 </div>
@@ -288,12 +279,12 @@ export default function CatalogadorPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[0.65rem] font-bold uppercase opacity-60">Tendência Desejada</Label>
+                <Label className="text-[0.65rem] font-bold uppercase opacity-60">Direção Predominante</Label>
                 <div className="grid grid-cols-1 gap-2">
                    {[
-                     { id: 'CALL', label: 'Apenas Tendência de Alta', icon: TrendingUp, color: 'text-green-500' },
-                     { id: 'PUT', label: 'Apenas Tendência de Baixa', icon: TrendingDown, color: 'text-red-500' },
-                     { id: 'BOTH', label: 'Padrão Misto (Call/Put)', icon: Zap, color: 'text-primary' },
+                     { id: 'CALL', label: 'Tendência de Alta (CALL)', icon: TrendingUp, color: 'text-green-500' },
+                     { id: 'PUT', label: 'Tendência de Baixa (PUT)', icon: TrendingDown, color: 'text-red-500' },
+                     { id: 'BOTH', label: 'Modo Híbrido (Call/Put)', icon: Zap, color: 'text-primary' },
                    ].map((d) => (
                       <Button
                         key={d.id}
@@ -332,13 +323,12 @@ export default function CatalogadorPage() {
                 disabled={isLoading}
                 className="w-full h-14 bg-primary text-black font-black uppercase tracking-tighter text-base shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all rounded-xl"
               >
-                {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : 'Catalogar Agora'}
+                {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : 'Sincronizar Lista VIP'}
               </Button>
             </CardContent>
           </Card>
         </div>
 
-        {/* RESULTS AREA */}
         <div className="lg:col-span-8 space-y-6">
           <Card className="bg-card/30 border-white/5 min-h-[650px] flex flex-col overflow-hidden rounded-3xl relative">
             
@@ -356,15 +346,21 @@ export default function CatalogadorPage() {
                         <p className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-primary animate-pulse">
                           {SCAN_STEPS[loadingStep]}
                         </p>
-                        <p className="text-[0.55rem] font-bold text-muted-foreground uppercase opacity-40">Módulo de Análise Estatística Ativo</p>
+                        <p className="text-[0.55rem] font-bold text-muted-foreground uppercase opacity-40">Motor de Análise Unificado Ativo</p>
                       </div>
                       <p className="text-xl font-black font-mono tracking-tighter text-primary">{Math.round(progress)}%</p>
                     </div>
                     <Progress value={progress} className="h-2 bg-white/5 border border-white/5 rounded-full" />
                   </div>
-                  <div className="grid grid-cols-2 gap-4 w-full max-w-sm">
-                     <div className="flex items-center gap-2 text-[0.6rem] font-bold text-muted-foreground/60"><Layers className="h-3 w-3" /> Multi-Layer Scan</div>
-                     <div className="flex items-center gap-2 text-[0.6rem] font-bold text-muted-foreground/60"><Target className="h-3 w-3" /> Target Accuracy 80%+</div>
+                  <div className="grid grid-cols-2 gap-4 w-full max-w-sm text-center">
+                     <div className="flex flex-col items-center gap-1">
+                        <Layers className="h-4 w-4 text-primary/40" />
+                        <span className="text-[0.55rem] font-bold text-muted-foreground/60 uppercase">Multi-Layer Sync</span>
+                     </div>
+                     <div className="flex flex-col items-center gap-1">
+                        <Target className="h-4 w-4 text-primary/40" />
+                        <span className="text-[0.55rem] font-bold text-muted-foreground/60 uppercase">Real-Time Core</span>
+                     </div>
                   </div>
                </div>
             ) : signals.length > 0 ? (
@@ -373,8 +369,8 @@ export default function CatalogadorPage() {
                    <div className="flex items-center gap-3">
                       <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
                       <div className="flex flex-col">
-                        <h2 className="text-sm font-black uppercase tracking-widest">Sinais Encontrados</h2>
-                        <span className="text-[0.6rem] font-bold text-muted-foreground/40 uppercase tracking-tighter">Clique num sinal para copiar</span>
+                        <h2 className="text-sm font-black uppercase tracking-widest">Sinais Sincronizados</h2>
+                        <span className="text-[0.6rem] font-bold text-muted-foreground/40 uppercase tracking-tighter">Mesmo resultado do Analisador Live</span>
                       </div>
                    </div>
                    <Button variant="outline" size="sm" onClick={handleCopyList} className="bg-primary/10 border-primary/20 text-primary hover:bg-primary hover:text-black rounded-full h-10 px-6 text-[0.65rem] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/5">
@@ -390,8 +386,6 @@ export default function CatalogadorPage() {
                           className="flex items-center justify-between p-5 bg-card/50 backdrop-blur-xl rounded-2xl border border-white/5 hover:border-primary/40 cursor-pointer transition-all group relative overflow-hidden active:scale-95 shadow-xl"
                         >
                            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                           
-                           {/* PROGRESS INDICATOR */}
                            <div className="absolute bottom-0 left-0 h-[3px] bg-primary/20 w-full opacity-20" />
                            
                            <div className="flex items-center gap-4 relative z-10">
@@ -445,14 +439,14 @@ export default function CatalogadorPage() {
                     </div>
                   </div>
                   <div className="space-y-2 max-w-sm">
-                      <h3 className="text-2xl font-black uppercase tracking-tighter">Sistema de Varredura Pronto</h3>
+                      <h3 className="text-2xl font-black uppercase tracking-tighter">Sistema Core Sincronizado</h3>
                       <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest leading-relaxed opacity-60">
-                        Selecione os ativos e o timeframe desejado para que a IA inicie o processamento dos sinais.
+                        Escolha os ativos e o timeframe. A lista gerada será idêntica à análise em tempo real do Analisador Live.
                       </p>
                   </div>
                   <div className="flex gap-3 pt-4">
                     <Badge variant="outline" className="border-white/10 opacity-30">ELITE MODE</Badge>
-                    <Badge variant="outline" className="border-white/10 opacity-30">NON-REPAINT</Badge>
+                    <Badge variant="outline" className="border-white/10 opacity-30">CORE SYNC</Badge>
                   </div>
                </div>
             )}

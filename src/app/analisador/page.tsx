@@ -26,16 +26,10 @@ import { Button } from '@/components/ui/button';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import AffiliateLink from '@/components/app/affiliate-link';
-import { generateSignal as generateClientSideSignal } from '@/lib/signal-generator';
+import { generateSignal as generateClientSideSignal, Asset, ExpirationTime } from '@/lib/signal-generator';
 import { VipUpgradeModal } from '@/components/app/vip-upgrade-modal';
 import { AnalysisAnimation } from '@/components/app/analysis-animation';
 import TradingViewWidget from '@/components/app/tradingview-widget';
-
-export type Asset = 
-  | 'EUR/USD' | 'EUR/USD (OTC)'
-  | 'EUR/JPY' | 'EUR/JPY (OTC)';
-
-export type ExpirationTime = '1m' | '5m';
 
 export type FormData = {
   asset: Asset;
@@ -103,7 +97,7 @@ export default function AnalisadorPage() {
 
   const [formData, setFormData] = useState<FormData>({
     asset: 'EUR/JPY',
-    expirationTime: '1m',
+    expirationTime: '5m',
   });
 
   // CRITICAL: Force immediate logout if account is disabled

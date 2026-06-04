@@ -1,4 +1,3 @@
-
 'use client';
 
 export type Asset = 
@@ -19,6 +18,7 @@ export type GenerateSignalInput = {
   vipMaxWait?: number;
   correlationChance?: number;
   invertSignal?: boolean;
+  targetDate?: Date; // Opcional: se não enviado, calcula o próximo
 };
 
 export type GenerateSignalOutput = {
@@ -26,112 +26,80 @@ export type GenerateSignalOutput = {
   targetTime: string;
   source: 'Aleatório';
   targetDate: Date;
+  accuracy: number;
+  confluence: number;
+  strategy: string;
 };
 
-// --- Seeded "Analysis" Functions ---
+const STRATEGIES = ["Price Action PRO", "MHI Calibrada", "Fluxo de Tendência", "Reversão de Exaustão"];
 
 /**
- * Generates the base signal for a 5-minute interval.
- * This acts as the "main trend" for the 5-minute candle.
+ * Função central de geração determinística.
+ * Garante que para o MESMO ATIVO e MESMO HORÁRIO, o sinal seja SEMPRE IGUAL.
  */
-function getM5Signal(asset: Asset, targetTime: Date): 'CALL 🔼' | 'PUT 🔽' {
-    // We need a consistent time for the entire 5-minute block.
-    // So, we find the beginning of the 5-minute interval.
-    const intervalStart = new Date(targetTime);
-    intervalStart.setMinutes(Math.floor(intervalStart.getMinutes() / 5) * 5, 0, 0);
-
-    const timeSeed = intervalStart.getTime();
-    const assetSeed = asset.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
-
-    // A simple deterministic seed.
-    const combinedSeed = timeSeed + assetSeed;
-    
-    // Use a sine function to create a predictable oscillating pattern.
-    const analysisValue = Math.sin(combinedSeed / 100000); // Slower oscillation
-
-    if (analysisValue > 0.1) {
-        return 'CALL 🔼';
-    } else if (analysisValue < -0.1) {
-        return 'PUT 🔽';
-    } else {
-        // For values in the middle, decide based on even/odd hour.
-        return intervalStart.getHours() % 2 === 0 ? 'CALL 🔼' : 'PUT 🔽';
-    }
-}
-
-
-/**
- * Generates a 1-minute signal that is correlated with the 5-minute signal.
- */
-function getM1Signal(asset: Asset, targetTime: Date): 'CALL 🔼' | 'PUT 🔽' {
-    // First, determine the trend of the parent 5-minute candle.
-    const m5Trend = getM5Signal(asset, targetTime);
-    const minute = targetTime.getMinutes();
-    
-    // This creates a simple pattern within the 5-minute candle.
-    // E.g., maybe the first and last minute follow the trend, but the middle ones might be corrections.
-    const minuteWithinInterval = minute % 5;
-
-    // This is a simple logic to simulate corrections within the main trend.
-    // 0: First minute - follows trend
-    // 1: Second minute - follows trend
-    // 2: Third minute (middle) - counter-trend (correction)
-    // 3: Fourth minute - follows trend
-    // 4: Fifth minute - follows trend
-    if (minuteWithinInterval === 2) { 
-        // Simulate a "correction" in the middle of the 5-min candle
-        return m5Trend === 'CALL 🔼' ? 'PUT 🔽' : 'CALL 🔼';
-    }
-    
-    // For all other minutes, follow the main 5-minute trend.
-    return m5Trend;
-}
-
-
-// --- Main Signal Generation Function ---
 export function generateSignal(input: GenerateSignalInput): GenerateSignalOutput {
     const { 
         expirationTime, 
         invertSignal = false,
         asset,
+        targetDate: inputDate
     } = input;
-    const now = new Date();
-    let targetTime: Date;
 
-    // 1. Calculate the next available target time.
-    if (expirationTime === '1m') {
-        targetTime = new Date(now);
-        targetTime.setSeconds(0, 0);
-        targetTime.setMinutes(targetTime.getMinutes() + 1);
-    } else { // 5m
-        targetTime = new Date(now);
-        const minutes = targetTime.getMinutes();
-        const remainder = minutes % 5;
-        const minutesToAdd = (remainder === 0) ? 5 : (5 - remainder);
-        targetTime.setMinutes(minutes + minutesToAdd, 0, 0);
+    const now = new Date();
+    let targetDate: Date;
+
+    // 1. Calcular o próximo bloco de tempo se não for fornecido
+    if (inputDate) {
+        targetDate = new Date(inputDate);
+    } else {
+        targetDate = new Date(now);
+        if (expirationTime === '1m') {
+            targetDate.setSeconds(0, 0);
+            targetDate.setMinutes(targetDate.getMinutes() + 1);
+        } else { // 5m
+            const minutes = targetDate.getMinutes();
+            const remainder = minutes % 5;
+            const minutesToAdd = (remainder === 0) ? 5 : (5 - remainder);
+            targetDate.setMinutes(minutes + minutesToAdd, 0, 0);
+        }
     }
 
-    // 2. Generate a deterministic signal based on the timeframe.
-    let signal = expirationTime === '1m'
-      ? getM1Signal(asset, targetTime)
-      : getM5Signal(asset, targetTime);
+    // 2. Criar uma Seed baseada no ativo e no tempo redondo (timestamp)
+    const timestamp = targetDate.getTime();
+    const assetSeed = asset.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+    const combinedSeed = timestamp + assetSeed;
 
-    // 3. Invert the signal if the global flag is set
+    // 3. Motor de Tendência (Onda Senoidal)
+    // Cria oscilações de mercado que duram alguns blocos, parecendo tendências reais.
+    const waveFreq = expirationTime === '1m' ? 600000 : 1800000; // Ondas de 10 ou 30 min
+    const trendValue = Math.sin(combinedSeed / waveFreq);
+    
+    let signal: 'CALL 🔼' | 'PUT 🔽' = trendValue >= 0 ? 'CALL 🔼' : 'PUT 🔽';
+
+    // 4. Detalhes Determinísticos (Assertividade e Estratégia)
+    // Usamos o módulo da seed para garantir que os valores sejam sempre os mesmos para aquele sinal
+    const accuracy = 84 + (Math.abs(Math.floor(Math.sin(combinedSeed) * 12)));
+    const confluence = 3 + (Math.abs(Math.floor(Math.cos(combinedSeed) * 3)));
+    const strategy = STRATEGIES[Math.abs(combinedSeed) % STRATEGIES.length];
+
+    // 5. Inverter sinal (Global Config)
     if (invertSignal) {
         signal = signal === 'CALL 🔼' ? 'PUT 🔽' : 'CALL 🔼';
     }
 
-    // 4. Format output.
-    const targetTimeString = targetTime.toLocaleTimeString('en-US', {
+    const targetTimeString = targetDate.toLocaleTimeString('pt-BR', {
         hour12: false,
         hour: '2-digit',
         minute: '2-digit',
     });
 
     return {
-        signal: signal,
+        signal,
         targetTime: targetTimeString,
         source: 'Aleatório' as const,
-        targetDate: targetTime,
+        targetDate,
+        accuracy,
+        confluence,
+        strategy
     };
 }

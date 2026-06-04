@@ -35,7 +35,8 @@ import {
   Layers,
   Search,
   Lock,
-  Crown
+  Crown,
+  Radio
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { CurrencyFlags } from '@/components/app/currency-flags';
@@ -492,20 +493,25 @@ export default function CatalogadorPage() {
 
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 p-4 bg-black/80 backdrop-blur-2xl border-t border-white/5 flex justify-center gap-10 z-40">
-         <Button variant="ghost" className="text-[0.6rem] font-black uppercase tracking-[0.2em] opacity-30 hover:opacity-100 hover:text-primary transition-all" asChild>
-            <a href="/analisador">Analisador Live</a>
-         </Button>
-         <Button variant="ghost" className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-primary relative" disabled>
-            Scanner de Elite
-            <span className="absolute -top-1 -right-1 flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-            </span>
-         </Button>
-         <Button variant="ghost" className="text-[0.6rem] font-black uppercase tracking-[0.2em] opacity-30 hover:opacity-100 hover:text-primary transition-all" asChild>
-            <a href="/sessaochinesa">Sessão Chinesa</a>
-         </Button>
+      <footer className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+          <div className="flex items-center gap-1 p-1.5 bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
+                <Button variant="ghost" className="h-12 px-4 rounded-xl flex flex-col gap-1 text-muted-foreground hover:text-primary transition-all" asChild>
+                    <a href="/analisador">
+                        <Zap className="h-4 w-4" />
+                        <span className="text-[0.55rem] font-black uppercase tracking-tighter">Analisador</span>
+                    </a>
+                </Button>
+                <Button variant="ghost" className="h-12 px-4 rounded-xl flex flex-col gap-1 text-primary bg-primary/10" disabled>
+                    <Search className="h-4 w-4" />
+                    <span className="text-[0.55rem] font-black uppercase tracking-tighter">Scanner</span>
+                </Button>
+                <Button variant="ghost" className="h-12 px-4 rounded-xl flex flex-col gap-1 text-muted-foreground hover:text-primary transition-all" asChild>
+                    <a href="/sessaochinesa">
+                        <Radio className="h-4 w-4" />
+                        <span className="text-[0.55rem] font-black uppercase tracking-tighter">Sessão</span>
+                    </a>
+                </Button>
+          </div>
       </footer>
     </div>
   );

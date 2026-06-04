@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAffiliateRouter } from '@/hooks/use-affiliate-router';
+import { usePathname } from 'next/navigation';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,6 +31,7 @@ import { generateSignal as generateClientSideSignal, Asset, ExpirationTime } fro
 import { VipUpgradeModal } from '@/components/app/vip-upgrade-modal';
 import { AnalysisAnimation } from '@/components/app/analysis-animation';
 import TradingViewWidget from '@/components/app/tradingview-widget';
+import { cn } from '@/lib/utils';
 
 export type FormData = {
   asset: Asset;
@@ -59,6 +61,7 @@ type SignalUsage = {
 
 export default function AnalisadorPage() {
   const router = useAffiliateRouter();
+  const pathname = usePathname();
   const { auth, user, isUserLoading, firestore } = useFirebase();
   const { config, isConfigLoading, affiliateId } = useAppConfig();
 
@@ -452,27 +455,42 @@ export default function AnalisadorPage() {
       <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/90 to-background" />
 
       <div className="flex flex-col min-h-screen">
-        <header className="px-6 py-3 flex justify-between items-center border-b border-border/10 bg-card/30 backdrop-blur-md sticky top-0 z-50">
-          <div className="flex items-center gap-6">
+        <header className="px-4 md:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-6 border-b border-border/10 bg-card/30 backdrop-blur-md sticky top-0 z-50">
+          <div className="flex items-center gap-4 md:gap-8 w-full md:w-auto">
              <div className="flex flex-col">
                 <h1 className="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tighter leading-tight">
                     ESTRATÉGIA CHINESA
                 </h1>
-                <p className="text-[0.6rem] text-primary/60 font-bold tracking-[0.2em] uppercase mt-[-2px]">Intelligence Analyzer</p>
+                <p className="text-[0.6rem] text-primary/60 font-black tracking-[0.2em] uppercase mt-[-2px]">Intelligence Analyzer</p>
              </div>
-             <div className="hidden sm:block h-8 w-px bg-border/20" />
-             <div className="px-4 py-1.5 text-[0.7rem] font-bold bg-primary/10 border border-primary/20 text-primary rounded-full shadow-lg shadow-primary/5 flex items-center gap-2">
-               <User className="h-3 w-3" />
-               {isPremium ? 'PREMIUM ACCESS' : 'VIP MEMBER'}
+             <div className="hidden lg:block h-10 w-px bg-border/20" />
+             <div className="hidden lg:flex px-4 py-2 text-[0.65rem] font-black bg-primary/10 border border-primary/20 text-primary rounded-full shadow-lg shadow-primary/5 items-center gap-2 uppercase tracking-widest">
+               <User className="h-3.5 w-3.5" />
+               {isPremium ? 'Premium Access' : 'Vip Member'}
              </div>
           </div>
+
+          <nav className="flex items-center gap-1.5 bg-black/40 p-1.5 rounded-2xl border border-white/5 shadow-2xl">
+             <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === '/analisador' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                <AffiliateLink href="/analisador">Analisador</AffiliateLink>
+             </Button>
+             <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === '/catalogador' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                <AffiliateLink href="/catalogador">Sinais</AffiliateLink>
+             </Button>
+             <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all group", pathname === '/sessaochinesa' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                <AffiliateLink href="/sessaochinesa" className="flex items-center gap-2">
+                   Sessão
+                   <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.6)]" />
+                </AffiliateLink>
+             </Button>
+          </nav>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 ml-auto md:ml-0">
              <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleLogout}
-                className="text-xs font-bold text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all rounded-full px-4"
+                className="text-[0.65rem] font-black text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all rounded-full px-5 border border-white/5 h-10 uppercase tracking-widest"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 Sair
@@ -595,27 +613,6 @@ export default function AnalisadorPage() {
                 </div>
             </div>
         </main>
-        
-        <footer className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-            <div className="flex items-center gap-1 p-1.5 bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
-                <Button variant="ghost" className="h-12 px-4 rounded-xl flex flex-col gap-1 text-primary bg-primary/10" disabled>
-                    <Zap className="h-4 w-4" />
-                    <span className="text-[0.55rem] font-black uppercase tracking-tighter">Analisador</span>
-                </Button>
-                <Button variant="ghost" className="h-12 px-4 rounded-xl flex flex-col gap-1 text-muted-foreground hover:text-primary transition-all" asChild>
-                    <a href="/catalogador">
-                        <Search className="h-4 w-4" />
-                        <span className="text-[0.55rem] font-black uppercase tracking-tighter">Scanner</span>
-                    </a>
-                </Button>
-                <Button variant="ghost" className="h-12 px-4 rounded-xl flex flex-col gap-1 text-muted-foreground hover:text-primary transition-all" asChild>
-                    <a href="/sessaochinesa">
-                        <Radio className="h-4 w-4" />
-                        <span className="text-[0.55rem] font-black uppercase tracking-tighter">Sessão</span>
-                    </a>
-                </Button>
-            </div>
-        </footer>
       </div>
 
       <VipUpgradeModal

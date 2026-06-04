@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useFirebase, useMemoFirebase, useDoc } from '@/firebase';
 import { useAffiliateRouter } from '@/hooks/use-affiliate-router';
+import { usePathname } from 'next/navigation';
 import { 
   Card, 
   CardContent, 
@@ -36,7 +37,9 @@ import {
   Search,
   Lock,
   Crown,
-  Radio
+  Radio,
+  LogOut,
+  User
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { CurrencyFlags } from '@/components/app/currency-flags';
@@ -46,6 +49,7 @@ import { generateSignal, Asset, ExpirationTime } from '@/lib/signal-generator';
 import { useAppConfig } from '@/firebase/config-provider';
 import { Badge } from '@/components/ui/badge';
 import { doc } from 'firebase/firestore';
+import AffiliateLink from '@/components/app/affiliate-link';
 
 type Timeframe = ExpirationTime;
 type Direction = 'CALL' | 'PUT' | 'BOTH';
@@ -75,9 +79,10 @@ const SCAN_STEPS = [
 ];
 
 export default function CatalogadorPage() {
-  const { user, isUserLoading, firestore } = useFirebase();
+  const { user, auth, isUserLoading, firestore } = useFirebase();
   const { config } = useAppConfig();
   const router = useAffiliateRouter();
+  const pathname = usePathname();
   const { toast } = useToast();
   
   const [isLoading, setIsLoading] = useState(false);
@@ -113,6 +118,13 @@ export default function CatalogadorPage() {
         : [...prev, asset]
     );
   };
+
+  const handleLogout = async () => {
+    await auth.signOut();
+    localStorage.removeItem('loginTimestamp');
+    localStorage.removeItem('hasSeenVipWelcome');
+    router.push('/login');
+  }
 
   const handleGenerate = async () => {
     if (!isPremium) return;
@@ -259,25 +271,48 @@ export default function CatalogadorPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-foreground font-body pb-20">
-      <header className="border-b border-white/5 bg-black/40 backdrop-blur-md sticky top-0 z-50">
-        <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-             <Button variant="ghost" size="icon" onClick={() => router.push('/analisador')} className="rounded-full hover:bg-white/5">
-                <ArrowLeft className="h-5 w-5" />
-             </Button>
+       <header className="px-4 md:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-6 border-b border-border/10 bg-card/30 backdrop-blur-md sticky top-0 z-50">
+          <div className="flex items-center gap-4 md:gap-8 w-full md:w-auto">
              <div className="flex flex-col">
-                <h1 className="text-lg font-black uppercase tracking-tighter text-primary flex items-center gap-2">
-                   Scanner de Elite <Badge variant="outline" className="bg-primary/20 text-primary border-none text-[0.5rem] px-1.5 h-4">ELITE SYNC</Badge>
+                <h1 className="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tighter leading-tight">
+                    ESTRATÉGIA CHINESA
                 </h1>
-                <p className="text-[0.6rem] font-bold opacity-40 uppercase tracking-widest">Sincronizado com Analisador Live</p>
+                <p className="text-[0.6rem] text-primary/60 font-black tracking-[0.2em] uppercase mt-[-2px]">Intelligence Analyzer</p>
+             </div>
+             <div className="hidden lg:block h-10 w-px bg-border/20" />
+             <div className="hidden lg:flex px-4 py-2 text-[0.65rem] font-black bg-primary/10 border border-primary/20 text-primary rounded-full shadow-lg shadow-primary/5 items-center gap-2 uppercase tracking-widest">
+               <User className="h-3.5 w-3.5" />
+               {isPremium ? 'Premium Access' : 'Vip Member'}
              </div>
           </div>
-          <div className="flex items-center gap-2 px-4 py-1.5 bg-primary/10 rounded-full border border-primary/20 shadow-lg shadow-primary/5">
-             <Activity className="h-3.5 w-3.5 text-primary animate-pulse" />
-             <span className="text-[0.6rem] font-black uppercase tracking-widest text-primary">CORE ENGINE SYNC</span>
+
+          <nav className="flex items-center gap-1.5 bg-black/40 p-1.5 rounded-2xl border border-white/5 shadow-2xl">
+             <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === '/analisador' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                <AffiliateLink href="/analisador">Analisador</AffiliateLink>
+             </Button>
+             <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === '/catalogador' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                <AffiliateLink href="/catalogador">Sinais</AffiliateLink>
+             </Button>
+             <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all group", pathname === '/sessaochinesa' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                <AffiliateLink href="/sessaochinesa" className="flex items-center gap-2">
+                   Sessão
+                   <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.6)]" />
+                </AffiliateLink>
+             </Button>
+          </nav>
+          
+          <div className="flex items-center gap-4 ml-auto md:ml-0">
+             <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className="text-[0.65rem] font-black text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all rounded-full px-5 border border-white/5 h-10 uppercase tracking-widest"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sair
+              </Button>
           </div>
-        </div>
-      </header>
+        </header>
 
       <main className="container mx-auto p-4 md:p-8 max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-8 pb-32">
         
@@ -481,7 +516,7 @@ export default function CatalogadorPage() {
                     </div>
                   </div>
                   <div className="space-y-2 max-w-sm">
-                      <h3 className="text-2xl font-black uppercase tracking-tighter">Scanner de Elite Sincronizado</h3>
+                      <h3 className="text-2xl font-black uppercase tracking-tighter">Sinais de Elite Sincronizados</h3>
                       <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest leading-relaxed opacity-60">
                         Escolha os ativos e o timeframe. A lista gerada será idêntica à análise em tempo real do Analisador Live.
                       </p>
@@ -492,27 +527,6 @@ export default function CatalogadorPage() {
         </div>
 
       </main>
-
-      <footer className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-          <div className="flex items-center gap-1 p-1.5 bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
-                <Button variant="ghost" className="h-12 px-4 rounded-xl flex flex-col gap-1 text-muted-foreground hover:text-primary transition-all" asChild>
-                    <a href="/analisador">
-                        <Zap className="h-4 w-4" />
-                        <span className="text-[0.55rem] font-black uppercase tracking-tighter">Analisador</span>
-                    </a>
-                </Button>
-                <Button variant="ghost" className="h-12 px-4 rounded-xl flex flex-col gap-1 text-primary bg-primary/10" disabled>
-                    <Search className="h-4 w-4" />
-                    <span className="text-[0.55rem] font-black uppercase tracking-tighter">Scanner</span>
-                </Button>
-                <Button variant="ghost" className="h-12 px-4 rounded-xl flex flex-col gap-1 text-muted-foreground hover:text-primary transition-all" asChild>
-                    <a href="/sessaochinesa">
-                        <Radio className="h-4 w-4" />
-                        <span className="text-[0.55rem] font-black uppercase tracking-tighter">Sessão</span>
-                    </a>
-                </Button>
-          </div>
-      </footer>
     </div>
   );
 }

@@ -5,7 +5,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { doc, collection, query, where, getDocs, limit } from 'firebase/firestore';
-import { Loader2, ShieldCheck, XCircle, CheckCircle, Trophy, TrendingUp, Radio, Zap, Search } from 'lucide-react';
+import { Loader2, ShieldCheck, XCircle, CheckCircle, Trophy, TrendingUp, Radio, Zap, Search, User, LogOut } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -35,6 +36,7 @@ import { useFirebase, useDoc, useMemoFirebase, useAppConfig } from '@/firebase';
 import AffiliateLink from '@/components/app/affiliate-link';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useAffiliateRouter } from '@/hooks/use-affiliate-router';
 
 const formSchema = z.object({
   userId: z.string()
@@ -108,9 +110,11 @@ function Scoreboard({ wins, losses, isLoading }: { wins: number | undefined, los
 }
 
 export default function SessaoChinesaPage() {
-    const { firestore } = useFirebase();
+    const { firestore, auth, user } = useFirebase();
     const { config } = useAppConfig();
     const { toast } = useToast();
+    const pathname = usePathname();
+    const router = useAffiliateRouter();
 
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [isFailureAlertOpen, setFailureAlertOpen] = React.useState(false);
@@ -126,6 +130,13 @@ export default function SessaoChinesaPage() {
     const wins = (scoreData as any)?.wins;
     const losses = (scoreData as any)?.losses;
     const managedLink = (statusData as any)?.zoomLink;
+
+    const handleLogout = async () => {
+      await auth.signOut();
+      localStorage.removeItem('loginTimestamp');
+      localStorage.removeItem('hasSeenVipWelcome');
+      router.push('/login');
+    }
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -191,11 +202,67 @@ export default function SessaoChinesaPage() {
     }
 
     return (
-        <div className="theme-premium">
+        <div className="theme-premium min-h-screen flex flex-col">
             <div className="fixed inset-0 -z-20 h-full w-full grid-bg" />
             <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/80 to-background" />
 
-            <div className="flex flex-col min-h-screen items-center justify-center p-4">
+            <header className="px-4 md:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-6 border-b border-border/10 bg-card/30 backdrop-blur-md sticky top-0 z-50">
+              <div className="flex items-center gap-4 md:gap-8 w-full md:w-auto">
+                 <div className="flex flex-col">
+                    <h1 className="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tighter leading-tight">
+                        ESTRATÉGIA CHINESA
+                    </h1>
+                    <p className="text-[0.6rem] text-primary/60 font-black tracking-[0.2em] uppercase mt-[-2px]">Intelligence Analyzer</p>
+                 </div>
+                 <div className="hidden lg:block h-10 w-px bg-border/20" />
+                 {user && (
+                    <div className="hidden lg:flex px-4 py-2 text-[0.65rem] font-black bg-primary/10 border border-primary/20 text-primary rounded-full shadow-lg shadow-primary/5 items-center gap-2 uppercase tracking-widest">
+                        <User className="h-3.5 w-3.5" />
+                        Membro Ativo
+                    </div>
+                 )}
+              </div>
+
+              <nav className="flex items-center gap-1.5 bg-black/40 p-1.5 rounded-2xl border border-white/5 shadow-2xl">
+                 <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === '/analisador' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                    <AffiliateLink href="/analisador">Analisador</AffiliateLink>
+                 </Button>
+                 <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === '/catalogador' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                    <AffiliateLink href="/catalogador">Sinais</AffiliateLink>
+                 </Button>
+                 <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all group", pathname === '/sessaochinesa' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                    <AffiliateLink href="/sessaochinesa" className="flex items-center gap-2">
+                       Sessão
+                       <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.6)]" />
+                    </AffiliateLink>
+                 </Button>
+              </nav>
+              
+              <div className="flex items-center gap-4 ml-auto md:ml-0">
+                 {user ? (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleLogout}
+                        className="text-[0.65rem] font-black text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all rounded-full px-5 border border-white/5 h-10 uppercase tracking-widest"
+                    >
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Sair
+                    </Button>
+                 ) : (
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        asChild
+                        className="text-[0.65rem] font-black text-primary border-primary/20 hover:bg-primary hover:text-black transition-all rounded-full px-5 h-10 uppercase tracking-widest"
+                    >
+                        <AffiliateLink href="/login">Entrar</AffiliateLink>
+                    </Button>
+                 )}
+              </div>
+            </header>
+
+            <div className="flex-grow flex flex-col items-center justify-center p-4">
                 <div className="w-full max-w-md space-y-6 pb-24">
                     
                     <div className="flex justify-center mb-2">
@@ -292,27 +359,6 @@ export default function SessaoChinesaPage() {
                     </div>
                 </div>
             </div>
-
-            <footer className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-                <div className="flex items-center gap-1 p-1.5 bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
-                    <Button variant="ghost" className="h-12 px-4 rounded-xl flex flex-col gap-1 text-muted-foreground hover:text-primary transition-all" asChild>
-                        <a href="/analisador">
-                            <Zap className="h-4 w-4" />
-                            <span className="text-[0.55rem] font-black uppercase tracking-tighter">Analisador</span>
-                        </a>
-                    </Button>
-                    <Button variant="ghost" className="h-12 px-4 rounded-xl flex flex-col gap-1 text-muted-foreground hover:text-primary transition-all" asChild>
-                        <a href="/catalogador">
-                            <Search className="h-4 w-4" />
-                            <span className="text-[0.55rem] font-black uppercase tracking-tighter">Scanner</span>
-                        </a>
-                    </Button>
-                    <Button variant="ghost" className="h-12 px-4 rounded-xl flex flex-col gap-1 text-primary bg-primary/10" disabled>
-                        <Radio className="h-4 w-4" />
-                        <span className="text-[0.55rem] font-black uppercase tracking-tighter">Sessão</span>
-                    </Button>
-                </div>
-            </footer>
 
             <Dialog open={isFailureAlertOpen} onOpenChange={setFailureAlertOpen}>
                 <DialogContent className="bg-[#0a0a0a] border-white/10 max-w-sm rounded-3xl">

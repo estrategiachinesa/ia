@@ -46,7 +46,8 @@ import {
   ExternalLink,
   History,
   Tv,
-  Plus
+  Plus,
+  Link as LinkIcon
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -123,6 +124,9 @@ export default function AdminDashboard() {
   const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
   const [analyticsType, setAnalyticsType] = useState<'VISITS' | 'CLICKS'>('VISITS');
 
+  const [zoomLink, setZoomLink] = useState('');
+  const [isSavingLink, setIsSavingLink] = useState(false);
+
   const isAdmin = user && ADMIN_EMAILS.includes(user.email || '');
 
   // Session Management State
@@ -130,6 +134,12 @@ export default function AdminDashboard() {
   const sessionScoreRef = useMemoFirebase(() => firestore ? doc(firestore, 'session', 'monthly_score') : null, [firestore]);
   const { data: sessionStatus } = useDoc(sessionStatusRef);
   const { data: sessionScore } = useDoc(sessionScoreRef);
+
+  useEffect(() => {
+    if (sessionStatus && (sessionStatus as any).zoomLink !== undefined) {
+      setZoomLink((sessionStatus as any).zoomLink || '');
+    }
+  }, [sessionStatus]);
 
   useEffect(() => {
     const fetchConfigs = async () => {
@@ -167,6 +177,16 @@ export default function AdminDashboard() {
       await setDoc(doc(firestore, 'session', 'status'), { isOnline: !current }, { merge: true });
       toast({ title: `Sessão ${!current ? 'Online' : 'Offline'}` });
     } catch (e) { toast({ variant: 'destructive', title: 'Erro ao alternar sessão' }); }
+  };
+
+  const handleSaveZoomLink = async () => {
+    if (!firestore) return;
+    setIsSavingLink(true);
+    try {
+      await setDoc(doc(firestore, 'session', 'status'), { zoomLink: zoomLink.trim() }, { merge: true });
+      toast({ title: 'Link da Sessão Atualizado' });
+    } catch (e) { toast({ variant: 'destructive', title: 'Erro ao salvar link' }); }
+    finally { setIsSavingLink(false); }
   };
 
   const handleUpdateScore = async (field: 'wins' | 'losses', current: number) => {
@@ -377,6 +397,28 @@ export default function AdminDashboard() {
                         </div>
                         <Switch checked={(sessionStatus as any)?.isOnline || false} onCheckedChange={() => handleToggleSession((sessionStatus as any)?.isOnline)} />
                     </div>
+
+                    <div className="space-y-2">
+                        <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><LinkIcon className="h-3 w-3"/> Link da Sala (Zoom/Meet)</Label>
+                        <div className="flex gap-2">
+                          <Input 
+                            value={zoomLink} 
+                            onChange={(e) => setZoomLink(e.target.value)} 
+                            placeholder="https://zoom.us/j/..." 
+                            className="bg-white/5 border-white/10 h-10 text-xs" 
+                          />
+                          <Button 
+                            size="sm" 
+                            onClick={handleSaveZoomLink} 
+                            disabled={isSavingLink}
+                            className="bg-primary text-black h-10 px-4"
+                          >
+                            {isSavingLink ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                        <p className="text-[0.5rem] opacity-40 uppercase font-bold italic">Link será exibido aos membros validados</p>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label className="text-[0.6rem] font-bold uppercase opacity-60">Wins (Mês)</Label>

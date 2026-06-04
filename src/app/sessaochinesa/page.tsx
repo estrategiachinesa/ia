@@ -127,6 +127,7 @@ export default function SessaoChinesaPage() {
     const isOnline = (statusData as any)?.isOnline;
     const wins = (scoreData as any)?.wins;
     const losses = (scoreData as any)?.losses;
+    const managedLink = (statusData as any)?.zoomLink;
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -137,10 +138,8 @@ export default function SessaoChinesaPage() {
 
     function onSubmit(values: z.infer<typeof formSchema>) {
         setIsSubmitting(true);
-        // Simulação de validação de ID sob afiliado
         setTimeout(() => {
             setIsSubmitting(false);
-            // Em produção, aqui faríamos uma consulta real. Por agora, simulamos sucesso para IDs específicos ou lógica de teste
             if (values.userId.length >= 8) {
                 setIsIdConfirmed(true);
                 toast({
@@ -163,12 +162,15 @@ export default function SessaoChinesaPage() {
             });
             return;
         }
+
+        const finalLink = managedLink || config?.telegramUrl || 'https://t.me/Trader_Chines';
+
         toast({
-            title: 'Redirecionando...',
+            title: managedLink ? 'Redirecionando para a Live...' : 'Redirecionando para o Canal...',
             description: 'A abrir a Sala VIP da Estratégia Chinesa.',
         });
-        // Aqui redirecionaria para o link da sala (ex: Telegram ou Live)
-        window.open(config?.telegramUrl || 'https://t.me/Trader_Chines', '_blank');
+        
+        window.open(finalLink, '_blank');
     }
 
     return (

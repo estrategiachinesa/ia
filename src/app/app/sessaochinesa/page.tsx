@@ -106,9 +106,10 @@ export default function SessaoChinesaPage() {
     const { data: statusData, isLoading: isStatusLoading } = useDoc(statusRef);
     const { data: scoreData, isLoading: isScoreLoading } = useDoc(scoreRef);
 
-    const isOnline = (statusData as { isOnline: boolean } | null)?.isOnline;
+    const isOnline = (statusData as { isOnline: boolean, zoomLink?: string } | null)?.isOnline;
     const wins = (scoreData as { wins: number } | null)?.wins;
     const losses = (scoreData as { losses: number } | null)?.losses;
+    const managedLink = (statusData as { isOnline: boolean, zoomLink?: string } | null)?.zoomLink;
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -136,10 +137,23 @@ export default function SessaoChinesaPage() {
     }
     
     function handleEnterSession() {
+        if (!isOnline) {
+            toast({
+                variant: 'destructive',
+                title: 'Sessão Offline',
+                description: 'Aguarde o horário da sessão.',
+            });
+            return;
+        }
+
+        const finalLink = managedLink || config?.telegramUrl || '#';
+
         toast({
             title: 'Entrando na Sessão...',
             description: 'Você será redirecionado em breve.',
         });
+        
+        window.open(finalLink, '_blank');
     }
 
     return (

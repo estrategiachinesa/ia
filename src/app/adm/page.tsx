@@ -28,7 +28,8 @@ import {
   Star,
   Ban,
   ShieldOff,
-  UserPlus
+  UserPlus,
+  AlertCircle
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -341,7 +342,7 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
              {[
                  { label: 'Cliques Totais', value: config?.checkoutClickCount || 0, icon: MousePointer2, color: 'text-blue-400' },
-                 { label: 'Pendentes', value: stats.pending, icon: Timer, color: 'text-orange-500' },
+                 { label: 'Pendentes', value: stats.pending, icon: Timer, color: stats.pending > 0 ? 'text-orange-500 animate-pulse' : 'text-zinc-500' },
                  { label: 'Total Membros', value: stats.total, icon: Users, color: 'text-primary' },
                  { label: 'Premium', value: stats.premium, icon: Star, color: 'text-purple-500' },
                  { label: 'Recusados', value: stats.rejected, icon: Ban, color: 'text-red-500' },
@@ -349,7 +350,10 @@ export default function AdminDashboard() {
              ].map((s, i) => (
                 <Card 
                     key={i} 
-                    className="bg-card/30 border-white/5 p-4 flex items-center gap-4 transition-all"
+                    className={cn(
+                        "bg-card/30 border-white/5 p-4 flex items-center gap-4 transition-all",
+                        s.label === 'Pendentes' && stats.pending > 0 && "border-orange-500/20 bg-orange-500/5"
+                    )}
                 >
                     <div className={cn("p-2 rounded-xl bg-white/5", s.color)}><s.icon className="h-5 w-5" /></div>
                     <div>
@@ -485,7 +489,24 @@ export default function AdminDashboard() {
         <div className="flex flex-col xl:flex-row gap-6 items-start xl:items-end justify-between">
             <div className="flex flex-wrap gap-2">
                 {['ALL', 'PENDING', 'PREMIUM', 'REJECTED', 'SUSPENDED'].map((f) => (
-                    <Button key={f} variant={activeFilter === f ? 'default' : 'outline'} onClick={() => setActiveFilter(f as QuickFilter)} className={`h-10 px-4 rounded-xl ${activeFilter === f ? 'bg-primary text-black' : 'bg-white/5'}`}>{f}</Button>
+                    <Button 
+                        key={f} 
+                        variant={activeFilter === f ? 'default' : 'outline'} 
+                        onClick={() => setActiveFilter(f as QuickFilter)} 
+                        className={cn(
+                            "h-10 px-4 rounded-xl relative",
+                            activeFilter === f ? 'bg-primary text-black' : 'bg-white/5',
+                            f === 'PENDING' && stats.pending > 0 && "border-orange-500 text-orange-500"
+                        )}
+                    >
+                        {f}
+                        {f === 'PENDING' && stats.pending > 0 && (
+                            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-orange-500"></span>
+                            </span>
+                        )}
+                    </Button>
                 ))}
             </div>
             <div className="flex gap-3 w-full xl:w-auto">

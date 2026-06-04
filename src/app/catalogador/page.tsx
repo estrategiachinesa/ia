@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useFirebase, useMemoFirebase } from '@/firebase';
+import { useFirebase, useMemoFirebase, useDoc } from '@/firebase';
 import { useAffiliateRouter } from '@/hooks/use-affiliate-router';
 import { 
   Card, 
@@ -33,7 +33,9 @@ import {
   BarChart4,
   Activity,
   Layers,
-  Search
+  Search,
+  Lock,
+  Crown
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { CurrencyFlags } from '@/components/app/currency-flags';
@@ -42,6 +44,7 @@ import { Progress } from '@/components/ui/progress';
 import { generateSignal, Asset, ExpirationTime } from '@/lib/signal-generator';
 import { useAppConfig } from '@/firebase/config-provider';
 import { Badge } from '@/components/ui/badge';
+import { doc } from 'firebase/firestore';
 
 type Timeframe = ExpirationTime;
 type Direction = 'CALL' | 'PUT' | 'BOTH';
@@ -71,7 +74,7 @@ const SCAN_STEPS = [
 ];
 
 export default function CatalogadorPage() {
-  const { user, isUserLoading } = useFirebase();
+  const { user, isUserLoading, firestore } = useFirebase();
   const { config } = useAppConfig();
   const router = useAffiliateRouter();
   const { toast } = useToast();
@@ -85,6 +88,15 @@ export default function CatalogadorPage() {
   const [direction, setDirection] = useState<Direction>('BOTH');
   const [quantity, setQuantity] = useState('12');
   const [signals, setSignals] = useState<Signal[]>([]);
+
+  // Premium Access Logic
+  const vipRequestRef = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'vipRequests', user.uid);
+  }, [firestore, user]);
+
+  const { data: vipData, isLoading: isVipLoading } = useDoc(vipRequestRef);
+  const isPremium = vipData && ['PREMIUM', 'APPROVED'].includes((vipData as any).status);
 
   // Bloqueio de acesso para não logados
   useEffect(() => {
@@ -102,6 +114,8 @@ export default function CatalogadorPage() {
   };
 
   const handleGenerate = async () => {
+    if (!isPremium) return;
+    
     setIsLoading(true);
     setSignals([]);
     setLoadingStep(0);
@@ -127,7 +141,6 @@ export default function CatalogadorPage() {
     const now = new Date();
     
     const startTime = new Date(now);
-    const intervalMinutes = timeframe === '1m' ? 1 : 5;
     
     if (timeframe === '1m') {
         startTime.setSeconds(0, 0);
@@ -200,11 +213,46 @@ export default function CatalogadorPage() {
     copyToClipboard(header + list + footer, 'Lista VIP Copiada!');
   };
 
-  if (isUserLoading || !user) {
+  if (isUserLoading || !user || isVipLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-[#0a0a0a]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
+    );
+  }
+
+  if (!isPremium) {
+    return (
+        <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center p-6 text-center">
+            <div className="fixed inset-0 -z-10 grid-bg opacity-20" />
+            <div className="bg-card/40 backdrop-blur-xl border border-white/10 p-12 rounded-3xl max-w-lg space-y-6 shadow-2xl shadow-purple-500/10 animate-in zoom-in-95 duration-500">
+                <div className="bg-purple-500/10 w-24 h-24 rounded-full flex items-center justify-center mx-auto border border-purple-500/20">
+                    <Lock className="h-10 w-10 text-purple-400" />
+                </div>
+                <div className="space-y-2">
+                    <h2 className="text-3xl font-headline font-black uppercase tracking-tighter text-white">Scanner Bloqueado</h2>
+                    <p className="text-xs font-black text-purple-400 uppercase tracking-[0.3em]">Exclusivo para Membros Premium</p>
+                </div>
+                <p className="text-muted-foreground leading-relaxed text-sm">
+                    O **Scanner de Elite** utiliza algoritmos avançados de varredura que estão disponíveis apenas para o estatuto de conta mais elevado da nossa rede.
+                </p>
+                <div className="pt-4 space-y-3">
+                    <Button 
+                        onClick={() => router.push('/analisador')}
+                        className="w-full h-14 bg-purple-600 text-white font-black uppercase tracking-tighter hover:bg-purple-700 rounded-xl"
+                    >
+                        <Crown className="h-5 w-5 mr-2" /> Tornar-se Premium
+                    </Button>
+                    <Button 
+                        variant="ghost"
+                        onClick={() => router.push('/analisador')}
+                        className="w-full text-muted-foreground text-xs uppercase font-bold"
+                    >
+                        Voltar para o Analisador
+                    </Button>
+                </div>
+            </div>
+        </div>
     );
   }
 

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -35,7 +34,8 @@ import {
   Zap,
   BarChart3,
   Trash2,
-  Crown
+  Crown,
+  Headset
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -103,6 +103,7 @@ export default function AdminDashboard() {
 
   const [isConfigSaving, setIsConfigSaving] = useState(false);
   const [regSecret, setRegSecret] = useState('');
+  const [supportLink, setSupportLink] = useState('');
   const [showSecret, setShowSecret] = useState(false);
   const [invertSignals, setInvertSignals] = useState(false);
   const [signalLimit, setSignalLimit] = useState(3);
@@ -135,10 +136,12 @@ export default function AdminDashboard() {
         const regSnap = await getDoc(doc(firestore, 'appConfig', 'registration'));
         const remoteSnap = await getDoc(doc(firestore, 'appConfig', 'remoteValues'));
         const limitSnap = await getDoc(doc(firestore, 'appConfig', 'limitation'));
+        const linksSnap = await getDoc(doc(firestore, 'appConfig', 'links'));
 
         if (regSnap.exists()) setRegSecret(regSnap.data().registrationSecret || '');
         if (remoteSnap.exists()) setInvertSignals(remoteSnap.data().invertSignal || false);
         if (limitSnap.exists()) setSignalLimit(limitSnap.data().hourlySignalLimit || 3);
+        if (linksSnap.exists()) setSupportLink(linksSnap.data().supportUrl || '');
       } catch (e) { console.error("Error fetching configs:", e); }
     };
     fetchConfigs();
@@ -151,7 +154,8 @@ export default function AdminDashboard() {
       await Promise.all([
         setDoc(doc(firestore, 'appConfig', 'registration'), { registrationSecret: regSecret.trim() }, { merge: true }),
         setDoc(doc(firestore, 'appConfig', 'remoteValues'), { invertSignal: invertSignals }, { merge: true }),
-        setDoc(doc(firestore, 'appConfig', 'limitation'), { hourlySignalLimit: signalLimit }, { merge: true })
+        setDoc(doc(firestore, 'appConfig', 'limitation'), { hourlySignalLimit: signalLimit }, { merge: true }),
+        setDoc(doc(firestore, 'appConfig', 'links'), { supportUrl: supportLink.trim() }, { merge: true })
       ]);
       toast({ title: 'Configurações Salvas' });
     } catch (e) { toast({ variant: 'destructive', title: 'Erro ao Salvar' }); }
@@ -502,6 +506,16 @@ export default function AdminDashboard() {
                     </div>
 
                     <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><Headset className="h-3 w-3"/> Link de Suporte (Telegram/WA)</Label>
+                            <Input 
+                                value={supportLink} 
+                                onChange={(e) => setSupportLink(e.target.value)} 
+                                placeholder="https://t.me/..." 
+                                className="bg-white/5 border-white/10 h-11" 
+                            />
+                        </div>
+
                          <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
                             <div className="flex flex-col">
                                 <span className="text-xs font-bold uppercase">Inverter Sinais</span>

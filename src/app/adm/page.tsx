@@ -30,7 +30,8 @@ import {
   ShieldOff,
   UserPlus,
   AlertCircle,
-  Zap
+  Zap,
+  BarChart3
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -61,6 +62,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
@@ -97,6 +105,8 @@ export default function AdminDashboard() {
   
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+
+  const [isClicksDialogOpen, setIsClicksDialogOpen] = useState(false);
 
   const [zoomLink, setZoomLink] = useState('');
   const [isSavingLink, setIsSavingLink] = useState(false);
@@ -304,6 +314,17 @@ export default function AdminDashboard() {
     rejected: mergedUsers.filter(u => u.isRejected).length,
   }), [mergedUsers]);
 
+  const pageClicks = useMemo(() => {
+    if (!config) return [];
+    return Object.keys(config)
+      .filter(key => key.startsWith('clicks_'))
+      .map(key => ({
+        page: key.replace('clicks_', '').replace('home', 'Início').replace('analisador', 'Analisador').replace('catalogador', 'Scanner').replace('vip', 'Página VIP').replace('sessaochinesa', 'Sessão Chinesa'),
+        count: config[key] || 0
+      }))
+      .sort((a, b) => b.count - a.count);
+  }, [config]);
+
   const formatDate = (ts: any) => {
     if (!ts) return '---';
     const date = ts.seconds ? new Date(ts.seconds * 1000) : new Date(ts);
@@ -342,7 +363,7 @@ export default function AdminDashboard() {
         {/* STATS BAR */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
              {[
-                 { label: 'Cliques Totais', value: config?.checkoutClickCount || 0, icon: MousePointer2, color: 'text-blue-400' },
+                 { label: 'Cliques Totais', value: config?.checkoutClickCount || 0, icon: MousePointer2, color: 'text-blue-400', onClick: () => setIsClicksDialogOpen(true) },
                  { label: 'Pendentes', value: stats.pending, icon: Timer, color: stats.pending > 0 ? 'text-orange-500 animate-pulse' : 'text-zinc-500' },
                  { label: 'Total Membros', value: stats.total, icon: Users, color: 'text-primary' },
                  { label: 'Premium', value: stats.premium, icon: Star, color: 'text-purple-500' },
@@ -351,9 +372,11 @@ export default function AdminDashboard() {
              ].map((s, i) => (
                 <Card 
                     key={i} 
+                    onClick={s.onClick}
                     className={cn(
                         "bg-card/30 border-white/5 p-4 flex items-center gap-4 transition-all",
-                        s.label === 'Pendentes' && stats.pending > 0 && "border-orange-500/20 bg-orange-500/5"
+                        s.label === 'Pendentes' && stats.pending > 0 && "border-orange-500/20 bg-orange-500/5",
+                        s.onClick && "cursor-pointer hover:bg-white/5 hover:border-white/10"
                     )}
                 >
                     <div className={cn("p-2 rounded-xl bg-white/5", s.color)}><s.icon className="h-5 w-5" /></div>
@@ -586,6 +609,29 @@ export default function AdminDashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={isClicksDialogOpen} onOpenChange={setIsClicksDialogOpen}>
+        <DialogContent className="bg-[#0d0d0d] border-white/10 max-w-md">
+            <DialogHeader>
+                <DialogTitle className="text-primary font-black uppercase flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" /> Detalhes de Cliques
+                </DialogTitle>
+                <DialogDescription className="text-xs">
+                    Cliques totais por página (Excluindo Admin)
+                </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 pt-4">
+                {pageClicks.length > 0 ? pageClicks.map((stat, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                        <span className="text-xs font-bold uppercase opacity-70">{stat.page}</span>
+                        <span className="font-mono font-black text-primary">{stat.count}</span>
+                    </div>
+                )) : (
+                    <p className="text-center py-8 text-muted-foreground text-sm">Sem dados de cliques registados.</p>
+                )}
+            </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

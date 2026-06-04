@@ -541,7 +541,7 @@ export default function AdminDashboard() {
                         <span className="text-xs font-bold">{u.email}</span>
                         {u.isNew && (
                            <Badge className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20 text-[0.5rem] px-1.5 h-4 flex items-center gap-1 animate-pulse">
-                              <Star className="h-2 w-2 fill-yellow-500" /> NOVO
+                              <Star className="h-2 w-2 fill-yellow-500" /> NOVO - {u.daysSince}D
                            </Badge>
                         )}
                       </div>

@@ -95,8 +95,15 @@ export default function AnalisadorPage() {
     return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
 
+  const sessionStatusRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'session', 'status');
+  }, [firestore]);
+
   const { data: vipData, isLoading: isVipLoading } = useDoc(vipRequestRef);
   const { data: userProfile, isLoading: isProfileLoading } = useDoc(userProfileRef);
+  const { data: sessionStatus } = useDoc(sessionStatusRef);
+  const isSessionOnline = (sessionStatus as any)?.isOnline;
 
   const [formData, setFormData] = useState<FormData>({
     asset: 'EUR/JPY',
@@ -480,7 +487,10 @@ export default function AnalisadorPage() {
              <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all group", pathname === '/sessaochinesa' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
                 <AffiliateLink href="/sessaochinesa" className="flex items-center gap-2">
                    Sessão
-                   <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.6)]" />
+                   <span className={cn(
+                     "w-2 h-2 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.6)]",
+                     isSessionOnline ? "bg-green-500 animate-pulse" : "bg-red-500"
+                   )} />
                 </AffiliateLink>
              </Button>
           </nav>

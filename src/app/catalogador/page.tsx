@@ -101,8 +101,15 @@ export default function CatalogadorPage() {
     return doc(firestore, 'vipRequests', user.uid);
   }, [firestore, user]);
 
+  const sessionStatusRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'session', 'status');
+  }, [firestore]);
+
   const { data: vipData, isLoading: isVipLoading } = useDoc(vipRequestRef);
+  const { data: sessionStatus } = useDoc(sessionStatusRef);
   const isPremium = vipData && ['PREMIUM', 'APPROVED'].includes((vipData as any).status);
+  const isSessionOnline = (sessionStatus as any)?.isOnline;
 
   // Bloqueio de acesso para não logados
   useEffect(() => {
@@ -296,7 +303,10 @@ export default function CatalogadorPage() {
              <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all group", pathname === '/sessaochinesa' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
                 <AffiliateLink href="/sessaochinesa" className="flex items-center gap-2">
                    Sessão
-                   <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.6)]" />
+                   <span className={cn(
+                     "w-2 h-2 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.6)]",
+                     isSessionOnline ? "bg-green-500 animate-pulse" : "bg-red-500"
+                   )} />
                 </AffiliateLink>
              </Button>
           </nav>

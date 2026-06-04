@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { doc } from 'firebase/firestore';
-import { Loader2, ShieldCheck, XCircle, CheckCircle } from 'lucide-react';
+import { Loader2, ShieldCheck, XCircle, CheckCircle, Trophy, TrendingUp, TrendingDown, Radio } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -36,6 +36,7 @@ import { Input } from '@/components/ui/input';
 import { useFirebase, useDoc, useMemoFirebase, useAppConfig } from '@/firebase';
 import AffiliateLink from '@/components/app/affiliate-link';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   userId: z.string()
@@ -53,40 +54,57 @@ const formSchema = z.object({
 function StatusIndicator({ isOnline, isLoading }: { isOnline: boolean | undefined, isLoading: boolean }) {
     if (isLoading) {
         return (
-            <div className="flex items-center gap-2 text-muted-foreground">
+            <div className="flex items-center gap-2 text-muted-foreground opacity-50">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Status...</span>
+                <span className="text-[0.6rem] font-black uppercase tracking-widest">Sincronizando...</span>
             </div>
         )
     }
 
     return (
-        <div className="flex items-center gap-2">
-            <span className="relative flex h-3 w-3">
-                {isOnline && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>}
-                <span className={`relative inline-flex rounded-full h-3 w-3 ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}></span>
-            </span>
-            <span className="font-semibold">{isOnline ? 'Sessão Online' : 'Sessão Offline'}</span>
+        <div className="flex flex-col items-center gap-2">
+            <div className="flex items-center gap-2">
+                <span className="relative flex h-3 w-3">
+                    {isOnline && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>}
+                    <span className={cn("relative inline-flex rounded-full h-3 w-3", isOnline ? 'bg-green-500' : 'bg-red-500')}></span>
+                </span>
+                <span className={cn("text-xs font-black uppercase tracking-widest", isOnline ? 'text-green-500' : 'text-red-500')}>
+                    {isOnline ? 'Sessão Online' : 'Sessão Offline'}
+                </span>
+            </div>
+            {isOnline && <span className="text-[0.5rem] font-bold text-green-500/50 animate-pulse">TRANSMISSÃO AO VIVO</span>}
         </div>
     )
 }
 
 function Scoreboard({ wins, losses, isLoading }: { wins: number | undefined, losses: number | undefined, isLoading: boolean }) {
     if (isLoading) {
-        return <Loader2 className="h-6 w-6 animate-spin text-primary" />;
+        return <div className="h-10 flex items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>;
     }
     
-    const total = (wins || 0) + (losses || 0);
-    const assertiveness = total > 0 ? (((wins || 0) / total) * 100).toFixed(1) : "0.0";
+    const w = wins || 0;
+    const l = losses || 0;
+    const total = w + l;
+    const assertiveness = total > 0 ? ((w / total) * 100).toFixed(1) : "0.0";
 
     return (
         <div className='text-center'>
-            <div className="flex justify-center items-center gap-4 text-2xl font-bold">
-                <span className="text-green-400">{wins ?? 0}</span>
-                <span>:</span>
-                <span className="text-red-400">{losses ?? 0}</span>
+            <div className="flex justify-center items-center gap-4">
+                <div className="flex flex-col items-center">
+                    <span className="text-2xl font-black text-green-500">{w}</span>
+                    <span className="text-[0.5rem] font-bold opacity-30 uppercase">Wins</span>
+                </div>
+                <span className="text-xl font-black opacity-20">:</span>
+                <div className="flex flex-col items-center">
+                    <span className="text-2xl font-black text-red-500">{l}</span>
+                    <span className="text-[0.5rem] font-bold opacity-30 uppercase">Losses</span>
+                </div>
             </div>
-            <p className="text-[0.6rem] text-muted-foreground mt-1 uppercase font-black opacity-40">Assertividade: {assertiveness}%</p>
+            <div className="mt-2 px-3 py-0.5 bg-white/5 rounded-full border border-white/5">
+                <p className="text-[0.55rem] text-muted-foreground uppercase font-black tracking-tighter">
+                    Assertividade: <span className="text-primary">{assertiveness}%</span>
+                </p>
+            </div>
         </div>
     )
 }
@@ -106,9 +124,9 @@ export default function SessaoChinesaPage() {
     const { data: statusData, isLoading: isStatusLoading } = useDoc(statusRef);
     const { data: scoreData, isLoading: isScoreLoading } = useDoc(scoreRef);
 
-    const isOnline = (statusData as { isOnline: boolean } | null)?.isOnline;
-    const wins = (scoreData as { wins: number } | null)?.wins;
-    const losses = (scoreData as { losses: number } | null)?.losses;
+    const isOnline = (statusData as any)?.isOnline;
+    const wins = (scoreData as any)?.wins;
+    const losses = (scoreData as any)?.losses;
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -119,14 +137,15 @@ export default function SessaoChinesaPage() {
 
     function onSubmit(values: z.infer<typeof formSchema>) {
         setIsSubmitting(true);
+        // Simulação de validação de ID sob afiliado
         setTimeout(() => {
             setIsSubmitting(false);
-            if (values.userId === '12345678') {
+            // Em produção, aqui faríamos uma consulta real. Por agora, simulamos sucesso para IDs específicos ou lógica de teste
+            if (values.userId.length >= 8) {
                 setIsIdConfirmed(true);
                 toast({
-                    title: 'ID Confirmado!',
-                    description: 'Seu acesso foi verificado. Clique em "Entrar na Sessão".',
-                    icon: <CheckCircle className="h-5 w-5 text-green-500" />,
+                    title: 'Acesso Verificado!',
+                    description: 'Seu ID está ativo sob nossa rede. Pode entrar na sala.',
                 })
             } else {
                 setFailureAlertOpen(true);
@@ -136,111 +155,154 @@ export default function SessaoChinesaPage() {
     }
     
     function handleEnterSession() {
+        if (!isOnline) {
+            toast({
+                variant: 'destructive',
+                title: 'Sessão Offline',
+                description: 'Aguarde o horário da sessão para entrar na sala.',
+            });
+            return;
+        }
         toast({
-            title: 'Entrando na Sessão...',
-            description: 'Você será redirecionado em breve.',
+            title: 'Redirecionando...',
+            description: 'A abrir a Sala VIP da Estratégia Chinesa.',
         });
+        // Aqui redirecionaria para o link da sala (ex: Telegram ou Live)
+        window.open(config?.telegramUrl || 'https://t.me/Trader_Chines', '_blank');
     }
 
     return (
-        <>
+        <div className="theme-premium">
             <div className="fixed inset-0 -z-20 h-full w-full grid-bg" />
-            <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/80 to-background" />
+            <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/90 to-background" />
 
             <div className="flex flex-col min-h-screen items-center justify-center p-4">
-                <Card className="w-full max-w-md bg-background/50 backdrop-blur-sm border-border/50 shadow-2xl shadow-primary/10">
-                    <CardHeader className="text-center">
-                        <div className="flex justify-center items-center gap-2 mb-2">
-                            <ShieldCheck className="h-10 w-10 text-primary" />
+                <div className="w-full max-w-md space-y-6">
+                    
+                    <div className="flex justify-center mb-2">
+                        <div className="p-4 bg-primary/10 rounded-full border border-primary/20 shadow-2xl shadow-primary/10 animate-pulse">
+                            <Radio className="h-10 w-10 text-primary" />
                         </div>
-                        <CardTitle className="font-headline text-3xl font-black uppercase tracking-tighter">Sessão Chinesa</CardTitle>
-                        <CardDescription className="text-xs font-bold uppercase opacity-50">Membros Verificados</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
-                             <Card className='p-4 bg-white/5 border-white/5 flex flex-col items-center justify-center'>
-                                <StatusIndicator isOnline={isOnline} isLoading={isStatusLoading} />
-                             </Card>
-                             <Card className='p-4 bg-white/5 border-white/5'>
-                                 <Scoreboard wins={wins} losses={losses} isLoading={isScoreLoading} />
-                             </Card>
-                        </div>
-                        
-                        <div className='text-center p-2'>
-                           <p className='text-xs font-bold text-muted-foreground uppercase tracking-widest'>Insira o ID da corretora para acesso:</p>
-                        </div>
+                    </div>
 
-                        <Form {...form}>
-                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                                <FormField
-                                    control={form.control}
-                                    name="userId"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormControl>
-                                                <Input 
-                                                    placeholder="Seu ID Corretora" 
-                                                    {...field}
-                                                    type="text"
-                                                    pattern="[0-9]*"
-                                                    inputMode="numeric"
-                                                    disabled={isIdConfirmed}
-                                                    className="bg-white/5 border-white/10 h-12 text-center text-lg font-mono tracking-widest"
-                                                    onChange={(e) => {
-                                                        const val = e.target.value;
-                                                        if (/^\d{0,20}$/.test(val)) {
-                                                            field.onChange(val);
-                                                        }
-                                                    }}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
+                    <Card className="w-full bg-card/40 backdrop-blur-xl border-white/10 shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+                        
+                        <CardHeader className="text-center pb-2">
+                            <CardTitle className="font-headline text-3xl font-black uppercase tracking-tighter">Sessão Chinesa</CardTitle>
+                            <CardDescription className="text-[0.65rem] font-bold uppercase opacity-50 tracking-[0.2em]">Exclusivo para Membros VIP</CardDescription>
+                        </CardHeader>
+                        
+                        <CardContent className="space-y-6 pt-4">
+                            <div className="grid grid-cols-2 gap-3">
+                                 <Card className='p-4 bg-white/5 border-white/5 flex items-center justify-center text-center'>
+                                    <StatusIndicator isOnline={isOnline} isLoading={isStatusLoading} />
+                                 </Card>
+                                 <Card className='p-4 bg-white/5 border-white/5 flex items-center justify-center'>
+                                     <Scoreboard wins={wins} losses={losses} isLoading={isScoreLoading} />
+                                 </Card>
+                            </div>
+                            
+                            <div className='space-y-4 pt-2'>
+                               <div className="text-center">
+                                  <p className='text-[0.6rem] font-black text-muted-foreground uppercase tracking-widest opacity-60'>Validação de Acesso</p>
+                                  <p className='text-xs font-bold text-foreground/80 mt-1'>Insira seu ID da Corretora (IQ/Exnova)</p>
+                               </div>
+
+                                <Form {...form}>
+                                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="userId"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormControl>
+                                                        <Input 
+                                                            placeholder="00000000" 
+                                                            {...field}
+                                                            type="text"
+                                                            pattern="[0-9]*"
+                                                            inputMode="numeric"
+                                                            disabled={isIdConfirmed}
+                                                            className="bg-black/40 border-white/10 h-14 text-center text-xl font-mono tracking-[0.3em] rounded-xl focus:ring-primary/20"
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                if (/^\d{0,20}$/.test(val)) {
+                                                                    field.onChange(val);
+                                                                }
+                                                            }}
+                                                        />
+                                                    </FormControl>
+                                                    <FormMessage className="text-[0.6rem] font-bold text-center uppercase" />
+                                                </FormItem>
+                                            )}
+                                        />
+                                        <Button 
+                                            type="submit" 
+                                            className="w-full h-14 font-black uppercase tracking-tighter bg-primary text-black hover:bg-primary/90 rounded-xl transition-all shadow-xl shadow-primary/10" 
+                                            disabled={isSubmitting || isIdConfirmed}
+                                        >
+                                            {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : (isIdConfirmed ? 'ID Verificado ✅' : 'Verificar Cadastro')}
+                                        </Button>
+                                    </form>
+                                </Form>
+                                
+                                <Button
+                                    onClick={handleEnterSession}
+                                    className={cn(
+                                        "w-full h-14 font-black uppercase tracking-tighter rounded-xl transition-all",
+                                        isIdConfirmed && isOnline ? "bg-green-600 text-white hover:bg-green-700 animate-bounce mt-2" : ""
                                     )}
-                                />
-                                <Button type="submit" className="w-full h-12 font-black uppercase tracking-tighter bg-primary text-black hover:bg-primary/90" disabled={isSubmitting || isIdConfirmed}>
-                                    {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : (isIdConfirmed ? 'ID Confirmado' : 'Confirmar ID')}
+                                    disabled={!isIdConfirmed}
+                                    variant={isIdConfirmed ? 'default' : 'outline'}
+                                >
+                                    <TrendingUp className="h-5 w-5 mr-2" /> Entrar na Sala VIP
                                 </Button>
-                            </form>
-                        </Form>
-                         <Button
-                            onClick={handleEnterSession}
-                            className="w-full h-12 font-black uppercase tracking-tighter"
-                            disabled={!isIdConfirmed}
-                            variant={isIdConfirmed ? 'default' : 'outline'}
-                        >
-                            Entrar na Sala VIP
-                        </Button>
-                    </CardContent>
-                </Card>
-                <footer className="w-full text-center text-xs text-foreground/50 p-4 mt-8">
-                  <p>© 2026 ESTRATÉGIA CHINESA • Todos os direitos reservados.</p>
-                </footer>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <div className="bg-white/5 border border-white/5 rounded-2xl p-4 flex items-start gap-4">
+                        <div className="p-2 bg-primary/10 rounded-lg"><Trophy className="h-5 w-5 text-primary" /></div>
+                        <div>
+                            <h4 className="text-xs font-black uppercase tracking-wider">Como funciona?</h4>
+                            <p className="text-[0.7rem] text-muted-foreground mt-1 leading-relaxed">
+                                A Sessão Chinesa ocorre de segunda a sexta. O analista envia as operações em tempo real para você copiar e lucrar. É obrigatório estar cadastrado pelo nosso link para ter o ID validado.
+                            </p>
+                        </div>
+                    </div>
+
+                    <footer className="text-center space-y-2">
+                      <p className="text-[0.6rem] font-black text-muted-foreground uppercase tracking-[0.2em] opacity-40">© 2026 ESTRATÉGIA CHINESA • V.PRO</p>
+                    </footer>
+                </div>
             </div>
 
             <Dialog open={isFailureAlertOpen} onOpenChange={setFailureAlertOpen}>
-                <DialogContent className="bg-[#0a0a0a] border-white/10">
+                <DialogContent className="bg-[#0a0a0a] border-white/10 max-w-sm rounded-3xl">
                     <DialogHeader className="text-center items-center">
-                        <XCircle className="h-12 w-12 text-destructive mb-2"/>
-                        <DialogTitle className="font-headline text-2xl font-black uppercase">Falha no Acesso</DialogTitle>
-                        <DialogDescription className="text-sm">
-                            Este ID não está registado sob o nosso link de afiliado. É necessário criar uma nova conta e realizar um depósito para aceder à Sessão Chinesa.
+                        <div className="bg-red-500/10 p-4 rounded-full mb-2">
+                            <XCircle className="h-12 w-12 text-red-500"/>
+                        </div>
+                        <DialogTitle className="font-headline text-2xl font-black uppercase tracking-tighter">ID Não Encontrado</DialogTitle>
+                        <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
+                            Este ID não está registado sob o nosso link de afiliado. Para aceder à Sessão Chinesa, é necessário criar uma nova conta através dos botões abaixo.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="flex flex-col gap-2 sm:flex-col sm:space-x-0 pt-4">
-                        <Button asChild className="w-full h-11 font-bold">
+                        <Button asChild className="w-full h-12 font-black uppercase tracking-tighter bg-white text-black hover:bg-white/90">
                             <AffiliateLink href={config?.exnovaUrl || '#'} target="_blank">
-                                Cadastrar na Exnova
+                                Abrir Conta Exnova
                             </AffiliateLink>
                         </Button>
-                         <Button asChild variant="outline" className="w-full h-11 font-bold">
+                         <Button asChild variant="outline" className="w-full h-12 font-black uppercase tracking-tighter border-white/10">
                             <AffiliateLink href={config?.iqOptionUrl || '#'} target="_blank">
-                                Cadastrar na IQ Option
+                                Abrir Conta IQ Option
                             </AffiliateLink>
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </>
+        </div>
     );
 }

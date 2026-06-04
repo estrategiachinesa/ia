@@ -1,16 +1,13 @@
-
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useFirebase } from '@/firebase';
-import { useAppConfig } from '@/firebase/config-provider';
 import { useAffiliateRouter } from '@/hooks/use-affiliate-router';
 import { 
   Card, 
   CardContent, 
   CardHeader, 
-  CardTitle, 
-  CardDescription 
+  CardTitle 
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -25,13 +22,13 @@ import {
   Loader2, 
   FileSearch, 
   Copy, 
-  CheckCircle2, 
   ArrowLeft, 
   LineChart,
   Zap,
   TrendingUp,
   TrendingDown,
-  Clock
+  Clock,
+  Check
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { CurrencyFlags } from '@/components/app/currency-flags';
@@ -49,69 +46,108 @@ interface Signal {
   timeframe: Timeframe;
 }
 
+const AVAILABLE_ASSETS: Asset[] = ['EUR/USD', 'EUR/USD (OTC)', 'EUR/JPY', 'EUR/JPY (OTC)'];
+
+// Deterministic Direction Generator
+function getDeterministicDirection(asset: string, time: string, dateStr: string): 'CALL 🔼' | 'PUT 🔽' {
+  const seed = asset + time + dateStr;
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = ((hash << 5) - hash) + seed.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash) % 2 === 0 ? 'CALL 🔼' : 'PUT 🔽';
+}
+
 export default function CatalogadorPage() {
-  const { user, isUserLoading } = useFirebase();
+  const { isUserLoading } = useFirebase();
   const router = useAffiliateRouter();
   const { toast } = useToast();
   
   const [isLoading, setIsLoading] = useState(false);
   const [timeframe, setTimeframe] = useState<Timeframe>('5m');
-  const [asset, setAsset] = useState<Asset>('EUR/USD');
+  const [selectedAssets, setSelectedAssets] = useState<Asset[]>(['EUR/USD']);
   const [direction, setDirection] = useState<Direction>('BOTH');
   const [quantity, setQuantity] = useState('10');
   const [signals, setSignals] = useState<Signal[]>([]);
+
+  const toggleAsset = (asset: Asset) => {
+    setSelectedAssets(prev => 
+      prev.includes(asset) 
+        ? (prev.length > 1 ? prev.filter(a => a !== asset) : prev) 
+        : [...prev, asset]
+    );
+  };
 
   const handleGenerate = async () => {
     setIsLoading(true);
     setSignals([]);
 
-    // Simulação de processamento de IA/Estatística
-    await new Promise(resolve => setTimeout(resolve, 2500));
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
     const newSignals: Signal[] = [];
-    const now = new Date();
-    // Arredonda para os próximos 5 minutos para começar
-    now.setMinutes(Math.ceil(now.getMinutes() / 5) * 5, 0, 0);
+    const today = new Date();
+    const dateStr = today.toDateString();
+    
+    // Base time: next round 5 minutes
+    const startTime = new Date(today);
+    startTime.setMinutes(Math.ceil(startTime.getMinutes() / 5) * 5, 0, 0);
 
-    for (let i = 0; i < parseInt(quantity); i++) {
-      // Incrementa o horário em intervalos de 20 a 30 minutos
-      const interval = 20 + Math.floor(Math.random() * 11);
-      now.setMinutes(now.getMinutes() + interval);
+    const qty = parseInt(quantity);
+    const signalsPerAsset = Math.max(1, Math.floor(qty / selectedAssets.length));
 
-      let finalDir: 'CALL 🔼' | 'PUT 🔽';
-      if (direction === 'BOTH') {
-        finalDir = Math.random() > 0.5 ? 'CALL 🔼' : 'PUT 🔽';
-      } else {
-        finalDir = direction === 'CALL' ? 'CALL 🔼' : 'PUT 🔽';
+    selectedAssets.forEach((assetName) => {
+      const assetTime = new Date(startTime);
+      for (let i = 0; i < signalsPerAsset; i++) {
+        // Deterministic intervals: 20, 25 or 30 mins based on asset and index
+        const interval = [20, 25, 30][(assetName.length + i) % 3];
+        assetTime.setMinutes(assetTime.getMinutes() + interval);
+
+        const timeStr = assetTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        
+        let finalDir: 'CALL 🔼' | 'PUT 🔽';
+        const detDir = getDeterministicDirection(assetName, timeStr, dateStr);
+
+        if (direction === 'BOTH') {
+          finalDir = detDir;
+        } else {
+          finalDir = direction === 'CALL' ? 'CALL 🔼' : 'PUT 🔽';
+        }
+
+        newSignals.push({
+          id: `${assetName}-${timeStr}-${i}`,
+          time: timeStr,
+          asset: assetName,
+          direction: finalDir,
+          timeframe: timeframe
+        });
       }
+    });
 
-      newSignals.push({
-        id: Math.random().toString(36).substr(2, 9),
-        time: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        asset: asset,
-        direction: finalDir,
-        timeframe: timeframe
-      });
-    }
-
-    setSignals(newSignals);
+    // Sort all by time
+    setSignals(newSignals.sort((a, b) => a.time.localeCompare(b.time)));
     setIsLoading(false);
     toast({
       title: 'Lista Gerada!',
-      description: `${quantity} sinais catalogados para ${asset}.`,
+      description: `Sinais catalogados com sucesso para ${selectedAssets.length} ativos.`,
     });
   };
 
+  const copyToClipboard = (text: string, title: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title, description: 'Copiado para a área de transferência.' });
+  };
+
+  const handleCopySingleSignal = (s: Signal) => {
+    const text = `🎯 SINAL ESTRATÉGIA CHINESA\n⏰ HORA: ${s.time}\n📊 ATIVO: ${s.asset}\n⏱️ TF: ${s.timeframe}\n🚀 DIREÇÃO: ${s.direction}`;
+    copyToClipboard(text, 'Sinal Copiado!');
+  };
+
   const handleCopyList = () => {
-    const header = `📊 LISTA DE SINAIS - ESTRATÉGIA CHINESA\n🎯 ATIVO: ${asset}\n⏱️ TIMEFRAME: ${timeframe}\n\n`;
+    const header = `📊 LISTA DE SINAIS - ESTRATÉGIA CHINESA\n🎯 ATIVOS: ${selectedAssets.join(', ')}\n⏱️ TIMEFRAME: ${timeframe}\n\n`;
     const list = signals.map(s => `${s.time} - ${s.asset} - ${s.direction}`).join('\n');
     const footer = `\n\n⚠️ Opere sempre com gestão de risco.`;
-    
-    navigator.clipboard.writeText(header + list + footer);
-    toast({
-      title: 'Copiado!',
-      description: 'A lista de sinais foi copiada para a área de transferência.',
-    });
+    copyToClipboard(header + list + footer, 'Lista Completa Copiada!');
   };
 
   if (isUserLoading) {
@@ -132,16 +168,15 @@ export default function CatalogadorPage() {
              </Button>
              <div className="flex flex-col">
                 <h1 className="text-lg font-black uppercase tracking-tighter text-primary">Catalogador PRO</h1>
-                <p className="text-[0.6rem] font-bold opacity-40 uppercase tracking-widest">Geração de Listas</p>
+                <p className="text-[0.6rem] font-bold opacity-40 uppercase tracking-widest">Sinais Determinísticos</p>
              </div>
           </div>
           <Zap className="h-5 w-5 text-primary animate-pulse" />
         </div>
       </header>
 
-      <main className="container mx-auto p-4 md:p-8 max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <main className="container mx-auto p-4 md:p-8 max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* CONFIGURATION PANEL */}
         <div className="lg:col-span-4 space-y-6">
           <Card className="bg-card/40 border-white/5 shadow-2xl backdrop-blur-xl">
             <CardHeader>
@@ -170,18 +205,26 @@ export default function CatalogadorPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[0.65rem] font-bold uppercase opacity-60">Ativo</Label>
-                <Select value={asset} onValueChange={(v) => setAsset(v as Asset)}>
-                  <SelectTrigger className="bg-white/5 border-white/10 h-11">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-black border-white/10">
-                    <SelectItem value="EUR/USD">EUR/USD</SelectItem>
-                    <SelectItem value="EUR/USD (OTC)">EUR/USD (OTC)</SelectItem>
-                    <SelectItem value="EUR/JPY">EUR/JPY</SelectItem>
-                    <SelectItem value="EUR/JPY (OTC)">EUR/JPY (OTC)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label className="text-[0.65rem] font-bold uppercase opacity-60">Ativos (Selecione um ou mais)</Label>
+                <div className="grid grid-cols-1 gap-2">
+                  {AVAILABLE_ASSETS.map((assetName) => (
+                    <Button
+                      key={assetName}
+                      variant="outline"
+                      onClick={() => toggleAsset(assetName)}
+                      className={cn(
+                        "h-11 justify-between px-4 font-bold text-xs transition-all",
+                        selectedAssets.includes(assetName) ? "bg-primary/20 border-primary text-primary" : "bg-white/5 border-white/5"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <CurrencyFlags asset={assetName} />
+                        {assetName}
+                      </div>
+                      {selectedAssets.includes(assetName) && <Check className="h-4 w-4" />}
+                    </Button>
+                  ))}
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -209,13 +252,13 @@ export default function CatalogadorPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[0.65rem] font-bold uppercase opacity-60">Quantidade de Sinais</Label>
+                <Label className="text-[0.65rem] font-bold uppercase opacity-60">Quantidade Total</Label>
                 <Select value={quantity} onValueChange={setQuantity}>
                   <SelectTrigger className="bg-white/5 border-white/10 h-11 font-mono">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-black border-white/10">
-                    {[1, 5, 10, 15, 20, 24].map(q => (
+                    {[5, 10, 15, 20, 24].map(q => (
                       <SelectItem key={q} value={q.toString()} className="font-mono">{q} Sinais</SelectItem>
                     ))}
                   </SelectContent>
@@ -233,17 +276,16 @@ export default function CatalogadorPage() {
           </Card>
         </div>
 
-        {/* RESULTS AREA */}
         <div className="lg:col-span-8 space-y-6">
           <Card className="bg-card/30 border-white/5 min-h-[600px] flex flex-col">
             <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/5">
                <div className="flex items-center gap-3">
                   <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                  <h2 className="text-sm font-black uppercase tracking-widest">Sinais Catalogados</h2>
+                  <h2 className="text-sm font-black uppercase tracking-widest">Sinais Gerados</h2>
                </div>
                {signals.length > 0 && (
                  <Button variant="outline" size="sm" onClick={handleCopyList} className="bg-primary/10 border-primary/20 text-primary hover:bg-primary hover:text-black">
-                   <Copy className="h-4 w-4 mr-2" /> Copiar Lista
+                   <Copy className="h-4 w-4 mr-2" /> Copiar Lista Completa
                  </Button>
                )}
             </div>
@@ -253,18 +295,20 @@ export default function CatalogadorPage() {
                     {signals.map((signal) => (
                       <div 
                         key={signal.id} 
-                        className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-primary/30 transition-all group"
+                        onClick={() => handleCopySingleSignal(signal)}
+                        className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5 hover:border-primary/30 cursor-pointer transition-all group relative overflow-hidden"
                       >
-                         <div className="flex items-center gap-4">
+                         <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                         <div className="flex items-center gap-4 relative z-10">
                             <div className="p-3 bg-black/40 rounded-xl border border-white/5 group-hover:border-primary/20 transition-all">
                                <Clock className="h-4 w-4 text-primary" />
                             </div>
                             <div className="flex flex-col">
                                <span className="text-lg font-black font-mono tracking-tighter">{signal.time}</span>
-                               <span className="text-[0.6rem] font-bold uppercase opacity-30">Início da Vela</span>
+                               <span className="text-[0.6rem] font-bold uppercase opacity-30">{signal.timeframe}</span>
                             </div>
                          </div>
-                         <div className="text-right flex flex-col items-end gap-1">
+                         <div className="text-right flex flex-col items-end gap-1 relative z-10">
                             <div className="flex items-center gap-2">
                                <CurrencyFlags asset={signal.asset} />
                                <span className="text-xs font-black uppercase">{signal.asset}</span>
@@ -278,22 +322,20 @@ export default function CatalogadorPage() {
                               {signal.direction}
                             </span>
                          </div>
+                         <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-30 transition-opacity">
+                            <Copy className="h-3 w-3" />
+                         </div>
                       </div>
                     ))}
                  </div>
                ) : (
                  <div className="flex-grow flex flex-col items-center justify-center text-center opacity-20 py-20">
                     <LineChart className="h-20 w-20 mb-6 stroke-[1px]" />
-                    <h3 className="text-xl font-black uppercase tracking-tighter">Nenhuma lista gerada</h3>
-                    <p className="text-sm font-bold max-w-xs mt-2 uppercase tracking-widest">Ajuste os filtros e clique no botão para iniciar a catalogação estatística.</p>
+                    <h3 className="text-xl font-black uppercase tracking-tighter">Pronto para Catalogar</h3>
+                    <p className="text-sm font-bold max-w-xs mt-2 uppercase tracking-widest">Sinais gerados via IA são idênticos para todos os operadores.</p>
                  </div>
                )}
             </CardContent>
-            {signals.length > 0 && (
-              <div className="p-4 bg-white/5 border-t border-white/5 text-center">
-                 <p className="text-[0.6rem] font-black uppercase text-muted-foreground tracking-widest">Processado via Inteligência Artificial v.2026</p>
-              </div>
-            )}
           </Card>
         </div>
 

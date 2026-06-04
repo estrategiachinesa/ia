@@ -3,6 +3,7 @@
 import React, { createContext, useContext, ReactNode, useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { doc, onSnapshot, collection, updateDoc, increment, getDoc, setDoc } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 import { initializeFirebase } from '.';
 
 // Define the shape of the configuration object
@@ -91,13 +92,18 @@ const AffiliateIdManager: React.FC<{
 };
 
 export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: string | null }> = ({ children, affiliateId }) => {
-  const { firestore } = initializeFirebase();
+  const { firestore, auth } = initializeFirebase();
   const [config, setConfig] = useState<AppConfig>(defaultConfig);
   const [isConfigLoading, setIsConfigLoading] = useState(true);
   const [configError, setConfigError] = useState<Error | null>(null);
 
   const trackCheckoutClick = useCallback(async () => {
     if (!firestore) return;
+    
+    // Don't track clicks from admin account
+    const currentUser = auth.currentUser;
+    if (currentUser?.email === 'chines@trader.com') return;
+
     const path = window.location.pathname;
     const fieldName = `clicks_${path.replace(/\//g, '') || 'home'}`;
     
@@ -110,15 +116,18 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
     } catch (e) {
         console.error("Tracking checkout click failed", e);
     }
-  }, [firestore]);
+  }, [firestore, auth]);
 
   useEffect(() => {
     if (!firestore) return;
 
-    // Tracker logic: increment visit count once per session per page
     const trackVisit = async () => {
         const path = window.location.pathname;
-        if (path.startsWith('/adm')) return; // Don't track admin visits
+        if (path.startsWith('/adm')) return; 
+
+        // Don't track visits from admin account
+        const currentUser = auth.currentUser;
+        if (currentUser?.email === 'chines@trader.com') return;
 
         const sessionKey = `visited_${path.replace(/\//g, '_')}`;
         const hasTracked = sessionStorage.getItem(sessionKey);
@@ -132,7 +141,6 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
                     [fieldName]: increment(1) 
                 };
 
-                // Regra: Total Visitas no dashboard admin (campo visitCount) é só para a página /vip
                 if (path === '/vip') {
                     updates.visitCount = increment(1);
                 }
@@ -157,7 +165,6 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
 
     const unsubscribers: (() => void)[] = [];
 
-    // Real-time listener for appConfig documents
     const docPaths = ['links', 'limitation', 'time', 'remoteValues', 'registration', 'offer', 'analytics'];
     
     let loadedDocs = 0;
@@ -185,7 +192,6 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
             },
             (err) => {
                 console.error(`Error loading config ${path}:`, err);
-                // Don't set global config error for missing optional docs
                 if (loadedDocs < totalDocs) {
                     loadedDocs++;
                     if (loadedDocs === totalDocs) setIsConfigLoading(false);
@@ -195,7 +201,6 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
         unsubscribers.push(unsub);
     });
 
-    // Real-time listener for affiliates
     const unsubAffiliates = onSnapshot(collection(firestore, 'affiliates'), 
         (snap) => {
             const affiliatesData: { [key: string]: string } = {};
@@ -220,7 +225,7 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
         unsubscribers.forEach(unsub => unsub());
         clearTimeout(timeout);
     };
-  }, [firestore]);
+  }, [firestore, auth]);
 
   return (
     <ConfigContext.Provider value={{ config, isConfigLoading, configError, affiliateId: affiliateId || null, trackCheckoutClick }}>

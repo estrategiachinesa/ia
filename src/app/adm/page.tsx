@@ -1,53 +1,34 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
 import { useFirebase, useCollection, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, doc, updateDoc, deleteDoc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
-import { sendPasswordResetEmail } from 'firebase/auth';
+import { collection, doc, deleteDoc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { 
   Loader2, 
   LogOut,
   Search,
   ChevronDown,
   ChevronUp,
-  CheckCircle2,
-  ShieldAlert,
   Key,
-  Trash2,
   LayoutDashboard,
-  UserCheck,
-  UserX,
   ArrowUpDown,
   MoreVertical,
-  Mail,
-  AlertCircle,
   Settings2,
   Save,
-  Zap,
-  LockKeyhole,
-  Activity,
-  RefreshCw,
-  Timer,
-  SlidersHorizontal,
-  Download,
-  Filter,
-  UserCircle,
-  CreditCard,
-  Ban,
-  Users,
-  Star,
-  ShieldOff,
-  XCircle,
-  Sparkles,
-  Eye,
-  MousePointer2,
-  Info,
-  ExternalLink,
-  History,
   Tv,
   Plus,
-  Link as LinkIcon
+  Link as LinkIcon,
+  MousePointer2,
+  Eye,
+  EyeOff,
+  Copy,
+  History,
+  Users,
+  Timer,
+  Star,
+  Ban,
+  ShieldOff,
+  UserPlus
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -78,13 +59,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { 
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
@@ -115,21 +89,18 @@ export default function AdminDashboard() {
 
   const [isConfigSaving, setIsConfigSaving] = useState(false);
   const [regSecret, setRegSecret] = useState('');
+  const [showSecret, setShowSecret] = useState(false);
   const [invertSignals, setInvertSignals] = useState(false);
   const [signalLimit, setSignalLimit] = useState(3);
   
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
-  const [isAnalyticsModalOpen, setIsAnalyticsModalOpen] = useState(false);
-  const [analyticsType, setAnalyticsType] = useState<'VISITS' | 'CLICKS'>('VISITS');
-
   const [zoomLink, setZoomLink] = useState('');
   const [isSavingLink, setIsSavingLink] = useState(false);
 
   const isAdmin = user && ADMIN_EMAILS.includes(user.email || '');
 
-  // Session Management State
   const sessionStatusRef = useMemoFirebase(() => firestore ? doc(firestore, 'session', 'status') : null, [firestore]);
   const sessionScoreRef = useMemoFirebase(() => firestore ? doc(firestore, 'session', 'monthly_score') : null, [firestore]);
   const { data: sessionStatus } = useDoc(sessionStatusRef);
@@ -206,6 +177,17 @@ export default function AdminDashboard() {
       setIsResetDialogOpen(false);
     } catch (e) { toast({ variant: 'destructive', title: 'Erro ao Resetar' }); }
     finally { setIsResetting(false); }
+  };
+
+  const handleCopySecret = () => {
+    navigator.clipboard.writeText(regSecret);
+    toast({ title: 'Copiado!', description: 'Chave de registo copiada.' });
+  };
+
+  const handleCopyRegisterLink = () => {
+    const link = window.location.origin + '/register';
+    navigator.clipboard.writeText(link);
+    toast({ title: 'Copiado!', description: 'Link de cadastro copiado.' });
   };
 
   const usersQuery = useMemoFirebase(() => {
@@ -356,11 +338,10 @@ export default function AdminDashboard() {
       <main className="container mx-auto p-6 space-y-8">
         
         {/* STATS BAR */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
              {[
+                 { label: 'Cliques Totais', value: config?.checkoutClickCount || 0, icon: MousePointer2, color: 'text-blue-400' },
                  { label: 'Pendentes', value: stats.pending, icon: Timer, color: 'text-orange-500' },
-                 { label: 'Visitas VIP', value: config?.visitCount || 0, icon: Eye, color: 'text-emerald-500', clickable: true, type: 'VISITS' },
-                 { label: 'Cliques Checkout', value: config?.checkoutClickCount || 0, icon: MousePointer2, color: 'text-blue-400', clickable: true, type: 'CLICKS' },
                  { label: 'Total Membros', value: stats.total, icon: Users, color: 'text-primary' },
                  { label: 'Premium', value: stats.premium, icon: Star, color: 'text-purple-500' },
                  { label: 'Recusados', value: stats.rejected, icon: Ban, color: 'text-red-500' },
@@ -368,8 +349,7 @@ export default function AdminDashboard() {
              ].map((s, i) => (
                 <Card 
                     key={i} 
-                    className={cn("bg-card/30 border-white/5 p-4 flex items-center gap-4 transition-all", s.clickable && "cursor-pointer hover:bg-white/10 active:scale-95")}
-                    onClick={() => { if (s.clickable) { setAnalyticsType(s.type as 'VISITS'); setIsAnalyticsModalOpen(true); } }}
+                    className="bg-card/30 border-white/5 p-4 flex items-center gap-4 transition-all"
                 >
                     <div className={cn("p-2 rounded-xl bg-white/5", s.color)}><s.icon className="h-5 w-5" /></div>
                     <div>
@@ -416,7 +396,6 @@ export default function AdminDashboard() {
                             {isSavingLink ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                           </Button>
                         </div>
-                        <p className="text-[0.5rem] opacity-40 uppercase font-bold italic">Link será exibido aos membros validados</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -447,19 +426,56 @@ export default function AdminDashboard() {
                     </div>
                     <Button variant="destructive" size="sm" onClick={() => setIsResetDialogOpen(true)} className="h-9 px-4 rounded-xl font-bold bg-red-600/10 text-red-500 border border-red-500/20 hover:bg-red-600 hover:text-white"><History className="h-4 w-4 mr-2" /> Zerar Stats</Button>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
-                    <div className="space-y-2">
-                        <Label className="text-[0.6rem] font-bold uppercase opacity-60">Chave de Registo (Secret)</Label>
-                        <Input value={regSecret} onChange={(e) => setRegSecret(e.target.value)} className="bg-white/5 border-white/10 h-11" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-4">
                         <div className="space-y-2">
-                            <Label className="text-[0.6rem] font-bold uppercase opacity-60">Limite Trades</Label>
-                            <Input type="number" value={signalLimit} onChange={(e) => setSignalLimit(parseInt(e.target.value))} className="bg-white/5 border-white/10 h-11" />
+                            <Label className="text-[0.6rem] font-bold uppercase opacity-60">Chave de Registo (Secret)</Label>
+                            <div className="flex gap-2">
+                                <div className="relative flex-grow">
+                                    <Input 
+                                        type={showSecret ? "text" : "password"} 
+                                        value={regSecret} 
+                                        onChange={(e) => setRegSecret(e.target.value)} 
+                                        className="bg-white/5 border-white/10 h-11 pr-10" 
+                                    />
+                                    <button 
+                                        onClick={() => setShowSecret(!showSecret)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 opacity-40 hover:opacity-100 transition-opacity"
+                                    >
+                                        {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </button>
+                                </div>
+                                <Button size="icon" variant="outline" className="h-11 w-11" onClick={handleCopySecret}><Copy className="h-4 w-4" /></Button>
+                            </div>
                         </div>
-                        <Button onClick={handleSaveConfigs} disabled={isConfigSaving} className="h-11 font-black uppercase tracking-tighter bg-primary text-black">
-                            {isConfigSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />} Salvar
-                        </Button>
+                        
+                        <div className="space-y-2">
+                            <Label className="text-[0.6rem] font-bold uppercase opacity-60">Link de Cadastro</Label>
+                            <Button variant="outline" className="w-full h-11 justify-start font-mono text-[0.65rem] bg-white/5 border-white/10" onClick={handleCopyRegisterLink}>
+                                <UserPlus className="h-4 w-4 mr-2 text-primary" /> Copiar Link de Registro
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                         <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
+                            <div className="flex flex-col">
+                                <span className="text-xs font-bold uppercase">Inverter Sinais</span>
+                                <span className="text-[0.55rem] opacity-40 uppercase">Apenas Modo PREMIUM</span>
+                            </div>
+                            <Switch checked={invertSignals} onCheckedChange={setInvertSignals} />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 items-end">
+                            <div className="space-y-2">
+                                <Label className="text-[0.6rem] font-bold uppercase opacity-60">Limite Trades</Label>
+                                <Input type="number" value={signalLimit} onChange={(e) => setSignalLimit(parseInt(e.target.value))} className="bg-white/5 border-white/10 h-11" />
+                            </div>
+                            <Button onClick={handleSaveConfigs} disabled={isConfigSaving} className="h-11 font-black uppercase tracking-tighter bg-primary text-black">
+                                {isConfigSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />} Salvar
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </Card>
@@ -530,7 +546,7 @@ export default function AdminDashboard() {
         <AlertDialogContent className="bg-[#0d0d0d] border-white/10">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-red-500 font-black uppercase">Zerar Estatísticas?</AlertDialogTitle>
-            <AlertDialogDescription className="text-sm">Esta ação limpará todos os contadores de Visitas e Cliques acumulados até ao momento.</AlertDialogDescription>
+            <AlertDialogDescription className="text-sm">Esta ação limpará todos os contadores de Cliques acumulados até ao momento.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="bg-white/5 border-white/10">Cancelar</AlertDialogCancel>

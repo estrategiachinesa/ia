@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -28,10 +29,13 @@ import {
   Star,
   Ban,
   ShieldOff,
+  ShieldCheck,
   UserPlus,
   AlertCircle,
   Zap,
-  BarChart3
+  BarChart3,
+  Trash2,
+  Crown
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -237,8 +241,19 @@ export default function AdminDashboard() {
     const isPremiumStatus = newStatus === 'PREMIUM' || newStatus === 'APPROVED';
     const subStatus = isPremiumStatus ? 'ACTIVE' : 'INACTIVE';
     try {
-      await setDoc(doc(firestore, 'vipRequests', userId), { status: newStatus, userId, userEmail: email === '---' ? "" : email, updatedAt: serverTimestamp() }, { merge: true });
-      await setDoc(doc(firestore, 'users', userId), { subscriptionStatus: subStatus, email: email === '---' ? "" : email, updatedAt: serverTimestamp() }, { merge: true });
+      await setDoc(doc(firestore, 'vipRequests', userId), { 
+        status: newStatus, 
+        userId, 
+        userEmail: email === '---' ? "" : email, 
+        updatedAt: serverTimestamp() 
+      }, { merge: true });
+      
+      await setDoc(doc(firestore, 'users', userId), { 
+        subscriptionStatus: subStatus, 
+        email: email === '---' ? "" : email, 
+        updatedAt: serverTimestamp() 
+      }, { merge: true });
+      
       toast({ title: 'Plano Atualizado' });
     } catch (e) { toast({ variant: 'destructive', title: 'Erro' }); }
   };
@@ -583,10 +598,28 @@ export default function AdminDashboard() {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 rounded-full"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-black/95 border-white/10">
-                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'APPROVED', u.email)} className="text-xs font-bold text-purple-400">Aprovar PREMIUM</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleToggleAccount(u.id, u.accountStatus, u.email)} className="text-xs">{u.accountStatus === 'DISABLED' ? 'Ativar Conta' : 'Suspender Conta'}</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'APPROVED', u.email)} className="text-xs font-bold text-purple-400">
+                          <Crown className="h-3.5 w-3.5 mr-2" /> Tornar PREMIUM
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'REJECTED', u.email)} className="text-xs text-red-400">
+                          <Ban className="h-3.5 w-3.5 mr-2" /> Recusar PREMIUM
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'PENDING', u.email)} className="text-xs text-orange-400">
+                          <Timer className="h-3.5 w-3.5 mr-2" /> Voltar PENDENTE
+                        </DropdownMenuItem>
+                        
                         <DropdownMenuSeparator className="bg-white/5" />
-                        <DropdownMenuItem className="text-destructive text-xs font-bold" onClick={() => setDeleteUserId(u.id)}>Excluir</DropdownMenuItem>
+                        
+                        <DropdownMenuItem onClick={() => handleToggleAccount(u.id, u.accountStatus, u.email)} className="text-xs">
+                          {u.accountStatus === 'DISABLED' ? <ShieldCheck className="h-3.5 w-3.5 mr-2" /> : <ShieldOff className="h-3.5 w-3.5 mr-2" />}
+                          {u.accountStatus === 'DISABLED' ? 'Ativar Conta' : 'Suspender Conta'}
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuSeparator className="bg-white/5" />
+                        
+                        <DropdownMenuItem className="text-destructive text-xs font-bold" onClick={() => setDeleteUserId(u.id)}>
+                          <Trash2 className="h-3.5 w-3.5 mr-2" /> Excluir Total
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -632,6 +665,21 @@ export default function AdminDashboard() {
             </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!deleteUserId} onOpenChange={(open) => !open && setDeleteUserId(null)}>
+        <AlertDialogContent className="bg-[#0d0d0d] border-white/10">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-red-500 font-black uppercase">Excluir Utilizador?</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm">Esta ação é irreversível e apagará todos os dados de perfil e pedidos VIP deste membro.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-white/5 border-white/10">Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteUser} disabled={isDeleting} className="bg-red-600 text-white hover:bg-red-700">
+               {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirmar Exclusão'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

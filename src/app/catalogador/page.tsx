@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useFirebase } from '@/firebase';
+import { useFirebase, useMemoFirebase } from '@/firebase';
 import { useAffiliateRouter } from '@/hooks/use-affiliate-router';
 import { 
   Card, 
@@ -32,7 +32,8 @@ import {
   Target,
   BarChart4,
   Activity,
-  Layers
+  Layers,
+  Search
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { CurrencyFlags } from '@/components/app/currency-flags';
@@ -40,6 +41,7 @@ import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import { generateSignal, Asset, ExpirationTime } from '@/lib/signal-generator';
 import { useAppConfig } from '@/firebase/config-provider';
+import { Badge } from '@/components/ui/badge';
 
 type Timeframe = ExpirationTime;
 type Direction = 'CALL' | 'PUT' | 'BOTH';
@@ -69,7 +71,7 @@ const SCAN_STEPS = [
 ];
 
 export default function CatalogadorPage() {
-  const { isUserLoading } = useFirebase();
+  const { user, isUserLoading } = useFirebase();
   const { config } = useAppConfig();
   const router = useAffiliateRouter();
   const { toast } = useToast();
@@ -83,6 +85,13 @@ export default function CatalogadorPage() {
   const [direction, setDirection] = useState<Direction>('BOTH');
   const [quantity, setQuantity] = useState('12');
   const [signals, setSignals] = useState<Signal[]>([]);
+
+  // Bloqueio de acesso para não logados
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isUserLoading, router]);
 
   const toggleAsset = (asset: Asset) => {
     setSelectedAssets(prev => 
@@ -117,7 +126,6 @@ export default function CatalogadorPage() {
     const newSignals: Signal[] = [];
     const now = new Date();
     
-    // Inicia no próximo bloco exato (mesma lógica do analisador)
     const startTime = new Date(now);
     const intervalMinutes = timeframe === '1m' ? 1 : 5;
     
@@ -137,7 +145,6 @@ export default function CatalogadorPage() {
     selectedAssets.forEach((assetName) => {
       const assetTime = new Date(startTime);
       for (let i = 0; i < signalsPerAsset; i++) {
-        // Gera o sinal usando o motor central unificado
         const result = generateSignal({
             asset: assetName,
             expirationTime: timeframe,
@@ -145,7 +152,6 @@ export default function CatalogadorPage() {
             invertSignal: config?.invertSignal
         });
 
-        // Filtro de direção
         const matchesDirection = direction === 'BOTH' || 
                                (direction === 'CALL' && result.signal.includes('CALL')) ||
                                (direction === 'PUT' && result.signal.includes('PUT'));
@@ -163,7 +169,6 @@ export default function CatalogadorPage() {
             });
         }
 
-        // Avança o tempo para o próximo sinal (intervalos de 20-30 min para realismo)
         const gap = 15 + (Math.abs(assetTime.getTime()) % 15);
         assetTime.setMinutes(assetTime.getMinutes() + gap);
       }
@@ -195,7 +200,7 @@ export default function CatalogadorPage() {
     copyToClipboard(header + list + footer, 'Lista VIP Copiada!');
   };
 
-  if (isUserLoading) {
+  if (isUserLoading || !user) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-[#0a0a0a]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -213,7 +218,7 @@ export default function CatalogadorPage() {
              </Button>
              <div className="flex flex-col">
                 <h1 className="text-lg font-black uppercase tracking-tighter text-primary flex items-center gap-2">
-                   Catalogador PRO <Badge className="bg-primary/20 text-primary border-none text-[0.5rem] px-1.5 h-4">ELITE SYNC</Badge>
+                   Scanner de Elite <Badge variant="outline" className="bg-primary/20 text-primary border-none text-[0.5rem] px-1.5 h-4">ELITE SYNC</Badge>
                 </h1>
                 <p className="text-[0.6rem] font-bold opacity-40 uppercase tracking-widest">Sincronizado com Analisador Live</p>
              </div>
@@ -232,7 +237,7 @@ export default function CatalogadorPage() {
             <div className="h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent w-full" />
             <CardHeader className="pb-4 pt-6 px-6">
               <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2 opacity-70">
-                <Cpu className="h-4 w-4 text-primary" /> Configurar Varredura
+                <Cpu className="h-4 w-4 text-primary" /> Configurar Scanner
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6 px-6 pb-8">
@@ -323,7 +328,7 @@ export default function CatalogadorPage() {
                 disabled={isLoading}
                 className="w-full h-14 bg-primary text-black font-black uppercase tracking-tighter text-base shadow-2xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all rounded-xl"
               >
-                {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : 'Sincronizar Lista VIP'}
+                {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : 'Sincronizar Scanner'}
               </Button>
             </CardContent>
           </Card>
@@ -352,16 +357,6 @@ export default function CatalogadorPage() {
                     </div>
                     <Progress value={progress} className="h-2 bg-white/5 border border-white/5 rounded-full" />
                   </div>
-                  <div className="grid grid-cols-2 gap-4 w-full max-w-sm text-center">
-                     <div className="flex flex-col items-center gap-1">
-                        <Layers className="h-4 w-4 text-primary/40" />
-                        <span className="text-[0.55rem] font-bold text-muted-foreground/60 uppercase">Multi-Layer Sync</span>
-                     </div>
-                     <div className="flex flex-col items-center gap-1">
-                        <Target className="h-4 w-4 text-primary/40" />
-                        <span className="text-[0.55rem] font-bold text-muted-foreground/60 uppercase">Real-Time Core</span>
-                     </div>
-                  </div>
                </div>
             ) : signals.length > 0 ? (
                <>
@@ -386,7 +381,6 @@ export default function CatalogadorPage() {
                           className="flex items-center justify-between p-5 bg-card/50 backdrop-blur-xl rounded-2xl border border-white/5 hover:border-primary/40 cursor-pointer transition-all group relative overflow-hidden active:scale-95 shadow-xl"
                         >
                            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                           <div className="absolute bottom-0 left-0 h-[3px] bg-primary/20 w-full opacity-20" />
                            
                            <div className="flex items-center gap-4 relative z-10">
                               <div className="p-3.5 bg-black/60 rounded-xl border border-white/5 group-hover:border-primary/30 transition-all shadow-inner">
@@ -422,7 +416,6 @@ export default function CatalogadorPage() {
                                    <span className="text-[0.65rem] font-black text-primary">{signal.accuracy}%</span>
                                 </div>
                               </div>
-                              <span className="text-[0.5rem] font-bold text-muted-foreground/30 uppercase tracking-[0.1em]">{signal.strategy}</span>
                            </div>
                         </div>
                       ))}
@@ -439,14 +432,10 @@ export default function CatalogadorPage() {
                     </div>
                   </div>
                   <div className="space-y-2 max-w-sm">
-                      <h3 className="text-2xl font-black uppercase tracking-tighter">Sistema Core Sincronizado</h3>
+                      <h3 className="text-2xl font-black uppercase tracking-tighter">Scanner de Elite Sincronizado</h3>
                       <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest leading-relaxed opacity-60">
                         Escolha os ativos e o timeframe. A lista gerada será idêntica à análise em tempo real do Analisador Live.
                       </p>
-                  </div>
-                  <div className="flex gap-3 pt-4">
-                    <Badge variant="outline" className="border-white/10 opacity-30">ELITE MODE</Badge>
-                    <Badge variant="outline" className="border-white/10 opacity-30">CORE SYNC</Badge>
                   </div>
                </div>
             )}
@@ -460,7 +449,7 @@ export default function CatalogadorPage() {
             <a href="/analisador">Analisador Live</a>
          </Button>
          <Button variant="ghost" className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-primary relative" disabled>
-            Catalogador PRO
+            Scanner de Elite
             <span className="absolute -top-1 -right-1 flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
@@ -472,16 +461,4 @@ export default function CatalogadorPage() {
       </footer>
     </div>
   );
-}
-
-function Badge({ children, className, variant = "default" }: { children: React.ReactNode, className?: string, variant?: "default" | "outline" }) {
-    return (
-        <span className={cn(
-            "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold transition-colors",
-            variant === "default" ? "bg-primary text-primary-foreground" : "border border-input bg-background",
-            className
-        )}>
-            {children}
-        </span>
-    );
 }

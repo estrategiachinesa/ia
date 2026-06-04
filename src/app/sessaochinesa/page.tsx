@@ -1,12 +1,11 @@
-
 'use client';
 
 import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { doc } from 'firebase/firestore';
-import { Loader2, ShieldCheck, XCircle, CheckCircle, Trophy, TrendingUp, TrendingDown, Radio } from 'lucide-react';
+import { doc, collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { Loader2, ShieldCheck, XCircle, CheckCircle, Trophy, TrendingUp, Radio } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -21,7 +20,6 @@ import {
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import {
@@ -40,8 +38,8 @@ import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
   userId: z.string()
-  .min(8, {
-    message: 'O ID do usuário deve ter no mínimo 8 caracteres.',
+  .min(5, {
+    message: 'O ID do usuário deve ter no mínimo 5 caracteres.',
   })
   .max(20, {
     message: 'O ID do usuário não pode ter mais de 20 caracteres.',
@@ -136,21 +134,40 @@ export default function SessaoChinesaPage() {
         },
     });
 
-    function onSubmit(values: z.infer<typeof formSchema>) {
+    async function onSubmit(values: z.infer<typeof formSchema>) {
+        if (!firestore) return;
+        
         setIsSubmitting(true);
-        setTimeout(() => {
-            setIsSubmitting(false);
-            if (values.userId.length >= 8) {
+        try {
+            // Busca no banco de dados se o ID da corretora existe na coleção vipRequests
+            const q = query(
+              collection(firestore, 'vipRequests'), 
+              where('brokerId', '==', values.userId),
+              limit(1)
+            );
+            
+            const querySnapshot = await getDocs(q);
+            
+            if (!querySnapshot.empty) {
                 setIsIdConfirmed(true);
                 toast({
                     title: 'Acesso Verificado!',
                     description: 'Seu ID está ativo sob nossa rede. Pode entrar na sala.',
-                })
+                });
             } else {
                 setFailureAlertOpen(true);
                 form.reset();
             }
-        }, 1500);
+        } catch (error) {
+            console.error("Erro ao validar ID:", error);
+            toast({
+                variant: 'destructive',
+                title: 'Erro na Verificação',
+                description: 'Não foi possível validar seu acesso no momento.',
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
     }
     
     function handleEnterSession() {
@@ -176,7 +193,7 @@ export default function SessaoChinesaPage() {
     return (
         <div className="theme-premium">
             <div className="fixed inset-0 -z-20 h-full w-full grid-bg" />
-            <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/90 to-background" />
+            <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/80 to-background" />
 
             <div className="flex flex-col min-h-screen items-center justify-center p-4">
                 <div className="w-full max-w-md space-y-6">
@@ -269,7 +286,7 @@ export default function SessaoChinesaPage() {
                         <div>
                             <h4 className="text-xs font-black uppercase tracking-wider">Como funciona?</h4>
                             <p className="text-[0.7rem] text-muted-foreground mt-1 leading-relaxed">
-                                A Sessão Chinesa ocorre de segunda a sexta. O analista envia as operações em tempo real para você copiar e lucrar. É obrigatório estar cadastrado pelo nosso link para ter o ID validado.
+                                A Sessão Chinesa ocorre de segunda a sexta. O analista envia as operações em tempo real para você copiar e lucrar. É obrigatório estar cadastrado pelo nosso link para ter o ID validado no banco de dados.
                             </p>
                         </div>
                     </div>
@@ -288,7 +305,7 @@ export default function SessaoChinesaPage() {
                         </div>
                         <DialogTitle className="font-headline text-2xl font-black uppercase tracking-tighter">ID Não Encontrado</DialogTitle>
                         <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
-                            Este ID não está registado sob o nosso link de afiliado. Para aceder à Sessão Chinesa, é necessário criar uma nova conta através dos botões abaixo.
+                            Este ID não está registado sob o nosso link de afiliado no banco de dados. Para aceder à Sessão Chinesa, é necessário criar uma nova conta através dos botões abaixo.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="flex flex-col gap-2 sm:flex-col sm:space-x-0 pt-4">

@@ -1,4 +1,3 @@
-
 import { FirebaseClientProvider } from '@/firebase';
 
 export default function SessaoChinesaLayout({
@@ -6,11 +5,10 @@ export default function SessaoChinesaLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // A página de Sessão Chinesa é aberta ao público para validação de ID
   return (
     <FirebaseClientProvider>
-        <div className="theme-premium">
-            {children}
-        </div>
+      {children}
     </FirebaseClientProvider>
   );
 }

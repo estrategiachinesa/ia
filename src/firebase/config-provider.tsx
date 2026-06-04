@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, ReactNode, useState, useEffect, Suspense, useCallback } from 'react';
@@ -186,7 +185,11 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
             },
             (err) => {
                 console.error(`Error loading config ${path}:`, err);
-                setConfigError(err);
+                // Don't set global config error for missing optional docs
+                if (loadedDocs < totalDocs) {
+                    loadedDocs++;
+                    if (loadedDocs === totalDocs) setIsConfigLoading(false);
+                }
             }
         );
         unsubscribers.push(unsub);
@@ -200,6 +203,9 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
                 affiliatesData[doc.id] = doc.data().checkoutUrl;
             });
             setConfig(prev => ({ ...prev, afiliados: affiliatesData }));
+        },
+        (err) => {
+            console.error("Error loading affiliates:", err);
         }
     );
     unsubscribers.push(unsubAffiliates);

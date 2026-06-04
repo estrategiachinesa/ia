@@ -25,7 +25,7 @@ service cloud.firestore {
       allow read: if true;
       // Permite que qualquer pessoa incremente as estatísticas de analytics
       allow create, update: if configDoc == 'analytics' || isAdmin();
-      allow write: if isAdmin();
+      allow delete: if isAdmin();
     }
 
     /**
@@ -57,7 +57,7 @@ service cloud.firestore {
     }
 
     /**
-     * Generic rules for other collections
+     * Generic rules for other public collections
      */
     match /session/{sessionDoc} {
       allow read: if true;

@@ -146,7 +146,7 @@ export default function AdminDashboard() {
 
         if (regSnap.exists()) setRegSecret(regSnap.data().registrationSecret || '');
         if (remoteSnap.exists()) setInvertSignals(remoteSnap.data().invertSignal || false);
-        if (limitSnap.exists()) setSignalLimit(limitSnap.data().hourlySignalLimit || 3);
+        if (limitSnap.exists()) setSignalLimit(remoteSnap.data().hourlySignalLimit || 3);
         if (linksSnap.exists()) setSupportLink(linksSnap.data().supportUrl || '');
       } catch (e) { console.error("Error fetching configs:", e); }
     };
@@ -351,8 +351,13 @@ export default function AdminDashboard() {
       let valB = b[sortConfig.key as keyof typeof b] as any;
       if (valA?.seconds) valA = valA.seconds;
       if (valB?.seconds) valB = valB.seconds;
-      if (valA === null || valA === undefined) valA = 0;
-      if (valB === null || valB === undefined) valB = 0;
+      if (valA === null || valA === undefined) valA = '';
+      if (valB === null || valB === undefined) valB = '';
+      
+      if (typeof valA === 'string' && typeof valB === 'string') {
+          return sortConfig.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      }
+      
       return sortConfig.direction === 'asc' ? (valA < valB ? -1 : 1) : (valA > valB ? -1 : 1);
     });
   }, [rawUsers, rawRequests, searchTerm, sortConfig, activeFilter]);
@@ -627,10 +632,10 @@ export default function AdminDashboard() {
                 <TableHead onClick={() => setSortConfig({ key: 'createdAt', direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })} className="cursor-pointer text-[0.6rem] font-black uppercase">Registo <ArrowUpDown className="inline h-3 w-3 ml-1" /></TableHead>
                 <TableHead onClick={() => setSortConfig({ key: 'email', direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })} className="cursor-pointer text-[0.6rem] font-black uppercase">Membro <ArrowUpDown className="inline h-3 w-3 ml-1" /></TableHead>
                 <TableHead onClick={() => setSortConfig({ key: 'lastActivity', direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })} className="cursor-pointer text-[0.6rem] font-black uppercase">Atividade <ArrowUpDown className="inline h-3 w-3 ml-1" /></TableHead>
-                <TableHead className="text-[0.6rem] font-black uppercase">ID Corretora</TableHead>
+                <TableHead onClick={() => setSortConfig({ key: 'brokerId', direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })} className="cursor-pointer text-[0.6rem] font-black uppercase">ID Corretora <ArrowUpDown className="inline h-3 w-3 ml-1" /></TableHead>
                 <TableHead onClick={() => setSortConfig({ key: 'rating', direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })} className="cursor-pointer text-[0.6rem] font-black uppercase">Avaliação <ArrowUpDown className="inline h-3 w-3 ml-1" /></TableHead>
-                <TableHead className="text-[0.6rem] font-black uppercase">Status</TableHead>
-                <TableHead className="text-[0.6rem] font-black uppercase">Plano</TableHead>
+                <TableHead onClick={() => setSortConfig({ key: 'accountStatus', direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })} className="cursor-pointer text-[0.6rem] font-black uppercase">Status <ArrowUpDown className="inline h-3 w-3 ml-1" /></TableHead>
+                <TableHead onClick={() => setSortConfig({ key: 'rawStatus', direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })} className="cursor-pointer text-[0.6rem] font-black uppercase">Plano <ArrowUpDown className="inline h-3 w-3 ml-1" /></TableHead>
                 <TableHead className="text-right text-[0.6rem] font-black uppercase">Ações</TableHead>
               </TableRow>
             </TableHeader>

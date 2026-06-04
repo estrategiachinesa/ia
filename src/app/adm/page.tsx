@@ -74,7 +74,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/dialog";
+} from "@/components/ui/dialog";
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
@@ -452,7 +452,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="space-y-6">
                     <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
-                        <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
                             <span className="text-xs font-bold uppercase">Status Live</span>
                             <span className={cn("text-[0.6rem] font-black", (sessionStatus as any)?.isOnline ? "text-green-500" : "text-red-500")}>
                                 {(sessionStatus as any)?.isOnline ? 'SESSÃO ONLINE' : 'SESSÃO OFFLINE'}

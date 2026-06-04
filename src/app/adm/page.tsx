@@ -35,7 +35,9 @@ import {
   BarChart3,
   Trash2,
   Crown,
-  Headset
+  Headset,
+  UserCheck,
+  RefreshCcw
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -72,7 +74,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/dialog";
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
@@ -87,7 +89,7 @@ type SortConfig = {
   direction: 'asc' | 'desc';
 };
 
-type QuickFilter = 'ALL' | 'PENDING' | 'PREMIUM' | 'SUSPENDED' | 'REJECTED';
+type QuickFilter = 'ALL' | 'PENDING' | 'PREMIUM' | 'SUSPENDED' | 'REJECTED' | 'DEPOSIT';
 
 export default function AdminDashboard() {
   const { auth, user, isUserLoading, firestore } = useFirebase();
@@ -242,9 +244,23 @@ export default function AdminDashboard() {
 
   const handleUpdateVipStatus = async (userId: string, newStatus: string, email: string) => {
     if (!firestore) return;
-    const isPremiumStatus = newStatus === 'PREMIUM' || newStatus === 'APPROVED';
-    const subStatus = isPremiumStatus ? 'ACTIVE' : 'INACTIVE';
+    
     try {
+      if (newStatus === 'VIP_RESET') {
+        // Reset para VIP (Remove o pedido e volta o plano para ACTIVE)
+        await deleteDoc(doc(firestore, 'vipRequests', userId)).catch(() => {});
+        await setDoc(doc(firestore, 'users', userId), { 
+          subscriptionStatus: 'ACTIVE',
+          updatedAt: serverTimestamp() 
+        }, { merge: true });
+        toast({ title: 'Conta Resetada para VIP' });
+        return;
+      }
+
+      const isPremiumStatus = newStatus === 'PREMIUM' || newStatus === 'APPROVED';
+      const subStatus = isPremiumStatus ? 'ACTIVE' : 'INACTIVE';
+      
+      // Update Vip Request status
       await setDoc(doc(firestore, 'vipRequests', userId), { 
         status: newStatus, 
         userId, 
@@ -252,14 +268,20 @@ export default function AdminDashboard() {
         updatedAt: serverTimestamp() 
       }, { merge: true });
       
+      // Update User Sub status
+      // Nota: Se for APPROVED/PREMIUM, o subscriptionStatus no user.profile costuma ser ACTIVE (indicando que a licença está ok)
+      // O 'PREMIUM' como plano extra é lido através da coleção vipRequests.
       await setDoc(doc(firestore, 'users', userId), { 
         subscriptionStatus: subStatus, 
         email: email === '---' ? "" : email, 
         updatedAt: serverTimestamp() 
       }, { merge: true });
       
-      toast({ title: 'Plano Atualizado' });
-    } catch (e) { toast({ variant: 'destructive', title: 'Erro' }); }
+      toast({ title: 'Status Atualizado' });
+    } catch (e) { 
+        console.error(e);
+        toast({ variant: 'destructive', title: 'Erro ao atualizar' }); 
+    }
   };
 
   const handleDeleteUser = async () => {
@@ -300,7 +322,9 @@ export default function AdminDashboard() {
         subscriptionStatus: vipStatus === 'NENHUM' ? 'VIP' : (vipStatus === 'APPROVED' || vipStatus === 'PREMIUM' ? 'PREMIUM' : vipStatus),
         rawStatus: vipStatus, rating: u?.rating || 0,
         isPremium: vipStatus === 'PREMIUM' || vipStatus === 'APPROVED',
-        isPending: ['PENDING', 'AWAITING_DEPOSIT', 'DEPOSIT_PENDING'].includes(vipStatus),
+        isPending: vipStatus === 'PENDING',
+        isDepositPending: vipStatus === 'DEPOSIT_PENDING',
+        isAwaitingDeposit: vipStatus === 'AWAITING_DEPOSIT',
         isRejected: vipStatus === 'REJECTED', isNew, daysSince: diffDays, isGhost: !u
       };
     })
@@ -309,6 +333,7 @@ export default function AdminDashboard() {
       const matchesSearch = !searchTerm || (u.email?.toLowerCase().includes(search) || u.brokerId?.toLowerCase().includes(search) || u.id.toLowerCase().includes(search));
       if (!matchesSearch) return false;
       if (activeFilter === 'PENDING') return u.isPending;
+      if (activeFilter === 'DEPOSIT') return u.isDepositPending;
       if (activeFilter === 'PREMIUM') return u.isPremium;
       if (activeFilter === 'SUSPENDED') return u.accountStatus === 'DISABLED';
       if (activeFilter === 'REJECTED') return u.isRejected;
@@ -328,6 +353,7 @@ export default function AdminDashboard() {
   const stats = useMemo(() => ({
     total: mergedUsers.length,
     pending: mergedUsers.filter(u => u.isPending).length,
+    deposit: mergedUsers.filter(u => u.isDepositPending).length,
     premium: mergedUsers.filter(u => u.isPremium).length,
     suspended: mergedUsers.filter(u => u.accountStatus === 'DISABLED').length,
     rejected: mergedUsers.filter(u => u.isRejected).length,
@@ -359,6 +385,15 @@ export default function AdminDashboard() {
     return 'bg-yellow-500 text-black';
   };
 
+  const getStatusLabel = (rawStatus: string) => {
+      if (rawStatus === 'PENDING') return 'PENDENTE';
+      if (rawStatus === 'AWAITING_DEPOSIT') return 'AGUARD. DEPÓSITO';
+      if (rawStatus === 'DEPOSIT_PENDING') return 'DEPÓSITO PENDENTE';
+      if (rawStatus === 'APPROVED' || rawStatus === 'PREMIUM') return 'PREMIUM';
+      if (rawStatus === 'REJECTED') return 'RECUSADO';
+      return 'VIP';
+  };
+
   if (isUserLoading || !user || !isAdmin) {
     return <div className="flex h-screen w-full items-center justify-center bg-[#0a0a0a]"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
@@ -384,8 +419,8 @@ export default function AdminDashboard() {
              {[
                  { label: 'Cliques Totais', value: config?.checkoutClickCount || 0, icon: MousePointer2, color: 'text-blue-400', onClick: () => setIsClicksDialogOpen(true) },
                  { label: 'Pendentes', value: stats.pending, icon: Timer, color: stats.pending > 0 ? 'text-orange-500 animate-pulse' : 'text-zinc-500' },
+                 { label: 'Depósitos', value: stats.deposit, icon: RefreshCcw, color: stats.deposit > 0 ? 'text-emerald-500 animate-pulse' : 'text-zinc-500' },
                  { label: 'Total Membros', value: stats.total, icon: Users, color: 'text-primary' },
-                 { label: 'Premium', value: stats.premium, icon: Star, color: 'text-purple-500' },
                  { label: 'Recusados', value: stats.rejected, icon: Ban, color: 'text-red-500' },
                  { label: 'Suspensos', value: stats.suspended, icon: ShieldOff, color: 'text-zinc-500' },
              ].map((s, i) => (
@@ -394,7 +429,8 @@ export default function AdminDashboard() {
                     onClick={s.onClick}
                     className={cn(
                         "bg-card/30 border-white/5 p-4 flex items-center gap-4 transition-all",
-                        s.label === 'Pendentes' && stats.pending > 0 && "border-orange-500/20 bg-orange-500/5",
+                        (s.label === 'Pendentes' && stats.pending > 0) && "border-orange-500/20 bg-orange-500/5",
+                        (s.label === 'Depósitos' && stats.deposit > 0) && "border-emerald-500/20 bg-emerald-500/5",
                         s.onClick && "cursor-pointer hover:bg-white/5 hover:border-white/10"
                     )}
                 >
@@ -541,7 +577,7 @@ export default function AdminDashboard() {
         {/* FILTERS AND TABLE */}
         <div className="flex flex-col xl:flex-row gap-6 items-start xl:items-end justify-between">
             <div className="flex flex-wrap gap-2">
-                {['ALL', 'PENDING', 'PREMIUM', 'REJECTED', 'SUSPENDED'].map((f) => (
+                {['ALL', 'PENDING', 'DEPOSIT', 'PREMIUM', 'REJECTED', 'SUSPENDED'].map((f) => (
                     <Button 
                         key={f} 
                         variant={activeFilter === f ? 'default' : 'outline'} 
@@ -549,14 +585,21 @@ export default function AdminDashboard() {
                         className={cn(
                             "h-10 px-4 rounded-xl relative",
                             activeFilter === f ? 'bg-primary text-black' : 'bg-white/5',
-                            f === 'PENDING' && stats.pending > 0 && "border-orange-500 text-orange-500"
+                            f === 'PENDING' && stats.pending > 0 && "border-orange-500 text-orange-500",
+                            f === 'DEPOSIT' && stats.deposit > 0 && "border-emerald-500 text-emerald-500"
                         )}
                     >
-                        {f}
+                        {f === 'DEPOSIT' ? 'DEPÓSITOS' : f}
                         {f === 'PENDING' && stats.pending > 0 && (
                             <span className="absolute -top-1 -right-1 flex h-3 w-3">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-3 w-3 bg-orange-500"></span>
+                            </span>
+                        )}
+                        {f === 'DEPOSIT' && stats.deposit > 0 && (
+                            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
                             </span>
                         )}
                     </Button>
@@ -606,32 +649,51 @@ export default function AdminDashboard() {
                     <Badge variant={u.accountStatus === 'DISABLED' ? 'destructive' : 'outline'} className="text-[0.6rem] font-black">{u.accountStatus === 'DISABLED' ? 'SUSPENSO' : 'ATIVA'}</Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge className={cn("text-[0.6rem] font-black px-2 py-0.5 border-none shadow-md", getPlanBadgeStyles(u.rawStatus))}>{u.subscriptionStatus}</Badge>
+                    <Badge className={cn("text-[0.6rem] font-black px-2 py-0.5 border-none shadow-md whitespace-nowrap", getPlanBadgeStyles(u.rawStatus))}>
+                        {getStatusLabel(u.rawStatus)}
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 rounded-full"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="bg-black/95 border-white/10">
-                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'APPROVED', u.email)} className="text-xs font-bold text-purple-400">
-                          <Crown className="h-3.5 w-3.5 mr-2" /> Tornar PREMIUM
+                      <DropdownMenuContent align="end" className="bg-black/95 border-white/10 w-64 p-2">
+                        
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'PREMIUM', u.email)} className="text-xs font-bold text-purple-400 focus:bg-purple-400/10 mb-1">
+                          <UserCheck className="h-4 w-4 mr-3" /> Aprovar para PREMIUM
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'REJECTED', u.email)} className="text-xs text-red-400">
-                          <Ban className="h-3.5 w-3.5 mr-2" /> Recusar PREMIUM
+
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'DEPOSIT_PENDING', u.email)} className="text-xs font-bold text-emerald-400 focus:bg-emerald-400/10 mb-1">
+                          <RefreshCcw className="h-4 w-4 mr-3" /> Mudar: Depósito Pendente
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'PENDING', u.email)} className="text-xs text-orange-400">
-                          <Timer className="h-3.5 w-3.5 mr-2" /> Voltar PENDENTE
+
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'AWAITING_DEPOSIT', u.email)} className="text-xs font-bold text-cyan-400 focus:bg-cyan-400/10 mb-1">
+                          <Timer className="h-4 w-4 mr-3" /> Mudar: Aguard. Depósito
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'PENDING', u.email)} className="text-xs font-bold text-orange-400 focus:bg-orange-400/10 mb-1">
+                          <RefreshCcw className="h-4 w-4 mr-3" /> Mudar: Pendente
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'VIP_RESET', u.email)} className="text-xs font-bold text-yellow-400 focus:bg-yellow-400/10 mb-1">
+                          <Zap className="h-4 w-4 mr-3" /> Tornar VIP (Reset)
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuSeparator className="bg-white/5" />
+
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'REJECTED', u.email)} className="text-xs font-bold text-red-400 focus:bg-red-400/10 mb-1">
+                          <Ban className="h-4 w-4 mr-3" /> Recusar / Rebaixar
                         </DropdownMenuItem>
                         
                         <DropdownMenuSeparator className="bg-white/5" />
                         
-                        <DropdownMenuItem onClick={() => handleToggleAccount(u.id, u.accountStatus, u.email)} className="text-xs">
+                        <DropdownMenuItem onClick={() => handleToggleAccount(u.id, u.accountStatus, u.email)} className="text-xs opacity-60 hover:opacity-100">
                           {u.accountStatus === 'DISABLED' ? <ShieldCheck className="h-3.5 w-3.5 mr-2" /> : <ShieldOff className="h-3.5 w-3.5 mr-2" />}
                           {u.accountStatus === 'DISABLED' ? 'Ativar Conta' : 'Suspender Conta'}
                         </DropdownMenuItem>
                         
                         <DropdownMenuSeparator className="bg-white/5" />
                         
-                        <DropdownMenuItem className="text-destructive text-xs font-bold" onClick={() => setDeleteUserId(u.id)}>
+                        <DropdownMenuItem className="text-destructive text-xs font-bold opacity-60 hover:opacity-100" onClick={() => setDeleteUserId(u.id)}>
                           <Trash2 className="h-3.5 w-3.5 mr-2" /> Excluir Total
                         </DropdownMenuItem>
                       </DropdownMenuContent>

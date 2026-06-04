@@ -37,7 +37,8 @@ import {
   Crown,
   Headset,
   UserCheck,
-  RefreshCcw
+  RefreshCcw,
+  StarHalf
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -56,7 +57,10 @@ import {
   DropdownMenuContent, 
   DropdownMenuItem, 
   DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent
 } from '@/components/ui/dropdown-menu';
 import { 
   AlertDialog,
@@ -242,12 +246,19 @@ export default function AdminDashboard() {
     } catch (e) { toast({ variant: 'destructive', title: 'Erro' }); }
   };
 
+  const handleUpdateRating = async (userId: string, rating: number) => {
+    if (!firestore) return;
+    try {
+      await setDoc(doc(firestore, 'users', userId), { rating }, { merge: true });
+      toast({ title: `Avaliação: ${rating} Estrelas` });
+    } catch (e) { toast({ variant: 'destructive', title: 'Erro ao avaliar' }); }
+  };
+
   const handleUpdateVipStatus = async (userId: string, newStatus: string, email: string) => {
     if (!firestore) return;
     
     try {
       if (newStatus === 'VIP_RESET') {
-        // Reset para VIP (Remove o pedido e volta o plano para ACTIVE)
         await deleteDoc(doc(firestore, 'vipRequests', userId)).catch(() => {});
         await setDoc(doc(firestore, 'users', userId), { 
           subscriptionStatus: 'ACTIVE',
@@ -260,7 +271,6 @@ export default function AdminDashboard() {
       const isPremiumStatus = newStatus === 'PREMIUM' || newStatus === 'APPROVED';
       const subStatus = isPremiumStatus ? 'ACTIVE' : 'INACTIVE';
       
-      // Update Vip Request status
       await setDoc(doc(firestore, 'vipRequests', userId), { 
         status: newStatus, 
         userId, 
@@ -268,9 +278,6 @@ export default function AdminDashboard() {
         updatedAt: serverTimestamp() 
       }, { merge: true });
       
-      // Update User Sub status
-      // Nota: Se for APPROVED/PREMIUM, o subscriptionStatus no user.profile costuma ser ACTIVE (indicando que a licença está ok)
-      // O 'PREMIUM' como plano extra é lido através da coleção vipRequests.
       await setDoc(doc(firestore, 'users', userId), { 
         subscriptionStatus: subStatus, 
         email: email === '---' ? "" : email, 
@@ -620,7 +627,8 @@ export default function AdminDashboard() {
                 <TableHead onClick={() => setSortConfig({ key: 'createdAt', direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })} className="cursor-pointer text-[0.6rem] font-black uppercase">Registo <ArrowUpDown className="inline h-3 w-3 ml-1" /></TableHead>
                 <TableHead onClick={() => setSortConfig({ key: 'email', direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })} className="cursor-pointer text-[0.6rem] font-black uppercase">Membro <ArrowUpDown className="inline h-3 w-3 ml-1" /></TableHead>
                 <TableHead onClick={() => setSortConfig({ key: 'lastActivity', direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })} className="cursor-pointer text-[0.6rem] font-black uppercase">Atividade <ArrowUpDown className="inline h-3 w-3 ml-1" /></TableHead>
-                <TableHead className="text-[0.6rem] font-black uppercase">Broker ID</TableHead>
+                <TableHead className="text-[0.6rem] font-black uppercase">ID Corretora</TableHead>
+                <TableHead onClick={() => setSortConfig({ key: 'rating', direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })} className="cursor-pointer text-[0.6rem] font-black uppercase">Avaliação <ArrowUpDown className="inline h-3 w-3 ml-1" /></TableHead>
                 <TableHead className="text-[0.6rem] font-black uppercase">Status</TableHead>
                 <TableHead className="text-[0.6rem] font-black uppercase">Plano</TableHead>
                 <TableHead className="text-right text-[0.6rem] font-black uppercase">Ações</TableHead>
@@ -645,6 +653,19 @@ export default function AdminDashboard() {
                   </TableCell>
                   <TableCell className="text-[0.7rem] font-mono opacity-80">{formatDate(u.lastActivity)}</TableCell>
                   <TableCell className="text-xs font-mono text-primary font-bold">{u.brokerId}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-0.5">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                            <Star 
+                                key={star} 
+                                className={cn(
+                                    "h-3 w-3", 
+                                    star <= (u.rating || 0) ? "text-yellow-500 fill-yellow-500" : "text-zinc-700"
+                                )} 
+                            />
+                        ))}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <Badge variant={u.accountStatus === 'DISABLED' ? 'destructive' : 'outline'} className="text-[0.6rem] font-black">{u.accountStatus === 'DISABLED' ? 'SUSPENSO' : 'ATIVA'}</Badge>
                   </TableCell>
@@ -678,6 +699,21 @@ export default function AdminDashboard() {
                           <Zap className="h-4 w-4 mr-3" /> Tornar VIP (Reset)
                         </DropdownMenuItem>
                         
+                        <DropdownMenuSeparator className="bg-white/5" />
+
+                        <DropdownMenuSub>
+                           <DropdownMenuSubTrigger className="text-xs font-bold text-yellow-500">
+                             <Star className="h-4 w-4 mr-3" /> Definir Avaliação
+                           </DropdownMenuSubTrigger>
+                           <DropdownMenuSubContent className="bg-black/95 border-white/10 p-2">
+                              {[0, 1, 2, 3, 4, 5].map((r) => (
+                                <DropdownMenuItem key={r} onClick={() => handleUpdateRating(u.id, r)} className="text-xs font-bold">
+                                   {r} Estrelas
+                                </DropdownMenuItem>
+                              ))}
+                           </DropdownMenuSubContent>
+                        </DropdownMenuSub>
+
                         <DropdownMenuSeparator className="bg-white/5" />
 
                         <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'REJECTED', u.email)} className="text-xs font-bold text-red-400 focus:bg-red-400/10 mb-1">

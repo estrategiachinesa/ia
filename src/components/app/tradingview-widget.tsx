@@ -130,7 +130,12 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset, interval }
   }, [asset, interval, widgetContainerId]); // Re-run when asset or the unique ID changes
 
   return (
-    <div id={widgetContainerId} ref={containerRef} className="tradingview-widget-container h-full w-full" />
+    <div 
+        id={widgetContainerId} 
+        ref={containerRef} 
+        className="tradingview-widget-container" 
+        style={{ width: '100%', height: '100%', minHeight: '300px' }}
+    />
   );
 };
 

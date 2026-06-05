@@ -453,8 +453,8 @@ export default function AnalisadorPage() {
         <main className="flex-grow container max-w-[1400px] mx-auto p-0 md:p-10">
             <div className="w-full">
                 <div className="flex flex-col lg:flex-row gap-0 lg:gap-8 items-stretch justify-center">
-                    <div className="w-full lg:w-[450px] flex flex-col min-h-[calc(100dvh-100px)] lg:min-h-0">
-                        <div className="w-full flex-grow bg-card/50 backdrop-blur-xl border-x-0 md:border border-white/10 rounded-none md:rounded-3xl shadow-2xl p-6 md:p-10 flex flex-col items-center justify-start md:justify-center transition-all duration-500 overflow-hidden relative shine-effect">
+                    <div className="w-full lg:w-[450px] flex flex-col h-[calc(100dvh-120px)] lg:h-auto">
+                        <div className="w-full h-full bg-card/50 backdrop-blur-xl border-x-0 md:border border-white/10 rounded-none md:rounded-3xl shadow-2xl p-6 md:p-10 flex flex-col items-center justify-start md:justify-center transition-all duration-500 overflow-hidden relative shine-effect">
                             {renderContent()}
                         </div>
                         
@@ -475,7 +475,7 @@ export default function AnalisadorPage() {
                         )}
                     </div>
 
-                     <div className="flex flex-grow relative flex-col min-w-0 self-stretch min-h-[calc(100dvh-100px)] lg:min-h-0">
+                     <div className="flex flex-grow relative flex-col min-w-0 self-stretch h-[calc(100dvh-120px)] lg:h-auto mt-2 lg:mt-0">
                         {isOtcAsset ? (
                             <div className="w-full h-full flex items-center justify-center bg-card/40 backdrop-blur-xl border-x-0 md:border border-white/5 rounded-none md:rounded-3xl shadow-2xl p-10">
                                 {appState === 'loading' ? (
@@ -502,24 +502,24 @@ export default function AnalisadorPage() {
                             </div>
                         ) : (
                             <div className="flex flex-col h-full bg-card/40 backdrop-blur-xl border-x-0 md:border border-white/5 rounded-none md:rounded-3xl shadow-2xl overflow-hidden transition-all duration-500">
-                                <div className="flex justify-between items-center px-6 py-4 border-b border-white/5 bg-white/5">
-                                    <div className="flex items-center gap-6">
+                                <div className="flex justify-between items-center px-4 md:px-6 py-2 md:py-4 border-b border-white/5 bg-white/5">
+                                    <div className="flex items-center gap-3 md:gap-6">
                                         <div className="flex items-center gap-2.5">
                                             <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
-                                            <span className="text-[0.7rem] font-black text-muted-foreground uppercase tracking-[0.2em]">Market Live</span>
+                                            <span className="text-[0.6rem] md:text-[0.7rem] font-black text-muted-foreground uppercase tracking-[0.2em]">Market Live</span>
                                         </div>
                                         <div className="h-5 w-px bg-border/20" />
-                                        <div className="flex items-center gap-2 text-[0.75rem] font-bold">
+                                        <div className="flex items-center gap-2 text-[0.7rem] md:text-[0.75rem] font-bold">
                                             <span className="text-muted-foreground">TIME:</span>
                                             <span className="text-primary bg-primary/10 px-2 py-0.5 rounded-md">{currentExpirationTime}</span>
                                         </div>
                                     </div>
-                                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-white/10" onClick={() => setIsChartVisible(!isChartVisible)}>
-                                        {isChartVisible ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 md:h-9 md:w-9 rounded-full hover:bg-white/10" onClick={() => setIsChartVisible(!isChartVisible)}>
+                                        {isChartVisible ? <ChevronUp className="h-4 w-4 md:h-5 md:w-5" /> : <ChevronDown className="h-4 w-4 md:h-5 md:w-5" />}
                                     </Button>
                                 </div>
 
-                                <div className="flex-grow bg-[#0a0a0a] relative">
+                                <div className="flex-grow bg-[#0a0a0a] relative overflow-hidden h-full">
                                     {isChartVisible && (
                                         <TradingViewWidget
                                             asset={currentAsset}

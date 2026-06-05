@@ -41,7 +41,10 @@ import {
   StarHalf,
   FileCode,
   Layout,
-  ToggleRight
+  ToggleRight,
+  ExternalLink,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -98,6 +101,23 @@ type SortConfig = {
 
 type QuickFilter = 'ALL' | 'PENDING' | 'PREMIUM' | 'SUSPENDED' | 'REJECTED' | 'DEPOSIT';
 
+type PageConfigItem = {
+    id: string;
+    label: string;
+    path: string;
+    enabled: boolean;
+};
+
+const DEFAULT_PAGE_LIST: PageConfigItem[] = [
+    { id: 'analisador', label: 'ANALISADOR', path: '/analisador', enabled: true },
+    { id: 'catalogador', label: 'SINAIS', path: '/catalogador', enabled: true },
+    { id: 'sessaochinesa', label: 'SESSÃO CHINESA', path: '/sessaochinesa', enabled: true },
+    { id: 'vip', label: 'PÁGINA VIP', path: '/vip', enabled: true },
+    { id: 'descubra', label: 'VSL', path: '/descubra', enabled: true },
+    { id: 'register', label: 'REGISTRO', path: '/register', enabled: true },
+    { id: 'bb', label: 'BROKER BREAKER', path: '/bb', enabled: true },
+];
+
 export default function AdminDashboard() {
   const { auth, user, isUserLoading, firestore } = useFirebase();
   const { config } = useAppConfig();
@@ -125,15 +145,7 @@ export default function AdminDashboard() {
   const [zoomLink, setZoomLink] = useState('');
   const [isSavingLink, setIsSavingLink] = useState(false);
 
-  const [pagesEnabled, setPagesEnabled] = useState({
-    analisador: true,
-    catalogador: true,
-    sessaochinesa: true,
-    vip: true,
-    descubra: true,
-    register: true,
-    bb: true
-  });
+  const [pagesConfig, setPagesConfig] = useState<PageConfigItem[]>(DEFAULT_PAGE_LIST);
   const [isSavingPages, setIsSavingPages] = useState(false);
 
   const isAdmin = user && ADMIN_EMAILS.includes(user.email || '');
@@ -163,16 +175,28 @@ export default function AdminDashboard() {
         if (remoteSnap.exists()) setInvertSignals(remoteSnap.data().invertSignal || false);
         if (limitSnap.exists()) setSignalLimit(remoteSnap.data().hourlySignalLimit || 3);
         if (linksSnap.exists()) setSupportLink(linksSnap.data().supportUrl || '');
+        
         if (pagesSnap.exists()) {
-            setPagesEnabled({
-                analisador: pagesSnap.data().analisador ?? true,
-                catalogador: pagesSnap.data().catalogador ?? true,
-                sessaochinesa: pagesSnap.data().sessaochinesa ?? true,
-                vip: pagesSnap.data().vip ?? true,
-                descubra: pagesSnap.data().descubra ?? true,
-                register: pagesSnap.data().register ?? true,
-                bb: pagesSnap.data().bb ?? true,
+            const savedData = pagesSnap.data();
+            const order = savedData.pagesOrder as string[] || DEFAULT_PAGE_LIST.map(p => p.id);
+            
+            const mergedList = order.map(id => {
+                const base = DEFAULT_PAGE_LIST.find(p => p.id === id);
+                if (!base) return null;
+                return {
+                    ...base,
+                    enabled: savedData[id] ?? base.enabled
+                };
+            }).filter(Boolean) as PageConfigItem[];
+
+            // Add any new pages that might have been added to the default list but aren't in the order yet
+            DEFAULT_PAGE_LIST.forEach(p => {
+                if (!mergedList.find(m => m.id === p.id)) {
+                    mergedList.push({ ...p, enabled: savedData[p.id] ?? p.enabled });
+                }
             });
+
+            setPagesConfig(mergedList);
         }
       } catch (e) { console.error("Error fetching configs:", e); }
     };
@@ -198,13 +222,37 @@ export default function AdminDashboard() {
     if (!firestore) return;
     setIsSavingPages(true);
     try {
-        await setDoc(doc(firestore, 'appConfig', 'pages'), pagesEnabled);
-        toast({ title: 'Acessos Atualizados' });
+        const pagesUpdate: any = {
+            pagesOrder: pagesConfig.map(p => p.id)
+        };
+        pagesConfig.forEach(p => {
+            pagesUpdate[p.id] = p.enabled;
+        });
+
+        await setDoc(doc(firestore, 'appConfig', 'pages'), pagesUpdate);
+        toast({ title: 'Acessos e Ordem Atualizados' });
     } catch (e) {
         toast({ variant: 'destructive', title: 'Erro ao salvar acessos' });
     } finally {
         setIsSavingPages(false);
     }
+  };
+
+  const movePage = (index: number, direction: 'up' | 'down') => {
+    const newList = [...pagesConfig];
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    if (newIndex < 0 || newIndex >= newList.length) return;
+    
+    const temp = newList[index];
+    newList[index] = newList[newIndex];
+    newList[newIndex] = temp;
+    
+    setPagesConfig(newList);
+  };
+
+  const handleTogglePage = (id: string) => {
+    setPagesConfig(prev => prev.map(p => p.id === id ? { ...p, enabled: !p.enabled } : p));
   };
 
   const handleToggleSession = async (current: boolean | undefined) => {
@@ -565,7 +613,7 @@ export default function AdminDashboard() {
                 </div>
             </Card>
 
-            {/* VISIBILIDADE DE PÁGINAS */}
+            {/* VISIBILIDADE DE PÁGINAS (KILL SWITCH) */}
             <Card className="bg-card/40 border-white/5 p-6 rounded-2xl lg:col-span-1">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-2">
@@ -576,26 +624,35 @@ export default function AdminDashboard() {
                         {isSavingPages ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                     </Button>
                 </div>
-                <div className="space-y-3">
-                    {[
-                        { id: 'analisador', label: 'Analisador IA', path: '/analisador' },
-                        { id: 'catalogador', label: 'Scanner (Sinais)', path: '/catalogador' },
-                        { id: 'sessaochinesa', label: 'Sessão Chinesa', path: '/sessaochinesa' },
-                        { id: 'vip', label: 'Página VIP', path: '/vip' },
-                        { id: 'descubra', label: 'VSL (Descubra)', path: '/descubra' },
-                        { id: 'register', label: 'Registo', path: '/register' },
-                        { id: 'bb', label: 'Broker Bug', path: '/bb' },
-                    ].map((p) => (
-                        <div key={p.id} className="flex items-center justify-between p-2.5 bg-white/5 rounded-xl border border-white/5 group hover:border-primary/20 transition-all">
-                            <div className="flex flex-col">
-                                <span className="text-[0.7rem] font-bold uppercase">{p.label}</span>
-                                <span className="text-[0.55rem] font-mono opacity-40">{p.path}</span>
+                <div className="space-y-2">
+                    {pagesConfig.map((p, idx) => (
+                        <div key={p.id} className="flex items-center justify-between p-2 bg-white/5 rounded-xl border border-white/5 group hover:border-primary/20 transition-all">
+                            <div className="flex items-center gap-2">
+                                <div className="flex flex-col gap-0.5">
+                                    <Button variant="ghost" size="icon" className="h-4 w-4 p-0 opacity-40 hover:opacity-100" onClick={() => movePage(idx, 'up')} disabled={idx === 0}>
+                                        <ArrowUp className="h-3 w-3" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-4 w-4 p-0 opacity-40 hover:opacity-100" onClick={() => movePage(idx, 'down')} disabled={idx === pagesConfig.length - 1}>
+                                        <ArrowDown className="h-3 w-3" />
+                                    </Button>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-[0.65rem] font-black uppercase leading-tight">{p.label}</span>
+                                    <span className="text-[0.5rem] font-mono opacity-40">{p.path}</span>
+                                </div>
                             </div>
-                            <Switch 
-                                checked={pagesEnabled[p.id as keyof typeof pagesEnabled]} 
-                                onCheckedChange={(val) => setPagesEnabled(prev => ({ ...prev, [p.id]: val }))} 
-                                className="scale-75"
-                            />
+                            <div className="flex items-center gap-3">
+                                <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-lg bg-white/5 hover:bg-white/10">
+                                    <a href={p.path} target="_blank" rel="noopener noreferrer">
+                                        <ExternalLink className="h-3.5 w-3.5 opacity-60" />
+                                    </a>
+                                </Button>
+                                <Switch 
+                                    checked={p.enabled} 
+                                    onCheckedChange={() => handleTogglePage(p.id)} 
+                                    className="scale-75"
+                                />
+                            </div>
                         </div>
                     ))}
                 </div>

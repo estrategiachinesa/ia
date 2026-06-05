@@ -68,6 +68,16 @@ interface Signal {
 
 const AVAILABLE_ASSETS: Asset[] = ['EUR/USD', 'EUR/USD (OTC)', 'EUR/JPY', 'EUR/JPY (OTC)'];
 
+const PAGE_METADATA: Record<string, { label: string; path: string }> = {
+    analisador: { label: 'ANALISADOR', path: '/analisador' },
+    catalogador: { label: 'SINAIS', path: '/catalogador' },
+    sessaochinesa: { label: 'SESSÃO CHINESA', path: '/sessaochinesa' },
+    vip: { label: 'PÁGINA VIP', path: '/vip' },
+    descubra: { label: 'VSL', path: '/descubra' },
+    register: { label: 'REGISTRO', path: '/register' },
+    bb: { label: 'BROKER BREAKER', path: '/bb' },
+};
+
 const SCAN_STEPS = [
   "Iniciando varredura de ativos...",
   "Analisando médias móveis (MA20, MA100, MA200)...",
@@ -121,6 +131,23 @@ export default function CatalogadorPage() {
         router.push('/analisador');
     }
   }, [user, isUserLoading, router, config]);
+
+  // Dynamic Navigation based on Admin Order
+  const navigationItems = useMemo(() => {
+    if (!config || !config.pagesOrder) {
+        return Object.entries(PAGE_METADATA)
+            .filter(([id]) => id !== 'register' && config?.pages?.[id] !== false)
+            .map(([id, meta]) => ({ id, ...meta }));
+    }
+    
+    return config.pagesOrder
+        .filter((id: string) => id !== 'register' && config.pages?.[id] !== false)
+        .map((id: string) => ({
+            id,
+            ...PAGE_METADATA[id]
+        }))
+        .filter((p: any) => p.label);
+  }, [config]);
 
   const toggleAsset = (asset: Asset) => {
     setSelectedAssets(prev => 
@@ -326,27 +353,19 @@ export default function CatalogadorPage() {
           </div>
 
           <nav className="flex items-center gap-1.5 bg-black/40 p-1.5 rounded-2xl border border-white/5 shadow-2xl">
-             {config?.pages?.analisador !== false && (
-                <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === '/analisador' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
-                    <AffiliateLink href="/analisador">Analisador</AffiliateLink>
-                </Button>
-             )}
-             {config?.pages?.catalogador !== false && (
-                <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === '/catalogador' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
-                    <AffiliateLink href="/catalogador">Sinais</AffiliateLink>
-                </Button>
-             )}
-             {config?.pages?.sessaochinesa !== false && (
-                <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all group", pathname === '/sessaochinesa' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
-                    <AffiliateLink href="/sessaochinesa" className="flex items-center gap-2">
-                    Sessão
-                    <span className={cn(
-                        "w-2 h-2 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.6)]",
-                        isSessionOnline ? "bg-green-500 animate-pulse" : "bg-red-500"
-                    )} />
+             {navigationItems.map((item) => (
+                <Button key={item.id} asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === item.path ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                    <AffiliateLink href={item.path} className="flex items-center gap-2">
+                        {item.label}
+                        {item.id === 'sessaochinesa' && (
+                            <span className={cn(
+                                "w-2 h-2 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.6)]",
+                                isSessionOnline ? "bg-green-500 animate-pulse" : "bg-red-500"
+                            )} />
+                        )}
                     </AffiliateLink>
                 </Button>
-             )}
+             ))}
           </nav>
           
           <div className="flex items-center gap-4 ml-auto md:ml-0">

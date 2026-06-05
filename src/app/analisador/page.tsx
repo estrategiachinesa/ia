@@ -11,7 +11,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/dialog'; // Usando Dialog comum para manter consistência
+} from '@/components/ui/dialog'; 
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import YoutubePlayer from '@/components/youtube-player';
@@ -402,37 +402,37 @@ export default function AnalisadorPage() {
       <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/90 to-background" />
 
       <div className="flex flex-col min-h-screen">
-        <header className="px-4 py-3 md:px-8 md:py-4 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 border-b border-border/10 bg-card/30 backdrop-blur-md sticky top-0 z-50">
-          <div className="flex items-center justify-between w-full md:w-auto">
-             <div className="flex flex-col">
-                <h1 className="text-lg md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tighter leading-tight">
+        <header className="px-4 py-2 md:py-4 flex flex-col md:flex-row justify-between items-center gap-2 md:gap-6 border-b border-border/10 bg-card/30 backdrop-blur-md sticky top-0 z-50">
+          <div className="flex items-center justify-between w-full md:w-auto relative">
+             <div className="flex flex-col flex-1 items-center md:items-start text-center md:text-left">
+                <h1 className="text-base md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tighter leading-tight">
                     ESTRATÉGIA CHINESA
                 </h1>
-                <p className="text-[0.55rem] md:text-[0.6rem] text-primary/60 font-black tracking-[0.2em] uppercase mt-[-1px] md:mt-[-2px]">Intelligence Analyzer</p>
+                <p className="text-[0.5rem] md:text-[0.6rem] text-primary/60 font-black tracking-[0.2em] uppercase mt-[-2px]">Intelligence Analyzer</p>
              </div>
              
-             <div className="flex items-center gap-2 md:hidden">
+             <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-2 md:hidden">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleLogout}
-                  className="text-[0.6rem] font-black text-muted-foreground hover:text-destructive transition-all rounded-full px-3 border border-white/5 h-8 uppercase tracking-widest"
+                  className="text-[0.55rem] font-black text-muted-foreground hover:text-destructive transition-all rounded-full px-2 border border-white/5 h-7 uppercase tracking-tighter"
                 >
-                  <LogOut className="h-3 w-3 mr-1.5" />
+                  <LogOut className="h-3 w-3 mr-1" />
                   Sair
                 </Button>
              </div>
           </div>
 
-          <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto no-scrollbar pb-1 md:pb-0 justify-center">
+          <div className="flex items-center gap-1 w-full md:w-auto overflow-x-auto no-scrollbar justify-center pb-1 md:pb-0">
             <nav className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5 shadow-2xl shrink-0">
                {navigationItems.map((item) => (
-                  <Button key={item.id} asChild variant="ghost" size="sm" className={cn("h-8 md:h-10 px-3 md:px-4 rounded-lg md:rounded-xl text-[0.6rem] md:text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === item.path ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
-                      <AffiliateLink href={item.path} className="flex items-center gap-1.5 md:gap-2">
+                  <Button key={item.id} asChild variant="ghost" size="sm" className={cn("h-7 md:h-10 px-2 md:px-4 rounded-lg md:rounded-xl text-[0.55rem] md:text-[0.65rem] font-black uppercase tracking-tighter md:tracking-widest transition-all", pathname === item.path ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                      <AffiliateLink href={item.path} className="flex items-center gap-1 md:gap-2">
                           {item.label}
                           {item.id === 'sessaochinesa' && (
                               <span className={cn(
-                                  "w-1.5 h-1.5 md:w-2 md:h-2 rounded-full",
+                                  "w-1 h-1 md:w-2 md:h-2 rounded-full",
                                   isSessionOnline ? "bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500"
                               )} />
                           )}
@@ -455,24 +455,24 @@ export default function AnalisadorPage() {
           </div>
         </header>
 
-        <main className="flex-grow container max-w-[1400px] mx-auto p-4 lg:p-10 pb-32">
+        <main className="flex-grow container max-w-[1400px] mx-auto p-2 md:p-10 pb-20 md:pb-32">
             <div className="w-full">
-                <div className="flex flex-col lg:flex-row gap-8 items-start justify-center">
-                    <div className="w-full lg:w-[450px] flex flex-col gap-6">
-                        <div className="w-full bg-card/50 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl p-10 min-h-[620px] flex flex-col items-center justify-center transition-all duration-500 overflow-hidden relative shine-effect">
+                <div className="flex flex-col lg:flex-row gap-4 md:gap-8 items-start justify-center">
+                    <div className="w-full lg:w-[450px] flex flex-col gap-4 md:gap-6">
+                        <div className="w-full bg-card/50 backdrop-blur-xl border border-white/10 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-10 min-h-0 md:min-h-[620px] flex flex-col items-center justify-center transition-all duration-500 overflow-hidden relative shine-effect">
                             {renderContent()}
                         </div>
                         
                         {!isPremium && appState !== 'loading' && (
-                             <div className="bg-gradient-to-br from-primary/20 to-transparent border border-primary/20 rounded-2xl p-5 flex items-center justify-between shadow-xl">
-                                <div className="space-y-1">
-                                    <p className="text-[0.6rem] font-bold text-primary tracking-[0.15em] uppercase opacity-80">Estatuto de Conta</p>
-                                    <h4 className="text-sm font-bold text-foreground">Versão VIP Limitada</h4>
+                             <div className="bg-gradient-to-br from-primary/20 to-transparent border border-primary/20 rounded-xl md:rounded-2xl p-3 md:p-5 flex items-center justify-between shadow-xl">
+                                <div className="space-y-0.5 md:space-y-1">
+                                    <p className="text-[0.55rem] md:text-[0.6rem] font-bold text-primary tracking-[0.15em] uppercase opacity-80">Estatuto de Conta</p>
+                                    <h4 className="text-xs md:text-sm font-bold text-foreground">Versão VIP Limitada</h4>
                                 </div>
                                 <Button 
                                   size="sm" 
                                   onClick={handleUpgradeClick} 
-                                  className="h-9 px-6 text-[0.7rem] font-black rounded-full shadow-lg shadow-primary/20 hover:scale-105 transition-transform"
+                                  className="h-8 md:h-9 px-4 md:px-6 text-[0.6rem] md:text-[0.7rem] font-black rounded-full shadow-lg shadow-primary/20 hover:scale-105 transition-transform"
                                 >
                                   UPGRADE
                                 </Button>
@@ -480,7 +480,7 @@ export default function AnalisadorPage() {
                         )}
                     </div>
 
-                     <div className="flex-grow relative flex flex-col min-w-0 self-stretch">
+                     <div className="hidden md:flex flex-grow relative flex-col min-w-0 self-stretch">
                         {isOtcAsset ? (
                             <div className="w-full h-full flex items-center justify-center bg-card/40 backdrop-blur-xl border border-white/5 rounded-3xl shadow-2xl p-10 min-h-[620px]">
                                 {appState === 'loading' ? (

@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppConfig } from '@/firebase/config-provider';
-import { Headset } from 'lucide-react';
+import { Headset, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function FloatingSupportButton() {
   const { config } = useAppConfig();
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const [rel, setRel] = useState({ x: 0, y: 0 });
   const buttonRef = useRef<HTMLDivElement>(null);
 
@@ -16,7 +17,7 @@ export function FloatingSupportButton() {
   useEffect(() => {
     const updatePosition = () => {
         // Position at the right edge, vertically centered
-        const initialX = window.innerWidth - 65; 
+        const initialX = window.innerWidth - 60; 
         const initialY = (window.innerHeight / 2) - 25;
         setPosition({ x: initialX, y: initialY });
     };
@@ -29,6 +30,8 @@ export function FloatingSupportButton() {
   }, []);
 
   const onMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
+    if (e.target instanceof SVGElement || (e.target as HTMLElement).closest('.close-btn')) return;
+    
     if (e.type === 'touchstart') {
         const touch = (e as React.TouchEvent).touches[0];
         setRel({
@@ -92,6 +95,8 @@ export function FloatingSupportButton() {
     }
   };
 
+  if (!isVisible) return null;
+
   const supportLink = config?.supportUrl || 'https://t.me/TraderChinesVIP';
 
   return (
@@ -105,28 +110,37 @@ export function FloatingSupportButton() {
         touchAction: 'none'
       }}
       className={cn(
-        "fixed z-[100] cursor-grab active:cursor-grabbing select-none transition-opacity duration-300",
-        isDragging ? "opacity-100 scale-110" : "opacity-70 hover:opacity-100"
+        "fixed z-[100] cursor-grab active:cursor-grabbing select-none transition-all duration-300",
+        isDragging ? "opacity-100 scale-110" : "opacity-60 hover:opacity-100"
       )}
     >
-      <a
-        href={supportLink}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={handleClick}
-        className={cn(
-          "flex items-center justify-center gap-2 p-2.5 rounded-full shadow-xl transition-all group overflow-hidden border border-white/10",
-          "bg-[#229ED9]/40 backdrop-blur-md text-white"
-        )}
-      >
-        <Headset className="h-5 w-5" />
-        <span className={cn(
-            "max-w-0 overflow-hidden transition-all duration-500 font-black whitespace-nowrap text-[0.6rem] uppercase tracking-widest",
-            "group-hover:max-w-xs group-hover:ml-1.5"
-        )}>
-          SUPORTE
-        </span>
-      </a>
+      <div className="relative group/wrapper">
+        <button 
+          onClick={(e) => { e.stopPropagation(); setIsVisible(false); }}
+          className="close-btn absolute -top-2 -right-1 bg-black/80 text-white rounded-full p-0.5 border border-white/20 opacity-0 group-hover/wrapper:opacity-100 transition-opacity z-10"
+        >
+          <X className="h-2.5 w-2.5" />
+        </button>
+        
+        <a
+          href={supportLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={handleClick}
+          className={cn(
+            "flex items-center justify-center gap-2 p-2 rounded-full shadow-xl transition-all group overflow-hidden border border-white/10",
+            "bg-[#229ED9]/30 backdrop-blur-md text-white"
+          )}
+        >
+          <Headset className="h-4 w-4 md:h-5 md:w-5" />
+          <span className={cn(
+              "max-w-0 overflow-hidden transition-all duration-500 font-black whitespace-nowrap text-[0.55rem] uppercase tracking-widest",
+              "group-hover:max-w-xs group-hover:ml-1.5"
+          )}>
+            SUPORTE
+          </span>
+        </a>
+      </div>
     </div>
   );
 }

@@ -139,88 +139,86 @@ export function SignalForm({
   const buttonDisabled = isLoading || !isMarketOpen || (hasReachedLimit && !waitingMessage && !isPremium);
 
   return (
-    <div className="w-full space-y-2 md:space-y-6 text-center">
-      <div className="grid grid-cols-2 gap-2 mb-1">
-          <Button asChild variant="ghost" size="sm" className="h-6 md:h-8 text-[0.5rem] md:text-[0.6rem] font-black uppercase tracking-widest border border-white/5 bg-white/5 hover:bg-white/10 rounded-lg transition-all">
-              <a href={config?.iqOptionUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1"><ExternalLink className="h-2 w-2" /> IQ Option</a>
-          </Button>
-          <Button asChild variant="ghost" size="sm" className="h-6 md:h-8 text-[0.5rem] md:text-[0.6rem] font-black uppercase tracking-widest border border-white/5 bg-white/5 hover:bg-white/10 rounded-lg transition-all">
-              <a href={config?.exnovaUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1"><ExternalLink className="h-2 w-2" /> Exnova</a>
-          </Button>
-      </div>
+    <div className="w-full h-full flex flex-col justify-between text-center">
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-2 mb-1">
+            <Button asChild variant="ghost" size="sm" className="h-8 md:h-10 text-[0.55rem] md:text-[0.6rem] font-black uppercase tracking-widest border border-white/5 bg-white/5 hover:bg-white/10 rounded-xl transition-all">
+                <a href={config?.iqOptionUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1"><ExternalLink className="h-3 w-3" /> IQ Option</a>
+            </Button>
+            <Button asChild variant="ghost" size="sm" className="h-8 md:h-10 text-[0.55rem] md:text-[0.6rem] font-black uppercase tracking-widest border border-white/5 bg-white/5 hover:bg-white/10 rounded-xl transition-all">
+                <a href={config?.exnovaUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1"><ExternalLink className="h-3 w-3" /> Exnova</a>
+            </Button>
+        </div>
 
-      <EconomicCalendarWidget asset={formData.asset} />
+        <EconomicCalendarWidget asset={formData.asset} />
 
-      <div className="space-y-1 md:space-y-2">
-        <p className="text-[0.5rem] md:text-[0.65rem] text-foreground/40 font-bold uppercase tracking-[0.2em]">Configuração Operacional</p>
-      </div>
+        {waitingMessage && (
+            <Alert className="text-center bg-primary/5 border-primary/20 py-2.5 rounded-xl">
+                <Timer className="h-4 w-4 text-primary" />
+                <AlertDescription className="text-[0.7rem] font-bold text-primary/80">{waitingMessage}</AlertDescription>
+            </Alert>
+        )}
 
-      {waitingMessage && (
-          <Alert className="text-center bg-primary/5 border-primary/20 py-1 md:py-2.5 rounded-xl">
-              <Timer className="h-3 w-3 md:h-4 md:w-4 text-primary" />
-              <AlertDescription className="text-[0.6rem] md:text-[0.7rem] font-bold text-primary/80">{waitingMessage}</AlertDescription>
-          </Alert>
-      )}
-
-      <div className="space-y-2 md:space-y-5 text-left">
-        <div className="space-y-1 md:space-y-2.5">
-          <div className="flex justify-between items-center px-1">
-            <Label className="text-[0.5rem] md:text-[0.65rem] font-black text-muted-foreground uppercase tracking-widest opacity-60">Ativo:</Label>
-            <div className="flex items-center space-x-1.5 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">
-              <Label htmlFor="otc-switch" className="text-[0.45rem] font-black text-muted-foreground uppercase tracking-widest opacity-50">OTC</Label>
-              <Switch id="otc-switch" checked={showOTC} onCheckedChange={setShowOTC} disabled={isLoading} className="scale-[0.35] origin-right" />
+        <div className="space-y-4 text-left">
+          <div className="space-y-2">
+            <div className="flex justify-between items-center px-1">
+              <Label className="text-[0.6rem] md:text-[0.65rem] font-black text-muted-foreground uppercase tracking-widest opacity-60">Ativo Selecionado:</Label>
+              <div className="flex items-center space-x-1.5 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">
+                <Label htmlFor="otc-switch" className="text-[0.5rem] font-black text-muted-foreground uppercase tracking-widest opacity-50">OTC</Label>
+                <Switch id="otc-switch" checked={showOTC} onCheckedChange={setShowOTC} disabled={isLoading} className="scale-[0.45] origin-right" />
+              </div>
             </div>
+            <Select value={formData.asset} onValueChange={(value) => setFormData({ ...formData, asset: value as Asset })} disabled={isLoading}>
+              <SelectTrigger className="h-12 md:h-14 text-xs md:text-sm rounded-xl bg-white/5 border-white/5 hover:bg-white/10 transition-all">
+                <SelectValue asChild>
+                  <div className="flex items-center gap-3">
+                    <CurrencyFlags asset={formData.asset} />
+                    <span className="font-bold tracking-tight">{formData.asset}</span>
+                  </div>
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-white/10 bg-card/95 backdrop-blur-xl">
+                {assets.map(asset => (
+                  <SelectItem key={asset} value={asset} className="rounded-lg focus:bg-primary/20 focus:text-white py-3">
+                    <div className="flex items-center gap-3"><CurrencyFlags asset={asset} /><span className="font-bold">{asset}</span></div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <Select value={formData.asset} onValueChange={(value) => setFormData({ ...formData, asset: value as Asset })} disabled={isLoading}>
-            <SelectTrigger className="h-9 md:h-12 text-[0.7rem] md:text-sm rounded-xl bg-white/5 border-white/5 hover:bg-white/10 transition-all">
-              <SelectValue asChild>
-                <div className="flex items-center gap-2 md:gap-3">
-                  <CurrencyFlags asset={formData.asset} />
-                  <span className="font-bold tracking-tight">{formData.asset}</span>
-                </div>
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent className="rounded-xl border-white/10 bg-card/95 backdrop-blur-xl">
-              {assets.map(asset => (
-                <SelectItem key={asset} value={asset} className="rounded-lg focus:bg-primary/20 focus:text-white">
-                  <div className="flex items-center gap-3"><CurrencyFlags asset={asset} /><span className="font-bold">{asset}</span></div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
 
-        <div className="space-y-1 md:space-y-2.5">
-          <Label className="text-[0.5rem] md:text-[0.65rem] font-black text-muted-foreground uppercase tracking-widest opacity-60 px-1">Expiração:</Label>
-          <Select value={formData.expirationTime} onValueChange={(value) => setFormData({ ...formData, expirationTime: value as ExpirationTime })} disabled={isLoading}>
-            <SelectTrigger className="h-9 md:h-12 text-[0.7rem] md:text-sm rounded-xl bg-white/5 border-white/5 hover:bg-white/10 transition-all">
-              <SelectValue placeholder="Selecione o Tempo" />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl border-white/10 bg-card/95 backdrop-blur-xl">
-              <SelectItem value="1m" className="rounded-lg font-bold">1 minuto (M1)</SelectItem>
-              <SelectItem value="5m" className="rounded-lg font-bold">5 minutos (M5)</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="space-y-2">
+            <Label className="text-[0.6rem] md:text-[0.65rem] font-black text-muted-foreground uppercase tracking-widest opacity-60 px-1">Tempo de Expiração:</Label>
+            <Select value={formData.expirationTime} onValueChange={(value) => setFormData({ ...formData, expirationTime: value as ExpirationTime })} disabled={isLoading}>
+              <SelectTrigger className="h-12 md:h-14 text-xs md:text-sm rounded-xl bg-white/5 border-white/5 hover:bg-white/10 transition-all">
+                <SelectValue placeholder="Selecione o Tempo" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl border-white/10 bg-card/95 backdrop-blur-xl">
+                <SelectItem value="1m" className="rounded-lg font-bold py-3">1 minuto (M1)</SelectItem>
+                <SelectItem value="5m" className="rounded-lg font-bold py-3">5 minutos (M5)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
-      <div className="w-full space-y-1 md:space-y-4 pt-1 md:pt-4">
+      <div className="w-full space-y-4 pt-8">
           <Button
             size="lg"
-            className="w-full h-11 md:h-14 text-xs md:text-base font-black bg-primary text-primary-foreground shadow-2xl transition-all pulse-strong rounded-xl uppercase tracking-tighter"
+            className="w-full h-14 md:h-16 text-sm md:text-lg font-black bg-primary text-primary-foreground shadow-2xl transition-all pulse-strong rounded-xl uppercase tracking-tighter"
             onClick={onSubmit}
             disabled={buttonDisabled}
           >
-            {isLoading ? <Loader2 className="mr-2 h-4 w-4 md:mr-3 md:h-5 md:w-5 animate-spin" /> : !isMarketOpen ? <Lock className="mr-2 h-4 w-4 md:mr-3 md:h-5 md:w-5" /> : (hasReachedLimit && !isPremium) || waitingMessage ? <Timer className="mr-2 h-4 w-4 md:mr-3 md:h-5 md:w-5" /> : <BarChart className="mr-2 h-4 w-4 md:mr-3 md:h-5 md:w-5" />}
-            {isLoading ? 'Analisando...' : !isMarketOpen ? 'Mercado Fechado' : (hasReachedLimit && !isPremium) || waitingMessage ? 'Aguardando Liberação' : 'Analisar Agora'}
+            {isLoading ? <Loader2 className="mr-3 h-5 w-5 animate-spin" /> : !isMarketOpen ? <Lock className="mr-3 h-5 w-5" /> : (hasReachedLimit && !isPremium) || waitingMessage ? <Timer className="mr-3 h-5 w-5" /> : <BarChart className="mr-3 h-5 w-5" />}
+            {isLoading ? 'ANALISANDO MERCADO...' : !isMarketOpen ? 'MERCADO FECHADO' : (hasReachedLimit && !isPremium) || waitingMessage ? 'AGUARDANDO LIBERAÇÃO' : 'ANALISAR AGORA'}
           </Button>
           {!isPremium && (
-            <Button variant="link" className="w-full flex-col h-auto text-purple-400 hover:text-purple-300 group py-0.5" onClick={() => {
+            <Button variant="link" className="w-full flex-col h-auto text-purple-400 hover:text-purple-300 group py-1" onClick={() => {
               if (vipStatus) setVipModalOpen(true);
               else setUpgradeModalOpen(true);
             }}>
-                <Crown className="h-3 w-3 md:h-5 md:w-5 mb-0.5 group-hover:scale-110 transition-transform" />
-                <span className="text-[0.45rem] md:text-[0.55rem] font-black uppercase tracking-[0.2em]">Acesso PREMIUM</span>
+                <Crown className="h-5 w-5 mb-1 group-hover:scale-110 transition-transform" />
+                <span className="text-[0.55rem] font-black uppercase tracking-[0.2em]">DESBLOQUEAR ACESSO PREMIUM</span>
             </Button>
           )}
       </div>

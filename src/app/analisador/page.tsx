@@ -87,7 +87,6 @@ export default function AnalisadorPage() {
   const [hasReachedLimit, setHasReachedLimit] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
   
-  // Modals
   const [isStatusModalOpen, setStatusModalOpen] = useState(false);
   const [isUpgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [isNewsWarningModalOpen, setIsNewsWarningModalOpen] = useState(false);
@@ -97,7 +96,6 @@ export default function AnalisadorPage() {
   const usageStorageKey = user ? `signalUsage_${user.uid}` : null;
   const [isChartVisible, setIsChartVisible] = useState(true);
 
-  // Real-time references
   const vipRequestRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, 'vipRequests', user.uid);
@@ -123,7 +121,6 @@ export default function AnalisadorPage() {
     expirationTime: '1m',
   });
 
-  // Dynamic Navigation
   const navigationItems = useMemo(() => {
     if (!config || !config.pagesOrder) {
         return Object.entries(PAGE_METADATA)
@@ -140,7 +137,6 @@ export default function AnalisadorPage() {
         .filter((p: any) => p && p.label);
   }, [config]);
 
-  // Page Visibility & Auth Check
   useEffect(() => {
     if (isUserLoading || isProfileLoading) {
         setAccessState('checking');
@@ -204,7 +200,6 @@ export default function AnalisadorPage() {
       setHasReachedLimit(recentTimestamps.length >= config.hourlySignalLimit);
     }
   }, [appState, isPremium, usageStorageKey, config]);
-
 
   useEffect(() => {
     const checkMarketStatus = () => setIsMarketOpen(isMarketOpenForAsset(formData.asset));
@@ -367,7 +362,7 @@ export default function AnalisadorPage() {
 
   const renderContent = () => {
     switch (appState) {
-      case 'loading': return <AnalysisAnimation />;
+      case 'loading': return <div className="w-full h-full flex items-center justify-center"><AnalysisAnimation /></div>;
       case 'result': return signalData && <SignalResult data={signalData} onReset={() => setAppState('idle')} />;
       default: return (
           <SignalForm
@@ -383,7 +378,6 @@ export default function AnalisadorPage() {
             firestore={firestore}
             isPremium={isPremium}
             vipStatus={(vipData as any)?.status}
-            // Now managed by page
             isVipModalOpen={isStatusModalOpen}
             setVipModalOpen={setStatusModalOpen}
             setUpgradeModalOpen={setUpgradeModalOpen}
@@ -456,16 +450,16 @@ export default function AnalisadorPage() {
           </div>
         </header>
 
-        <main className="flex-grow container max-w-[1400px] mx-auto p-2 md:p-10 pb-20 md:pb-32">
+        <main className="flex-grow container max-w-[1400px] mx-auto p-0 md:p-10">
             <div className="w-full">
-                <div className="flex flex-col lg:flex-row gap-4 md:gap-8 items-start justify-center">
-                    <div className="w-full lg:w-[450px] flex flex-col gap-4 md:gap-6 min-h-[calc(100svh-140px)] lg:min-h-0">
-                        <div className="w-full flex-grow bg-card/50 backdrop-blur-xl border border-white/10 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-10 flex flex-col items-center justify-center transition-all duration-500 overflow-hidden relative shine-effect">
+                <div className="flex flex-col lg:flex-row gap-0 lg:gap-8 items-stretch justify-center">
+                    <div className="w-full lg:w-[450px] flex flex-col min-h-[calc(100dvh-100px)] lg:min-h-0">
+                        <div className="w-full flex-grow bg-card/50 backdrop-blur-xl border-x-0 md:border border-white/10 rounded-none md:rounded-3xl shadow-2xl p-6 md:p-10 flex flex-col items-center justify-start md:justify-center transition-all duration-500 overflow-hidden relative shine-effect">
                             {renderContent()}
                         </div>
                         
                         {!isPremium && appState !== 'loading' && (
-                             <div className="bg-gradient-to-br from-primary/20 to-transparent border border-primary/20 rounded-xl md:rounded-2xl p-3 md:p-5 flex items-center justify-between shadow-xl">
+                             <div className="bg-gradient-to-br from-primary/20 to-transparent border-t md:border border-primary/20 md:rounded-2xl p-4 flex items-center justify-between shadow-xl">
                                 <div className="space-y-0.5 md:space-y-1">
                                     <p className="text-[0.55rem] md:text-[0.6rem] font-bold text-primary tracking-[0.15em] uppercase opacity-80">Estatuto de Conta</p>
                                     <h4 className="text-xs md:text-sm font-bold text-foreground">Versão VIP Limitada</h4>
@@ -481,9 +475,9 @@ export default function AnalisadorPage() {
                         )}
                     </div>
 
-                     <div className="flex flex-grow relative flex-col min-w-0 self-stretch min-h-[calc(100svh-140px)] lg:min-h-0 pt-4 lg:pt-0">
+                     <div className="flex flex-grow relative flex-col min-w-0 self-stretch min-h-[calc(100dvh-100px)] lg:min-h-0">
                         {isOtcAsset ? (
-                            <div className="w-full h-full flex items-center justify-center bg-card/40 backdrop-blur-xl border border-white/5 rounded-3xl shadow-2xl p-10">
+                            <div className="w-full h-full flex items-center justify-center bg-card/40 backdrop-blur-xl border-x-0 md:border border-white/5 rounded-none md:rounded-3xl shadow-2xl p-10">
                                 {appState === 'loading' ? (
                                     <AnalysisAnimation />
                                 ) : (
@@ -507,7 +501,7 @@ export default function AnalisadorPage() {
                                 )}
                             </div>
                         ) : (
-                            <div className="flex flex-col h-full bg-card/40 backdrop-blur-xl border border-white/5 rounded-3xl shadow-2xl overflow-hidden transition-all duration-500">
+                            <div className="flex flex-col h-full bg-card/40 backdrop-blur-xl border-x-0 md:border border-white/5 rounded-none md:rounded-3xl shadow-2xl overflow-hidden transition-all duration-500">
                                 <div className="flex justify-between items-center px-6 py-4 border-b border-white/5 bg-white/5">
                                     <div className="flex items-center gap-6">
                                         <div className="flex items-center gap-2.5">
@@ -525,7 +519,7 @@ export default function AnalisadorPage() {
                                     </Button>
                                 </div>
 
-                                <div className="flex-grow bg-[#0a0a0a] relative min-h-[550px] md:min-h-0">
+                                <div className="flex-grow bg-[#0a0a0a] relative">
                                     {isChartVisible && (
                                         <TradingViewWidget
                                             asset={currentAsset}

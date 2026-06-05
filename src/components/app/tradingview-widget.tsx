@@ -134,7 +134,7 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset, interval }
         id={widgetContainerId} 
         ref={containerRef} 
         className="tradingview-widget-container" 
-        style={{ width: '100%', height: '100%', minHeight: '300px' }}
+        style={{ width: '100%', height: '100%', minHeight: '100%' }}
     />
   );
 };

@@ -19,7 +19,7 @@ export function FloatingSupportButton() {
         const isMobile = window.innerWidth < 768;
         if (isMobile) {
             // Top left for mobile as requested
-            setPosition({ x: 10, y: 10 }); 
+            setPosition({ x: 15, y: 85 }); 
         } else {
             // Center right for desktop
             const initialX = window.innerWidth - 60; 
@@ -107,7 +107,7 @@ export function FloatingSupportButton() {
       }}
       className={cn(
         "fixed z-[100] cursor-grab active:cursor-grabbing select-none transition-all duration-300",
-        isDragging ? "opacity-100 scale-110" : "opacity-60 hover:opacity-100"
+        isDragging ? "opacity-100 scale-110" : "opacity-50 hover:opacity-100"
       )}
     >
       <div className="relative group/wrapper">
@@ -123,13 +123,13 @@ export function FloatingSupportButton() {
           target="_blank"
           rel="noopener noreferrer"
           className={cn(
-            "flex items-center justify-center gap-2 p-2 rounded-full shadow-xl transition-all group overflow-hidden border border-white/10",
+            "flex items-center justify-center gap-2 p-2.5 rounded-full shadow-xl transition-all group overflow-hidden border border-white/10",
             "bg-[#229ED9]/30 backdrop-blur-md text-white"
           )}
         >
           <Headset className="h-4 w-4 md:h-5 md:w-5" />
           <span className={cn(
-              "max-w-0 overflow-hidden transition-all duration-500 font-black whitespace-nowrap text-[0.55rem] uppercase tracking-widest",
+              "max-w-0 overflow-hidden transition-all duration-500 font-black whitespace-nowrap text-[0.6rem] uppercase tracking-widest",
               "group-hover:max-w-xs group-hover:ml-1.5"
           )}>
             SUPORTE

@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, ReactNode, useState, useEffect, Suspense, useCallback } from 'react';
@@ -40,7 +41,7 @@ export interface AppConfig {
   [key: string]: any; 
 }
 
-// Define the state for the config context
+// Define the state for the context
 interface ConfigContextState {
   config: AppConfig | null;
   isConfigLoading: boolean;
@@ -49,10 +50,10 @@ interface ConfigContextState {
   trackCheckoutClick: () => void;
 }
 
-// Create the context with an initial undefined value
+// Create the context
 const ConfigContext = createContext<ConfigContextState | undefined>(undefined);
 
-// Default configs to be used as a fallback
+// Default configs (All pages ENABLED by default)
 const defaultConfig: AppConfig = {
     hotmartUrl: "https://pay.hotmart.com/G102999657C",
     exnovaUrl: "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=",
@@ -119,9 +120,8 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
   const trackCheckoutClick = useCallback(async () => {
     if (!firestore) return;
     
-    // Don't track clicks from admin account
     const currentUser = auth.currentUser;
-    if (currentUser?.email === 'chines@trader.com') return;
+    if (currentUser?.email === 'chines@trader.com' || currentUser?.email === 'estrategiachinesa@gmail.com') return;
 
     const path = window.location.pathname;
     const fieldName = `clicks_${path.replace(/\//g, '') || 'home'}`;
@@ -144,9 +144,8 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
         const path = window.location.pathname;
         if (path.startsWith('/adm')) return; 
 
-        // Don't track visits from admin account
         const currentUser = auth.currentUser;
-        if (currentUser?.email === 'chines@trader.com') return;
+        if (currentUser?.email === 'chines@trader.com' || currentUser?.email === 'estrategiachinesa@gmail.com') return;
 
         const sessionKey = `visited_${path.replace(/\//g, '_')}`;
         const hasTracked = sessionStorage.getItem(sessionKey);
@@ -183,7 +182,6 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
     trackVisit();
 
     const unsubscribers: (() => void)[] = [];
-
     const docPaths = ['links', 'limitation', 'time', 'remoteValues', 'registration', 'offer', 'analytics', 'pages'];
     
     let loadedDocs = 0;
@@ -191,7 +189,7 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
 
     const handleDocUpdate = (docName: string, data: any) => {
         if (docName === 'pages') {
-            setConfig(prev => ({ ...prev, pages: data }));
+            setConfig(prev => ({ ...prev, pages: { ...defaultConfig.pages, ...data } }));
         } else {
             setConfig(prev => ({ ...prev, ...data }));
         }

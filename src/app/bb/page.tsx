@@ -1,5 +1,12 @@
-import { redirect } from 'next/navigation';
+
+'use client';
+
+import { BrokerBugSimulator } from '@/components/broker-bug-simulator';
 
 export default function BrokerPage() {
-  redirect('/login');
+  return (
+    <div className="w-full animate-in fade-in duration-700">
+        <BrokerBugSimulator />
+    </div>
+  );
 }

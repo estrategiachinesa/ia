@@ -512,6 +512,19 @@ export function SignalForm({
     <>
       <div className="w-full space-y-6 text-center">
         
+        <div className="grid grid-cols-2 gap-2 mb-2">
+            <Button asChild variant="ghost" size="sm" className="h-8 text-[0.6rem] font-black uppercase tracking-widest border border-white/5 bg-white/5 hover:bg-white/10 rounded-lg transition-all">
+                <a href={config?.iqOptionUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+                    <ExternalLink className="h-3 w-3" /> IQ Option
+                </a>
+            </Button>
+            <Button asChild variant="ghost" size="sm" className="h-8 text-[0.6rem] font-black uppercase tracking-widest border border-white/5 bg-white/5 hover:bg-white/10 rounded-lg transition-all">
+                <a href={config?.exnovaUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
+                    <ExternalLink className="h-3 w-3" /> Exnova
+                </a>
+            </Button>
+        </div>
+
         <EconomicCalendarWidget asset={formData.asset} />
 
         <div className="space-y-2">

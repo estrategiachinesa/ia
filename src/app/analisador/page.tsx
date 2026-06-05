@@ -119,7 +119,7 @@ export default function AnalisadorPage() {
 
   const [formData, setFormData] = useState<FormData>({
     asset: 'EUR/JPY',
-    expirationTime: '5m',
+    expirationTime: '1m',
   });
 
   // Dynamic Navigation based on Admin Order
@@ -568,22 +568,6 @@ export default function AnalisadorPage() {
                     <div className="w-full lg:w-[450px] flex flex-col gap-6">
                         <div className="w-full bg-card/50 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl p-10 min-h-[620px] flex flex-col items-center justify-center transition-all duration-500 overflow-hidden relative shine-effect">
                             {renderContent()}
-                        </div>
-
-                        <div className="w-full bg-card/40 backdrop-blur-xl border border-white/5 rounded-2xl p-6 shadow-xl space-y-4">
-                            <h3 className="text-[0.65rem] font-black text-muted-foreground uppercase tracking-widest opacity-60">Plataformas Operacionais</h3>
-                            <div className="grid grid-cols-2 gap-3">
-                                <Button asChild variant="outline" className="h-11 rounded-xl font-bold border-white/10 bg-white/5 hover:bg-white/10 transition-all">
-                                    <a href={config?.iqOptionUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
-                                        <ExternalLink className="h-4 w-4" /> IQ Option
-                                    </a>
-                                </Button>
-                                <Button asChild variant="outline" className="h-11 rounded-xl font-bold border-white/10 bg-white/5 hover:bg-white/10 transition-all">
-                                    <a href={config?.exnovaUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
-                                        <ExternalLink className="h-4 w-4" /> Exnova
-                                    </a>
-                                </Button>
-                            </div>
                         </div>
                         
                         {!isPremium && appState !== 'loading' && (

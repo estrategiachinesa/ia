@@ -11,7 +11,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from '@/components/ui/dialog'; // Usando Dialog comum para manter consistência
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import YoutubePlayer from '@/components/youtube-player';
@@ -20,7 +20,7 @@ import YoutubePlayer from '@/components/youtube-player';
 import { SignalForm } from '@/components/app/signal-form';
 import { SignalResult } from '@/components/app/signal-result';
 import { isMarketOpenForAsset } from '@/lib/market-hours';
-import { Loader2, AlertTriangle, ChevronDown, ChevronUp, BarChart, LogOut, User, Calendar, ShieldAlert, ExternalLink, Zap, Search, Radio } from 'lucide-react';
+import { Loader2, AlertTriangle, ChevronDown, ChevronUp, BarChart, LogOut, User, Calendar, ShieldAlert, ExternalLink, Zap, Search, Radio, Crown } from 'lucide-react';
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { useAppConfig } from '@/firebase/config-provider';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 import AffiliateLink from '@/components/app/affiliate-link';
 import { generateSignal as generateClientSideSignal, Asset, ExpirationTime } from '@/lib/signal-generator';
 import { VipUpgradeModal } from '@/components/app/vip-upgrade-modal';
+import { VipStatusModal } from '@/components/app/vip-status-modal';
 import { AnalysisAnimation } from '@/components/app/analysis-animation';
 import TradingViewWidget from '@/components/app/tradingview-widget';
 import { cn } from '@/lib/utils';
@@ -85,18 +86,18 @@ export default function AnalisadorPage() {
   const [signalUsage, setSignalUsage] = useState<SignalUsage>({ timestamps: [] });
   const [hasReachedLimit, setHasReachedLimit] = useState(false);
   const [isPremium, setIsPremium] = useState(false);
-  const [isVipModalOpen, setVipModalOpen] = useState(false);
+  
+  // Modals
+  const [isStatusModalOpen, setStatusModalOpen] = useState(false);
   const [isUpgradeModalOpen, setUpgradeModalOpen] = useState(false);
-  const { toast } = useToast();
-  
   const [isNewsWarningModalOpen, setIsNewsWarningModalOpen] = useState(false);
-  const [hasAgreedToNewsWarning, setHasAgreedToNewsWarning] = useState(false);
-
-  const usageStorageKey = user ? `signalUsage_${user.uid}` : null;
   
+  const { toast } = useToast();
+  const [hasAgreedToNewsWarning, setHasAgreedToNewsWarning] = useState(false);
+  const usageStorageKey = user ? `signalUsage_${user.uid}` : null;
   const [isChartVisible, setIsChartVisible] = useState(true);
 
-  // Real-time references for permissions and status
+  // Real-time references
   const vipRequestRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, 'vipRequests', user.uid);
@@ -122,7 +123,7 @@ export default function AnalisadorPage() {
     expirationTime: '1m',
   });
 
-  // Dynamic Navigation based on Admin Order
+  // Dynamic Navigation
   const navigationItems = useMemo(() => {
     if (!config || !config.pagesOrder) {
         return Object.entries(PAGE_METADATA)
@@ -139,25 +140,7 @@ export default function AnalisadorPage() {
         .filter((p: any) => p && p.label);
   }, [config]);
 
-  // Page Visibility Check
-  useEffect(() => {
-      if (config && config.pages && config.pages.analisador === false) {
-          setAccessState('disabled');
-      }
-  }, [config]);
-
-  // CRITICAL: Force immediate logout if account is disabled
-  useEffect(() => {
-    if (userProfile?.accountStatus === 'DISABLED') {
-      setAccessState('blocked');
-      // Sign out immediately to kill the session token
-      auth.signOut().then(() => {
-        localStorage.removeItem('loginTimestamp');
-        localStorage.removeItem('hasSeenVipWelcome');
-      });
-    }
-  }, [userProfile?.accountStatus, auth]);
-
+  // Page Visibility & Auth Check
   useEffect(() => {
     if (isUserLoading || isProfileLoading) {
         setAccessState('checking');
@@ -171,6 +154,7 @@ export default function AnalisadorPage() {
 
     if (userProfile?.accountStatus === 'DISABLED') {
       setAccessState('blocked');
+      auth.signOut();
       return;
     }
 
@@ -180,20 +164,8 @@ export default function AnalisadorPage() {
     }
 
     const loginTime = localStorage.getItem('loginTimestamp');
-    let sessionExpired = false;
-
-    if (loginTime) {
-      const hoursSinceLogin = (Date.now() - parseInt(loginTime)) / (1000 * 60 * 60);
-      if (hoursSinceLogin >= 1) {
-        sessionExpired = true;
-      }
-    } else {
-      sessionExpired = true;
-    }
-
-    if (sessionExpired) {
+    if (!loginTime || (Date.now() - parseInt(loginTime)) / (1000 * 60 * 60) >= 1) {
         auth.signOut();
-        localStorage.removeItem('loginTimestamp');
         setAccessState('denied');
     } else {
         setAccessState('granted');
@@ -202,17 +174,15 @@ export default function AnalisadorPage() {
 
    useEffect(() => {
     const isPremiumUser = vipData && ['PREMIUM', 'APPROVED'].includes((vipData as any).status);
+    setIsPremium(!!isPremiumUser);
     
     if (isPremiumUser) {
-      setIsPremium(true);
       document.documentElement.classList.add('theme-premium');
-
       const hasSeenWelcome = localStorage.getItem('hasSeenVipWelcome');
       if (!hasSeenWelcome) {
-        setVipModalOpen(true);
+        setStatusModalOpen(true);
       }
     } else {
-      setIsPremium(false);
       document.documentElement.classList.remove('theme-premium');
     }
      return () => {
@@ -229,51 +199,21 @@ export default function AnalisadorPage() {
     if (usageString) {
       const usage: Partial<SignalUsage> = JSON.parse(usageString);
       const oneHourAgo = Date.now() - 60 * 60 * 1000;
-      
       const recentTimestamps = (usage.timestamps || []).filter(ts => ts > oneHourAgo);
-      
-      if (usage.timestamps && usage.timestamps.length !== recentTimestamps.length) {
-          const newUsage = { timestamps: recentTimestamps };
-          localStorage.setItem(usageStorageKey, JSON.stringify(newUsage));
-          setSignalUsage(newUsage);
-      } else {
-          setSignalUsage({ timestamps: recentTimestamps });
-      }
-      
       setHasReachedLimit(recentTimestamps.length >= config.hourlySignalLimit);
-
     }
   }, [appState, isPremium, usageStorageKey, config]);
 
 
   useEffect(() => {
-    const checkMarketStatus = () => {
-        setIsMarketOpen(isMarketOpenForAsset(formData.asset));
-    };
+    const checkMarketStatus = () => setIsMarketOpen(isMarketOpenForAsset(formData.asset));
     checkMarketStatus();
     const interval = setInterval(checkMarketStatus, 10000); 
     return () => clearInterval(interval);
-  }, [formData.asset, config]);
-
-  useEffect(() => {
-    const checkAndSetOTC = () => {
-      const isEurUsdOpen = isMarketOpenForAsset('EUR/USD');
-      const isEurJpyOpen = isMarketOpenForAsset('EUR/JPY');
-      if (!isEurUsdOpen && !isEurJpyOpen) {
-        setShowOTC(true);
-        setFormData(prev => ({ ...prev, asset: 'EUR/JPY (OTC)' }));
-      }
-    };
-    
-    checkAndSetOTC();
-    const interval = setInterval(checkAndSetOTC, 60000);
-
-    return () => clearInterval(interval);
-  }, [config]);
+  }, [formData.asset]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined;
-
     if (appState === 'result' && signalData) {
       const updateCountdowns = () => {
         setSignalData(prevData => {
@@ -281,24 +221,16 @@ export default function AnalisadorPage() {
           const now = new Date();
           if (prevData.operationStatus === 'pending') {
             const newCountdown = Math.max(0, Math.floor((prevData.targetDate.getTime() - now.getTime()) / 1000));
-            
-
-            if (newCountdown > 0) {
-              return { ...prevData, countdown: newCountdown };
-            } else {
-              const operationDuration = prevData.expirationTime === '1m' ? 60 : 300;
-              return { ...prevData, countdown: 0, operationStatus: 'active', operationCountdown: operationDuration };
-            }
+            if (newCountdown > 0) return { ...prevData, countdown: newCountdown };
+            const operationDuration = prevData.expirationTime === '1m' ? 60 : 300;
+            return { ...prevData, countdown: 0, operationStatus: 'active', operationCountdown: operationDuration };
           }
           if (prevData.operationStatus === 'active') {
               const operationDuration = prevData.expirationTime === '1m' ? 60 : 300;
               const operationEndTime = prevData.targetDate.getTime() + (operationDuration * 1000);
-              const newOperationCountdown = Math.max(0, Math.floor((operationEndTime - now.getTime()) / 1000));
-              if (newOperationCountdown > 0) {
-                  return { ...prevData, operationCountdown: newOperationCountdown };
-              } else {
-                  return { ...prevData, operationCountdown: 0, operationStatus: 'finished' };
-              }
+              const newOpCountdown = Math.max(0, Math.floor((operationEndTime - now.getTime()) / 1000));
+              if (newOpCountdown > 0) return { ...prevData, operationCountdown: newOpCountdown };
+              return { ...prevData, operationCountdown: 0, operationStatus: 'finished' };
           }
           return prevData;
         });
@@ -313,22 +245,8 @@ export default function AnalisadorPage() {
     sessionStorage.setItem('hasSeenNewsWarning', 'true');
     setIsNewsWarningModalOpen(false);
 
-    if (!config) {
-        toast({
-            variant: 'destructive',
-            title: 'Erro de Configuração',
-            description: 'A configuração da aplicação não foi carregada. Tente novamente.',
-        });
-        return;
-    }
-    if (!user || !firestore) {
-      toast({
-            variant: 'destructive',
-            title: 'Erro de Autenticação',
-            description: 'Não foi possível identificar o usuário. Tente fazer login novamente.',
-        });
-        return;
-    }
+    if (!config || !user || !firestore) return;
+
     if (!isPremium && usageStorageKey) {
       const usageString = localStorage.getItem(usageStorageKey) || '{ "timestamps": [] }';
       const currentUsage: SignalUsage = JSON.parse(usageString);
@@ -337,13 +255,12 @@ export default function AnalisadorPage() {
 
       if (recentTimestamps.length >= config.hourlySignalLimit) {
           setHasReachedLimit(true);
-          setVipModalOpen(true);
+          setStatusModalOpen(true);
           return;
       }
     }
 
     setAppState('loading');
-    
     await new Promise(resolve => setTimeout(resolve, 5000));
     
     try {
@@ -351,10 +268,6 @@ export default function AnalisadorPage() {
         asset: formData.asset,
         expirationTime: formData.expirationTime,
         userTier: isPremium ? 'PREMIUM' : 'VIP',
-        premiumMinWait: config.premiumMinWait,
-        premiumMaxWait: config.premiumMaxWait,
-        vipMinWait: config.vipMinWait,
-        vipMaxWait: config.vipMaxWait,
         invertSignal: config.invertSignal,
       });
       
@@ -376,85 +289,62 @@ export default function AnalisadorPage() {
         const currentUsage: SignalUsage = JSON.parse(usageString);
         const oneHourAgo = Date.now() - 60 * 60 * 1000;
         const recentTimestamps = (currentUsage.timestamps || []).filter(ts => ts > oneHourAgo);
-
-        const newTimestamps = [...recentTimestamps, Date.now()];
-        const newUsage = { timestamps: newTimestamps };
+        const newUsage = { timestamps: [...recentTimestamps, Date.now()] };
         localStorage.setItem(usageStorageKey, JSON.stringify(newUsage));
-        setSignalUsage(newUsage);
-        if(newUsage.timestamps.length >= config.hourlySignalLimit){
-            setHasReachedLimit(true);
-        }
+        if(newUsage.timestamps.length >= config.hourlySignalLimit) setHasReachedLimit(true);
       }
 
       setAppState('result');
     } catch (error) {
-        console.error("Error generating signal:", error);
-        toast({
-            variant: 'destructive',
-            title: 'Erro ao Gerar Sinal',
-            description: 'Ocorreu um erro. Tente novamente.',
-        });
         setAppState('idle');
     }
   };
 
   const handleAnalyze = () => {
     const hasSeenWarning = sessionStorage.getItem('hasSeenNewsWarning');
-
-    if (hasSeenWarning) {
-      proceedWithAnalysis();
-    } else {
+    if (hasSeenWarning) proceedWithAnalysis();
+    else {
       setHasAgreedToNewsWarning(false);
       setIsNewsWarningModalOpen(true);
     }
   };
 
-  const handleReset = () => {
-    setAppState('idle');
-    setSignalData(null);
-  };
-  
   const handleLogout = async () => {
     await auth.signOut();
     localStorage.removeItem('loginTimestamp');
-    localStorage.removeItem('hasSeenVipWelcome');
     router.push('/login');
   }
 
+  const handleUpgradeClick = () => {
+    if (vipData) {
+      setStatusModalOpen(true);
+    } else {
+      setUpgradeModalOpen(true);
+    }
+  };
+
   if (accessState === 'checking' || isVipLoading || isConfigLoading || isProfileLoading) {
       return (
-          <div className="flex h-screen w-full items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin" />
-              <p className="ml-2">Verificando acesso...</p>
+          <div className="flex h-screen w-full items-center justify-center bg-black">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
       )
   }
 
-  if (accessState === 'disabled') {
+  if (accessState === 'disabled' || accessState === 'blocked') {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background p-6">
-        <div className="max-w-md w-full bg-card border border-primary/20 rounded-3xl p-10 text-center space-y-6 shadow-2xl shadow-primary/10 animate-in zoom-in-95 duration-300">
-           <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto">
-             <AlertTriangle className="h-10 w-10 text-primary" />
+        <div className={cn("max-w-md w-full bg-card border rounded-3xl p-10 text-center space-y-6 shadow-2xl animate-in zoom-in-95", accessState === 'blocked' ? "border-destructive/20" : "border-primary/20")}>
+           <div className={cn("w-20 h-20 rounded-full flex items-center justify-center mx-auto", accessState === 'blocked' ? "bg-destructive/10" : "bg-primary/10")}>
+             {accessState === 'blocked' ? <ShieldAlert className="h-10 w-10 text-destructive" /> : <AlertTriangle className="h-10 w-10 text-primary" />}
            </div>
-           <h2 className="text-3xl font-headline font-black text-foreground uppercase tracking-tight">Manutenção</h2>
-           <p className="text-muted-foreground leading-relaxed">O Analisador IA está temporariamente indisponível para atualizações de mercado. Por favor, tente novamente mais tarde.</p>
-           <Button variant="outline" onClick={() => router.push('/login')} className="w-full h-12 rounded-xl font-bold">Voltar para Início</Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (accessState === 'blocked') {
-    return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background p-6">
-        <div className="max-w-md w-full bg-card border border-destructive/20 rounded-3xl p-10 text-center space-y-6 shadow-2xl shadow-destructive/10 animate-in zoom-in-95 duration-300">
-           <div className="bg-destructive/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto">
-             <ShieldAlert className="h-10 w-10 text-destructive" />
-           </div>
-           <h2 className="text-3xl font-headline font-black text-foreground uppercase tracking-tight">Acesso Bloqueado</h2>
-           <p className="text-muted-foreground leading-relaxed">Sua conta foi suspensa por um administrador. Se você acredita que isso é um erro, entre em contato com o suporte oficial.</p>
-           <Button variant="outline" onClick={() => router.push('/login')} className="w-full h-12 rounded-xl font-bold">Voltar para Início</Button>
+           <h2 className="text-3xl font-headline font-black uppercase tracking-tight">
+                {accessState === 'blocked' ? 'Acesso Bloqueado' : 'Manutenção'}
+           </h2>
+           <p className="text-muted-foreground leading-relaxed">
+                {accessState === 'blocked' ? 'Sua conta foi suspensa.' : 'O Analisador está temporariamente indisponível.'}
+           </p>
+           <Button variant="outline" onClick={() => router.push('/login')} className="w-full h-12 rounded-xl font-bold">Voltar</Button>
         </div>
       </div>
     );
@@ -462,30 +352,23 @@ export default function AnalisadorPage() {
 
   if (accessState === 'denied') {
     return (
-      <AlertDialog open={true}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Acesso Negado</AlertDialogTitle>
-            <AlertDialogDescription>
-              Sua sessão expirou ou você não tem permissão para acessar. Por favor, retorne à página inicial para entrar novamente.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={() => router.push('/login')}>Ir para Login</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <Dialog open={true}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Sessão Expirada</DialogTitle>
+            <DialogDescription>Por favor, faça login novamente.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter><Button className="w-full" onClick={() => router.push('/login')}>Ir para Login</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
     );
   }
 
   const renderContent = () => {
     switch (appState) {
-      case 'loading':
-        return <AnalysisAnimation />;
-      case 'result':
-        return signalData && <SignalResult data={signalData} onReset={handleReset} />;
-      default:
-        return (
+      case 'loading': return <AnalysisAnimation />;
+      case 'result': return signalData && <SignalResult data={signalData} onReset={() => setAppState('idle')} />;
+      default: return (
           <SignalForm
             formData={formData}
             setFormData={setFormData}
@@ -496,11 +379,12 @@ export default function AnalisadorPage() {
             isMarketOpen={isMarketOpen}
             hasReachedLimit={hasReachedLimit}
             user={user}
-            firestore={useFirebase().firestore}
+            firestore={firestore}
             isPremium={isPremium}
             vipStatus={(vipData as any)?.status}
-            isVipModalOpen={isVipModalOpen}
-            setVipModalOpen={setVipModalOpen}
+            // Now managed by page
+            isVipModalOpen={isStatusModalOpen}
+            setVipModalOpen={setStatusModalOpen}
             setUpgradeModalOpen={setUpgradeModalOpen}
             rejectedBrokerId={(vipData as any)?.brokerId}
           />
@@ -540,8 +424,8 @@ export default function AnalisadorPage() {
                         {item.label}
                         {item.id === 'sessaochinesa' && (
                             <span className={cn(
-                                "w-2 h-2 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.6)]",
-                                isSessionOnline ? "bg-green-500 animate-pulse" : "bg-red-500"
+                                "w-2 h-2 rounded-full",
+                                isSessionOnline ? "bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.6)]" : "bg-red-500"
                             )} />
                         )}
                     </AffiliateLink>
@@ -578,13 +462,7 @@ export default function AnalisadorPage() {
                                 </div>
                                 <Button 
                                   size="sm" 
-                                  onClick={() => {
-                                    if (vipData) {
-                                      setVipModalOpen(true);
-                                    } else {
-                                      setUpgradeModalOpen(true);
-                                    }
-                                  }} 
+                                  onClick={handleUpgradeClick} 
                                   className="h-9 px-6 text-[0.7rem] font-black rounded-full shadow-lg shadow-primary/20 hover:scale-105 transition-transform"
                                 >
                                   UPGRADE
@@ -605,18 +483,14 @@ export default function AnalisadorPage() {
                                         </div>
                                         <h3 className="text-2xl font-bold text-foreground">Gráfico Indisponível (OTC)</h3>
                                         <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
-                                            Os ativos de balcão (OTC) são exclusivos de cada corretora. Utilize a plataforma oficial para acompanhamento em tempo real das movimentações.
+                                            Os ativos de balcão (OTC) são exclusivos de cada corretora. Utilize a plataforma oficial para acompanhamento em tempo real.
                                         </p>
                                         <div className="mt-10 grid grid-cols-2 gap-4">
                                             <Button asChild variant="secondary" className="font-bold h-12 rounded-xl border border-border/50">
-                                                <a href={config?.iqOptionUrl || '#'} target="_blank" rel="noopener noreferrer">
-                                                    IQ Option
-                                                </a>
+                                                <a href={config?.iqOptionUrl || '#'} target="_blank" rel="noopener noreferrer">IQ Option</a>
                                             </Button>
                                             <Button asChild variant="secondary" className="font-bold h-12 rounded-xl border border-border/50">
-                                                <a href={config?.exnovaUrl || '#'} target="_blank" rel="noopener noreferrer">
-                                                    Exnova
-                                                </a>
+                                                <a href={config?.exnovaUrl || '#'} target="_blank" rel="noopener noreferrer">Exnova</a>
                                             </Button>
                                         </div>
                                     </div>
@@ -671,46 +545,38 @@ export default function AnalisadorPage() {
         config={config}
       />
 
+      <VipStatusModal
+        isOpen={isStatusModalOpen}
+        onOpenChange={setStatusModalOpen}
+        vipStatus={(vipData as any)?.status}
+        rejectedBrokerId={(vipData as any)?.brokerId}
+      />
+
       <Dialog open={isNewsWarningModalOpen} onOpenChange={setIsNewsWarningModalOpen}>
         <DialogContent className="max-w-lg bg-card/95 backdrop-blur-2xl border-white/10 rounded-3xl shadow-2xl">
             <DialogHeader>
                 <DialogTitle className="flex items-center gap-3 text-2xl font-headline">
-                    <AlertTriangle className="text-yellow-400 h-8 w-8" />
-                    Alta Volatilidade
+                    <AlertTriangle className="text-yellow-400 h-8 w-8" /> Alta Volatilidade
                 </DialogTitle>
                 <DialogDescription className="text-muted-foreground text-base leading-relaxed">
-                    Detectámos eventos de alto impacto no calendário económico. Operar nestes momentos pode comprometer as análises estatísticas da IA.
+                    Eventos de alto impacto podem comprometer as análises estatísticas da IA.
                 </DialogDescription>
             </DialogHeader>
             <div className="py-6 space-y-6">
                 <YoutubePlayer videoId="81HihzJWVwk" />
                 <Button asChild variant="outline" className="w-full h-12 font-bold rounded-xl border-primary/20 hover:bg-primary/5">
-                    <a href="https://br.investing.com/economic-calendar" target="_blank" rel="noopener noreferrer">
-                        Ver Calendário Completo
-                    </a>
+                    <a href="https://br.investing.com/economic-calendar" target="_blank" rel="noopener noreferrer">Calendário Económico</a>
                 </Button>
                 <div className="flex items-center space-x-4 pt-2 p-4 bg-white/5 rounded-2xl border border-white/10">
                     <Checkbox id="news-agreement" checked={hasAgreedToNewsWarning} onCheckedChange={(checked) => setHasAgreedToNewsWarning(checked as boolean)} />
-                    <label htmlFor="news-agreement" className="text-xs font-bold leading-tight cursor-pointer peer-disabled:cursor-not-allowed peer-disabled:opacity-70 uppercase tracking-wide opacity-80">
-                        Estou ciente dos riscos e verifiquei o impacto das notícias.
+                    <label htmlFor="news-agreement" className="text-xs font-bold leading-tight cursor-pointer uppercase tracking-wide opacity-80">
+                        Estou ciente dos riscos operacionais.
                     </label>
                 </div>
             </div>
             <DialogFooter className="gap-3 sm:gap-0">
-                <Button
-                    variant="secondary"
-                    onClick={() => setIsNewsWarningModalOpen(false)}
-                    className="font-bold h-12 rounded-xl px-8"
-                >
-                    Cancelar
-                </Button>
-                <Button
-                    onClick={proceedWithAnalysis}
-                    disabled={!hasAgreedToNewsWarning}
-                    className="font-bold h-12 rounded-xl px-10 shadow-lg shadow-primary/20"
-                >
-                    Entendido, Prosseguir
-                </Button>
+                <Button variant="secondary" onClick={() => setIsNewsWarningModalOpen(false)} className="font-bold h-12 rounded-xl px-8">Cancelar</Button>
+                <Button onClick={proceedWithAnalysis} disabled={!hasAgreedToNewsWarning} className="font-bold h-12 rounded-xl px-10 shadow-lg shadow-primary/20">Prosseguir</Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>

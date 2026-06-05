@@ -1,20 +1,15 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import Image from 'next/image';
 import {
   AlertTriangle,
   CheckCircle2,
   SquareCheckBig,
   Goal,
   ShieldCheck,
-  Star,
   LineChart,
-  Youtube as YoutubeIcon,
 } from 'lucide-react';
-import Link from 'next/link';
 import {
   Accordion,
   AccordionContent,
@@ -25,7 +20,6 @@ import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
-  CardFooter,
   CardHeader,
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -35,6 +29,7 @@ import { Logo } from '@/components/logo';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAppConfig } from '@/firebase';
+import { useRouter } from 'next/navigation';
 
 const VslPlayerWithNoSSR = dynamic(() => import('@/components/vsl-player'), {
   ssr: false,
@@ -45,7 +40,8 @@ const HotmartButton = ({ className, url }: { className?: string; url: string }) 
     const { affiliateId } = useAppConfig();
     let finalUrl = url;
     if (affiliateId && !finalUrl.includes('afftrack')) {
-        finalUrl += `&afftrack=${affiliateId}`;
+        const separator = finalUrl.includes('?') ? '&' : '?';
+        finalUrl += `${separator}afftrack=${affiliateId}`;
     }
 
     return (
@@ -422,9 +418,17 @@ const Footer = () => (
 
 export default function DescubraPage() {
   const [videoEnded, setVideoEnded] = useState(false);
+  const { config } = useAppConfig();
+  const router = useRouter();
+
+  // Kill Switch Check
+  useEffect(() => {
+    if (config?.pages?.descubra === false) {
+      router.push('/login');
+    }
+  }, [config, router]);
 
   useEffect(() => {
-    // Check localStorage on mount and on changes to update the state
     const checkVideoStatus = () => {
       const storedVideoEnded = localStorage.getItem('vsl_videoEnded') === 'true';
       if (storedVideoEnded !== videoEnded) {
@@ -433,10 +437,7 @@ export default function DescubraPage() {
     };
     checkVideoStatus();
 
-    // Also listen for storage events to sync across tabs
     window.addEventListener('storage', checkVideoStatus);
-    
-    // Set up an interval as a fallback, especially for the active tab
     const interval = setInterval(checkVideoStatus, 500);
 
     return () => {
@@ -445,6 +446,17 @@ export default function DescubraPage() {
     };
   }, [videoEnded]);
 
+  if (config?.pages?.descubra === false) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center bg-[#0e0e0e] p-6">
+            <div className="text-center space-y-4 animate-in fade-in duration-500">
+                <AlertTriangle className="h-12 w-12 text-primary mx-auto animate-pulse" />
+                <h2 className="text-xl font-black uppercase text-white">Página em Manutenção</h2>
+                <Button variant="outline" onClick={() => router.push('/login')}>Voltar ao Início</Button>
+            </div>
+        </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center bg-[#0e0e0e] text-white">

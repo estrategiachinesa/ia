@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -8,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { LineChart, Loader2, Eye, EyeOff } from 'lucide-react';
+import { LineChart, Loader2, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 import AffiliateLink from '@/components/app/affiliate-link';
 import { useFirebase, useAppConfig, setDocumentNonBlocking } from '@/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
@@ -32,6 +31,13 @@ export default function RegisterPage() {
   const [activationCode, setActivationCode] = useState('');
   const [isCodeLoading, setIsCodeLoading] = useState(false);
 
+  // Kill Switch Check
+  useEffect(() => {
+    if (config?.pages?.register === false) {
+      router.push('/login');
+    }
+  }, [config, router]);
+
   useEffect(() => {
     if (!isUserLoading && user) {
         router.push('/analisador');
@@ -53,7 +59,6 @@ export default function RegisterPage() {
 
     setIsCodeLoading(true);
     
-    // Comparação exata e limpa
     if (trimmedCode === config.registrationSecret.trim()) {
         localStorage.setItem('activationCodeValidated', 'true');
         setRegistrationStep('terms');
@@ -154,6 +159,19 @@ export default function RegisterPage() {
       window.removeEventListener('keydown', handleKeyPress);
     };
   }, [handleRegister, handleCodeValidation, registrationStep]);
+
+  if (config?.pages?.register === false) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center bg-black p-6">
+            <div className="text-center space-y-4 animate-in fade-in duration-500">
+                <AlertTriangle className="h-12 w-12 text-primary mx-auto animate-pulse" />
+                <h2 className="text-xl font-black uppercase text-white">Registos Temporariamente Fechados</h2>
+                <p className="text-muted-foreground text-sm max-w-xs mx-auto">Novas licenças serão libertadas em breve. Por favor, contacte o suporte.</p>
+                <Button variant="outline" onClick={() => router.push('/login')}>Voltar ao Início</Button>
+            </div>
+        </div>
+    );
+  }
 
   if (isUserLoading) {
       return (

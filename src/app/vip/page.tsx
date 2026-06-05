@@ -1,13 +1,14 @@
-
 'use client';
 
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { useAppConfig } from '@/firebase';
-import { Check, ShieldCheck, Zap, BarChart, Clock, Users, Gift, Timer, ArrowLeft, Loader2 } from 'lucide-react';
+import { Check, ShieldCheck, Zap, BarChart, Clock, Users, Gift, Timer, ArrowLeft, Loader2, AlertTriangle } from 'lucide-react';
 import AffiliateLink from '@/components/app/affiliate-link';
 import VipVslPlayer from '@/components/vip-vsl-player';
 import { HotmartButton } from '@/components/app/hotmart-button';
+import { useAffiliateRouter } from '@/hooks/use-affiliate-router';
 
 const Feature = ({ icon: Icon, title, description }: { icon: React.ElementType; title: string; description: string }) => (
   <div className="flex items-start gap-4">
@@ -23,16 +24,34 @@ const Feature = ({ icon: Icon, title, description }: { icon: React.ElementType; 
 
 export default function VipPage() {
   const { config, isConfigLoading, affiliateId } = useAppConfig();
+  const router = useAffiliateRouter();
+
+  // Kill Switch Check
+  useEffect(() => {
+    if (config?.pages?.vip === false) {
+      router.push('/analisador');
+    }
+  }, [config, router]);
 
   let checkoutUrl = "https://pay.hotmart.com/G102999657C";
 
-  // Specific override for affiliate 'wm'
   if (affiliateId === 'wm') {
     checkoutUrl = 'https://go.hotmart.com/D103007301M?dp=1';
   } else if (affiliateId && checkoutUrl !== '#') {
-    // General affiliate tracking for others
     const separator = checkoutUrl.includes('?') ? '&' : '?';
     checkoutUrl = `${checkoutUrl}${separator}afftrack=${affiliateId}`;
+  }
+
+  if (config?.pages?.vip === false) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center bg-black p-6">
+            <div className="text-center space-y-4 animate-in fade-in duration-500">
+                <AlertTriangle className="h-12 w-12 text-primary mx-auto animate-pulse" />
+                <h2 className="text-xl font-black uppercase text-white">Oferta Temporariamente Indisponível</h2>
+                <Button variant="outline" onClick={() => router.push('/analisador')}>Voltar ao Analisador</Button>
+            </div>
+        </div>
+    );
   }
 
   return (
@@ -103,7 +122,7 @@ export default function VipPage() {
               <p className="text-xs md:text-sm text-muted-foreground">OFERTA ESPECIAL POR TEMPO LIMITADO</p>
               {isConfigLoading ? (
                 <div className="flex justify-center items-center my-4 h-12">
-                    <Loader2 className="h-8 w-8 animate-spin" />
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto" />
                 </div>
               ) : (
                 <p className="text-4xl md:text-5xl font-bold text-foreground my-2">{config?.price}</p>
@@ -134,5 +153,3 @@ export default function VipPage() {
     </div>
   );
 }
-
-    

@@ -46,7 +46,7 @@ function EconomicCalendarWidget({ asset }: { asset: string }) {
         </div>
       </div>
       
-      <div className="h-[240px] md:h-[180px] w-full overflow-hidden relative bg-[#0a0a0a]">
+      <div className="h-[180px] md:h-[180px] w-full overflow-hidden relative bg-[#0a0a0a]">
          <div className="relative w-[200%] left-[-5px] top-[-105px]">
             <iframe 
               src={`https://sslecal2.investing.com?columns=exc_flags,exc_currency,exc_importance&importance=1,2,3&countries=${countries}&calType=day&timeZone=12&lang=12`} 
@@ -132,12 +132,12 @@ export function SignalForm({
 
   return (
     <div className="w-full h-full flex flex-col justify-between text-center p-1 md:p-0">
-      <div className="space-y-6 md:space-y-6">
+      <div className="space-y-6 md:space-y-8">
         <div className="grid grid-cols-2 gap-4 mb-2">
-            <Button asChild variant="ghost" size="sm" className="h-12 md:h-10 text-[0.6rem] font-black uppercase tracking-widest border border-white/5 bg-white/5 hover:bg-white/10 rounded-xl transition-all">
+            <Button asChild variant="ghost" size="sm" className="h-12 md:h-12 text-[0.6rem] md:text-xs font-black uppercase tracking-widest border border-white/5 bg-white/5 hover:bg-white/10 rounded-xl transition-all">
                 <a href={config?.iqOptionUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2"><ExternalLink className="h-3.5 w-3.5" /> IQ Option</a>
             </Button>
-            <Button asChild variant="ghost" size="sm" className="h-12 md:h-10 text-[0.6rem] font-black uppercase tracking-widest border border-white/5 bg-white/5 hover:bg-white/10 rounded-xl transition-all">
+            <Button asChild variant="ghost" size="sm" className="h-12 md:h-12 text-[0.6rem] md:text-xs font-black uppercase tracking-widest border border-white/5 bg-white/5 hover:bg-white/10 rounded-xl transition-all">
                 <a href={config?.exnovaUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2"><ExternalLink className="h-3.5 w-3.5" /> Exnova</a>
             </Button>
         </div>
@@ -151,7 +151,7 @@ export function SignalForm({
             </Alert>
         )}
 
-        <div className="space-y-6 text-left">
+        <div className="space-y-6 md:space-y-8 text-left">
           <div className="space-y-3">
             <div className="flex justify-between items-center px-1">
               <Label className="text-[0.65rem] font-black text-muted-foreground uppercase tracking-widest opacity-60">Ativo Selecionado:</Label>
@@ -161,7 +161,7 @@ export function SignalForm({
               </div>
             </div>
             <Select value={formData.asset} onValueChange={(value) => setFormData({ ...formData, asset: value as Asset })} disabled={isLoading}>
-              <SelectTrigger className="h-14 md:h-14 text-sm rounded-2xl bg-white/5 border-white/5 hover:bg-white/10 transition-all">
+              <SelectTrigger className="h-14 md:h-16 text-sm rounded-2xl bg-white/5 border-white/5 hover:bg-white/10 transition-all">
                 <SelectValue asChild>
                   <div className="flex items-center gap-3">
                     <CurrencyFlags asset={formData.asset} />
@@ -182,7 +182,7 @@ export function SignalForm({
           <div className="space-y-3">
             <Label className="text-[0.65rem] font-black text-muted-foreground uppercase tracking-widest opacity-60 px-1">Tempo de Expiração:</Label>
             <Select value={formData.expirationTime} onValueChange={(value) => setFormData({ ...formData, expirationTime: value as ExpirationTime })} disabled={isLoading}>
-              <SelectTrigger className="h-14 md:h-14 text-sm rounded-2xl bg-white/5 border-white/5 hover:bg-white/10 transition-all">
+              <SelectTrigger className="h-14 md:h-16 text-sm rounded-2xl bg-white/5 border-white/5 hover:bg-white/10 transition-all">
                 <SelectValue placeholder="Selecione o Tempo" />
               </SelectTrigger>
               <SelectContent className="rounded-2xl border-white/10 bg-card/95 backdrop-blur-xl">
@@ -194,10 +194,10 @@ export function SignalForm({
         </div>
       </div>
 
-      <div className="w-full space-y-4 pt-8">
+      <div className="w-full space-y-4 pt-10">
           <Button
             size="lg"
-            className="w-full h-16 md:h-16 text-base md:text-lg font-black bg-primary text-primary-foreground shadow-2xl transition-all pulse-strong rounded-2xl uppercase tracking-tighter"
+            className="w-full h-16 md:h-20 text-base md:text-xl font-black bg-primary text-primary-foreground shadow-2xl transition-all pulse-strong rounded-2xl uppercase tracking-tighter"
             onClick={onSubmit}
             disabled={buttonDisabled}
           >

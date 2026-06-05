@@ -396,13 +396,13 @@ export default function AnalisadorPage() {
       <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/90 to-background" />
 
       <div className="flex flex-col min-h-screen">
-        <header className="px-4 py-3 md:py-4 flex flex-col md:flex-row justify-between items-center gap-3 md:gap-6 border-b border-border/10 bg-card/30 backdrop-blur-md sticky top-0 z-50">
+        <header className="px-4 py-2 md:py-4 flex flex-col md:flex-row justify-between items-center gap-2 md:gap-6 border-b border-border/10 bg-card/30 backdrop-blur-md sticky top-0 z-50 h-[72px] md:h-auto">
           <div className="flex items-center justify-between w-full md:w-auto relative">
              <div className="flex flex-col flex-1 items-center md:items-start text-center md:text-left">
-                <h1 className="text-lg md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tighter leading-tight">
+                <h1 className="text-base md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tighter leading-tight">
                     ESTRATÉGIA CHINESA
                 </h1>
-                <p className="text-[0.55rem] md:text-[0.6rem] text-primary/60 font-black tracking-[0.2em] uppercase mt-[-1px] md:mt-[-2px]">Intelligence Analyzer</p>
+                <p className="text-[0.5rem] md:text-[0.6rem] text-primary/60 font-black tracking-[0.2em] uppercase mt-[-1px]">Intelligence Analyzer</p>
              </div>
              
              <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-2 md:hidden">
@@ -410,23 +410,23 @@ export default function AnalisadorPage() {
                   variant="ghost"
                   size="sm"
                   onClick={handleLogout}
-                  className="text-[0.6rem] font-black text-muted-foreground hover:text-destructive transition-all rounded-full px-3 border border-white/5 h-8 uppercase tracking-tighter"
+                  className="text-[0.55rem] font-black text-muted-foreground hover:text-destructive transition-all rounded-full px-2.5 border border-white/5 h-7 uppercase tracking-tighter"
                 >
-                  <LogOut className="h-3.5 w-3.5 mr-1" />
+                  <LogOut className="h-3 w-3 mr-1" />
                   Sair
                 </Button>
              </div>
           </div>
 
-          <div className="flex items-center gap-1 w-full md:w-auto overflow-x-auto no-scrollbar justify-center pb-1 md:pb-0">
-            <nav className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5 shadow-2xl shrink-0">
+          <div className="flex items-center gap-1 w-full md:w-auto overflow-x-auto no-scrollbar justify-center">
+            <nav className="flex items-center gap-1 bg-black/40 p-0.5 rounded-lg border border-white/5 shadow-2xl shrink-0">
                {navigationItems.map((item) => (
-                  <Button key={item.id} asChild variant="ghost" size="sm" className={cn("h-8 md:h-10 px-3 md:px-4 rounded-lg md:rounded-xl text-[0.6rem] md:text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === item.path ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
-                      <AffiliateLink href={item.path} className="flex items-center gap-1.5 md:gap-2">
+                  <Button key={item.id} asChild variant="ghost" size="sm" className={cn("h-7 md:h-10 px-2 md:px-4 rounded-md md:rounded-xl text-[0.55rem] md:text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === item.path ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                      <AffiliateLink href={item.path} className="flex items-center gap-1 md:gap-2">
                           {item.label}
                           {item.id === 'sessaochinesa' && (
                               <span className={cn(
-                                  "w-1.5 h-1.5 md:w-2 md:h-2 rounded-full",
+                                  "w-1 h-1 md:w-2 md:h-2 rounded-full",
                                   isSessionOnline ? "bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500"
                               )} />
                           )}
@@ -453,14 +453,14 @@ export default function AnalisadorPage() {
             <div className="w-full">
                 <div className="flex flex-col lg:flex-row gap-0 lg:gap-8 items-stretch justify-center">
                     {/* Secção 1: Analisador */}
-                    <div className="w-full lg:w-[450px] flex flex-col h-[calc(100dvh-120px)] lg:h-auto overflow-hidden">
-                        <div className="w-full h-full bg-card/50 backdrop-blur-xl border-x-0 md:border border-white/10 rounded-none md:rounded-3xl shadow-2xl p-6 md:p-10 flex flex-col items-center justify-start md:justify-center transition-all duration-500 overflow-hidden relative shine-effect">
+                    <div className="w-full lg:w-[450px] flex flex-col h-[calc(100dvh-72px)] lg:h-auto overflow-hidden">
+                        <div className="w-full h-full bg-card/50 backdrop-blur-xl border-x-0 md:border border-white/10 rounded-none md:rounded-3xl shadow-2xl p-4 md:p-10 flex flex-col items-center justify-between md:justify-center transition-all duration-500 overflow-hidden relative shine-effect">
                             {renderContent()}
                         </div>
                     </div>
 
                     {/* Secção 2: Gráfico */}
-                     <div className="flex flex-grow relative flex-col min-w-0 self-stretch h-[calc(100dvh-120px)] lg:h-auto mt-0 lg:mt-0">
+                     <div className="flex flex-grow relative flex-col min-w-0 self-stretch h-[calc(100dvh-72px)] lg:h-auto mt-0 lg:mt-0">
                         {isOtcAsset ? (
                             <div className="w-full h-full flex items-center justify-center bg-card/40 backdrop-blur-xl border-x-0 md:border border-white/5 rounded-none md:rounded-3xl shadow-2xl p-10">
                                 {appState === 'loading' ? (
@@ -487,24 +487,24 @@ export default function AnalisadorPage() {
                             </div>
                         ) : (
                             <div className="flex flex-col h-full bg-card/40 backdrop-blur-xl border-x-0 md:border border-white/5 rounded-none md:rounded-3xl shadow-2xl overflow-hidden transition-all duration-500">
-                                <div className="flex justify-between items-center px-4 md:px-6 py-3 md:py-4 border-b border-white/5 bg-white/5">
+                                <div className="flex justify-between items-center px-4 md:px-6 py-3 md:py-4 border-b border-white/5 bg-white/5 h-[50px] md:h-auto">
                                     <div className="flex items-center gap-3 md:gap-6">
                                         <div className="flex items-center gap-2.5">
-                                            <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse" />
-                                            <span className="text-[0.65rem] md:text-[0.7rem] font-black text-muted-foreground uppercase tracking-[0.2em]">Market Live</span>
+                                            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                            <span className="text-[0.6rem] md:text-[0.7rem] font-black text-muted-foreground uppercase tracking-[0.2em]">Market Live</span>
                                         </div>
-                                        <div className="h-5 w-px bg-border/20" />
-                                        <div className="flex items-center gap-2 text-[0.7rem] md:text-[0.75rem] font-bold">
+                                        <div className="h-4 w-px bg-border/20" />
+                                        <div className="flex items-center gap-2 text-[0.65rem] md:text-[0.75rem] font-bold">
                                             <span className="text-muted-foreground">TIME:</span>
                                             <span className="text-primary bg-primary/10 px-2 py-0.5 rounded-md">{currentExpirationTime}</span>
                                         </div>
                                     </div>
-                                    <Button variant="ghost" size="icon" className="h-9 w-9 md:h-9 md:w-9 rounded-full hover:bg-white/10" onClick={() => setIsChartVisible(!isChartVisible)}>
-                                        {isChartVisible ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 md:h-9 md:w-9 rounded-full hover:bg-white/10" onClick={() => setIsChartVisible(!isChartVisible)}>
+                                        {isChartVisible ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                                     </Button>
                                 </div>
 
-                                <div className="flex-grow bg-[#0a0a0a] relative overflow-hidden h-full">
+                                <div className="flex-grow bg-[#0a0a0a] relative overflow-hidden h-[calc(100%-50px)] md:h-full">
                                     {isChartVisible && (
                                         <TradingViewWidget
                                             asset={currentAsset}

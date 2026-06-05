@@ -18,8 +18,8 @@ export function FloatingSupportButton() {
     const updatePosition = () => {
         const isMobile = window.innerWidth < 768;
         if (isMobile) {
-            // Top left for mobile as requested
-            setPosition({ x: 15, y: 85 }); 
+            // Top left for mobile as requested, but slightly offset to not cover logo
+            setPosition({ x: 10, y: 75 }); 
         } else {
             // Center right for desktop
             const initialX = window.innerWidth - 60; 
@@ -123,14 +123,14 @@ export function FloatingSupportButton() {
           target="_blank"
           rel="noopener noreferrer"
           className={cn(
-            "flex items-center justify-center gap-2 p-2.5 rounded-full shadow-xl transition-all group overflow-hidden border border-white/10",
+            "flex items-center justify-center gap-2 p-2 rounded-full shadow-xl transition-all group overflow-hidden border border-white/10",
             "bg-[#229ED9]/30 backdrop-blur-md text-white"
           )}
         >
-          <Headset className="h-4 w-4 md:h-5 md:w-5" />
+          <Headset className="h-3.5 w-3.5 md:h-5 md:w-5" />
           <span className={cn(
-              "max-w-0 overflow-hidden transition-all duration-500 font-black whitespace-nowrap text-[0.6rem] uppercase tracking-widest",
-              "group-hover:max-w-xs group-hover:ml-1.5"
+              "max-w-0 overflow-hidden transition-all duration-500 font-black whitespace-nowrap text-[0.55rem] uppercase tracking-widest",
+              "group-hover:max-w-xs group-hover:ml-1"
           )}>
             SUPORTE
           </span>

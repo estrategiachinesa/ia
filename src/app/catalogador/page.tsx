@@ -128,9 +128,10 @@ export default function CatalogadorPage() {
   useEffect(() => {
     if (!isUserLoading && !user) {
       router.push('/login');
+      return;
     }
     if (config?.pages?.catalogador === false) {
-        router.push('/analisador');
+        router.replace('/');
     }
   }, [user, isUserLoading, router, config]);
 
@@ -287,14 +288,14 @@ export default function CatalogadorPage() {
                     <p className="text-xs font-black text-primary uppercase tracking-[0.3em]">Manutenção do Sistema</p>
                 </div>
                 <p className="text-muted-foreground leading-relaxed text-sm">
-                    O Scanner de Sinais está a passar por uma recalibração de algoritmos para melhorar a assertividade. Por favor, utilize o Analisador Live enquanto trabalhamos.
+                    O Scanner de Sinais está a passar por uma recalibração de algoritmos para melhorar a assertividade. Redirecionando...
                 </p>
                 <div className="pt-4">
                     <Button 
-                        onClick={() => router.push('/analisador')}
+                        onClick={() => router.replace('/')}
                         className="w-full h-14 bg-primary text-black font-black uppercase tracking-tighter hover:bg-primary/90 rounded-xl"
                     >
-                        Ir para o Analisador
+                        Voltar ao Início
                     </Button>
                 </div>
             </div>

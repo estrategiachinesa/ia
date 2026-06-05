@@ -159,6 +159,7 @@ export default function AnalisadorPage() {
     }
 
     if (config?.pages?.analisador === false) {
+        router.replace('/');
         setAccessState('disabled');
         return;
     }
@@ -170,7 +171,7 @@ export default function AnalisadorPage() {
     } else {
         setAccessState('granted');
     }
-  }, [user, isUserLoading, isProfileLoading, userProfile, auth, config]);
+  }, [user, isUserLoading, isProfileLoading, userProfile, auth, config, router]);
 
    useEffect(() => {
     const isPremiumUser = vipData && ['PREMIUM', 'APPROVED'].includes((vipData as any).status);
@@ -344,7 +345,7 @@ export default function AnalisadorPage() {
            <p className="text-muted-foreground leading-relaxed">
                 {accessState === 'blocked' ? 'Sua conta foi suspensa.' : 'O Analisador está temporariamente indisponível.'}
            </p>
-           <Button variant="outline" onClick={() => router.push('/login')} className="w-full h-12 rounded-xl font-bold">Voltar</Button>
+           <Button variant="outline" onClick={() => router.push('/')} className="w-full h-12 rounded-xl font-bold">Voltar</Button>
         </div>
       </div>
     );
@@ -480,7 +481,7 @@ export default function AnalisadorPage() {
                         )}
                     </div>
 
-                     <div className="hidden md:flex flex-grow relative flex-col min-w-0 self-stretch">
+                     <div className="flex flex-grow relative flex-col min-w-0 self-stretch">
                         {isOtcAsset ? (
                             <div className="w-full h-full flex items-center justify-center bg-card/40 backdrop-blur-xl border border-white/5 rounded-3xl shadow-2xl p-10 min-h-[620px]">
                                 {appState === 'loading' ? (
@@ -524,7 +525,7 @@ export default function AnalisadorPage() {
                                     </Button>
                                 </div>
 
-                                <div className="flex-grow bg-[#0a0a0a] relative">
+                                <div className="flex-grow bg-[#0a0a0a] relative min-h-[400px] md:min-h-0">
                                     {isChartVisible && (
                                         <TradingViewWidget
                                             asset={currentAsset}

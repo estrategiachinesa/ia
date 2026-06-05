@@ -147,7 +147,7 @@ export default function SessaoChinesaPage() {
     // Check visibility
     React.useEffect(() => {
         if (config?.pages?.sessaochinesa === false) {
-            router.push('/analisador');
+            router.replace('/');
         }
     }, [config, router]);
 
@@ -243,8 +243,9 @@ export default function SessaoChinesaPage() {
             <div className="flex h-screen w-full items-center justify-center bg-black">
                 <div className="text-center space-y-4">
                     <AlertTriangle className="h-12 w-12 text-primary mx-auto animate-pulse" />
-                    <h2 className="text-xl font-black uppercase text-white">Sessão Temporariamente Indisponível</h2>
-                    <Button variant="outline" onClick={() => router.push('/analisador')}>Voltar ao Analisador</Button>
+                    <h2 className="text-xl font-black uppercase text-white">Sessão Indisponível</h2>
+                    <p className="text-sm text-muted-foreground">Redirecionando...</p>
+                    <Button variant="outline" onClick={() => router.replace('/')}>Voltar ao Início</Button>
                 </div>
             </div>
         );

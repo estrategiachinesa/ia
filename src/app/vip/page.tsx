@@ -29,7 +29,7 @@ export default function VipPage() {
   // Kill Switch Check
   useEffect(() => {
     if (config?.pages?.vip === false) {
-      router.push('/analisador');
+      router.replace('/');
     }
   }, [config, router]);
 
@@ -47,8 +47,9 @@ export default function VipPage() {
         <div className="flex h-screen w-full items-center justify-center bg-black p-6">
             <div className="text-center space-y-4 animate-in fade-in duration-500">
                 <AlertTriangle className="h-12 w-12 text-primary mx-auto animate-pulse" />
-                <h2 className="text-xl font-black uppercase text-white">Oferta Temporariamente Indisponível</h2>
-                <Button variant="outline" onClick={() => router.push('/analisador')}>Voltar ao Analisador</Button>
+                <h2 className="text-xl font-black uppercase text-white">Oferta Indisponível</h2>
+                <p className="text-sm text-muted-foreground">Redirecionando...</p>
+                <Button variant="outline" onClick={() => router.replace('/')}>Voltar ao Início</Button>
             </div>
         </div>
     );

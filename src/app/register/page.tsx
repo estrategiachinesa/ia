@@ -34,7 +34,7 @@ export default function RegisterPage() {
   // Kill Switch Check
   useEffect(() => {
     if (config?.pages?.register === false) {
-      router.push('/login');
+      router.replace('/');
     }
   }, [config, router]);
 
@@ -165,9 +165,9 @@ export default function RegisterPage() {
         <div className="flex h-screen w-full items-center justify-center bg-black p-6">
             <div className="text-center space-y-4 animate-in fade-in duration-500">
                 <AlertTriangle className="h-12 w-12 text-primary mx-auto animate-pulse" />
-                <h2 className="text-xl font-black uppercase text-white">Registos Temporariamente Fechados</h2>
-                <p className="text-muted-foreground text-sm max-w-xs mx-auto">Novas licenças serão libertadas em breve. Por favor, contacte o suporte.</p>
-                <Button variant="outline" onClick={() => router.push('/login')}>Voltar ao Início</Button>
+                <h2 className="text-xl font-black uppercase text-white">Registos Fechados</h2>
+                <p className="text-muted-foreground text-sm">Redirecionando...</p>
+                <Button variant="outline" onClick={() => router.replace('/')}>Voltar ao Início</Button>
             </div>
         </div>
     );

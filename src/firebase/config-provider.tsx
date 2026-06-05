@@ -26,6 +26,16 @@ export interface AppConfig {
   premiumMaxWait: number;
   visitCount?: number;
   checkoutClickCount?: number;
+  // Page access status
+  pages?: {
+    analisador?: boolean;
+    catalogador?: boolean;
+    sessaochinesa?: boolean;
+    vip?: boolean;
+    descubra?: boolean;
+    register?: boolean;
+    bb?: boolean;
+  };
   // Detalhamento por página
   [key: string]: any; 
 }
@@ -61,6 +71,15 @@ const defaultConfig: AppConfig = {
     price: "R$ 197",
     visitCount: 0,
     checkoutClickCount: 0,
+    pages: {
+        analisador: true,
+        catalogador: true,
+        sessaochinesa: true,
+        vip: true,
+        descubra: true,
+        register: true,
+        bb: true
+    },
     afiliados: {
       "wm": "https://go.hotmart.com/D103007301M?dp=1"
     },
@@ -165,13 +184,18 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
 
     const unsubscribers: (() => void)[] = [];
 
-    const docPaths = ['links', 'limitation', 'time', 'remoteValues', 'registration', 'offer', 'analytics'];
+    const docPaths = ['links', 'limitation', 'time', 'remoteValues', 'registration', 'offer', 'analytics', 'pages'];
     
     let loadedDocs = 0;
     const totalDocs = docPaths.length;
 
     const handleDocUpdate = (docName: string, data: any) => {
-        setConfig(prev => ({ ...prev, ...data }));
+        if (docName === 'pages') {
+            setConfig(prev => ({ ...prev, pages: data }));
+        } else {
+            setConfig(prev => ({ ...prev, ...data }));
+        }
+        
         if (loadedDocs < totalDocs) {
             loadedDocs++;
             if (loadedDocs === totalDocs) setIsConfigLoading(false);

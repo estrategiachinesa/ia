@@ -39,7 +39,8 @@ import {
   Crown,
   Radio,
   LogOut,
-  User
+  User,
+  AlertTriangle
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { CurrencyFlags } from '@/components/app/currency-flags';
@@ -111,12 +112,15 @@ export default function CatalogadorPage() {
   const isPremium = vipData && ['PREMIUM', 'APPROVED'].includes((vipData as any).status);
   const isSessionOnline = (sessionStatus as any)?.isOnline;
 
-  // Bloqueio de acesso para não logados
+  // Bloqueio de acesso para não logados ou página desativada
   useEffect(() => {
     if (!isUserLoading && !user) {
       router.push('/login');
     }
-  }, [user, isUserLoading, router]);
+    if (config?.pages?.catalogador === false) {
+        router.push('/analisador');
+    }
+  }, [user, isUserLoading, router, config]);
 
   const toggleAsset = (asset: Asset) => {
     setSelectedAssets(prev => 
@@ -241,6 +245,34 @@ export default function CatalogadorPage() {
     );
   }
 
+  if (config?.pages?.catalogador === false) {
+    return (
+        <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center p-6 text-center">
+            <div className="fixed inset-0 -z-10 grid-bg opacity-20" />
+            <div className="bg-card/40 backdrop-blur-xl border border-primary/20 p-12 rounded-3xl max-w-lg space-y-6 shadow-2xl shadow-primary/10 animate-in zoom-in-95 duration-500">
+                <div className="bg-primary/10 w-24 h-24 rounded-full flex items-center justify-center mx-auto border border-primary/20">
+                    <AlertTriangle className="h-10 w-10 text-primary" />
+                </div>
+                <div className="space-y-2">
+                    <h2 className="text-3xl font-headline font-black uppercase tracking-tighter text-white">Scanner Offline</h2>
+                    <p className="text-xs font-black text-primary uppercase tracking-[0.3em]">Manutenção do Sistema</p>
+                </div>
+                <p className="text-muted-foreground leading-relaxed text-sm">
+                    O Scanner de Sinais está a passar por uma recalibração de algoritmos para melhorar a assertividade. Por favor, utilize o Analisador Live enquanto trabalhamos.
+                </p>
+                <div className="pt-4">
+                    <Button 
+                        onClick={() => router.push('/analisador')}
+                        className="w-full h-14 bg-primary text-black font-black uppercase tracking-tighter hover:bg-primary/90 rounded-xl"
+                    >
+                        Ir para o Analisador
+                    </Button>
+                </div>
+            </div>
+        </div>
+    );
+  }
+
   if (!isPremium) {
     return (
         <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center p-6 text-center">
@@ -294,21 +326,27 @@ export default function CatalogadorPage() {
           </div>
 
           <nav className="flex items-center gap-1.5 bg-black/40 p-1.5 rounded-2xl border border-white/5 shadow-2xl">
-             <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === '/analisador' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
-                <AffiliateLink href="/analisador">Analisador</AffiliateLink>
-             </Button>
-             <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === '/catalogador' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
-                <AffiliateLink href="/catalogador">Sinais</AffiliateLink>
-             </Button>
-             <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all group", pathname === '/sessaochinesa' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
-                <AffiliateLink href="/sessaochinesa" className="flex items-center gap-2">
-                   Sessão
-                   <span className={cn(
-                     "w-2 h-2 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.6)]",
-                     isSessionOnline ? "bg-green-500 animate-pulse" : "bg-red-500"
-                   )} />
-                </AffiliateLink>
-             </Button>
+             {config?.pages?.analisador !== false && (
+                <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === '/analisador' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                    <AffiliateLink href="/analisador">Analisador</AffiliateLink>
+                </Button>
+             )}
+             {config?.pages?.catalogador !== false && (
+                <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === '/catalogador' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                    <AffiliateLink href="/catalogador">Sinais</AffiliateLink>
+                </Button>
+             )}
+             {config?.pages?.sessaochinesa !== false && (
+                <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all group", pathname === '/sessaochinesa' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                    <AffiliateLink href="/sessaochinesa" className="flex items-center gap-2">
+                    Sessão
+                    <span className={cn(
+                        "w-2 h-2 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.6)]",
+                        isSessionOnline ? "bg-green-500 animate-pulse" : "bg-red-500"
+                    )} />
+                    </AffiliateLink>
+                </Button>
+             )}
           </nav>
           
           <div className="flex items-center gap-4 ml-auto md:ml-0">

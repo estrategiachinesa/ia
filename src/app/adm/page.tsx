@@ -38,7 +38,10 @@ import {
   Headset,
   UserCheck,
   RefreshCcw,
-  StarHalf
+  StarHalf,
+  FileCode,
+  Layout,
+  ToggleRight
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -122,6 +125,17 @@ export default function AdminDashboard() {
   const [zoomLink, setZoomLink] = useState('');
   const [isSavingLink, setIsSavingLink] = useState(false);
 
+  const [pagesEnabled, setPagesEnabled] = useState({
+    analisador: true,
+    catalogador: true,
+    sessaochinesa: true,
+    vip: true,
+    descubra: true,
+    register: true,
+    bb: true
+  });
+  const [isSavingPages, setIsSavingPages] = useState(false);
+
   const isAdmin = user && ADMIN_EMAILS.includes(user.email || '');
 
   const sessionStatusRef = useMemoFirebase(() => firestore ? doc(firestore, 'session', 'status') : null, [firestore]);
@@ -143,11 +157,23 @@ export default function AdminDashboard() {
         const remoteSnap = await getDoc(doc(firestore, 'appConfig', 'remoteValues'));
         const limitSnap = await getDoc(doc(firestore, 'appConfig', 'limitation'));
         const linksSnap = await getDoc(doc(firestore, 'appConfig', 'links'));
+        const pagesSnap = await getDoc(doc(firestore, 'appConfig', 'pages'));
 
         if (regSnap.exists()) setRegSecret(regSnap.data().registrationSecret || '');
         if (remoteSnap.exists()) setInvertSignals(remoteSnap.data().invertSignal || false);
         if (limitSnap.exists()) setSignalLimit(remoteSnap.data().hourlySignalLimit || 3);
         if (linksSnap.exists()) setSupportLink(linksSnap.data().supportUrl || '');
+        if (pagesSnap.exists()) {
+            setPagesEnabled({
+                analisador: pagesSnap.data().analisador ?? true,
+                catalogador: pagesSnap.data().catalogador ?? true,
+                sessaochinesa: pagesSnap.data().sessaochinesa ?? true,
+                vip: pagesSnap.data().vip ?? true,
+                descubra: pagesSnap.data().descubra ?? true,
+                register: pagesSnap.data().register ?? true,
+                bb: pagesSnap.data().bb ?? true,
+            });
+        }
       } catch (e) { console.error("Error fetching configs:", e); }
     };
     fetchConfigs();
@@ -166,6 +192,19 @@ export default function AdminDashboard() {
       toast({ title: 'Configurações Salvas' });
     } catch (e) { toast({ variant: 'destructive', title: 'Erro ao Salvar' }); }
     finally { setIsConfigSaving(false); }
+  };
+
+  const handleSavePages = async () => {
+    if (!firestore) return;
+    setIsSavingPages(true);
+    try {
+        await setDoc(doc(firestore, 'appConfig', 'pages'), pagesEnabled);
+        toast({ title: 'Acessos Atualizados' });
+    } catch (e) {
+        toast({ variant: 'destructive', title: 'Erro ao salvar acessos' });
+    } finally {
+        setIsSavingPages(false);
+    }
   };
 
   const handleToggleSession = async (current: boolean | undefined) => {
@@ -349,6 +388,18 @@ export default function AdminDashboard() {
     .sort((a, b) => {
       let valA = a[sortConfig.key as keyof typeof a] as any;
       let valB = b[sortConfig.key as keyof typeof b] as any;
+      
+      if (sortConfig.key === 'idCorretora') {
+          valA = a.brokerId;
+          valB = b.brokerId;
+      } else if (sortConfig.key === 'status') {
+          valA = a.accountStatus;
+          valB = b.accountStatus;
+      } else if (sortConfig.key === 'plano') {
+          valA = a.subscriptionStatus;
+          valB = b.subscriptionStatus;
+      }
+
       if (valA?.seconds) valA = valA.seconds;
       if (valB?.seconds) valB = valB.seconds;
       if (valA === null || valA === undefined) valA = '';
@@ -455,8 +506,10 @@ export default function AdminDashboard() {
              ))}
         </div>
 
-        {/* CONTROLO DE SESSÃO CHINESA */}
+        {/* TOP CARDS ROW */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* CONTROLO DE SESSÃO CHINESA */}
             <Card className="bg-card/40 border-white/5 p-6 rounded-2xl lg:col-span-1">
                 <div className="flex items-center gap-2 mb-6">
                     <Tv className="h-5 w-5 text-primary" />
@@ -512,75 +565,84 @@ export default function AdminDashboard() {
                 </div>
             </Card>
 
+            {/* VISIBILIDADE DE PÁGINAS */}
+            <Card className="bg-card/40 border-white/5 p-6 rounded-2xl lg:col-span-1">
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2">
+                        <Layout className="h-5 w-5 text-primary" />
+                        <h2 className="text-sm font-black uppercase tracking-widest">Visibilidade Páginas</h2>
+                    </div>
+                    <Button size="sm" onClick={handleSavePages} disabled={isSavingPages} className="h-8 bg-primary/20 text-primary border border-primary/20 hover:bg-primary hover:text-black">
+                        {isSavingPages ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    </Button>
+                </div>
+                <div className="space-y-3">
+                    {[
+                        { id: 'analisador', label: 'Analisador IA', path: '/analisador' },
+                        { id: 'catalogador', label: 'Scanner (Sinais)', path: '/catalogador' },
+                        { id: 'sessaochinesa', label: 'Sessão Chinesa', path: '/sessaochinesa' },
+                        { id: 'vip', label: 'Página VIP', path: '/vip' },
+                        { id: 'descubra', label: 'VSL (Descubra)', path: '/descubra' },
+                        { id: 'register', label: 'Registo', path: '/register' },
+                        { id: 'bb', label: 'Broker Bug', path: '/bb' },
+                    ].map((p) => (
+                        <div key={p.id} className="flex items-center justify-between p-2.5 bg-white/5 rounded-xl border border-white/5 group hover:border-primary/20 transition-all">
+                            <div className="flex flex-col">
+                                <span className="text-[0.7rem] font-bold uppercase">{p.label}</span>
+                                <span className="text-[0.55rem] font-mono opacity-40">{p.path}</span>
+                            </div>
+                            <Switch 
+                                checked={pagesEnabled[p.id as keyof typeof pagesEnabled]} 
+                                onCheckedChange={(val) => setPagesEnabled(prev => ({ ...prev, [p.id]: val }))} 
+                                className="scale-75"
+                            />
+                        </div>
+                    ))}
+                </div>
+            </Card>
+
             {/* GLOBAL CONFIGS */}
-            <Card className="bg-card/40 border-white/5 p-6 rounded-2xl lg:col-span-2">
+            <Card className="bg-card/40 border-white/5 p-6 rounded-2xl lg:col-span-1">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-2">
                         <Settings2 className="h-5 w-5 text-primary" />
-                        <h2 className="text-sm font-black uppercase tracking-widest">Configurações Globais</h2>
+                        <h2 className="text-sm font-black uppercase tracking-widest">Global</h2>
                     </div>
-                    <Button variant="destructive" size="sm" onClick={() => setIsResetDialogOpen(true)} className="h-9 px-4 rounded-xl font-bold bg-red-600/10 text-red-500 border border-red-500/20 hover:bg-red-600 hover:text-white"><History className="h-4 w-4 mr-2" /> Zerar Stats</Button>
+                    <Button variant="destructive" size="sm" onClick={() => setIsResetDialogOpen(true)} className="h-8 px-3 rounded-lg font-bold bg-red-600/10 text-red-500 border border-red-500/20 hover:bg-red-600 hover:text-white"><History className="h-3 w-3 mr-1" /> Reset</Button>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label className="text-[0.6rem] font-bold uppercase opacity-60">Chave de Registo (Secret)</Label>
-                            <div className="flex gap-2">
-                                <div className="relative flex-grow">
-                                    <Input 
-                                        type={showSecret ? "text" : "password"} 
-                                        value={regSecret} 
-                                        onChange={(e) => setRegSecret(e.target.value)} 
-                                        className="bg-white/5 border-white/10 h-11 pr-10" 
-                                    />
-                                    <button 
-                                        onClick={() => setShowSecret(!showSecret)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 opacity-40 hover:opacity-100 transition-opacity"
-                                    >
-                                        {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                    </button>
-                                </div>
-                                <Button size="icon" variant="outline" className="h-11 w-11" onClick={handleCopySecret}><Copy className="h-4 w-4" /></Button>
-                            </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                            <Label className="text-[0.6rem] font-bold uppercase opacity-60">Link de Cadastro</Label>
-                            <Button variant="outline" className="w-full h-11 justify-start font-mono text-[0.65rem] bg-white/5 border-white/10" onClick={handleCopyRegisterLink}>
-                                <UserPlus className="h-4 w-4 mr-2 text-primary" /> Copiar Link de Registro
-                            </Button>
+                <div className="space-y-4">
+                    <div className="space-y-1.5">
+                        <Label className="text-[0.6rem] font-bold uppercase opacity-60">Link de Suporte</Label>
+                        <Input 
+                            value={supportLink} 
+                            onChange={(e) => setSupportLink(e.target.value)} 
+                            placeholder="https://t.me/..." 
+                            className="bg-white/5 border-white/10 h-10 text-xs" 
+                        />
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <Label className="text-[0.6rem] font-bold uppercase opacity-60">Chave Secret (Hotmart)</Label>
+                        <div className="flex gap-2">
+                            <Input 
+                                type={showSecret ? "text" : "password"} 
+                                value={regSecret} 
+                                onChange={(e) => setRegSecret(e.target.value)} 
+                                className="bg-white/5 border-white/10 h-10 text-xs" 
+                            />
+                            <Button size="icon" variant="outline" className="h-10 w-10" onClick={() => setShowSecret(!showSecret)}>{showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</Button>
                         </div>
                     </div>
 
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><Headset className="h-3 w-3"/> Link de Suporte (Telegram/WA)</Label>
-                            <Input 
-                                value={supportLink} 
-                                onChange={(e) => setSupportLink(e.target.value)} 
-                                placeholder="https://t.me/..." 
-                                className="bg-white/5 border-white/10 h-11" 
-                            />
+                    <div className="grid grid-cols-2 gap-3 items-end">
+                        <div className="space-y-1.5">
+                            <Label className="text-[0.6rem] font-bold uppercase opacity-60">Trades/Hora</Label>
+                            <Input type="number" value={signalLimit} onChange={(e) => setSignalLimit(parseInt(e.target.value))} className="bg-white/5 border-white/10 h-10" />
                         </div>
-
-                         <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
-                            <div className="flex flex-col">
-                                <span className="text-xs font-bold uppercase">Inverter Sinais</span>
-                                <span className="text-[0.55rem] opacity-40 uppercase">Apenas Modo PREMIUM</span>
-                            </div>
-                            <Switch checked={invertSignals} onCheckedChange={setInvertSignals} />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 items-end">
-                            <div className="space-y-2">
-                                <Label className="text-[0.6rem] font-bold uppercase opacity-60">Limite Trades</Label>
-                                <Input type="number" value={signalLimit} onChange={(e) => setSignalLimit(parseInt(e.target.value))} className="bg-white/5 border-white/10 h-11" />
-                            </div>
-                            <Button onClick={handleSaveConfigs} disabled={isConfigSaving} className="h-11 font-black uppercase tracking-tighter bg-primary text-black">
-                                {isConfigSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />} Salvar
-                            </Button>
-                        </div>
+                        <Button onClick={handleSaveConfigs} disabled={isConfigSaving} className="h-10 bg-primary text-black font-black uppercase tracking-tighter text-xs">
+                            {isConfigSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-1.5" />} Salvar
+                        </Button>
                     </div>
                 </div>
             </Card>
@@ -632,10 +694,10 @@ export default function AdminDashboard() {
                 <TableHead onClick={() => setSortConfig({ key: 'createdAt', direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })} className="cursor-pointer text-[0.6rem] font-black uppercase">Registo <ArrowUpDown className="inline h-3 w-3 ml-1" /></TableHead>
                 <TableHead onClick={() => setSortConfig({ key: 'email', direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })} className="cursor-pointer text-[0.6rem] font-black uppercase">Membro <ArrowUpDown className="inline h-3 w-3 ml-1" /></TableHead>
                 <TableHead onClick={() => setSortConfig({ key: 'lastActivity', direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })} className="cursor-pointer text-[0.6rem] font-black uppercase">Atividade <ArrowUpDown className="inline h-3 w-3 ml-1" /></TableHead>
-                <TableHead onClick={() => setSortConfig({ key: 'brokerId', direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })} className="cursor-pointer text-[0.6rem] font-black uppercase">ID Corretora <ArrowUpDown className="inline h-3 w-3 ml-1" /></TableHead>
-                <TableHead onClick={() => setSortConfig({ key: 'rating', direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })} className="cursor-pointer text-[0.6rem] font-black uppercase">Avaliação <ArrowUpDown className="inline h-3 w-3 ml-1" /></TableHead>
-                <TableHead onClick={() => setSortConfig({ key: 'accountStatus', direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })} className="cursor-pointer text-[0.6rem] font-black uppercase">Status <ArrowUpDown className="inline h-3 w-3 ml-1" /></TableHead>
-                <TableHead onClick={() => setSortConfig({ key: 'rawStatus', direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })} className="cursor-pointer text-[0.6rem] font-black uppercase">Plano <ArrowUpDown className="inline h-3 w-3 ml-1" /></TableHead>
+                <TableHead onClick={() => setSortConfig({ key: 'idCorretora', direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })} className="cursor-pointer text-[0.6rem] font-black uppercase">ID Corretora <ArrowUpDown className="inline h-3 w-3 ml-1" /></TableHead>
+                <TableHead className="text-[0.6rem] font-black uppercase">Avaliação</TableHead>
+                <TableHead onClick={() => setSortConfig({ key: 'status', direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })} className="cursor-pointer text-[0.6rem] font-black uppercase">Status <ArrowUpDown className="inline h-3 w-3 ml-1" /></TableHead>
+                <TableHead onClick={() => setSortConfig({ key: 'plano', direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' })} className="cursor-pointer text-[0.6rem] font-black uppercase">Plano <ArrowUpDown className="inline h-3 w-3 ml-1" /></TableHead>
                 <TableHead className="text-right text-[0.6rem] font-black uppercase">Ações</TableHead>
               </TableRow>
             </TableHeader>

@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { doc, collection, query, where, getDocs, limit } from 'firebase/firestore';
-import { Loader2, ShieldCheck, XCircle, CheckCircle, Trophy, TrendingUp, Radio, Zap, Search, User, LogOut } from 'lucide-react';
+import { Loader2, ShieldCheck, XCircle, CheckCircle, Trophy, TrendingUp, Radio, Zap, Search, User, LogOut, AlertTriangle } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
@@ -132,6 +132,13 @@ export default function SessaoChinesaPage() {
     const losses = (scoreData as any)?.losses;
     const managedLink = (statusData as any)?.zoomLink;
 
+    // Check visibility
+    React.useEffect(() => {
+        if (config?.pages?.sessaochinesa === false) {
+            router.push('/analisador');
+        }
+    }, [config, router]);
+
     const handleLogout = async () => {
       await auth.signOut();
       localStorage.removeItem('loginTimestamp');
@@ -202,6 +209,18 @@ export default function SessaoChinesaPage() {
         window.open(finalLink, '_blank');
     }
 
+    if (config?.pages?.sessaochinesa === false) {
+        return (
+            <div className="flex h-screen w-full items-center justify-center bg-black">
+                <div className="text-center space-y-4">
+                    <AlertTriangle className="h-12 w-12 text-primary mx-auto animate-pulse" />
+                    <h2 className="text-xl font-black uppercase text-white">Sessão Temporariamente Indisponível</h2>
+                    <Button variant="outline" onClick={() => router.push('/analisador')}>Voltar ao Analisador</Button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="theme-premium min-h-screen flex flex-col">
             <div className="fixed inset-0 -z-20 h-full w-full grid-bg" />
@@ -225,21 +244,27 @@ export default function SessaoChinesaPage() {
               </div>
 
               <nav className="flex items-center gap-1.5 bg-black/40 p-1.5 rounded-2xl border border-white/5 shadow-2xl">
-                 <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === '/analisador' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
-                    <AffiliateLink href="/analisador">Analisador</AffiliateLink>
-                 </Button>
-                 <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === '/catalogador' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
-                    <AffiliateLink href="/catalogador">Sinais</AffiliateLink>
-                 </Button>
-                 <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all group", pathname === '/sessaochinesa' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
-                    <AffiliateLink href="/sessaochinesa" className="flex items-center gap-2">
-                       Sessão
-                       <span className={cn(
-                         "w-2 h-2 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.6)]",
-                         isOnline ? "bg-green-500 animate-pulse" : "bg-red-500"
-                       )} />
-                    </AffiliateLink>
-                 </Button>
+                 {config?.pages?.analisador !== false && (
+                    <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === '/analisador' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                        <AffiliateLink href="/analisador">Analisador</AffiliateLink>
+                    </Button>
+                 )}
+                 {config?.pages?.catalogador !== false && (
+                    <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === '/catalogador' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                        <AffiliateLink href="/catalogador">Sinais</AffiliateLink>
+                    </Button>
+                 )}
+                 {config?.pages?.sessaochinesa !== false && (
+                    <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all group", pathname === '/sessaochinesa' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                        <AffiliateLink href="/sessaochinesa" className="flex items-center gap-2">
+                        Sessão
+                        <span className={cn(
+                            "w-2 h-2 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.6)]",
+                            isOnline ? "bg-green-500 animate-pulse" : "bg-red-500"
+                        )} />
+                        </AffiliateLink>
+                    </Button>
+                 )}
               </nav>
               
               <div className="flex items-center gap-4 ml-auto md:ml-0">

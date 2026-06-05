@@ -53,7 +53,7 @@ export type SignalData = {
 };
 
 type AppState = 'idle' | 'loading' | 'result' | 'waiting';
-type AccessState = 'checking' | 'granted' | 'denied' | 'blocked';
+type AccessState = 'checking' | 'granted' | 'denied' | 'blocked' | 'disabled';
 
 type SignalUsage = {
   timestamps: number[];
@@ -110,6 +110,13 @@ export default function AnalisadorPage() {
     expirationTime: '5m',
   });
 
+  // Page Visibility Check
+  useEffect(() => {
+      if (config && config.pages && config.pages.analisador === false) {
+          setAccessState('disabled');
+      }
+  }, [config]);
+
   // CRITICAL: Force immediate logout if account is disabled
   useEffect(() => {
     if (userProfile?.accountStatus === 'DISABLED') {
@@ -138,6 +145,11 @@ export default function AnalisadorPage() {
       return;
     }
 
+    if (config?.pages?.analisador === false) {
+        setAccessState('disabled');
+        return;
+    }
+
     const loginTime = localStorage.getItem('loginTimestamp');
     let sessionExpired = false;
 
@@ -157,7 +169,7 @@ export default function AnalisadorPage() {
     } else {
         setAccessState('granted');
     }
-  }, [user, isUserLoading, isProfileLoading, userProfile, auth]);
+  }, [user, isUserLoading, isProfileLoading, userProfile, auth, config]);
 
    useEffect(() => {
     const isPremiumUser = vipData && ['PREMIUM', 'APPROVED'].includes((vipData as any).status);
@@ -389,6 +401,21 @@ export default function AnalisadorPage() {
       )
   }
 
+  if (accessState === 'disabled') {
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background p-6">
+        <div className="max-w-md w-full bg-card border border-primary/20 rounded-3xl p-10 text-center space-y-6 shadow-2xl shadow-primary/10 animate-in zoom-in-95 duration-300">
+           <div className="bg-primary/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto">
+             <AlertTriangle className="h-10 w-10 text-primary" />
+           </div>
+           <h2 className="text-3xl font-headline font-black text-foreground uppercase tracking-tight">Manutenção</h2>
+           <p className="text-muted-foreground leading-relaxed">O Analisador IA está temporariamente indisponível para atualizações de mercado. Por favor, tente novamente mais tarde.</p>
+           <Button variant="outline" onClick={() => router.push('/login')} className="w-full h-12 rounded-xl font-bold">Voltar para Início</Button>
+        </div>
+      </div>
+    );
+  }
+
   if (accessState === 'blocked') {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background p-6">
@@ -478,21 +505,27 @@ export default function AnalisadorPage() {
           </div>
 
           <nav className="flex items-center gap-1.5 bg-black/40 p-1.5 rounded-2xl border border-white/5 shadow-2xl">
-             <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === '/analisador' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
-                <AffiliateLink href="/analisador">Analisador</AffiliateLink>
-             </Button>
-             <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === '/catalogador' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
-                <AffiliateLink href="/catalogador">Sinais</AffiliateLink>
-             </Button>
-             <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all group", pathname === '/sessaochinesa' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
-                <AffiliateLink href="/sessaochinesa" className="flex items-center gap-2">
-                   Sessão
-                   <span className={cn(
-                     "w-2 h-2 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.6)]",
-                     isSessionOnline ? "bg-green-500 animate-pulse" : "bg-red-500"
-                   )} />
-                </AffiliateLink>
-             </Button>
+             {config?.pages?.analisador !== false && (
+                <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === '/analisador' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                    <AffiliateLink href="/analisador">Analisador</AffiliateLink>
+                </Button>
+             )}
+             {config?.pages?.catalogador !== false && (
+                <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === '/catalogador' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                    <AffiliateLink href="/catalogador">Sinais</AffiliateLink>
+                </Button>
+             )}
+             {config?.pages?.sessaochinesa !== false && (
+                <Button asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all group", pathname === '/sessaochinesa' ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                    <AffiliateLink href="/sessaochinesa" className="flex items-center gap-2">
+                    Sessão
+                    <span className={cn(
+                        "w-2 h-2 rounded-full shadow-[0_0_10px_rgba(34,197,94,0.6)]",
+                        isSessionOnline ? "bg-green-500 animate-pulse" : "bg-red-500"
+                    )} />
+                    </AffiliateLink>
+                </Button>
+             )}
           </nav>
           
           <div className="flex items-center gap-4 ml-auto md:ml-0">

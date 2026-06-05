@@ -402,38 +402,47 @@ export default function AnalisadorPage() {
       <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/90 to-background" />
 
       <div className="flex flex-col min-h-screen">
-        <header className="px-4 md:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-6 border-b border-border/10 bg-card/30 backdrop-blur-md sticky top-0 z-50">
-          <div className="flex items-center gap-4 md:gap-8 w-full md:w-auto">
+        <header className="px-4 py-3 md:px-8 md:py-4 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 border-b border-border/10 bg-card/30 backdrop-blur-md sticky top-0 z-50">
+          <div className="flex items-center justify-between w-full md:w-auto">
              <div className="flex flex-col">
-                <h1 className="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tighter leading-tight">
+                <h1 className="text-lg md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tighter leading-tight">
                     ESTRATÉGIA CHINESA
                 </h1>
-                <p className="text-[0.6rem] text-primary/60 font-black tracking-[0.2em] uppercase mt-[-2px]">Intelligence Analyzer</p>
+                <p className="text-[0.55rem] md:text-[0.6rem] text-primary/60 font-black tracking-[0.2em] uppercase mt-[-1px] md:mt-[-2px]">Intelligence Analyzer</p>
              </div>
-             <div className="hidden lg:block h-10 w-px bg-border/20" />
-             <div className="hidden lg:flex px-4 py-2 text-[0.65rem] font-black bg-primary/10 border border-primary/20 text-primary rounded-full shadow-lg shadow-primary/5 items-center gap-2 uppercase tracking-widest">
-               <User className="h-3.5 w-3.5" />
-               {isPremium ? 'Premium Access' : 'Vip Member'}
+             
+             <div className="flex items-center gap-2 md:hidden">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="text-[0.6rem] font-black text-muted-foreground hover:text-destructive transition-all rounded-full px-3 border border-white/5 h-8 uppercase tracking-widest"
+                >
+                  <LogOut className="h-3 w-3 mr-1.5" />
+                  Sair
+                </Button>
              </div>
           </div>
 
-          <nav className="flex items-center gap-1.5 bg-black/40 p-1.5 rounded-2xl border border-white/5 shadow-2xl">
-             {navigationItems.map((item) => (
-                <Button key={item.id} asChild variant="ghost" size="sm" className={cn("h-10 px-4 rounded-xl text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === item.path ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
-                    <AffiliateLink href={item.path} className="flex items-center gap-2">
-                        {item.label}
-                        {item.id === 'sessaochinesa' && (
-                            <span className={cn(
-                                "w-2 h-2 rounded-full",
-                                isSessionOnline ? "bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.6)]" : "bg-red-500"
-                            )} />
-                        )}
-                    </AffiliateLink>
-                </Button>
-             ))}
-          </nav>
+          <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto no-scrollbar pb-1 md:pb-0 justify-center">
+            <nav className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5 shadow-2xl shrink-0">
+               {navigationItems.map((item) => (
+                  <Button key={item.id} asChild variant="ghost" size="sm" className={cn("h-8 md:h-10 px-3 md:px-4 rounded-lg md:rounded-xl text-[0.6rem] md:text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === item.path ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                      <AffiliateLink href={item.path} className="flex items-center gap-1.5 md:gap-2">
+                          {item.label}
+                          {item.id === 'sessaochinesa' && (
+                              <span className={cn(
+                                  "w-1.5 h-1.5 md:w-2 md:h-2 rounded-full",
+                                  isSessionOnline ? "bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500"
+                              )} />
+                          )}
+                      </AffiliateLink>
+                  </Button>
+               ))}
+            </nav>
+          </div>
           
-          <div className="flex items-center gap-4 ml-auto md:ml-0">
+          <div className="hidden md:flex items-center gap-4">
              <Button
                 variant="ghost"
                 size="sm"

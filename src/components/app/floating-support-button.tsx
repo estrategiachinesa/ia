@@ -12,19 +12,20 @@ export function FloatingSupportButton() {
   const [rel, setRel] = useState({ x: 0, y: 0 });
   const buttonRef = useRef<HTMLDivElement>(null);
 
-  // Load saved position from localStorage
+  // Initialize position at center-right on load
   useEffect(() => {
-    const savedPos = localStorage.getItem('support_btn_pos');
-    if (savedPos) {
-      try {
-        setPosition(JSON.parse(savedPos));
-      } catch (e) {
-        console.error("Error loading button position", e);
-      }
-    } else {
-        // Default position: bottom right
-        setPosition({ x: window.innerWidth - 80, y: window.innerHeight - 150 });
-    }
+    const updatePosition = () => {
+        // Position at the right edge, vertically centered
+        const initialX = window.innerWidth - 65; 
+        const initialY = (window.innerHeight / 2) - 25;
+        setPosition({ x: initialX, y: initialY });
+    };
+
+    updatePosition();
+    
+    // Handle window resize to keep it visible
+    window.addEventListener('resize', updatePosition);
+    return () => window.removeEventListener('resize', updatePosition);
   }, []);
 
   const onMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
@@ -41,10 +42,6 @@ export function FloatingSupportButton() {
         });
     }
     setIsDragging(true);
-    // Prevent scrolling on mobile while dragging
-    if (e.type === 'touchstart') {
-        // e.preventDefault(); // Might break click, handled via CSS touch-action
-    }
   };
 
   useEffect(() => {
@@ -60,8 +57,8 @@ export function FloatingSupportButton() {
           pageY = e.pageY;
       }
 
-      const newX = Math.min(Math.max(10, pageX - rel.x), window.innerWidth - 70);
-      const newY = Math.min(Math.max(10, pageY - rel.y), window.innerHeight - 70);
+      const newX = Math.min(Math.max(5, pageX - rel.x), window.innerWidth - 55);
+      const newY = Math.min(Math.max(5, pageY - rel.y), window.innerHeight - 55);
       
       const newPos = { x: newX, y: newY };
       setPosition(newPos);
@@ -70,7 +67,6 @@ export function FloatingSupportButton() {
     const onMouseUp = () => {
       if (isDragging) {
         setIsDragging(false);
-        localStorage.setItem('support_btn_pos', JSON.stringify(position));
       }
     };
 
@@ -90,8 +86,6 @@ export function FloatingSupportButton() {
   }, [isDragging, rel, position]);
 
   const handleClick = (e: React.MouseEvent) => {
-    // If we moved the button more than 5px, don't trigger the link
-    // This prevents accidental clicks while dragging
     if (isDragging) {
         e.preventDefault();
         return;
@@ -111,8 +105,8 @@ export function FloatingSupportButton() {
         touchAction: 'none'
       }}
       className={cn(
-        "fixed z-[100] cursor-grab active:cursor-grabbing select-none",
-        isDragging && "opacity-80 scale-110"
+        "fixed z-[100] cursor-grab active:cursor-grabbing select-none transition-opacity duration-300",
+        isDragging ? "opacity-100 scale-110" : "opacity-70 hover:opacity-100"
       )}
     >
       <a
@@ -120,12 +114,15 @@ export function FloatingSupportButton() {
         target="_blank"
         rel="noopener noreferrer"
         onClick={handleClick}
-        className="flex items-center justify-center gap-2 bg-[#229ED9] text-white p-3 rounded-full shadow-2xl hover:scale-105 transition-transform group overflow-hidden border border-white/20"
+        className={cn(
+          "flex items-center justify-center gap-2 p-2.5 rounded-full shadow-xl transition-all group overflow-hidden border border-white/10",
+          "bg-[#229ED9]/40 backdrop-blur-md text-white"
+        )}
       >
-        <Headset className="h-6 w-6" />
+        <Headset className="h-5 w-5" />
         <span className={cn(
-            "max-w-0 overflow-hidden transition-all duration-500 font-black whitespace-nowrap text-[0.65rem] uppercase tracking-widest",
-            "group-hover:max-w-xs group-hover:ml-1"
+            "max-w-0 overflow-hidden transition-all duration-500 font-black whitespace-nowrap text-[0.6rem] uppercase tracking-widest",
+            "group-hover:max-w-xs group-hover:ml-1.5"
         )}>
           SUPORTE
         </span>

@@ -69,6 +69,8 @@ const PAGE_METADATA: Record<string, { label: string; path: string }> = {
     bb: { label: 'BROKER BREAKER', path: '/bb' },
 };
 
+const EXCLUDED_NAV_IDS = ['register', 'vip', 'descubra'];
+
 export default function AnalisadorPage() {
   const router = useAffiliateRouter();
   const pathname = usePathname();
@@ -124,17 +126,17 @@ export default function AnalisadorPage() {
   const navigationItems = useMemo(() => {
     if (!config || !config.pagesOrder) {
         return Object.entries(PAGE_METADATA)
-            .filter(([id]) => id !== 'register' && config?.pages?.[id] !== false)
+            .filter(([id]) => !EXCLUDED_NAV_IDS.includes(id) && config?.pages?.[id] !== false)
             .map(([id, meta]) => ({ id, ...meta }));
     }
     
     return config.pagesOrder
-        .filter((id: string) => id !== 'register' && config.pages?.[id] !== false)
+        .filter((id: string) => !EXCLUDED_NAV_IDS.includes(id) && config.pages?.[id] !== false)
         .map((id: string) => ({
             id,
             ...PAGE_METADATA[id]
         }))
-        .filter((p: any) => p.label);
+        .filter((p: any) => p && p.label);
   }, [config]);
 
   // Page Visibility Check

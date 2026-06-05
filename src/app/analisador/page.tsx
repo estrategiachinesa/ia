@@ -345,7 +345,7 @@ export default function AnalisadorPage() {
            <p className="text-muted-foreground leading-relaxed">
                 {accessState === 'blocked' ? 'Sua conta foi suspensa.' : 'O Analisador está temporariamente indisponível.'}
            </p>
-           <Button variant="outline" onClick={() => router.push('/')} className="w-full h-12 rounded-xl font-bold">Voltar ao Início</Button>
+           <Button variant="outline" onClick={() => router.replace('/')} className="w-full h-12 rounded-xl font-bold">Voltar ao Início</Button>
         </div>
       </div>
     );
@@ -459,8 +459,8 @@ export default function AnalisadorPage() {
         <main className="flex-grow container max-w-[1400px] mx-auto p-2 md:p-10 pb-20 md:pb-32">
             <div className="w-full">
                 <div className="flex flex-col lg:flex-row gap-4 md:gap-8 items-start justify-center">
-                    <div className="w-full lg:w-[450px] flex flex-col gap-4 md:gap-6">
-                        <div className="w-full bg-card/50 backdrop-blur-xl border border-white/10 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-10 min-h-0 md:min-h-[620px] flex flex-col items-center justify-center transition-all duration-500 overflow-hidden relative shine-effect">
+                    <div className="w-full lg:w-[450px] flex flex-col gap-4 md:gap-6 min-h-[calc(100svh-140px)] lg:min-h-0">
+                        <div className="w-full flex-grow bg-card/50 backdrop-blur-xl border border-white/10 rounded-2xl md:rounded-3xl shadow-2xl p-4 md:p-10 flex flex-col items-center justify-center transition-all duration-500 overflow-hidden relative shine-effect">
                             {renderContent()}
                         </div>
                         
@@ -481,9 +481,9 @@ export default function AnalisadorPage() {
                         )}
                     </div>
 
-                     <div className="flex flex-grow relative flex-col min-w-0 self-stretch">
+                     <div className="flex flex-grow relative flex-col min-w-0 self-stretch min-h-[calc(100svh-140px)] lg:min-h-0 pt-4 lg:pt-0">
                         {isOtcAsset ? (
-                            <div className="w-full h-full flex items-center justify-center bg-card/40 backdrop-blur-xl border border-white/5 rounded-3xl shadow-2xl p-10 min-h-[500px] md:min-h-[620px]">
+                            <div className="w-full h-full flex items-center justify-center bg-card/40 backdrop-blur-xl border border-white/5 rounded-3xl shadow-2xl p-10">
                                 {appState === 'loading' ? (
                                     <AnalysisAnimation />
                                 ) : (

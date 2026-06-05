@@ -54,7 +54,7 @@ function EconomicCalendarWidget({ asset }: { asset: string }) {
         </div>
       </div>
       
-      <div className="h-[80px] md:h-[160px] w-full overflow-hidden relative bg-[#0a0a0a]">
+      <div className="h-[70px] md:h-[160px] w-full overflow-hidden relative bg-[#0a0a0a]">
          <div className="relative w-[200%] left-[-5px] top-[-105px]">
             <iframe 
               src={`https://sslecal2.investing.com?columns=exc_flags,exc_currency,exc_importance&importance=1,2,3&countries=${countries}&calType=day&timeZone=12&lang=12`} 

@@ -18,7 +18,7 @@ export function FloatingSupportButton() {
     const updatePosition = () => {
         const isMobile = window.innerWidth < 768;
         if (isMobile) {
-            // Top left for mobile
+            // Top left for mobile as requested
             setPosition({ x: 10, y: 10 }); 
         } else {
             // Center right for desktop

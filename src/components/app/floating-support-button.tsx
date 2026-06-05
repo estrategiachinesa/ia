@@ -13,18 +13,22 @@ export function FloatingSupportButton() {
   const [rel, setRel] = useState({ x: 0, y: 0 });
   const buttonRef = useRef<HTMLDivElement>(null);
 
-  // Initialize position at center-right on load
+  // Initialize position based on device
   useEffect(() => {
     const updatePosition = () => {
-        // Position at the right edge, vertically centered
-        const initialX = window.innerWidth - 60; 
-        const initialY = (window.innerHeight / 2) - 25;
-        setPosition({ x: initialX, y: initialY });
+        const isMobile = window.innerWidth < 768;
+        if (isMobile) {
+            // Top left for mobile
+            setPosition({ x: 10, y: 10 }); 
+        } else {
+            // Center right for desktop
+            const initialX = window.innerWidth - 60; 
+            const initialY = (window.innerHeight / 2) - 25;
+            setPosition({ x: initialX, y: initialY });
+        }
     };
 
     updatePosition();
-    
-    // Handle window resize to keep it visible
     window.addEventListener('resize', updatePosition);
     return () => window.removeEventListener('resize', updatePosition);
   }, []);
@@ -63,8 +67,7 @@ export function FloatingSupportButton() {
       const newX = Math.min(Math.max(5, pageX - rel.x), window.innerWidth - 55);
       const newY = Math.min(Math.max(5, pageY - rel.y), window.innerHeight - 55);
       
-      const newPos = { x: newX, y: newY };
-      setPosition(newPos);
+      setPosition({ x: newX, y: newY });
     };
 
     const onMouseUp = () => {
@@ -86,14 +89,7 @@ export function FloatingSupportButton() {
       window.removeEventListener('touchmove', onMouseMove);
       window.removeEventListener('touchend', onMouseUp);
     };
-  }, [isDragging, rel, position]);
-
-  const handleClick = (e: React.MouseEvent) => {
-    if (isDragging) {
-        e.preventDefault();
-        return;
-    }
-  };
+  }, [isDragging, rel]);
 
   if (!isVisible) return null;
 
@@ -126,7 +122,6 @@ export function FloatingSupportButton() {
           href={supportLink}
           target="_blank"
           rel="noopener noreferrer"
-          onClick={handleClick}
           className={cn(
             "flex items-center justify-center gap-2 p-2 rounded-full shadow-xl transition-all group overflow-hidden border border-white/10",
             "bg-[#229ED9]/30 backdrop-blur-md text-white"

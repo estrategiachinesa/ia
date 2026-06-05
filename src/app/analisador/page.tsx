@@ -345,7 +345,7 @@ export default function AnalisadorPage() {
            <p className="text-muted-foreground leading-relaxed">
                 {accessState === 'blocked' ? 'Sua conta foi suspensa.' : 'O Analisador está temporariamente indisponível.'}
            </p>
-           <Button variant="outline" onClick={() => router.push('/')} className="w-full h-12 rounded-xl font-bold">Voltar</Button>
+           <Button variant="outline" onClick={() => router.push('/')} className="w-full h-12 rounded-xl font-bold">Voltar ao Início</Button>
         </div>
       </div>
     );
@@ -483,7 +483,7 @@ export default function AnalisadorPage() {
 
                      <div className="flex flex-grow relative flex-col min-w-0 self-stretch">
                         {isOtcAsset ? (
-                            <div className="w-full h-full flex items-center justify-center bg-card/40 backdrop-blur-xl border border-white/5 rounded-3xl shadow-2xl p-10 min-h-[620px]">
+                            <div className="w-full h-full flex items-center justify-center bg-card/40 backdrop-blur-xl border border-white/5 rounded-3xl shadow-2xl p-10 min-h-[500px] md:min-h-[620px]">
                                 {appState === 'loading' ? (
                                     <AnalysisAnimation />
                                 ) : (
@@ -525,7 +525,7 @@ export default function AnalisadorPage() {
                                     </Button>
                                 </div>
 
-                                <div className="flex-grow bg-[#0a0a0a] relative min-h-[400px] md:min-h-0">
+                                <div className="flex-grow bg-[#0a0a0a] relative min-h-[550px] md:min-h-0">
                                     {isChartVisible && (
                                         <TradingViewWidget
                                             asset={currentAsset}

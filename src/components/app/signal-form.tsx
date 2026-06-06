@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -19,42 +20,7 @@ import { useAppConfig } from '@/firebase';
 import { Firestore } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { getNextOpeningTime } from '@/lib/market-hours';
-
-/**
- * Widget de Calendário Económico ultra-clean: apenas Hora, Moeda e Touros.
- * Ajustado para evitar clipping nas bordas e esconder o título da notícia.
- */
-function EconomicCalendarWidget({ asset }: { asset: string }) {
-  const isEurUsd = asset.includes('EUR/USD');
-  const isEurJpy = asset.includes('EUR/JPY');
-
-  let countries = "5,72,35"; 
-  if (isEurUsd) countries = "5,72";
-  else if (isEurJpy) countries = "72,35";
-
-  return (
-    <div className="w-full mb-1 rounded-xl overflow-hidden border border-white/5 bg-black/40 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-500">
-      <div className="px-2 py-1 bg-white/5 border-b border-white/5 flex items-center justify-center gap-1.5">
-        <Zap className="h-3 w-3 text-primary animate-pulse" />
-        <span className="text-[0.5rem] font-black text-muted-foreground uppercase tracking-[0.2em]">Impacto Econômico</span>
-      </div>
-      
-      <div className="h-[180px] w-full overflow-hidden relative bg-[#0a0a0a] flex justify-center">
-         {/* A largura de 220px e o overflow-hidden no pai cortam o nome do evento no lado direito */}
-         <div className="relative w-[220px] left-[8px] top-[-118px]">
-            <iframe 
-              src={`https://sslecal2.investing.com?columns=exc_flags,exc_currency,exc_importance&importance=2,3&features=timezone&countries=${countries}&calType=day&timeZone=12&lang=12`} 
-              width="450" 
-              height="800" 
-              frameBorder="0" 
-              allowTransparency={true}
-              className="filter invert hue-rotate-180 brightness-[0.75] contrast-[1.4] saturate-[0.8] origin-top-left scale-[1.05]"
-            ></iframe>
-         </div>
-      </div>
-    </div>
-  );
-}
+import { EconomicIntelligence } from './economic-intelligence';
 
 type VipStatus = 'PENDING' | 'AWAITING_DEPOSIT' | 'DEPOSIT_PENDING' | 'APPROVED' | 'REJECTED' | 'PREMIUM';
 
@@ -172,14 +138,14 @@ export function SignalForm({
             </Button>
         </div>
 
-        {/* NOTICIAS - CENTRALIZADO E OCULTO EM OTC */}
+        {/* NOTICIAS - CUSTOM INTEL PANEL */}
         {!showOTC && (
             <div className="shrink-0 px-4">
-                <EconomicCalendarWidget asset={formData.asset} />
+                <EconomicIntelligence asset={formData.asset} />
             </div>
         )}
 
-        {/* STATUS MERCADO FECHADO - IQ OPTION STYLE */}
+        {/* STATUS MERCADO FECHADO */}
         {!isMarketOpen && !showOTC && nextOpenText && (
             <div className="mx-4 p-2.5 bg-red-600/10 border border-red-500/20 rounded-xl flex items-center justify-center gap-4 animate-in fade-in duration-500">
                 <div className="flex items-center gap-2">
@@ -222,7 +188,7 @@ export function SignalForm({
               <SelectContent className="rounded-xl border-white/10 bg-black/95 backdrop-blur-2xl">
                 {assets.map(asset => (
                   <SelectItem key={asset} value={asset} className="rounded-lg focus:bg-primary focus:text-primary-foreground py-3 transition-colors">
-                    <div className="flex items-center gap-3 w-full justify-center">
+                    <div className="flex items-center gap-3 w-full justify-center text-center">
                         <CurrencyFlags asset={asset} />
                         <span className="font-black text-[0.75rem] uppercase">{asset}</span>
                     </div>
@@ -240,7 +206,7 @@ export function SignalForm({
                 <SelectValue asChild>
                   <div className="flex items-center justify-center w-full">
                     <span className="font-black text-[0.85rem] md:text-sm uppercase tracking-tight">
-                        {formData.expirationTime === '1m' ? 'M1 (1 MINUTO)' : 'M5 (5 MIN)'}
+                        {formData.expirationTime === '1m' ? '1 MINUTO' : 'M5 (5 MIN)'}
                     </span>
                   </div>
                 </SelectValue>

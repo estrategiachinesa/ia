@@ -1,13 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Cpu, Activity, Target, ShieldCheck } from 'lucide-react';
+import { Cpu, Activity, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function OtcIntelligence() {
   const [confidence, setConfidence] = useState('87.4%');
   const [volatility, setVolatility] = useState('MÉDIA');
-  const [filterStatus, setFilterStatus] = useState('Protegido');
 
   useEffect(() => {
     const updateMetrics = () => {
@@ -18,10 +17,6 @@ export function OtcIntelligence() {
       // Volatilidade: Alterna entre os 3 estados
       const volLevels = ['BAIXA', 'MÉDIA', 'ALTA'];
       setVolatility(volLevels[Math.floor(Math.random() * volLevels.length)]);
-
-      // Status: Termos técnicos de segurança
-      const statuses = ['Protegido', 'Otimizado', 'Ativo', 'Seguro'];
-      setFilterStatus(statuses[Math.floor(Math.random() * statuses.length)]);
     };
 
     // Atualiza a cada 8 segundos para parecer uma leitura real de mercado
@@ -44,7 +39,7 @@ export function OtcIntelligence() {
         </div>
       </div>
       
-      <div className="flex-grow p-4 flex flex-col justify-around">
+      <div className="flex-grow p-4 flex flex-col justify-center gap-10">
         {/* CONFIANÇA */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -70,17 +65,6 @@ export function OtcIntelligence() {
                 <div className={cn("w-1 h-3.5 rounded-full transition-colors duration-500", volatility === 'ALTA' ? "bg-primary shadow-[0_0_5px_rgba(251,191,36,0.3)]" : "bg-primary/20")} />
              </div>
           </div>
-        </div>
-
-        {/* STATUS DO FILTRO */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <ShieldCheck className="h-4 w-4 text-primary/60" />
-            <span className="text-[0.6rem] font-bold uppercase text-muted-foreground">Status do Filtro</span>
-          </div>
-          <span className="text-[0.6rem] font-black text-green-500 uppercase px-2.5 py-0.5 bg-green-500/10 border border-green-500/20 rounded transition-all duration-1000">
-            {filterStatus}
-          </span>
         </div>
       </div>
       

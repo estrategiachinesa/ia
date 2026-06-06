@@ -454,16 +454,16 @@ export default function AnalisadorPage() {
           </Button>
         </header>
 
-        <main className="flex-grow flex flex-col md:flex-row overflow-hidden">
-            {/* Analisador (Full height no mobile, 420px no desktop) */}
-            <div className="w-full md:w-[420px] h-full shrink-0">
+        <main className="flex-grow flex flex-col md:flex-row overflow-y-auto md:overflow-hidden snap-y snap-mandatory md:snap-none no-scrollbar">
+            {/* Reel 1: Analisador (Full height no mobile, 420px no desktop) */}
+            <div className="w-full md:w-[420px] h-full shrink-0 snap-start">
                 <div className="w-full h-full bg-card/40 backdrop-blur-xl border-b md:border-b-0 md:border-r border-white/10 flex flex-col items-center justify-center overflow-hidden relative glass-panel">
                     {renderContent()}
                 </div>
             </div>
 
-            {/* Gráfico/Radar (Oculto no mobile, preenchimento no desktop) */}
-            <div className="hidden md:flex flex-grow h-full relative overflow-hidden bg-black">
+            {/* Reel 2: Gráfico/Radar (Snap Scroll no mobile, preenchimento no desktop) */}
+            <div className="w-full md:flex-grow h-full relative overflow-hidden bg-black shrink-0 snap-start">
                 {isOtcAsset ? (
                     <div className="w-full h-full flex items-center justify-center bg-black/20 p-6 relative overflow-hidden">
                         {/* Radar Scan Animation */}
@@ -500,7 +500,7 @@ export default function AnalisadorPage() {
                                 <Button asChild variant="outline" size="sm" className="h-10 text-[0.6rem] font-black border-white/10 hover-glow"><a href={config?.exnovaOpenUrl || '#'} target="_blank">EXNOVA</a></Button>
                             </div>
 
-                            <div className="mt-12 flex items-center justify-center gap-8 opacity-30">
+                            <div className="mt-12 hidden md:flex items-center justify-center gap-8 opacity-30">
                                <div className="flex flex-col items-center">
                                   <span className="text-[0.5rem] font-bold">LATENCY</span>
                                   <span className="text-xs font-mono">14ms</span>

@@ -61,14 +61,14 @@ export function OtcIntelligence() {
             <span className="text-[0.6rem] font-bold uppercase text-muted-foreground">Volatilidade OTC</span>
           </div>
           <div className="flex items-center gap-2.5">
+             <span className="text-[0.6rem] font-black text-white uppercase min-w-[42px] text-right transition-all duration-1000 tracking-tighter">
+                {volatility}
+             </span>
              <div className="flex items-center gap-1">
                 <div className="w-1 h-3.5 bg-primary rounded-full shadow-[0_0_5px_rgba(251,191,36,0.3)]" />
                 <div className={cn("w-1 h-3.5 rounded-full transition-colors duration-500", volatility !== 'BAIXA' ? "bg-primary shadow-[0_0_5px_rgba(251,191,36,0.3)]" : "bg-primary/20")} />
                 <div className={cn("w-1 h-3.5 rounded-full transition-colors duration-500", volatility === 'ALTA' ? "bg-primary shadow-[0_0_5px_rgba(251,191,36,0.3)]" : "bg-primary/20")} />
              </div>
-             <span className="text-[0.6rem] font-black text-white uppercase min-w-[42px] text-right transition-all duration-1000 tracking-tighter">
-                {volatility}
-             </span>
           </div>
         </div>
 

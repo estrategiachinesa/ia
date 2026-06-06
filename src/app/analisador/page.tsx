@@ -396,39 +396,27 @@ export default function AnalisadorPage() {
       <div className="fixed inset-0 -z-20 h-full w-full grid-bg" />
       <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/90 to-background" />
 
-      <div className="flex flex-col min-h-screen">
-        <header className="px-3 py-2 md:px-8 md:py-4 flex flex-col md:flex-row justify-between items-center gap-2 md:gap-6 border-b border-border/10 bg-card/30 backdrop-blur-md sticky top-0 z-50">
-          <div className="flex items-center justify-between w-full md:w-auto">
-             <div className="flex flex-col flex-1 items-center md:items-start text-center md:text-left">
-                <h1 className="text-sm md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tighter leading-tight">
+      <div className="flex flex-col h-[100dvh] overflow-hidden">
+        <header className="h-[60px] px-4 md:px-8 flex justify-between items-center border-b border-border/10 bg-card/30 backdrop-blur-md shrink-0">
+          <div className="flex items-center gap-3">
+             <div className="flex flex-col">
+                <h1 className="text-sm md:text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tighter leading-tight">
                     ESTRATÉGIA CHINESA
                 </h1>
-                <p className="text-[0.5rem] md:text-[0.6rem] text-primary/60 font-black tracking-[0.2em] uppercase mt-[-1px] md:mt-[-2px]">Intelligence Analyzer</p>
-             </div>
-             
-             <div className="flex items-center gap-2 md:hidden">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleLogout}
-                  className="text-[0.5rem] font-black text-muted-foreground hover:text-destructive transition-all rounded-full px-2 border border-white/5 h-7 uppercase tracking-widest"
-                >
-                  <LogOut className="h-2.5 w-2.5 mr-1" />
-                  Sair
-                </Button>
+                <p className="text-[0.5rem] text-primary/60 font-black tracking-[0.2em] uppercase mt-[-1px]">Intelligence Analyzer</p>
              </div>
           </div>
 
-          <div className="flex items-center gap-1 w-full md:w-auto overflow-x-auto no-scrollbar pb-0 justify-center">
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-[50%] md:max-w-none">
             <nav className="flex items-center gap-1 bg-black/40 p-0.5 rounded-lg border border-white/5 shrink-0">
                {navigationItems.map((item) => (
-                  <Button key={item.id} asChild variant="ghost" size="sm" className={cn("h-7 md:h-10 px-2 md:px-4 rounded-md md:rounded-xl text-[0.55rem] md:text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === item.path ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
-                      <AffiliateLink href={item.path} className="flex items-center gap-1 md:gap-2">
+                  <Button key={item.id} asChild variant="ghost" size="sm" className={cn("h-7 md:h-9 px-2 md:px-4 rounded-md text-[0.55rem] md:text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === item.path ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                      <AffiliateLink href={item.path} className="flex items-center gap-1">
                           {item.label}
                           {item.id === 'sessaochinesa' && (
                               <span className={cn(
-                                  "w-1 h-1 md:w-2 md:h-2 rounded-full",
-                                  isSessionOnline ? "bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500"
+                                  "w-1 h-1 rounded-full",
+                                  isSessionOnline ? "bg-green-500 animate-pulse" : "bg-red-500"
                               )} />
                           )}
                       </AffiliateLink>
@@ -437,139 +425,81 @@ export default function AnalisadorPage() {
             </nav>
           </div>
           
-          <div className="hidden md:flex items-center gap-4">
-             <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleLogout}
-                className="text-[0.65rem] font-black text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all rounded-full px-5 border border-white/5 h-10 uppercase tracking-widest"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Sair
-              </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleLogout}
+            className="text-[0.55rem] font-black text-muted-foreground hover:text-destructive transition-all rounded-full px-2 border border-white/5 h-7 uppercase tracking-widest hidden md:flex"
+          >
+            <LogOut className="h-3 w-3 mr-1" /> Sair
+          </Button>
         </header>
 
-        <main className="flex-grow container max-w-[1400px] mx-auto p-0 md:p-10">
-            <div className="w-full">
-                <div className="flex flex-col lg:flex-row gap-0 lg:gap-8 items-stretch justify-center">
-                    {/* Secção 1: Analisador (Otimizado para Split View) */}
-                    <div className="w-full lg:w-[450px] flex flex-col h-[58dvh] lg:h-auto overflow-hidden">
-                        <div className="w-full h-full bg-card/50 backdrop-blur-xl border-x-0 md:border border-white/10 rounded-none md:rounded-3xl shadow-2xl p-4 md:p-10 flex flex-col items-center justify-between transition-all duration-500 relative shine-effect">
-                            {renderContent()}
+        <main className="flex-grow flex flex-col md:flex-row overflow-hidden">
+            {/* Secção 1: Analisador */}
+            <div className="w-full md:w-[420px] h-[55dvh] md:h-full shrink-0">
+                <div className="w-full h-full bg-card/40 backdrop-blur-xl border-b md:border-b-0 md:border-r border-white/10 p-4 flex flex-col items-center justify-between overflow-hidden relative shine-effect">
+                    {renderContent()}
+                </div>
+            </div>
+
+            {/* Secção 2: Gráfico */}
+            <div className="flex-grow h-[45dvh] md:h-full relative overflow-hidden">
+                {isOtcAsset ? (
+                    <div className="w-full h-full flex items-center justify-center bg-black/20 p-6">
+                        <div className="text-center max-w-md">
+                            <BarChart className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
+                            <h3 className="text-sm font-bold text-foreground">Gráfico Indisponível (OTC)</h3>
+                            <p className="mt-1 text-[0.6rem] text-muted-foreground leading-tight">Utilize a plataforma oficial.</p>
+                            <div className="mt-4 grid grid-cols-2 gap-2">
+                                <Button asChild variant="secondary" size="sm" className="h-8 text-[0.6rem] font-black"><a href={config?.iqOptionOpenUrl || '#'} target="_blank">IQ Option</a></Button>
+                                <Button asChild variant="secondary" size="sm" className="h-8 text-[0.6rem] font-black"><a href={config?.exnovaOpenUrl || '#'} target="_blank">Exnova</a></Button>
+                            </div>
                         </div>
                     </div>
-
-                    {/* Secção 2: Gráfico (Otimizado para Split View) */}
-                     <div className="flex flex-grow relative flex-col min-w-0 self-stretch h-[42dvh] lg:h-auto mt-0 lg:mt-0">
-                        {isOtcAsset ? (
-                            <div className="w-full h-full flex items-center justify-center bg-card/40 backdrop-blur-xl border-x-0 md:border border-white/5 rounded-none md:rounded-3xl shadow-2xl p-6">
-                                {appState === 'loading' ? (
-                                    <AnalysisAnimation />
-                                ) : (
-                                    <div className="text-center max-w-md">
-                                        <div className="bg-muted/10 p-4 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center border border-border/10">
-                                            <BarChart className="h-8 w-8 text-muted-foreground/50" />
-                                        </div>
-                                        <h3 className="text-lg font-bold text-foreground">Gráfico Indisponível (OTC)</h3>
-                                        <p className="mt-2 text-[0.65rem] text-muted-foreground leading-tight">
-                                            Ativos OTC são exclusivos de cada corretora. Utilize a plataforma oficial.
-                                        </p>
-                                        <div className="mt-6 grid grid-cols-2 gap-3">
-                                            <Button asChild variant="secondary" size="sm" className="font-bold rounded-lg border border-border/50 h-9 text-xs">
-                                                <a href={config?.iqOptionOpenUrl || config?.iqOptionUrl || '#'} target="_blank" rel="noopener noreferrer">IQ Option</a>
-                                            </Button>
-                                            <Button asChild variant="secondary" size="sm" className="font-bold rounded-lg border border-border/50 h-9 text-xs">
-                                                <a href={config?.exnovaOpenUrl || config?.exnovaUrl || '#'} target="_blank" rel="noopener noreferrer">Exnova</a>
-                                            </Button>
-                                        </div>
-                                    </div>
-                                )}
+                ) : (
+                    <div className="flex flex-col h-full bg-black/40">
+                        <div className="h-[30px] shrink-0 px-4 border-b border-white/5 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                <span className="text-[0.5rem] font-black text-muted-foreground uppercase">Market Live</span>
                             </div>
-                        ) : (
-                            <div className="flex flex-col h-full bg-card/40 backdrop-blur-xl border-x-0 md:border border-white/5 rounded-none md:rounded-3xl shadow-2xl overflow-hidden transition-all duration-500">
-                                <div className="flex justify-between items-center px-4 py-2 border-b border-white/5 bg-white/5 h-[35px] md:h-auto">
-                                    <div className="flex items-center gap-3 md:gap-6">
-                                        <div className="flex items-center gap-2">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                                            <span className="text-[0.55rem] md:text-[0.7rem] font-black text-muted-foreground uppercase tracking-widest">Market Live</span>
-                                        </div>
-                                        <div className="h-3 w-px bg-border/20" />
-                                        <div className="flex items-center gap-1.5 text-[0.55rem] md:text-[0.75rem] font-bold">
-                                            <span className="text-muted-foreground">TIME:</span>
-                                            <span className="text-primary bg-primary/10 px-1.5 py-0.5 rounded-md">{currentExpirationTime}</span>
-                                        </div>
-                                    </div>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6 md:h-9 md:w-9 rounded-full hover:bg-white/10" onClick={() => setIsChartVisible(!isChartVisible)}>
-                                        {isChartVisible ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                                    </Button>
+                            <span className="text-[0.5rem] font-black text-primary bg-primary/10 px-1 rounded uppercase">{currentExpirationTime}</span>
+                        </div>
+                        <div className="flex-grow relative">
+                            <TradingViewWidget
+                                asset={currentAsset}
+                                interval={currentExpirationTime.replace('m', '')}
+                            />
+                            {appState === 'loading' && (
+                                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-10 flex items-center justify-center">
+                                    <AnalysisAnimation showProgressBar={false} />
                                 </div>
-
-                                <div className="flex-grow bg-[#0a0a0a] relative overflow-hidden h-full">
-                                    {isChartVisible && (
-                                        <TradingViewWidget
-                                            asset={currentAsset}
-                                            interval={currentExpirationTime.replace('m', '')}
-                                        />
-                                    )}
-                                    
-                                    {appState === 'loading' && (
-                                        <div className="absolute inset-0 flex items-center justify-center bg-black/70 backdrop-blur-md z-10 transition-all duration-300">
-                                            <AnalysisAnimation showProgressBar={false} />
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         </main>
       </div>
 
-      <VipUpgradeModal
-        isOpen={isUpgradeModalOpen}
-        onOpenChange={setUpgradeModalOpen}
-        user={user}
-        firestore={firestore}
-        config={config}
-      />
-
-      <VipStatusModal
-        isOpen={isStatusModalOpen}
-        onOpenChange={setStatusModalOpen}
-        vipStatus={(vipData as any)?.status}
-        rejectedBrokerId={(vipData as any)?.brokerId}
-      />
+      <VipUpgradeModal isOpen={isUpgradeModalOpen} onOpenChange={setUpgradeModalOpen} user={user} firestore={firestore} config={config} />
+      <VipStatusModal isOpen={isStatusModalOpen} onOpenChange={setStatusModalOpen} vipStatus={(vipData as any)?.status} rejectedBrokerId={(vipData as any)?.brokerId} />
 
       <Dialog open={isNewsWarningModalOpen} onOpenChange={setIsNewsWarningModalOpen}>
         <DialogContent className="max-w-lg bg-card/95 backdrop-blur-2xl border-white/10 rounded-3xl shadow-2xl">
-            <DialogHeader>
-                <DialogTitle className="flex items-center gap-3 text-2xl font-headline">
-                    <AlertTriangle className="text-yellow-400 h-8 w-8" /> Alta Volatilidade
-                </DialogTitle>
-                <DialogDescription className="text-muted-foreground text-base leading-relaxed">
-                    Eventos de alto impacto podem comprometer as análises estatísticas da IA.
-                </DialogDescription>
-            </DialogHeader>
-            <div className="py-6 space-y-6">
+            <DialogHeader><DialogTitle className="flex items-center gap-3 text-xl font-headline"><AlertTriangle className="text-yellow-400 h-6 w-6" /> Alta Volatilidade</DialogTitle></DialogHeader>
+            <div className="py-4 space-y-4">
                 <YoutubePlayer videoId="81HihzJWVwk" />
-                <Button asChild variant="outline" className="w-full h-12 font-bold rounded-xl border-primary/20 hover:bg-primary/5">
-                    <a href="https://br.investing.com/economic-calendar" target="_blank" rel="noopener noreferrer">Calendário Económico</a>
-                </Button>
-                <div className="flex items-center space-x-4 pt-2 p-4 bg-white/5 rounded-2xl border border-white/10">
+                <div className="flex items-center space-x-3 p-3 bg-white/5 rounded-xl border border-white/5">
                     <Checkbox id="news-agreement" checked={hasAgreedToNewsWarning} onCheckedChange={(checked) => setHasAgreedToNewsWarning(checked as boolean)} />
-                    <label htmlFor="news-agreement" className="text-xs font-bold leading-tight cursor-pointer uppercase tracking-wide opacity-80">
-                        Estou ciente dos riscos operacionais.
-                    </label>
+                    <label htmlFor="news-agreement" className="text-[0.65rem] font-black uppercase leading-tight cursor-pointer opacity-80">Estou ciente dos riscos operacionais.</label>
                 </div>
             </div>
-            <DialogFooter className="gap-3 sm:gap-0">
-                <Button variant="secondary" onClick={() => setIsNewsWarningModalOpen(false)} className="font-bold h-12 rounded-xl px-8">Cancelar</Button>
-                <Button onClick={proceedWithAnalysis} disabled={!hasAgreedToNewsWarning} className="font-bold h-12 rounded-xl px-10 shadow-lg shadow-primary/20">Prosseguir</Button>
-            </DialogFooter>
+            <DialogFooter className="gap-2 sm:gap-0"><Button variant="secondary" onClick={() => setIsNewsWarningModalOpen(false)} className="h-11 rounded-xl">Cancelar</Button><Button onClick={proceedWithAnalysis} disabled={!hasAgreedToNewsWarning} className="h-11 rounded-xl">Prosseguir</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </>
   );
 }
+

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, ReactNode, useState, useEffect, Suspense, useCallback } from 'react';
@@ -29,6 +28,7 @@ export interface AppConfig {
   vipMaxWait: number;
   premiumMinWait: number;
   premiumMaxWait: number;
+  newsWarningDuration: number;
   visitCount?: number;
   checkoutClickCount?: number;
   // Page access status
@@ -76,6 +76,7 @@ const defaultConfig: AppConfig = {
     vipMaxWait: 15,
     premiumMinWait: 1,
     premiumMaxWait: 10,
+    newsWarningDuration: 60,
     registrationSecret: "chines_2026",
     price: "R$ 197",
     visitCount: 0,

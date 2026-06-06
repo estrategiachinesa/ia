@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { Zap, Clock, ExternalLink } from 'lucide-react';
+import { Zap, Clock, ExternalLink, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { generateMockNewsEvents } from '@/lib/news-events';
 
 // Bandeiras em SVG para EUR, USD e JPY
 const CurrencyFlag = ({ currency }: { currency: string }) => {
@@ -55,56 +56,23 @@ const CurrencyFlag = ({ currency }: { currency: string }) => {
   }
 };
 
-// Ícone de Touro Customizado
-const BullIcon = ({ active, className }: { active?: boolean; className?: string }) => (
-  <svg 
-    viewBox="0 0 24 24" 
-    fill={active ? "currentColor" : "none"} 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={cn("w-3.5 h-3.5 transition-colors", active ? "text-primary" : "text-white/5", className)}
-  >
-    <path d="M12 12.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z" />
-    <path d="M9 13.5c-1.5-1-3-3-3-5a4 4 0 0 1 8 0c0 2-1.5 4-3 5" />
-    <path d="M15 13.5c1.5-1 3-3 3-5a4 4 0 0 0-8 0c0 2 1.5 4 3 5" />
-    <path d="m8 22 1-3" />
-    <path d="m16 22-1-3" />
-    <path d="M12 12V3" />
-    <path d="m9 5 3-2 3 2" />
-  </svg>
+// Ícone de Estrela Customizado
+const StarRating = ({ count }: { count: 1 | 2 | 3 }) => (
+  <div className="flex items-center gap-0.5">
+    {[1, 2, 3].map((i) => (
+      <Star 
+        key={i} 
+        className={cn(
+          "w-2.5 h-2.5 transition-colors", 
+          i <= count ? "text-primary fill-primary shadow-primary/20 shadow-sm" : "text-white/5"
+        )} 
+      />
+    ))}
+  </div>
 );
 
-type NewsEvent = {
-  time: string;
-  currency: string;
-  impact: 1 | 2 | 3;
-};
-
 export function EconomicIntelligence({ asset }: { asset: string }) {
-  const events = useMemo(() => {
-    const now = new Date();
-    const currentHour = now.getHours();
-    // Filtro estrito: apenas EUR, USD e JPY
-    const currencies = ['EUR', 'USD', 'JPY'];
-    const mockEvents: NewsEvent[] = [];
-    
-    // Geramos 6 eventos baseados no horário atual
-    for (let i = -1; i < 5; i++) {
-      const eventTime = new Date(now);
-      eventTime.setHours(currentHour + i);
-      eventTime.setMinutes(Math.floor(Math.random() * 4) * 15);
-
-      mockEvents.push({
-        time: eventTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-        currency: currencies[Math.floor(Math.random() * currencies.length)],
-        impact: (Math.floor(Math.random() * 3) + 1) as 1 | 2 | 3
-      });
-    }
-
-    return mockEvents.sort((a, b) => a.time.localeCompare(b.time));
-  }, [asset]);
+  const events = useMemo(() => generateMockNewsEvents(), []);
 
   return (
     <div className="w-full h-[220px] flex flex-col bg-black/40 border border-white/5 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in duration-700">
@@ -141,9 +109,7 @@ export function EconomicIntelligence({ asset }: { asset: string }) {
             </div>
 
             <div className="flex items-center gap-1">
-              <BullIcon active={event.impact >= 1} className="group-hover:text-black" />
-              <BullIcon active={event.impact >= 2} className="group-hover:text-black" />
-              <BullIcon active={event.impact >= 3} className="group-hover:text-black" />
+              <StarRating count={event.impact} />
               <ExternalLink className="h-2.5 w-2.5 ml-2 opacity-0 group-hover:opacity-100 group-hover:text-black transition-opacity" />
             </div>
           </a>

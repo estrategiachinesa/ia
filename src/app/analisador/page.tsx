@@ -30,6 +30,7 @@ import { VipStatusModal } from '@/components/app/vip-status-modal';
 import { AnalysisAnimation } from '@/components/app/analysis-animation';
 import TradingViewWidget from '@/components/app/tradingview-widget';
 import { cn } from '@/lib/utils';
+import { generateMockNewsEvents, isNewsCurrentlyActive } from '@/lib/news-events';
 
 export type FormData = {
   asset: Asset;
@@ -245,7 +246,6 @@ export default function AnalisadorPage() {
   }, [appState, signalData?.operationStatus]);
 
  const proceedWithAnalysis = async () => {
-    sessionStorage.setItem('hasSeenNewsWarning', 'true');
     setIsNewsWarningModalOpen(false);
 
     if (!config || !user || !firestore) return;
@@ -304,11 +304,15 @@ export default function AnalisadorPage() {
   };
 
   const handleAnalyze = () => {
-    const hasSeenWarning = sessionStorage.getItem('hasSeenNewsWarning');
-    if (hasSeenWarning) proceedWithAnalysis();
-    else {
+    // Lógica Inteligente de Notícias
+    const newsEvents = generateMockNewsEvents();
+    const isNewsActive = isNewsCurrentlyActive(newsEvents, config?.newsWarningDuration || 60);
+
+    if (isNewsActive && !showOTC) {
       setHasAgreedToNewsWarning(false);
       setIsNewsWarningModalOpen(true);
+    } else {
+      proceedWithAnalysis();
     }
   };
 
@@ -489,15 +493,33 @@ export default function AnalisadorPage() {
 
       <Dialog open={isNewsWarningModalOpen} onOpenChange={setIsNewsWarningModalOpen}>
         <DialogContent className="max-w-lg bg-card/95 backdrop-blur-2xl border-white/10 rounded-3xl shadow-2xl">
-            <DialogHeader><DialogTitle className="flex items-center gap-3 text-xl font-headline"><AlertTriangle className="text-yellow-400 h-6 w-6" /> Alta Volatilidade</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-3 text-xl font-headline">
+                <AlertTriangle className="text-yellow-400 h-6 w-6" /> Notícia no Momento
+              </DialogTitle>
+            </DialogHeader>
             <div className="py-4 space-y-4">
+                <div className="p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+                  <p className="text-sm leading-relaxed text-zinc-300">
+                    O mercado está a passar por um evento económico de impacto. As análises estatísticas podem ser invalidadas pela volatilidade extrema.
+                  </p>
+                </div>
                 <YoutubePlayer videoId="81HihzJWVwk" />
-                <div className="flex items-center space-x-3 p-3 bg-white/5 rounded-xl border border-white/5">
+                <div className="flex items-center space-x-3 p-4 bg-white/5 rounded-xl border border-white/5 cursor-pointer hover:bg-white/10 transition-colors" onClick={() => setHasAgreedToNewsWarning(!hasAgreedToNewsWarning)}>
                     <Checkbox id="news-agreement" checked={hasAgreedToNewsWarning} onCheckedChange={(checked) => setHasAgreedToNewsWarning(checked as boolean)} />
-                    <label htmlFor="news-agreement" className="text-[0.65rem] font-black uppercase leading-tight cursor-pointer opacity-80">Estou ciente dos riscos operacionais.</label>
+                    <label htmlFor="news-agreement" className="text-[0.65rem] font-black uppercase leading-tight cursor-pointer opacity-80">Estou ciente dos riscos e desejo operar.</label>
                 </div>
             </div>
-            <DialogFooter className="gap-2 sm:gap-0"><Button variant="secondary" onClick={() => setIsNewsWarningModalOpen(false)} className="h-11 rounded-xl">Cancelar</Button><Button onClick={proceedWithAnalysis} disabled={!hasAgreedToNewsWarning} className="h-11 rounded-xl">Prosseguir</Button></DialogFooter>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="secondary" onClick={() => setIsNewsWarningModalOpen(false)} className="h-11 rounded-xl">Cancelar</Button>
+              <Button 
+                onClick={proceedWithAnalysis} 
+                disabled={!hasAgreedToNewsWarning} 
+                className="h-11 rounded-xl bg-primary text-black font-black uppercase tracking-tighter"
+              >
+                Analisar mesmo assim
+              </Button>
+            </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

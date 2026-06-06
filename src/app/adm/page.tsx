@@ -44,7 +44,8 @@ import {
   ToggleRight,
   ExternalLink,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Clock
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -136,6 +137,7 @@ export default function AdminDashboard() {
   const [showSecret, setShowSecret] = useState(false);
   const [invertSignals, setInvertSignals] = useState(false);
   const [signalLimit, setSignalLimit] = useState(3);
+  const [newsWarningDuration, setNewsWarningDuration] = useState(60);
   
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
@@ -172,8 +174,11 @@ export default function AdminDashboard() {
         const pagesSnap = await getDoc(doc(firestore, 'appConfig', 'pages'));
 
         if (regSnap.exists()) setRegSecret(regSnap.data().registrationSecret || '');
-        if (remoteSnap.exists()) setInvertSignals(remoteSnap.data().invertSignal || false);
-        if (limitSnap.exists()) setSignalLimit(remoteSnap.data().hourlySignalLimit || 3);
+        if (remoteSnap.exists()) {
+            setInvertSignals(remoteSnap.data().invertSignal || false);
+            setNewsWarningDuration(remoteSnap.data().newsWarningDuration || 60);
+        }
+        if (limitSnap.exists()) setSignalLimit(limitSnap.data().hourlySignalLimit || 3);
         if (linksSnap.exists()) setSupportLink(linksSnap.data().supportUrl || '');
         
         if (pagesSnap.exists()) {
@@ -189,7 +194,6 @@ export default function AdminDashboard() {
                 };
             }).filter(Boolean) as PageConfigItem[];
 
-            // Add any new pages that might have been added to the default list but aren't in the order yet
             DEFAULT_PAGE_LIST.forEach(p => {
                 if (!mergedList.find(m => m.id === p.id)) {
                     mergedList.push({ ...p, enabled: savedData[p.id] ?? p.enabled });
@@ -209,7 +213,10 @@ export default function AdminDashboard() {
     try {
       await Promise.all([
         setDoc(doc(firestore, 'appConfig', 'registration'), { registrationSecret: regSecret.trim() }, { merge: true }),
-        setDoc(doc(firestore, 'appConfig', 'remoteValues'), { invertSignal: invertSignals }, { merge: true }),
+        setDoc(doc(firestore, 'appConfig', 'remoteValues'), { 
+            invertSignal: invertSignals,
+            newsWarningDuration: newsWarningDuration
+        }, { merge: true }),
         setDoc(doc(firestore, 'appConfig', 'limitation'), { hourlySignalLimit: signalLimit }, { merge: true }),
         setDoc(doc(firestore, 'appConfig', 'links'), { supportUrl: supportLink.trim() }, { merge: true })
       ]);
@@ -697,10 +704,14 @@ export default function AdminDashboard() {
                             <Label className="text-[0.6rem] font-bold uppercase opacity-60">Trades/Hora</Label>
                             <Input type="number" value={signalLimit} onChange={(e) => setSignalLimit(parseInt(e.target.value))} className="bg-white/5 border-white/10 h-10" />
                         </div>
-                        <Button onClick={handleSaveConfigs} disabled={isConfigSaving} className="h-10 bg-primary text-black font-black uppercase tracking-tighter text-xs">
-                            {isConfigSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-1.5" />} Salvar
-                        </Button>
+                        <div className="space-y-1.5">
+                            <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><Clock className="h-3 w-3" /> Aviso Notícia (Min)</Label>
+                            <Input type="number" value={newsWarningDuration} onChange={(e) => setNewsWarningDuration(parseInt(e.target.value))} className="bg-white/5 border-white/10 h-10" />
+                        </div>
                     </div>
+                    <Button onClick={handleSaveConfigs} disabled={isConfigSaving} className="w-full h-10 bg-primary text-black font-black uppercase tracking-tighter text-xs">
+                        {isConfigSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-1.5" />} Salvar Configurações
+                    </Button>
                 </div>
             </Card>
         </div>

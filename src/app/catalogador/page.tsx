@@ -417,7 +417,7 @@ export default function CatalogadorPage() {
                         timeframe === t ? "bg-primary text-black" : "bg-white/5 border-white/5 hover:bg-white/10"
                       )}
                     >
-                      {t === '1m' ? 'M1 (1 Min)' : 'M5 (5 Min)'}
+                      {t === '1m' ? 'M1 (1 MINUTO)' : 'M5 (5 MIN)'}
                     </Button>
                   ))}
                 </div>

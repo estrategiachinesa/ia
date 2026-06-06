@@ -17,7 +17,7 @@ import YoutubePlayer from '@/components/youtube-player';
 import { SignalForm } from '@/components/app/signal-form';
 import { SignalResult } from '@/components/app/signal-result';
 import { isMarketOpenForAsset } from '@/lib/market-hours';
-import { Loader2, AlertTriangle, BarChart, LogOut, ShieldAlert } from 'lucide-react';
+import { Loader2, AlertTriangle, BarChart, LogOut, ShieldAlert, Cpu } from 'lucide-react';
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { useAppConfig } from '@/firebase/config-provider';
 import { Button } from '@/components/ui/button';
@@ -451,14 +451,54 @@ export default function AnalisadorPage() {
             {/* Gráfico (45% no mobile, preenchimento no desktop) */}
             <div className="flex-grow h-[45%] md:h-full relative overflow-hidden bg-black">
                 {isOtcAsset ? (
-                    <div className="w-full h-full flex items-center justify-center bg-black/20 p-6">
-                        <div className="text-center max-w-md">
-                            <BarChart className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
-                            <h3 className="text-sm font-bold text-foreground">Gráfico Indisponível (OTC)</h3>
-                            <p className="mt-1 text-[0.6rem] text-muted-foreground leading-tight">Utilize a plataforma oficial.</p>
-                            <div className="mt-4 grid grid-cols-2 gap-2">
-                                <Button asChild variant="secondary" size="sm" className="h-8 text-[0.6rem] font-black"><a href={config?.iqOptionOpenUrl || '#'} target="_blank">IQ Option</a></Button>
-                                <Button asChild variant="secondary" size="sm" className="h-8 text-[0.6rem] font-black"><a href={config?.exnovaOpenUrl || '#'} target="_blank">Exnova</a></Button>
+                    <div className="w-full h-full flex items-center justify-center bg-black/20 p-6 relative overflow-hidden">
+                        {/* Radar Scan Animation */}
+                        <div className="absolute inset-0 z-0 flex items-center justify-center opacity-20">
+                           <svg width="400" height="400" viewBox="0 0 100 100" className="w-[80%] max-w-[500px]">
+                              <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="0.1" className="text-primary" />
+                              <circle cx="50" cy="50" r="35" fill="none" stroke="currentColor" strokeWidth="0.1" className="text-primary" />
+                              <circle cx="50" cy="50" r="20" fill="none" stroke="currentColor" strokeWidth="0.1" className="text-primary" />
+                              <line x1="50" y1="2" x2="50" y2="98" stroke="currentColor" strokeWidth="0.1" className="text-primary" />
+                              <line x1="2" y1="50" x2="98" y2="50" stroke="currentColor" strokeWidth="0.1" className="text-primary" />
+                              
+                              <circle cx="50" cy="50" r="5" className="text-primary pulse-ring" fill="currentColor" />
+                              
+                              <g className="radar-sweep">
+                                 <path d="M 50 50 L 50 2 A 48 48 0 0 1 98 50 Z" fill="url(#radarGradient)" />
+                              </g>
+
+                              <defs>
+                                <conicGradient id="radarGradient" cx="50" cy="50">
+                                  <stop offset="0%" stopColor="currentColor" stopOpacity="0.6" className="text-primary" />
+                                  <stop offset="100%" stopColor="currentColor" stopOpacity="0" className="text-primary" />
+                                </conicGradient>
+                              </defs>
+                           </svg>
+                        </div>
+
+                        <div className="text-center max-w-md relative z-10 animate-in zoom-in-95 duration-700">
+                            <Cpu className="h-10 w-10 text-primary/40 mx-auto mb-4 animate-pulse" />
+                            <h3 className="text-lg font-black text-foreground uppercase tracking-widest">IA Scanner: {currentAsset}</h3>
+                            <p className="mt-2 text-[0.65rem] text-primary/60 font-black uppercase tracking-[0.3em] leading-tight">Sincronizando com Liquidez de Balcão</p>
+                            
+                            <div className="mt-8 grid grid-cols-2 gap-3 max-w-[280px] mx-auto">
+                                <Button asChild variant="outline" size="sm" className="h-10 text-[0.6rem] font-black border-white/10 hover-glow"><a href={config?.iqOptionOpenUrl || '#'} target="_blank">IQ OPTION</a></Button>
+                                <Button asChild variant="outline" size="sm" className="h-10 text-[0.6rem] font-black border-white/10 hover-glow"><a href={config?.exnovaOpenUrl || '#'} target="_blank">EXNOVA</a></Button>
+                            </div>
+
+                            <div className="mt-12 flex items-center justify-center gap-8 opacity-30">
+                               <div className="flex flex-col items-center">
+                                  <span className="text-[0.5rem] font-bold">LATENCY</span>
+                                  <span className="text-xs font-mono">14ms</span>
+                               </div>
+                               <div className="flex flex-col items-center">
+                                  <span className="text-[0.5rem] font-bold">ACCURACY</span>
+                                  <span className="text-xs font-mono">HIGH</span>
+                               </div>
+                               <div className="flex flex-col items-center">
+                                  <span className="text-[0.5rem] font-bold">THREATS</span>
+                                  <span className="text-xs font-mono">NULL</span>
+                               </div>
                             </div>
                         </div>
                     </div>

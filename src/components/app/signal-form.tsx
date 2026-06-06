@@ -20,6 +20,7 @@ import { Firestore } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { getNextOpeningTime } from '@/lib/market-hours';
 import { EconomicIntelligence } from './economic-intelligence';
+import { OtcIntelligence } from './otc-intelligence';
 
 type VipStatus = 'PENDING' | 'AWAITING_DEPOSIT' | 'DEPOSIT_PENDING' | 'APPROVED' | 'REJECTED' | 'PREMIUM';
 
@@ -137,12 +138,10 @@ export function SignalForm({
             </Button>
         </div>
 
-        {/* NOTICIAS - CUSTOM INTEL PANEL */}
-        {!showOTC && (
-            <div className="shrink-0 px-4 mb-4">
-                <EconomicIntelligence asset={formData.asset} />
-            </div>
-        )}
+        {/* INTEL PANEL (DINÂMICO) */}
+        <div className="shrink-0 px-4 mb-4">
+            {showOTC ? <OtcIntelligence /> : <EconomicIntelligence asset={formData.asset} />}
+        </div>
 
         {/* STATUS MERCADO FECHADO */}
         {!isMarketOpen && !showOTC && nextOpenText && (
@@ -166,7 +165,7 @@ export function SignalForm({
             </Alert>
         )}
 
-        {/* SELETORES - DISTRIBUÍDOS PARA PREENCHER O ESPAÇO */}
+        {/* SELETORES */}
         <div className={cn(
             "flex flex-col px-6",
             showOTC ? "justify-center flex-grow gap-8" : "justify-start gap-6"
@@ -224,7 +223,7 @@ export function SignalForm({
         </div>
       </div>
 
-      {/* BOTÃO PRINCIPAL - FIXO NO RODAPÉ */}
+      {/* BOTÃO PRINCIPAL */}
       <div className="w-full space-y-3 pt-4 pb-8 shrink-0 px-6 bg-gradient-to-t from-black/40 to-transparent">
           <Button
             size="lg"

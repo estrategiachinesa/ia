@@ -22,7 +22,6 @@ import { getNextOpeningTime } from '@/lib/market-hours';
 
 /**
  * Widget de Calendário Económico ultra-clean: apenas Hora, Moeda e Touros.
- * Altura aumentada para 180px para preencher melhor a tela mobile.
  */
 function EconomicCalendarWidget({ asset }: { asset: string }) {
   const isEurUsd = asset.includes('EUR/USD');
@@ -220,7 +219,7 @@ export function SignalForm({
               </SelectTrigger>
               <SelectContent className="rounded-xl border-white/10 bg-black/95 backdrop-blur-2xl">
                 {assets.map(asset => (
-                  <SelectItem key={asset} value={asset} className="rounded-lg focus:bg-primary/20 py-3">
+                  <SelectItem key={asset} value={asset} className="rounded-lg focus:bg-primary focus:text-primary-foreground py-3 transition-colors">
                     <div className="flex items-center gap-3 w-full justify-center">
                         <CurrencyFlags asset={asset} />
                         <span className="font-black text-[0.75rem] uppercase">{asset}</span>
@@ -245,8 +244,8 @@ export function SignalForm({
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="rounded-xl border-white/10 bg-black/95 backdrop-blur-2xl">
-                <SelectItem value="1m" className="rounded-lg font-black py-3 text-[0.75rem] uppercase text-center">M1 (60 Segundos)</SelectItem>
-                <SelectItem value="5m" className="rounded-lg font-black py-3 text-[0.75rem] uppercase text-center">M5 (5 Minutos)</SelectItem>
+                <SelectItem value="1m" className="rounded-lg font-black py-3 text-[0.75rem] uppercase text-center focus:bg-primary focus:text-primary-foreground transition-colors">M1 (60 Segundos)</SelectItem>
+                <SelectItem value="5m" className="rounded-lg font-black py-3 text-[0.75rem] uppercase text-center focus:bg-primary focus:text-primary-foreground transition-colors">M5 (5 Minutos)</SelectItem>
               </SelectContent>
             </Select>
           </div>

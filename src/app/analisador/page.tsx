@@ -455,15 +455,15 @@ export default function AnalisadorPage() {
         </header>
 
         <main className="flex-grow flex flex-col md:flex-row overflow-hidden">
-            {/* Analisador (55% no mobile, 420px no desktop) */}
-            <div className="w-full md:w-[420px] h-[55%] md:h-full shrink-0">
+            {/* Analisador (Full height no mobile, 420px no desktop) */}
+            <div className="w-full md:w-[420px] h-full shrink-0">
                 <div className="w-full h-full bg-card/40 backdrop-blur-xl border-b md:border-b-0 md:border-r border-white/10 flex flex-col items-center justify-center overflow-hidden relative glass-panel">
                     {renderContent()}
                 </div>
             </div>
 
-            {/* Gráfico (45% no mobile, preenchimento no desktop) */}
-            <div className="flex-grow h-[45%] md:h-full relative overflow-hidden bg-black">
+            {/* Gráfico/Radar (Oculto no mobile, preenchimento no desktop) */}
+            <div className="hidden md:flex flex-grow h-full relative overflow-hidden bg-black">
                 {isOtcAsset ? (
                     <div className="w-full h-full flex items-center justify-center bg-black/20 p-6 relative overflow-hidden">
                         {/* Radar Scan Animation */}
@@ -492,7 +492,7 @@ export default function AnalisadorPage() {
 
                         <div className="text-center max-w-md relative z-10 animate-in zoom-in-95 duration-700">
                             <Cpu className="h-10 w-10 text-primary/40 mx-auto mb-4 animate-pulse" />
-                            <h3 className="text-lg font-black text-foreground uppercase tracking-widest">IA Scanner: {currentAsset}</h3>
+                            <h3 className="text-lg font-black text-foreground uppercase tracking-widest">IA SCANNER: {currentAsset}</h3>
                             <p className="mt-2 text-[0.65rem] text-primary/60 font-black uppercase tracking-[0.3em] leading-tight">Sincronizando com Liquidez de Balcão</p>
                             
                             <div className="mt-8 grid grid-cols-2 gap-3 max-w-[280px] mx-auto">

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -22,7 +21,6 @@ export function OtcIntelligence({ asset }: { asset: string }) {
       const currentMinute = now.getMinutes();
       
       // 1. Gerar uma SEED baseada no Ativo e no Intervalo de 15 segundos
-      // Isso garante que o valor mude, mas seja constante para todos no mesmo intervalo/ativo
       const timeStep = Math.floor(now.getTime() / 15000); 
       const assetSeed = asset.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
       const combinedSeed = timeStep + assetSeed;
@@ -44,23 +42,19 @@ export function OtcIntelligence({ asset }: { asset: string }) {
       setIsExcellentTime(isExcellent);
 
       if (isExcellent) {
-          // Força valores de alta performance (90.1% a 92.5%)
           const val = 90.1 + deterministicRandom(combinedSeed) * 2.4;
           setConfidenceVal(val);
           setVolatility('MÉDIA');
       } else {
-          // Valores normais oscilantes (85.0% a 90.0%)
           const conf = 85.0 + deterministicRandom(combinedSeed) * 5.0;
           setConfidenceVal(conf);
 
-          // Volatilidade varia entre BAIXA, MÉDIA e ALTA
           const volLevels = ['BAIXA', 'MÉDIA', 'ALTA'];
           const volIdx = Math.floor(deterministicRandom(combinedSeed + 500) * 3);
           setVolatility(volLevels[volIdx]);
       }
     };
 
-    // Atualização a cada 15 segundos
     const interval = setInterval(updateMetrics, 15000);
     updateMetrics();
 
@@ -95,8 +89,8 @@ export function OtcIntelligence({ asset }: { asset: string }) {
   }, [confidenceVal, isExcellentWindow]);
 
   return (
-    <div className="w-full h-[220px] flex flex-col bg-black/40 border border-white/5 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in duration-700">
-      <div className="px-4 py-2.5 bg-white/5 border-b border-white/5 flex items-center justify-between">
+    <div className="w-full h-[170px] md:h-[220px] flex flex-col bg-black/40 border border-white/5 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in duration-700">
+      <div className="px-4 py-2 bg-white/5 border-b border-white/5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Cpu className="h-3.5 w-3.5 text-primary animate-pulse" />
           <span className="text-[0.6rem] font-black text-muted-foreground uppercase tracking-[0.2em]">IA Metrics (OTC)</span>
@@ -107,15 +101,15 @@ export function OtcIntelligence({ asset }: { asset: string }) {
         </div>
       </div>
       
-      <div className="flex-grow p-4 flex flex-col justify-center gap-6 md:gap-8">
+      <div className="flex-grow p-3 md:p-4 flex flex-col justify-center gap-4 md:gap-8">
         {/* CONFIANÇA */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Target className="h-4 w-4 text-primary/60" />
-            <span className="text-[0.6rem] font-bold uppercase text-muted-foreground">Confiança IA</span>
+          <div className="flex items-center gap-2 md:gap-3">
+            <Target className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary/60" />
+            <span className="text-[0.55rem] md:text-[0.6rem] font-bold uppercase text-muted-foreground">Confiança IA</span>
           </div>
           <span className={cn(
-              "text-sm font-mono font-black tracking-tighter transition-all duration-1000",
+              "text-xs md:text-sm font-mono font-black tracking-tighter transition-all duration-1000",
               isExcellentWindow ? "text-green-500" : "text-primary"
           )}>
             {confidenceVal.toFixed(1)}%
@@ -124,39 +118,39 @@ export function OtcIntelligence({ asset }: { asset: string }) {
 
         {/* VOLATILIDADE */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Activity className="h-4 w-4 text-primary/60" />
-            <span className="text-[0.6rem] font-bold uppercase text-muted-foreground">Volatilidade OTC</span>
+          <div className="flex items-center gap-2 md:gap-3">
+            <Activity className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary/60" />
+            <span className="text-[0.55rem] md:text-[0.6rem] font-bold uppercase text-muted-foreground">Volatilidade OTC</span>
           </div>
-          <div className="flex items-center gap-2.5">
-             <span className="text-[0.6rem] font-black text-white uppercase min-w-[42px] text-left transition-all duration-1000 tracking-tighter">
+          <div className="flex items-center gap-2 md:gap-2.5">
+             <span className="text-[0.55rem] md:text-[0.6rem] font-black text-white uppercase min-w-[36px] md:min-w-[42px] text-left transition-all duration-1000 tracking-tighter">
                 {volatility}
              </span>
-             <div className="flex items-center gap-1">
-                <div className="w-1 h-3.5 bg-primary rounded-full shadow-[0_0_5px_rgba(251,191,36,0.3)]" />
-                <div className={cn("w-1 h-3.5 rounded-full transition-colors duration-500", (volatility === 'MÉDIA' || volatility === 'ALTA') ? "bg-primary shadow-[0_0_5px_rgba(251,191,36,0.3)]" : "bg-primary/20")} />
-                <div className={cn("w-1 h-3.5 rounded-full transition-colors duration-500", volatility === 'ALTA' ? "bg-primary shadow-[0_0_5px_rgba(251,191,36,0.3)]" : "bg-primary/20")} />
+             <div className="flex items-center gap-0.5 md:gap-1">
+                <div className="w-0.5 md:w-1 h-3 md:h-3.5 bg-primary rounded-full" />
+                <div className={cn("w-0.5 md:w-1 h-3 md:h-3.5 rounded-full transition-colors", (volatility === 'MÉDIA' || volatility === 'ALTA') ? "bg-primary" : "bg-primary/20")} />
+                <div className={cn("w-0.5 md:w-1 h-3 md:h-3.5 rounded-full transition-colors", volatility === 'ALTA' ? "bg-primary" : "bg-primary/20")} />
              </div>
           </div>
         </div>
 
         {/* MOMENTO IDEAL */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Zap className="h-4 w-4 text-primary/60" />
-            <span className="text-[0.6rem] font-bold uppercase text-muted-foreground">Momento Ideal</span>
+          <div className="flex items-center gap-2 md:gap-3">
+            <Zap className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary/60" />
+            <span className="text-[0.55rem] md:text-[0.6rem] font-bold uppercase text-muted-foreground">Momento Ideal</span>
           </div>
-          <div className="flex items-center gap-2 bg-black/40 px-2 py-1 rounded-lg border border-white/5">
-             <span className={cn("text-[0.6rem] font-black uppercase tracking-tighter transition-colors duration-500", idealMoment.color)}>
+          <div className="flex items-center gap-1.5 md:gap-2 bg-black/40 px-1.5 md:px-2 py-0.5 md:py-1 rounded-lg border border-white/5">
+             <span className={cn("text-[0.55rem] md:text-[0.6rem] font-black uppercase tracking-tighter", idealMoment.color)}>
                 {idealMoment.label}
              </span>
-             <div className={cn("w-2 h-2 rounded-full transition-all duration-500", idealMoment.bg, idealMoment.glow)} />
+             <div className={cn("w-1.5 h-1.5 md:w-2 md:h-2 rounded-full", idealMoment.bg, idealMoment.glow)} />
           </div>
         </div>
       </div>
       
-      <div className="px-4 py-2 bg-black/60 border-t border-white/5 flex justify-center items-center">
-         <span className="text-[0.5rem] font-black text-primary/40 uppercase tracking-[0.3em] animate-pulse">Sincronizado: {asset}</span>
+      <div className="px-4 py-1.5 bg-black/60 border-t border-white/5 flex justify-center items-center">
+         <span className="text-[0.45rem] md:text-[0.5rem] font-black text-primary/40 uppercase tracking-[0.3em] animate-pulse">Sincronizado: {asset}</span>
       </div>
     </div>
   );

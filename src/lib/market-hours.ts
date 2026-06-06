@@ -3,36 +3,28 @@
 import { Asset } from '@/app/analisador/page';
 
 /**
- * Horários sincronizados com IQ Option.
+ * Horários sincronizados com a imagem fornecida (IQ Option).
  * Todos os horários estão em America/Sao_Paulo (UTC-3).
- * Abertura: Domingo 19:00.
- * Fecho: Sexta 18:00.
- * Pausa diária: 18:00 - 19:00.
  */
-type TimeRange = { start: number; end: number }; 
-type Schedule = {
+export type TimeRange = { start: number; end: number }; 
+export type Schedule = {
   [day: number]: TimeRange[]; // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
 };
 
+// Padrão solicitado na imagem
+const defaultSchedule: Schedule = {
+  0: [{ start: 21, end: 24 }], // Domingo abre às 21h
+  1: [{ start: 0, end: 17 }, { start: 21, end: 24 }], // Seg a Qui: Pausa das 17h às 21h
+  2: [{ start: 0, end: 17 }, { start: 21, end: 24 }],
+  3: [{ start: 0, end: 17 }, { start: 21, end: 24 }],
+  4: [{ start: 0, end: 17 }, { start: 21, end: 24 }],
+  5: [{ start: 0, end: 15.5 }], // Sexta fecha às 15:30
+  6: [], // Sábado fechado
+};
+
 const marketSchedules: Record<string, Schedule> = {
-  'EUR/USD': {
-    0: [{ start: 19, end: 24 }], 
-    1: [{ start: 0, end: 18 }, { start: 19, end: 24 }],
-    2: [{ start: 0, end: 18 }, { start: 19, end: 24 }],
-    3: [{ start: 0, end: 18 }, { start: 19, end: 24 }],
-    4: [{ start: 0, end: 18 }, { start: 19, end: 24 }],
-    5: [{ start: 0, end: 18 }], 
-    6: [],
-  },
-  'EUR/JPY': {
-    0: [{ start: 19, end: 24 }],
-    1: [{ start: 0, end: 18 }, { start: 19, end: 24 }],
-    2: [{ start: 0, end: 18 }, { start: 19, end: 24 }],
-    3: [{ start: 0, end: 18 }, { start: 19, end: 24 }],
-    4: [{ start: 0, end: 18 }, { start: 19, end: 24 }],
-    5: [{ start: 0, end: 18 }],
-    6: [],
-  },
+  'EUR/USD': defaultSchedule,
+  'EUR/JPY': defaultSchedule,
 };
 
 function getSaoPauloNow() {
@@ -54,9 +46,11 @@ function getSaoPauloNow() {
     return { day: saoPauloDay, hour: saoPauloHour, date: now };
 }
 
-export function isMarketOpenForAsset(asset: Asset): boolean {
+export function isMarketOpenForAsset(asset: Asset, customSchedules?: Record<string, Schedule>): boolean {
   if (asset.includes('(OTC)')) return true;
-  const schedule = marketSchedules[asset as keyof typeof marketSchedules];
+  
+  const baseAsset = asset.replace(' (OTC)', '');
+  const schedule = (customSchedules && customSchedules[baseAsset]) || marketSchedules[baseAsset];
   if (!schedule) return false;
 
   const { day, hour } = getSaoPauloNow();
@@ -66,9 +60,11 @@ export function isMarketOpenForAsset(asset: Asset): boolean {
   return daySchedule.some(range => hour >= range.start && hour < range.end);
 }
 
-export function getNextOpeningTime(asset: Asset): Date | null {
+export function getNextOpeningTime(asset: Asset, customSchedules?: Record<string, Schedule>): Date | null {
     if (asset.includes('(OTC)')) return null;
-    const schedule = marketSchedules[asset as keyof typeof marketSchedules];
+    
+    const baseAsset = asset.replace(' (OTC)', '');
+    const schedule = (customSchedules && customSchedules[baseAsset]) || marketSchedules[baseAsset];
     if (!schedule) return null;
 
     const { day: currentDay, hour: currentHour, date: nowDate } = getSaoPauloNow();
@@ -90,7 +86,6 @@ export function getNextOpeningTime(asset: Asset): Date | null {
             const hours = Math.floor(slot.start);
             const minutes = Math.round((slot.start - hours) * 60);
             
-            // Ajuste para Horário de Brasília no objeto Date
             const brDate = new Date(nowDate.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
             const targetBrDate = new Date(brDate);
             targetBrDate.setDate(brDate.getDate() + i);

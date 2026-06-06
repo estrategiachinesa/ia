@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -19,7 +18,7 @@ import { Asset, ExpirationTime } from '@/app/analisador/page';
 import { useAppConfig } from '@/firebase';
 import { Firestore } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
-import { getNextOpeningTime } from '@/lib/market-hours';
+import { getNextOpeningTime, isMarketOpenForAsset } from '@/lib/market-hours';
 import { EconomicIntelligence } from './economic-intelligence';
 import { OtcIntelligence } from './otc-intelligence';
 
@@ -58,7 +57,7 @@ export function SignalForm({
   isLoading,
   showOTC,
   setShowOTC,
-  isMarketOpen,
+  isMarketOpen: initialMarketOpen,
   hasReachedLimit,
   isPremium,
   vipStatus,
@@ -68,6 +67,7 @@ export function SignalForm({
   const { config } = useAppConfig();
   const [waitingMessage, setWaitingMessage] = useState('');
   const [nextOpenText, setNextOpenText] = useState('');
+  const [isMarketOpen, setIsMarketOpen] = useState(initialMarketOpen);
 
   const assets = showOTC 
     ? allAssets.filter(a => a.includes('(OTC)')) 
@@ -91,13 +91,16 @@ export function SignalForm({
   }, [showOTC, setFormData]);
 
   useEffect(() => {
-    if (isMarketOpen || showOTC) {
-        setNextOpenText('');
-        return;
-    }
+    const updateMarketStatus = () => {
+        const open = isMarketOpenForAsset(formData.asset, config?.marketSchedules);
+        setIsMarketOpen(open);
+        
+        if (open || showOTC) {
+            setNextOpenText('');
+            return;
+        }
 
-    const updateTimer = () => {
-        const nextOpen = getNextOpeningTime(formData.asset);
+        const nextOpen = getNextOpeningTime(formData.asset, config?.marketSchedules);
         if (!nextOpen) {
             setNextOpenText('Horário Indisponível');
             return;
@@ -118,10 +121,10 @@ export function SignalForm({
         setNextOpenText(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
     };
 
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
+    updateMarketStatus();
+    const interval = setInterval(updateMarketStatus, 1000);
     return () => clearInterval(interval);
-  }, [isMarketOpen, showOTC, formData.asset]);
+  }, [showOTC, formData.asset, config?.marketSchedules]);
 
   const buttonDisabled = isLoading || (!isMarketOpen && !showOTC) || (hasReachedLimit && !waitingMessage && !isPremium);
 

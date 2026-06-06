@@ -46,7 +46,8 @@ import {
   ArrowUp,
   ArrowDown,
   Clock,
-  Sparkles
+  Sparkles,
+  CalendarClock
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -89,6 +90,7 @@ import {
 } from "@/components/ui/dialog";
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useAffiliateRouter } from '@/hooks/use-affiliate-router';
 import { useAppConfig } from '@/firebase/config-provider';
@@ -152,6 +154,11 @@ export default function AdminDashboard() {
   const [pagesConfig, setPagesConfig] = useState<PageConfigItem[]>(DEFAULT_PAGE_LIST);
   const [isSavingPages, setIsSavingPages] = useState(false);
 
+  // Market Schedules state
+  const [eurUsdSchedule, setEurUsdSchedule] = useState('');
+  const [eurJpySchedule, setEurJpySchedule] = useState('');
+  const [isSavingTime, setIsSavingTime] = useState(false);
+
   const isAdmin = user && ADMIN_EMAILS.includes(user.email || '');
 
   const sessionStatusRef = useMemoFirebase(() => firestore ? doc(firestore, 'session', 'status') : null, [firestore]);
@@ -174,6 +181,7 @@ export default function AdminDashboard() {
         const limitSnap = await getDoc(doc(firestore, 'appConfig', 'limitation'));
         const linksSnap = await getDoc(doc(firestore, 'appConfig', 'links'));
         const pagesSnap = await getDoc(doc(firestore, 'appConfig', 'pages'));
+        const timeSnap = await getDoc(doc(firestore, 'appConfig', 'time'));
 
         if (regSnap.exists()) setRegSecret(regSnap.data().registrationSecret || '');
         if (remoteSnap.exists()) {
@@ -184,6 +192,12 @@ export default function AdminDashboard() {
         if (limitSnap.exists()) setSignalLimit(limitSnap.data().hourlySignalLimit || 3);
         if (linksSnap.exists()) setSupportLink(linksSnap.data().supportUrl || '');
         
+        if (timeSnap.exists()) {
+            const data = timeSnap.data();
+            if (data['EUR/USD']) setEurUsdSchedule(JSON.stringify(data['EUR/USD'], null, 2));
+            if (data['EUR/JPY']) setEurJpySchedule(JSON.stringify(data['EUR/JPY'], null, 2));
+        }
+
         if (pagesSnap.exists()) {
             const savedData = pagesSnap.data();
             const order = savedData.pagesOrder as string[] || DEFAULT_PAGE_LIST.map(p => p.id);
@@ -227,6 +241,23 @@ export default function AdminDashboard() {
       toast({ title: 'Configurações Salvas' });
     } catch (e) { toast({ variant: 'destructive', title: 'Erro ao Salvar' }); }
     finally { setIsConfigSaving(false); }
+  };
+
+  const handleSaveTime = async () => {
+    if (!firestore) return;
+    setIsSavingTime(true);
+    try {
+        const update: any = {};
+        if (eurUsdSchedule) update['EUR/USD'] = JSON.parse(eurUsdSchedule);
+        if (eurJpySchedule) update['EUR/JPY'] = JSON.parse(eurJpySchedule);
+        
+        await setDoc(doc(firestore, 'appConfig', 'time'), update, { merge: true });
+        toast({ title: 'Horários do Mercado Atualizados' });
+    } catch (e) {
+        toast({ variant: 'destructive', title: 'Erro: Formato JSON Inválido' });
+    } finally {
+        setIsSavingTime(false);
+    }
   };
 
   const handleSavePages = async () => {
@@ -624,48 +655,39 @@ export default function AdminDashboard() {
                 </div>
             </Card>
 
-            {/* VISIBILIDADE DE PÁGINAS (KILL SWITCH) */}
+            {/* HORÁRIOS DO MERCADO (SYNC) */}
             <Card className="bg-card/40 border-white/5 p-6 rounded-2xl lg:col-span-1">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-2">
-                        <Layout className="h-5 w-5 text-primary" />
-                        <h2 className="text-sm font-black uppercase tracking-widest">Visibilidade Páginas</h2>
+                        <CalendarClock className="h-5 w-5 text-primary" />
+                        <h2 className="text-sm font-black uppercase tracking-widest">Horários Mercado</h2>
                     </div>
-                    <Button size="sm" onClick={handleSavePages} disabled={isSavingPages} className="h-8 bg-primary/20 text-primary border border-primary/20 hover:bg-primary hover:text-black">
-                        {isSavingPages ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    <Button size="sm" onClick={handleSaveTime} disabled={isSavingTime} className="h-8 bg-primary/20 text-primary border border-primary/20 hover:bg-primary hover:text-black">
+                        {isSavingTime ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                     </Button>
                 </div>
-                <div className="space-y-2">
-                    {pagesConfig.map((p, idx) => (
-                        <div key={p.id} className="flex items-center justify-between p-2 bg-white/5 rounded-xl border border-white/5 group hover:border-primary/20 transition-all">
-                            <div className="flex items-center gap-2">
-                                <div className="flex flex-col gap-0.5">
-                                    <Button variant="ghost" size="icon" className="h-4 w-4 p-0 opacity-40 hover:opacity-100" onClick={() => movePage(idx, 'up')} disabled={idx === 0}>
-                                        <ArrowUp className="h-3 w-3" />
-                                    </Button>
-                                    <Button variant="ghost" size="icon" className="h-4 w-4 p-0 opacity-40 hover:opacity-100" onClick={() => movePage(idx, 'down')} disabled={idx === pagesConfig.length - 1}>
-                                        <ArrowDown className="h-3 w-3" />
-                                    </Button>
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-[0.65rem] font-black uppercase leading-tight">{p.label}</span>
-                                    <span className="text-[0.5rem] font-mono opacity-40">{p.path}</span>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-lg bg-white/5 hover:bg-white/10">
-                                    <a href={p.path} target="_blank" rel="noopener noreferrer">
-                                        <ExternalLink className="h-3.5 w-3.5 opacity-60" />
-                                    </a>
-                                </Button>
-                                <Switch 
-                                    checked={p.enabled} 
-                                    onCheckedChange={() => handleTogglePage(p.id)} 
-                                    className="scale-75"
-                                />
-                            </div>
-                        </div>
-                    ))}
+                <div className="space-y-4">
+                    <div className="space-y-1.5">
+                        <Label className="text-[0.6rem] font-black uppercase opacity-50">Intervalos EUR/USD (JSON)</Label>
+                        <Textarea 
+                            value={eurUsdSchedule} 
+                            onChange={(e) => setEurUsdSchedule(e.target.value)} 
+                            placeholder='{ "0": [{"start": 21, "end": 24}], ... }'
+                            className="bg-white/5 border-white/10 h-28 font-mono text-[0.6rem] leading-tight"
+                        />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label className="text-[0.6rem] font-black uppercase opacity-50">Intervalos EUR/JPY (JSON)</Label>
+                        <Textarea 
+                            value={eurJpySchedule} 
+                            onChange={(e) => setEurJpySchedule(e.target.value)} 
+                            placeholder='{ "0": [{"start": 21, "end": 24}], ... }'
+                            className="bg-white/5 border-white/10 h-28 font-mono text-[0.6rem] leading-tight"
+                        />
+                    </div>
+                    <p className="text-[0.5rem] opacity-30 uppercase font-bold italic leading-tight">
+                        * 0=Dom, 1=Seg... 5=Sex. Use decimal para minutos (Ex: 15.5 = 15:30).
+                    </p>
                 </div>
             </Card>
 
@@ -726,6 +748,51 @@ export default function AdminDashboard() {
                 </div>
             </Card>
         </div>
+
+        {/* VISIBILIDADE DE PÁGINAS (KILL SWITCH) */}
+        <Card className="bg-card/40 border-white/5 p-6 rounded-2xl">
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                    <Layout className="h-5 w-5 text-primary" />
+                    <h2 className="text-sm font-black uppercase tracking-widest">Visibilidade Páginas</h2>
+                </div>
+                <Button size="sm" onClick={handleSavePages} disabled={isSavingPages} className="h-8 bg-primary/20 text-primary border border-primary/20 hover:bg-primary hover:text-black">
+                    {isSavingPages ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                </Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+                {pagesConfig.map((p, idx) => (
+                    <div key={p.id} className="flex items-center justify-between p-2 bg-white/5 rounded-xl border border-white/5 group hover:border-primary/20 transition-all">
+                        <div className="flex items-center gap-2">
+                            <div className="flex flex-col gap-0.5">
+                                <Button variant="ghost" size="icon" className="h-4 w-4 p-0 opacity-40 hover:opacity-100" onClick={() => movePage(idx, 'up')} disabled={idx === 0}>
+                                    <ArrowUp className="h-3 w-3" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-4 w-4 p-0 opacity-40 hover:opacity-100" onClick={() => movePage(idx, 'down')} disabled={idx === pagesConfig.length - 1}>
+                                    <ArrowDown className="h-3 w-3" />
+                                </Button>
+                            </div>
+                            <div className="flex flex-col">
+                                <span className="text-[0.65rem] font-black uppercase leading-tight">{p.label}</span>
+                                <span className="text-[0.5rem] font-mono opacity-40">{p.path}</span>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-lg bg-white/5 hover:bg-white/10">
+                                <a href={p.path} target="_blank" rel="noopener noreferrer">
+                                    <ExternalLink className="h-3.5 w-3.5 opacity-60" />
+                                </a>
+                            </Button>
+                            <Switch 
+                                checked={p.enabled} 
+                                onCheckedChange={() => handleTogglePage(p.id)} 
+                                className="scale-75"
+                            />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </Card>
 
         {/* FILTERS AND TABLE */}
         <div className="flex flex-col xl:flex-row gap-6 items-start xl:items-end justify-between">

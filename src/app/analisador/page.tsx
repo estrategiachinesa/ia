@@ -202,7 +202,7 @@ export default function AnalisadorPage() {
   useEffect(() => {
     const checkMarketStatus = () => {
       const baseAsset = formData.asset.replace(' (OTC)', '') as Asset;
-      const open = isMarketOpenForAsset(baseAsset);
+      const open = isMarketOpenForAsset(baseAsset, config?.marketSchedules);
       setIsMarketOpen(open);
 
       if (!open && lastMarketOpen && !showOTC) {
@@ -214,7 +214,7 @@ export default function AnalisadorPage() {
     checkMarketStatus();
     const interval = setInterval(checkMarketStatus, 10000); 
     return () => clearInterval(interval);
-  }, [formData.asset, lastMarketOpen, showOTC]);
+  }, [formData.asset, lastMarketOpen, showOTC, config?.marketSchedules]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined;

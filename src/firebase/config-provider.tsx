@@ -32,6 +32,9 @@ export interface AppConfig {
   otcExcellentFrequency: number;
   visitCount?: number;
   checkoutClickCount?: number;
+  marketSchedules?: {
+      [asset: string]: any;
+  };
   // Page access status
   pages?: {
     analisador?: boolean;

@@ -45,6 +45,7 @@ export function OtcIntelligence() {
       </div>
       
       <div className="flex-grow p-4 flex flex-col justify-around">
+        {/* CONFIANÇA */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Target className="h-4 w-4 text-primary/60" />
@@ -53,25 +54,31 @@ export function OtcIntelligence() {
           <span className="text-sm font-mono font-black text-primary tracking-tighter transition-all duration-1000">{confidence}</span>
         </div>
 
+        {/* VOLATILIDADE */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Activity className="h-4 w-4 text-primary/60" />
             <span className="text-[0.6rem] font-bold uppercase text-muted-foreground">Volatilidade OTC</span>
           </div>
-          <div className="flex items-center gap-1">
-             <div className="w-1 h-3 bg-primary rounded-full" />
-             <div className={cn("w-1 h-3 rounded-full", volatility !== 'BAIXA' ? "bg-primary" : "bg-primary/20")} />
-             <div className={cn("w-1 h-3 rounded-full", volatility === 'ALTA' ? "bg-primary" : "bg-primary/20")} />
-             <span className="text-[0.55rem] font-black ml-1 transition-all duration-1000">{volatility}</span>
+          <div className="flex items-center gap-2.5">
+             <div className="flex items-center gap-1">
+                <div className="w-1 h-3.5 bg-primary rounded-full shadow-[0_0_5px_rgba(251,191,36,0.3)]" />
+                <div className={cn("w-1 h-3.5 rounded-full transition-colors duration-500", volatility !== 'BAIXA' ? "bg-primary shadow-[0_0_5px_rgba(251,191,36,0.3)]" : "bg-primary/20")} />
+                <div className={cn("w-1 h-3.5 rounded-full transition-colors duration-500", volatility === 'ALTA' ? "bg-primary shadow-[0_0_5px_rgba(251,191,36,0.3)]" : "bg-primary/20")} />
+             </div>
+             <span className="text-[0.6rem] font-black text-white uppercase min-w-[42px] text-right transition-all duration-1000 tracking-tighter">
+                {volatility}
+             </span>
           </div>
         </div>
 
+        {/* STATUS DO FILTRO */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <ShieldCheck className="h-4 w-4 text-primary/60" />
             <span className="text-[0.6rem] font-bold uppercase text-muted-foreground">Status do Filtro</span>
           </div>
-          <span className="text-[0.6rem] font-black text-green-500 uppercase px-2 py-0.5 bg-green-500/10 rounded transition-all duration-1000">
+          <span className="text-[0.6rem] font-black text-green-500 uppercase px-2.5 py-0.5 bg-green-500/10 border border-green-500/20 rounded transition-all duration-1000">
             {filterStatus}
           </span>
         </div>

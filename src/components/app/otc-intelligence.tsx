@@ -21,9 +21,9 @@ export function OtcIntelligence({ asset }: { asset: string }) {
       const now = new Date();
       const currentMinute = now.getMinutes();
       
-      // 1. Gerar uma SEED baseada no Ativo e no Intervalo de 30 segundos
+      // 1. Gerar uma SEED baseada no Ativo e no Intervalo de 15 segundos
       // Isso garante que o valor mude, mas seja constante para todos no mesmo intervalo/ativo
-      const timeStep = Math.floor(now.getTime() / 30000); 
+      const timeStep = Math.floor(now.getTime() / 15000); 
       const assetSeed = asset.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
       const combinedSeed = timeStep + assetSeed;
 
@@ -60,8 +60,8 @@ export function OtcIntelligence({ asset }: { asset: string }) {
       }
     };
 
-    // Atualização a cada 30 segundos
-    const interval = setInterval(updateMetrics, 30000);
+    // Atualização a cada 15 segundos
+    const interval = setInterval(updateMetrics, 15000);
     updateMetrics();
 
     return () => clearInterval(interval);

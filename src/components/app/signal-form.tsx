@@ -236,7 +236,7 @@ export function SignalForm({
             disabled={buttonDisabled}
           >
             {isLoading ? <Loader2 className="mr-2 md:mr-3 h-5 w-5 md:h-6 md:w-6 animate-spin" /> : (!isMarketOpen && !showOTC) ? <Lock className="mr-2 md:mr-3 h-5 w-5 md:h-6 md:w-6" /> : (hasReachedLimit && !isPremium) || waitingMessage ? <Timer className="mr-2 md:mr-3 h-5 w-5 md:h-6 md:w-6" /> : <BarChart className="mr-2 md:mr-3 h-5 w-5 md:h-6 md:w-6" />}
-            {isLoading ? 'ANALISANDO...' : (!isMarketOpen && !showOTC) ? 'MERCADO FECHADO' : (hasReachedLimit && !isPremium) || waitingMessage ? 'ACESSO BLOQUEADO' : 'ANALISAR AGORA'}
+            {isLoading ? 'ANALISANDO...' : (!isMarketOpen && !showOTC) ? 'MERCADO FECHADO' : (hasReachedLimit && !isPremium) || waitingMessage ? 'EM FILA DE ESPERA' : 'ANALISAR AGORA'}
           </Button>
           {!isPremium && (
             <Button variant="link" className="w-full h-auto text-purple-400 py-0.5 md:py-1 hover:text-purple-300 transition-colors" onClick={() => {

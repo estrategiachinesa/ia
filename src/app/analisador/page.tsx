@@ -456,14 +456,14 @@ export default function AnalisadorPage() {
 
         <main className="flex-grow flex flex-col md:flex-row overflow-y-auto md:overflow-hidden snap-y snap-mandatory md:snap-none no-scrollbar">
             {/* Reel 1: Analisador (Full height no mobile, 420px no desktop) */}
-            <div className="w-full md:w-[420px] h-full shrink-0 snap-start">
+            <div className="w-full md:w-[420px] h-[calc(100dvh-50px)] md:h-full shrink-0 snap-start">
                 <div className="w-full h-full bg-card/40 backdrop-blur-xl border-b md:border-b-0 md:border-r border-white/10 flex flex-col items-center justify-center overflow-hidden relative glass-panel">
                     {renderContent()}
                 </div>
             </div>
 
             {/* Reel 2: Gráfico/Radar (Snap Scroll no mobile, preenchimento no desktop) */}
-            <div className="w-full md:flex-grow h-full relative overflow-hidden bg-black shrink-0 snap-start">
+            <div className="w-full md:flex-grow h-[calc(100dvh-50px)] md:h-full relative overflow-hidden bg-black shrink-0 snap-start">
                 {isOtcAsset ? (
                     <div className="w-full h-full flex items-center justify-center bg-black/20 p-6 relative overflow-hidden">
                         {/* Radar Scan Animation */}

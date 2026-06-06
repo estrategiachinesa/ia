@@ -17,7 +17,7 @@ import YoutubePlayer from '@/components/youtube-player';
 import { SignalForm } from '@/components/app/signal-form';
 import { SignalResult } from '@/components/app/signal-result';
 import { isMarketOpenForAsset } from '@/lib/market-hours';
-import { Loader2, AlertTriangle, ChevronDown, ChevronUp, BarChart, LogOut, ShieldAlert, Crown } from 'lucide-react';
+import { Loader2, AlertTriangle, BarChart, LogOut, ShieldAlert } from 'lucide-react';
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { useAppConfig } from '@/firebase/config-provider';
 import { Button } from '@/components/ui/button';
@@ -90,7 +90,6 @@ export default function AnalisadorPage() {
   const { toast } = useToast();
   const [hasAgreedToNewsWarning, setHasAgreedToNewsWarning] = useState(false);
   const usageStorageKey = user ? `signalUsage_${user.uid}` : null;
-  const [isChartVisible, setIsChartVisible] = useState(true);
 
   const vipRequestRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -362,27 +361,29 @@ export default function AnalisadorPage() {
 
   const renderContent = () => {
     switch (appState) {
-      case 'loading': return <div className="w-full h-full flex items-center justify-center"><AnalysisAnimation /></div>;
-      case 'result': return signalData && <SignalResult data={signalData} onReset={() => setAppState('idle')} />;
+      case 'loading': return <div className="w-full h-full flex items-center justify-center p-4"><AnalysisAnimation /></div>;
+      case 'result': return signalData && <div className="w-full h-full flex items-center justify-center p-4"><SignalResult data={signalData} onReset={() => setAppState('idle')} /></div>;
       default: return (
-          <SignalForm
-            formData={formData}
-            setFormData={setFormData}
-            onSubmit={handleAnalyze}
-            isLoading={appState === 'loading'}
-            showOTC={showOTC}
-            setShowOTC={setShowOTC}
-            isMarketOpen={isMarketOpen}
-            hasReachedLimit={hasReachedLimit}
-            user={user}
-            firestore={firestore}
-            isPremium={isPremium}
-            vipStatus={(vipData as any)?.status}
-            isVipModalOpen={isStatusModalOpen}
-            setVipModalOpen={setStatusModalOpen}
-            setUpgradeModalOpen={setUpgradeModalOpen}
-            rejectedBrokerId={(vipData as any)?.brokerId}
-          />
+          <div className="w-full h-full p-4 overflow-hidden">
+            <SignalForm
+                formData={formData}
+                setFormData={setFormData}
+                onSubmit={handleAnalyze}
+                isLoading={appState === 'loading'}
+                showOTC={showOTC}
+                setShowOTC={setShowOTC}
+                isMarketOpen={isMarketOpen}
+                hasReachedLimit={hasReachedLimit}
+                user={user}
+                firestore={firestore}
+                isPremium={isPremium}
+                vipStatus={(vipData as any)?.status}
+                isVipModalOpen={isStatusModalOpen}
+                setVipModalOpen={setStatusModalOpen}
+                setUpgradeModalOpen={setUpgradeModalOpen}
+                rejectedBrokerId={(vipData as any)?.brokerId}
+            />
+          </div>
         );
     }
   }
@@ -397,20 +398,20 @@ export default function AnalisadorPage() {
       <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/90 to-background" />
 
       <div className="flex flex-col h-[100dvh] overflow-hidden">
-        <header className="h-[60px] px-4 md:px-8 flex justify-between items-center border-b border-border/10 bg-card/30 backdrop-blur-md shrink-0">
+        <header className="h-[50px] px-4 md:px-8 flex justify-between items-center border-b border-border/10 bg-card/30 backdrop-blur-md shrink-0">
           <div className="flex items-center gap-3">
              <div className="flex flex-col">
-                <h1 className="text-sm md:text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tighter leading-tight">
+                <h1 className="text-xs md:text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tighter leading-tight">
                     ESTRATÉGIA CHINESA
                 </h1>
-                <p className="text-[0.5rem] text-primary/60 font-black tracking-[0.2em] uppercase mt-[-1px]">Intelligence Analyzer</p>
+                <p className="text-[0.4rem] text-primary/60 font-black tracking-[0.2em] uppercase mt-[-1px]">Intelligence Analyzer</p>
              </div>
           </div>
 
           <div className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-[50%] md:max-w-none">
             <nav className="flex items-center gap-1 bg-black/40 p-0.5 rounded-lg border border-white/5 shrink-0">
                {navigationItems.map((item) => (
-                  <Button key={item.id} asChild variant="ghost" size="sm" className={cn("h-7 md:h-9 px-2 md:px-4 rounded-md text-[0.55rem] md:text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === item.path ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                  <Button key={item.id} asChild variant="ghost" size="sm" className={cn("h-6 md:h-9 px-2 md:px-4 rounded-md text-[0.5rem] md:text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === item.path ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
                       <AffiliateLink href={item.path} className="flex items-center gap-1">
                           {item.label}
                           {item.id === 'sessaochinesa' && (
@@ -429,22 +430,22 @@ export default function AnalisadorPage() {
             variant="ghost"
             size="sm"
             onClick={handleLogout}
-            className="text-[0.55rem] font-black text-muted-foreground hover:text-destructive transition-all rounded-full px-2 border border-white/5 h-7 uppercase tracking-widest hidden md:flex"
+            className="text-[0.5rem] font-black text-muted-foreground hover:text-destructive transition-all rounded-full px-2 border border-white/5 h-6 uppercase tracking-widest hidden md:flex"
           >
             <LogOut className="h-3 w-3 mr-1" /> Sair
           </Button>
         </header>
 
         <main className="flex-grow flex flex-col md:flex-row overflow-hidden">
-            {/* Secção 1: Analisador */}
-            <div className="w-full md:w-[420px] h-[55dvh] md:h-full shrink-0">
-                <div className="w-full h-full bg-card/40 backdrop-blur-xl border-b md:border-b-0 md:border-r border-white/10 p-4 flex flex-col items-center justify-between overflow-hidden relative shine-effect">
+            {/* Secção 1: Analisador (55% no mobile) */}
+            <div className="w-full md:w-[420px] h-[55%] md:h-full shrink-0">
+                <div className="w-full h-full bg-card/40 backdrop-blur-xl border-b md:border-b-0 md:border-r border-white/10 flex flex-col items-center justify-center overflow-hidden relative shine-effect">
                     {renderContent()}
                 </div>
             </div>
 
-            {/* Secção 2: Gráfico */}
-            <div className="flex-grow h-[45dvh] md:h-full relative overflow-hidden">
+            {/* Secção 2: Gráfico (45% no mobile) */}
+            <div className="flex-grow h-[45%] md:h-full relative overflow-hidden bg-black">
                 {isOtcAsset ? (
                     <div className="w-full h-full flex items-center justify-center bg-black/20 p-6">
                         <div className="text-center max-w-md">
@@ -458,13 +459,13 @@ export default function AnalisadorPage() {
                         </div>
                     </div>
                 ) : (
-                    <div className="flex flex-col h-full bg-black/40">
-                        <div className="h-[30px] shrink-0 px-4 border-b border-white/5 flex items-center justify-between">
+                    <div className="flex flex-col h-full bg-black">
+                        <div className="h-[25px] shrink-0 px-4 border-b border-white/5 flex items-center justify-between bg-black/50">
                             <div className="flex items-center gap-2">
                                 <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                                <span className="text-[0.5rem] font-black text-muted-foreground uppercase">Market Live</span>
+                                <span className="text-[0.45rem] font-black text-muted-foreground uppercase tracking-widest">Market Live Stream</span>
                             </div>
-                            <span className="text-[0.5rem] font-black text-primary bg-primary/10 px-1 rounded uppercase">{currentExpirationTime}</span>
+                            <span className="text-[0.45rem] font-black text-primary bg-primary/10 px-1 rounded uppercase">{currentExpirationTime}</span>
                         </div>
                         <div className="flex-grow relative">
                             <TradingViewWidget
@@ -502,4 +503,3 @@ export default function AnalisadorPage() {
     </>
   );
 }
-

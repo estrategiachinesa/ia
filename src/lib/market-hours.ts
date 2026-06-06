@@ -2,9 +2,13 @@
 
 import { Asset } from '@/app/analisador/page';
 
-// Todos os horários estão em America/Sao_Paulo (UTC-3)
-// Sincronizado com IQ Option: Domingo 19:00 - Sexta 18:00
-// Pausa diária: 18:00 - 19:00
+/**
+ * Horários sincronizados com IQ Option.
+ * Todos os horários estão em America/Sao_Paulo (UTC-3).
+ * Abertura: Domingo 19:00.
+ * Fecho: Sexta 18:00.
+ * Pausa diária: 18:00 - 19:00.
+ */
 type TimeRange = { start: number; end: number }; 
 type Schedule = {
   [day: number]: TimeRange[]; // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
@@ -69,36 +73,29 @@ export function getNextOpeningTime(asset: Asset): Date | null {
 
     const { day: currentDay, hour: currentHour, date: nowDate } = getSaoPauloNow();
 
-    // Procuramos o próximo slot de abertura nos próximos 7 dias
     for (let i = 0; i < 7; i++) {
         const checkDay = (currentDay + i) % 7;
         const daySlots = schedule[checkDay];
         
         if (!daySlots || daySlots.length === 0) continue;
 
-        // Ordenar slots por horário de início
         const sortedSlots = [...daySlots].sort((a, b) => a.start - b.start);
 
         for (const slot of sortedSlots) {
-            // Se for o dia atual, só interessa se o slot começar depois da hora atual
             if (i === 0 && slot.start <= currentHour) continue;
 
-            // Criar data de abertura
             const openDate = new Date(nowDate);
             openDate.setDate(nowDate.getDate() + i);
             
             const hours = Math.floor(slot.start);
             const minutes = Math.round((slot.start - hours) * 60);
             
-            openDate.setHours(hours + 3, minutes, 0, 0); // +3 para voltar de SP para UTC para o objeto Date
-            
-            // Ajuste fino para garantir que o horário de Brasília seja respeitado no objeto Date
+            // Ajuste para Horário de Brasília no objeto Date
             const brDate = new Date(nowDate.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
             const targetBrDate = new Date(brDate);
             targetBrDate.setDate(brDate.getDate() + i);
             targetBrDate.setHours(hours, minutes, 0, 0);
 
-            // Converter a diferença de volta para o timestamp local
             const diff = targetBrDate.getTime() - brDate.getTime();
             return new Date(nowDate.getTime() + diff);
         }

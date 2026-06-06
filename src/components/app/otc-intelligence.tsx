@@ -1,9 +1,35 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Cpu, Activity, Target, ShieldCheck } from 'lucide-react';
 
 export function OtcIntelligence() {
+  const [confidence, setConfidence] = useState('94.8%');
+  const [volatility, setVolatility] = useState('MÉDIA');
+  const [filterStatus, setFilterStatus] = useState('Protegido');
+
+  useEffect(() => {
+    const updateMetrics = () => {
+      // Confiança: 91% a 99% com uma casa decimal
+      const conf = (91 + Math.random() * 8).toFixed(1);
+      setConfidence(`${conf}%`);
+
+      // Volatilidade: Alterna entre os 3 estados
+      const volLevels = ['BAIXA', 'MÉDIA', 'ALTA'];
+      setVolatility(volLevels[Math.floor(Math.random() * volLevels.length)]);
+
+      // Status: Termos técnicos de segurança
+      const statuses = ['Protegido', 'Otimizado', 'Ativo', 'Seguro'];
+      setFilterStatus(statuses[Math.floor(Math.random() * statuses.length)]);
+    };
+
+    // Atualiza a cada 8 segundos para parecer uma leitura real de mercado
+    const interval = setInterval(updateMetrics, 8000);
+    updateMetrics(); // Gera os primeiros valores imediatamente
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="w-full h-[220px] flex flex-col bg-black/40 border border-white/5 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in duration-700">
       <div className="px-4 py-2.5 bg-white/5 border-b border-white/5 flex items-center justify-between">
@@ -23,7 +49,7 @@ export function OtcIntelligence() {
             <Target className="h-4 w-4 text-primary/60" />
             <span className="text-[0.6rem] font-bold uppercase text-muted-foreground">Confiança IA</span>
           </div>
-          <span className="text-sm font-mono font-black text-primary tracking-tighter">94.8%</span>
+          <span className="text-sm font-mono font-black text-primary tracking-tighter transition-all duration-1000">{confidence}</span>
         </div>
 
         <div className="flex items-center justify-between">
@@ -33,9 +59,9 @@ export function OtcIntelligence() {
           </div>
           <div className="flex items-center gap-1">
              <div className="w-1 h-3 bg-primary rounded-full" />
-             <div className="w-1 h-3 bg-primary rounded-full" />
-             <div className="w-1 h-3 bg-primary/20 rounded-full" />
-             <span className="text-[0.55rem] font-black ml-1">MÉDIA</span>
+             <div className={cn("w-1 h-3 rounded-full", volatility !== 'BAIXA' ? "bg-primary" : "bg-primary/20")} />
+             <div className={cn("w-1 h-3 rounded-full", volatility === 'ALTA' ? "bg-primary" : "bg-primary/20")} />
+             <span className="text-[0.55rem] font-black ml-1 transition-all duration-1000">{volatility}</span>
           </div>
         </div>
 
@@ -44,7 +70,9 @@ export function OtcIntelligence() {
             <ShieldCheck className="h-4 w-4 text-primary/60" />
             <span className="text-[0.6rem] font-bold uppercase text-muted-foreground">Status do Filtro</span>
           </div>
-          <span className="text-[0.6rem] font-black text-green-500 uppercase px-2 py-0.5 bg-green-500/10 rounded">Protegido</span>
+          <span className="text-[0.6rem] font-black text-green-500 uppercase px-2 py-0.5 bg-green-500/10 rounded transition-all duration-1000">
+            {filterStatus}
+          </span>
         </div>
       </div>
       
@@ -54,3 +82,5 @@ export function OtcIntelligence() {
     </div>
   );
 }
+
+import { cn } from '@/lib/utils';

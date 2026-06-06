@@ -419,17 +419,17 @@ export default function AnalisadorPage() {
         <header className="h-[50px] md:h-[60px] px-4 md:px-8 flex justify-between items-center border-b border-border/10 bg-card/30 backdrop-blur-md shrink-0">
           <div className="flex items-center gap-3">
              <div className="flex flex-col">
-                <h1 className="text-xs md:text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tighter leading-tight">
+                <h1 className="text-sm md:text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tighter leading-tight">
                     ESTRATÉGIA CHINESA
                 </h1>
-                <p className="text-[0.4rem] text-primary/60 font-black tracking-[0.2em] uppercase mt-[-1px]">Intelligence Analyzer</p>
+                <p className="text-[0.5rem] text-primary/60 font-black tracking-[0.2em] uppercase mt-[-1px]">Intelligence Analyzer</p>
              </div>
           </div>
 
           <div className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-[50%] md:max-w-none">
             <nav className="flex items-center gap-1 bg-black/40 p-0.5 rounded-lg border border-white/5 shrink-0">
                {navigationItems.map((item) => (
-                  <Button key={item.id} asChild variant="ghost" size="sm" className={cn("h-6 md:h-9 px-2 md:px-4 rounded-md text-[0.5rem] md:text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === item.path ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                  <Button key={item.id} asChild variant="ghost" size="sm" className={cn("h-6 md:h-9 px-2 md:px-4 rounded-md text-[0.6rem] md:text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === item.path ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
                       <AffiliateLink href={item.path} className="flex items-center gap-1">
                           {item.label}
                           {item.id === 'sessaochinesa' && (
@@ -448,7 +448,7 @@ export default function AnalisadorPage() {
             variant="ghost"
             size="sm"
             onClick={handleLogout}
-            className="text-[0.5rem] font-black text-muted-foreground hover:text-destructive transition-all rounded-full px-2 border border-white/5 h-6 uppercase tracking-widest hidden md:flex"
+            className="text-[0.6rem] font-black text-muted-foreground hover:text-destructive transition-all rounded-full px-2 border border-white/5 h-6 uppercase tracking-widest hidden md:flex"
           >
             <LogOut className="h-3 w-3 mr-1" /> Sair
           </Button>

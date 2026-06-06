@@ -93,7 +93,7 @@ export function OtcIntelligence({ asset }: { asset: string }) {
       <div className="px-4 py-2 bg-white/5 border-b border-white/5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Cpu className="h-3.5 w-3.5 text-primary animate-pulse" />
-          <span className="text-[0.6rem] font-black text-muted-foreground uppercase tracking-[0.2em]">IA Metrics (OTC)</span>
+          <span className="text-[0.7rem] font-black text-muted-foreground uppercase tracking-[0.2em]">IA Metrics (OTC)</span>
         </div>
         <div className="flex items-center gap-1.5 opacity-40">
            <span className="text-[0.5rem] font-bold uppercase">Active Engine</span>
@@ -106,10 +106,10 @@ export function OtcIntelligence({ asset }: { asset: string }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 md:gap-3">
             <Target className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary/60" />
-            <span className="text-[0.55rem] md:text-[0.6rem] font-bold uppercase text-muted-foreground">Confiança IA</span>
+            <span className="text-[0.65rem] md:text-[0.6rem] font-bold uppercase text-muted-foreground">Confiança IA</span>
           </div>
           <span className={cn(
-              "text-xs md:text-sm font-mono font-black tracking-tighter transition-all duration-1000",
+              "text-sm md:text-sm font-mono font-black tracking-tighter transition-all duration-1000",
               isExcellentWindow ? "text-green-500" : "text-primary"
           )}>
             {confidenceVal.toFixed(1)}%
@@ -120,10 +120,10 @@ export function OtcIntelligence({ asset }: { asset: string }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 md:gap-3">
             <Activity className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary/60" />
-            <span className="text-[0.55rem] md:text-[0.6rem] font-bold uppercase text-muted-foreground">Volatilidade OTC</span>
+            <span className="text-[0.65rem] md:text-[0.6rem] font-bold uppercase text-muted-foreground">Volatilidade OTC</span>
           </div>
           <div className="flex items-center gap-2 md:gap-2.5">
-             <span className="text-[0.55rem] md:text-[0.6rem] font-black text-white uppercase min-w-[36px] md:min-w-[42px] text-left transition-all duration-1000 tracking-tighter">
+             <span className="text-[0.65rem] md:text-[0.6rem] font-black text-white uppercase min-w-[36px] md:min-w-[42px] text-left transition-all duration-1000 tracking-tighter">
                 {volatility}
              </span>
              <div className="flex items-center gap-0.5 md:gap-1">
@@ -138,10 +138,10 @@ export function OtcIntelligence({ asset }: { asset: string }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 md:gap-3">
             <Zap className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary/60" />
-            <span className="text-[0.55rem] md:text-[0.6rem] font-bold uppercase text-muted-foreground">Momento Ideal</span>
+            <span className="text-[0.65rem] md:text-[0.6rem] font-bold uppercase text-muted-foreground">Momento Ideal</span>
           </div>
           <div className="flex items-center gap-1.5 md:gap-2 bg-black/40 px-1.5 md:px-2 py-0.5 md:py-1 rounded-lg border border-white/5">
-             <span className={cn("text-[0.55rem] md:text-[0.6rem] font-black uppercase tracking-tighter", idealMoment.color)}>
+             <span className={cn("text-[0.65rem] md:text-[0.6rem] font-black uppercase tracking-tighter", idealMoment.color)}>
                 {idealMoment.label}
              </span>
              <div className={cn("w-1.5 h-1.5 md:w-2 md:h-2 rounded-full", idealMoment.bg, idealMoment.glow)} />
@@ -150,7 +150,7 @@ export function OtcIntelligence({ asset }: { asset: string }) {
       </div>
       
       <div className="px-4 py-1.5 bg-black/60 border-t border-white/5 flex justify-center items-center">
-         <span className="text-[0.45rem] md:text-[0.5rem] font-black text-primary/40 uppercase tracking-[0.3em] animate-pulse">Sincronizado: {asset}</span>
+         <span className="text-[0.5rem] md:text-[0.5rem] font-black text-primary/40 uppercase tracking-[0.3em] animate-pulse">Sincronizado: {asset}</span>
       </div>
     </div>
   );

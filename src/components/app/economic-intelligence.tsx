@@ -86,7 +86,7 @@ export function EconomicIntelligence({ asset }: { asset: string }) {
       <div className="px-4 py-2 bg-white/5 border-b border-white/5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Zap className="h-3.5 w-3.5 text-primary animate-pulse" />
-          <span className="text-[0.6rem] font-black text-muted-foreground uppercase tracking-[0.2em]">Impacto Econômico</span>
+          <span className="text-[0.7rem] font-black text-muted-foreground uppercase tracking-[0.2em]">Impacto Econômico</span>
         </div>
         <div className="flex items-center gap-1.5 opacity-40">
            <span className="text-[0.5rem] font-bold uppercase">Live Data</span>
@@ -106,12 +106,12 @@ export function EconomicIntelligence({ asset }: { asset: string }) {
             <div className="flex items-center gap-2 md:gap-4">
               <div className="flex items-center gap-1.5 md:gap-2">
                 <Clock className="h-3 h-3 md:h-3.5 md:w-3.5 opacity-30 group-hover:text-black group-hover:opacity-100" />
-                <span className="text-xs md:text-sm font-mono font-black tracking-tighter text-white group-hover:text-black">{event.time}</span>
+                <span className="text-sm md:text-sm font-mono font-black tracking-tighter text-white group-hover:text-black">{event.time}</span>
               </div>
               <div className="h-4 w-px bg-white/10 group-hover:bg-black/20" />
               <div className="flex items-center gap-1.5 md:gap-2">
                 <CurrencyFlag currency={event.currency} />
-                <span className="text-[0.6rem] md:text-[0.7rem] font-black text-primary uppercase group-hover:text-black">{event.currency}</span>
+                <span className="text-[0.7rem] md:text-[0.7rem] font-black text-primary uppercase group-hover:text-black">{event.currency}</span>
               </div>
             </div>
 
@@ -122,13 +122,13 @@ export function EconomicIntelligence({ asset }: { asset: string }) {
         )) : (
           <div className="h-full flex flex-col items-center justify-center opacity-30">
             <Clock className="h-6 w-6 mb-1" />
-            <p className="text-[0.5rem] md:text-[0.6rem] font-bold uppercase tracking-widest text-center px-4">Sem notícias relevantes</p>
+            <p className="text-[0.6rem] md:text-[0.6rem] font-bold uppercase tracking-widest text-center px-4">Sem notícias relevantes</p>
           </div>
         )}
       </div>
       
       <div className="px-4 py-1.5 bg-black/60 border-t border-white/5 flex justify-center items-center">
-         <span className="text-[0.45rem] md:text-[0.5rem] font-black text-primary/40 uppercase tracking-[0.3em] animate-pulse">Sincronizado com Investing.com</span>
+         <span className="text-[0.5rem] md:text-[0.5rem] font-black text-primary/40 uppercase tracking-[0.3em] animate-pulse">Sincronizado com Investing.com</span>
       </div>
     </div>
   );

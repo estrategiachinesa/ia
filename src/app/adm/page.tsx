@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -48,7 +49,8 @@ import {
   Clock,
   Sparkles,
   CalendarClock,
-  X
+  X,
+  RotateCcw
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -100,7 +102,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const ADMIN_EMAILS = ['chines@trader.com', 'estrategiachinesa@gmail.com'];
 
-const DAY_NAMES = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+const DAY_NAMES = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
 
 type TimeSlot = { start: string; end: string };
 type ScheduleEdit = Record<number, TimeSlot[]>;
@@ -128,6 +130,17 @@ const DEFAULT_PAGE_LIST: PageConfigItem[] = [
     { id: 'register', label: 'REGISTRO', path: '/register', enabled: true },
     { id: 'bb', label: 'BROKER BREAKER', path: '/bb', enabled: true },
 ];
+
+// Padrão da imagem enviada (IQ Option)
+const IMAGE_DEFAULT_SCHEDULE: ScheduleEdit = {
+    0: [{ start: '21:00', end: '23:59' }],
+    1: [{ start: '00:00', end: '17:00' }, { start: '21:00', end: '23:59' }],
+    2: [{ start: '00:00', end: '17:00' }, { start: '21:00', end: '23:59' }],
+    3: [{ start: '00:00', end: '17:00' }, { start: '21:00', end: '23:59' }],
+    4: [{ start: '00:00', end: '17:00' }, { start: '21:00', end: '23:59' }],
+    5: [{ start: '00:00', end: '15:30' }],
+    6: []
+};
 
 const decimalToTime = (dec: number): string => {
     const hours = Math.floor(dec);
@@ -227,6 +240,10 @@ export default function AdminDashboard() {
                 });
                 setEurJpySchedule(prev => ({ ...prev, ...mapped }));
             }
+        } else {
+            // Se não existir no banco, inicia com o padrão da imagem
+            setEurUsdSchedule(IMAGE_DEFAULT_SCHEDULE);
+            setEurJpySchedule(IMAGE_DEFAULT_SCHEDULE);
         }
 
         if (pagesSnap.exists()) {
@@ -302,6 +319,12 @@ export default function AdminDashboard() {
     } finally {
         setIsSavingTime(false);
     }
+  };
+
+  const handleLoadImageDefault = (target: 'USD' | 'JPY') => {
+      const setter = target === 'USD' ? setEurUsdSchedule : setEurJpySchedule;
+      setter(IMAGE_DEFAULT_SCHEDULE);
+      toast({ title: 'Padrão da Imagem Carregado', description: 'Clique em salvar para aplicar no sistema.' });
   };
 
   const addSlot = (target: 'USD' | 'JPY', day: number) => {
@@ -618,40 +641,61 @@ export default function AdminDashboard() {
   const renderScheduleEditor = (target: 'USD' | 'JPY') => {
       const schedule = target === 'USD' ? eurUsdSchedule : eurJpySchedule;
       return (
-          <div className="space-y-4 max-h-[400px] overflow-y-auto no-scrollbar pr-2">
-              {[0, 1, 2, 3, 4, 5, 6].map(day => (
-                  <div key={day} className="p-3 bg-white/5 rounded-xl border border-white/5 space-y-3">
-                      <div className="flex items-center justify-between">
-                          <span className="text-[0.65rem] font-black uppercase text-primary/70">{DAY_NAMES[day]}</span>
-                          <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full bg-primary/10 text-primary" onClick={() => addSlot(target, day)}>
-                              <Plus className="h-3 w-3" />
+          <div className="space-y-2 max-h-[500px] overflow-y-auto no-scrollbar pr-2">
+              {[6, 0, 1, 2, 3, 4, 5].map(day => (
+                  <div key={day} className="flex flex-col md:flex-row md:items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 gap-3">
+                      <div className="flex items-center justify-between md:min-w-[120px]">
+                          <span className={cn(
+                              "text-[0.7rem] font-black uppercase tracking-tight",
+                              day === 6 ? "text-red-500" : "text-primary/70"
+                          )}>
+                              {DAY_NAMES[day]}
+                          </span>
+                          <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-7 w-7 rounded-full bg-primary/10 text-primary md:hidden" 
+                              onClick={() => addSlot(target, day)}
+                          >
+                              <Plus className="h-3.5 w-3.5" />
                           </Button>
                       </div>
                       
-                      <div className="space-y-2">
+                      <div className="flex-grow flex flex-wrap items-center gap-2">
                           {schedule[day] && schedule[day].length > 0 ? schedule[day].map((slot, idx) => (
-                              <div key={idx} className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2">
+                              <div key={idx} className="flex items-center gap-1.5 bg-black/40 p-1.5 rounded-lg border border-white/10 animate-in zoom-in-95">
                                   <Input 
                                       type="time" 
                                       value={slot.start} 
                                       onChange={(e) => updateSlot(target, day, idx, 'start', e.target.value)}
-                                      className="h-8 bg-black/40 border-white/10 text-[0.7rem] px-2"
+                                      className="h-7 w-[75px] bg-transparent border-none text-[0.7rem] p-0 text-center font-mono"
                                   />
-                                  <span className="text-[0.6rem] opacity-30">até</span>
+                                  <span className="text-[0.6rem] opacity-30 uppercase font-black tracking-tighter">até</span>
                                   <Input 
                                       type="time" 
                                       value={slot.end} 
                                       onChange={(e) => updateSlot(target, day, idx, 'end', e.target.value)}
-                                      className="h-8 bg-black/40 border-white/10 text-[0.7rem] px-2"
+                                      className="h-7 w-[75px] bg-transparent border-none text-[0.7rem] p-0 text-center font-mono"
                                   />
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500/50 hover:text-red-500" onClick={() => removeSlot(target, day, idx)}>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500/50 hover:text-red-500 p-0" onClick={() => removeSlot(target, day, idx)}>
                                       <Trash2 className="h-3.5 w-3.5" />
                                   </Button>
                               </div>
                           )) : (
-                              <p className="text-[0.6rem] opacity-20 uppercase font-bold italic text-center py-1">Fechado / Apenas OTC</p>
+                              <div className="h-10 flex items-center justify-center flex-grow italic opacity-30 text-[0.65rem] font-bold uppercase tracking-widest bg-black/20 rounded-lg border border-dashed border-white/5">
+                                  Mercado Fechado / Apenas OTC
+                              </div>
                           )}
                       </div>
+
+                      <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-9 w-9 rounded-full bg-primary/10 text-primary hidden md:flex" 
+                          onClick={() => addSlot(target, day)}
+                      >
+                          <Plus className="h-4 w-4" />
+                      </Button>
                   </div>
               ))}
           </div>
@@ -767,35 +811,55 @@ export default function AdminDashboard() {
             </Card>
 
             {/* HORÁRIOS DO MERCADO (VISUAL) */}
-            <Card className="bg-card/40 border-white/5 p-6 rounded-2xl lg:col-span-1">
-                <div className="flex items-center justify-between mb-6">
+            <Card className="bg-card/40 border-white/5 p-6 rounded-2xl lg:col-span-2">
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
                     <div className="flex items-center gap-2">
                         <CalendarClock className="h-5 w-5 text-primary" />
-                        <h2 className="text-sm font-black uppercase tracking-widest">Horários Mercado</h2>
+                        <h2 className="text-sm font-black uppercase tracking-widest">Horários Mercado (Sincronização)</h2>
                     </div>
-                    <Button size="sm" onClick={handleSaveTime} disabled={isSavingTime} className="h-8 bg-primary/20 text-primary border border-primary/20 hover:bg-primary hover:text-black">
-                        {isSavingTime ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => handleLoadImageDefault('USD')} 
+                            className="h-8 text-[0.6rem] font-black uppercase tracking-widest bg-white/5 hover:bg-white/10 border-white/10"
+                        >
+                            <RotateCcw className="h-3 w-3 mr-1.5" /> Padrão Imagem
+                        </Button>
+                        <Button 
+                            size="sm" 
+                            onClick={handleSaveTime} 
+                            disabled={isSavingTime} 
+                            className="h-8 bg-primary text-black font-black uppercase tracking-widest hover:bg-primary/90"
+                        >
+                            {isSavingTime ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Save className="h-4 w-4 mr-1.5" /> Salvar Horários</>}
+                        </Button>
+                    </div>
                 </div>
                 
                 <Tabs defaultValue="EUR/USD" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 bg-black/40 border border-white/5 rounded-xl h-10 mb-4">
-                        <TabsTrigger value="EUR/USD" className="text-[0.6rem] font-black uppercase">EUR/USD</TabsTrigger>
-                        <TabsTrigger value="EUR/JPY" className="text-[0.6rem] font-black uppercase">EUR/JPY</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-2 bg-black/40 border border-white/5 rounded-xl h-12 mb-4">
+                        <TabsTrigger value="EUR/USD" className="text-[0.65rem] font-black uppercase tracking-widest">EUR/USD (Dólar)</TabsTrigger>
+                        <TabsTrigger value="EUR/JPY" className="text-[0.65rem] font-black uppercase tracking-widest">EUR/JPY (Iene)</TabsTrigger>
                     </TabsList>
                     
-                    <TabsContent value="EUR/USD" className="mt-0">
+                    <TabsContent value="EUR/USD" className="mt-0 outline-none">
                         {renderScheduleEditor('USD')}
                     </TabsContent>
                     
-                    <TabsContent value="EUR/JPY" className="mt-0">
+                    <TabsContent value="EUR/JPY" className="mt-0 outline-none">
                         {renderScheduleEditor('JPY')}
                     </TabsContent>
                 </Tabs>
                 
-                <p className="text-[0.55rem] opacity-30 uppercase font-bold italic leading-tight mt-4 text-center">
-                    * Fora destes intervalos o analisador forçará o modo OTC automaticamente.
-                </p>
+                <div className="mt-6 flex items-start gap-3 p-4 bg-primary/5 rounded-xl border border-primary/20">
+                    <AlertCircle className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                    <p className="text-[0.65rem] text-primary/70 font-bold uppercase tracking-tight leading-relaxed">
+                        Defina os horários em que o mercado real está <span className="text-primary underline">ABERTO</span>. 
+                        Fora desses intervalos, o analisador forçará o modo OTC automaticamente. 
+                        Como o mercado fecha diariamente entre 17h e 21h, adicione dois intervalos para segunda a quinta.
+                    </p>
+                </div>
             </Card>
 
             {/* GLOBAL CONFIGS */}

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Asset } from '@/app/analisador/page';
@@ -11,15 +12,21 @@ export type Schedule = {
   [day: number]: TimeRange[]; // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
 };
 
-// Padrão solicitado na imagem
+/**
+ * Padrão solicitado na imagem:
+ * Sábado: Fechado
+ * Domingo: 21:00 - 23:59
+ * Seg a Qui: 00:00 - 17:00; 21:00 - 23:59
+ * Sexta: 00:00 - 15:30
+ */
 const defaultSchedule: Schedule = {
-  0: [{ start: 21, end: 24 }], // Domingo abre às 21h
-  1: [{ start: 0, end: 17 }, { start: 21, end: 24 }], // Seg a Qui: Pausa das 17h às 21h
-  2: [{ start: 0, end: 17 }, { start: 21, end: 24 }],
-  3: [{ start: 0, end: 17 }, { start: 21, end: 24 }],
-  4: [{ start: 0, end: 17 }, { start: 21, end: 24 }],
-  5: [{ start: 0, end: 15.5 }], // Sexta fecha às 15:30
-  6: [], // Sábado fechado
+  0: [{ start: 21, end: 23.99 }], // Domingo
+  1: [{ start: 0, end: 17 }, { start: 21, end: 23.99 }], // Segunda
+  2: [{ start: 0, end: 17 }, { start: 21, end: 23.99 }], // Terça
+  3: [{ start: 0, end: 17 }, { start: 21, end: 23.99 }], // Quarta
+  4: [{ start: 0, end: 17 }, { start: 21, end: 23.99 }], // Quinta
+  5: [{ start: 0, end: 15.5 }], // Sexta
+  6: [], // Sábado
 };
 
 const marketSchedules: Record<string, Schedule> = {
@@ -29,21 +36,14 @@ const marketSchedules: Record<string, Schedule> = {
 
 function getSaoPauloNow() {
     const now = new Date();
-    const utcHour = now.getUTCHours() + now.getUTCMinutes() / 60 + now.getUTCSeconds() / 3600;
-    const saoPauloTimezoneOffset = -3;
+    // Convert to target timezone string then back to date to get local values
+    const spString = now.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"});
+    const spDate = new Date(spString);
     
-    let saoPauloHour = utcHour + saoPauloTimezoneOffset;
-    let saoPauloDay = now.getUTCDay();
-
-    if (saoPauloHour < 0) {
-        saoPauloHour += 24;
-        saoPauloDay = (saoPauloDay - 1 + 7) % 7;
-    } else if (saoPauloHour >= 24) {
-        saoPauloHour -= 24;
-        saoPauloDay = (saoPauloDay + 1) % 7;
-    }
+    const day = spDate.getDay();
+    const hour = spDate.getHours() + spDate.getMinutes() / 60 + spDate.getSeconds() / 3600;
     
-    return { day: saoPauloDay, hour: saoPauloHour, date: now };
+    return { day, hour, date: now, spDate };
 }
 
 export function isMarketOpenForAsset(asset: Asset, customSchedules?: Record<string, Schedule>): boolean {
@@ -67,7 +67,7 @@ export function getNextOpeningTime(asset: Asset, customSchedules?: Record<string
     const schedule = (customSchedules && customSchedules[baseAsset]) || marketSchedules[baseAsset];
     if (!schedule) return null;
 
-    const { day: currentDay, hour: currentHour, date: nowDate } = getSaoPauloNow();
+    const { day: currentDay, hour: currentHour, spDate } = getSaoPauloNow();
 
     for (let i = 0; i < 7; i++) {
         const checkDay = (currentDay + i) % 7;
@@ -78,21 +78,20 @@ export function getNextOpeningTime(asset: Asset, customSchedules?: Record<string
         const sortedSlots = [...daySlots].sort((a, b) => a.start - b.start);
 
         for (const slot of sortedSlots) {
+            // Se for hoje e o slot já começou ou passou, pula
             if (i === 0 && slot.start <= currentHour) continue;
 
-            const openDate = new Date(nowDate);
-            openDate.setDate(nowDate.getDate() + i);
+            const targetSpDate = new Date(spDate);
+            targetSpDate.setDate(spDate.getDate() + i);
             
             const hours = Math.floor(slot.start);
             const minutes = Math.round((slot.start - hours) * 60);
-            
-            const brDate = new Date(nowDate.toLocaleString("en-US", {timeZone: "America/Sao_Paulo"}));
-            const targetBrDate = new Date(brDate);
-            targetBrDate.setDate(brDate.getDate() + i);
-            targetBrDate.setHours(hours, minutes, 0, 0);
+            targetSpDate.setHours(hours, minutes, 0, 0);
 
-            const diff = targetBrDate.getTime() - brDate.getTime();
-            return new Date(nowDate.getTime() + diff);
+            // Convert SP target date back to local system time for the countdown
+            // Calculating the delta in SP time and applying to now
+            const diffMs = targetSpDate.getTime() - spDate.getTime();
+            return new Date(Date.now() + diffMs);
         }
     }
 

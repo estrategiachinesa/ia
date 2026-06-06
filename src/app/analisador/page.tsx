@@ -364,7 +364,7 @@ export default function AnalisadorPage() {
       case 'loading': return <div className="w-full h-full flex items-center justify-center p-4"><AnalysisAnimation /></div>;
       case 'result': return signalData && <div className="w-full h-full flex items-center justify-center p-4"><SignalResult data={signalData} onReset={() => setAppState('idle')} /></div>;
       default: return (
-          <div className="w-full h-full p-4 overflow-hidden">
+          <div className="w-full h-full p-2 md:p-4 overflow-hidden">
             <SignalForm
                 formData={formData}
                 setFormData={setFormData}
@@ -398,7 +398,7 @@ export default function AnalisadorPage() {
       <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/90 to-background" />
 
       <div className="flex flex-col h-[100dvh] overflow-hidden">
-        <header className="h-[50px] px-4 md:px-8 flex justify-between items-center border-b border-border/10 bg-card/30 backdrop-blur-md shrink-0">
+        <header className="h-[50px] md:h-[60px] px-4 md:px-8 flex justify-between items-center border-b border-border/10 bg-card/30 backdrop-blur-md shrink-0">
           <div className="flex items-center gap-3">
              <div className="flex flex-col">
                 <h1 className="text-xs md:text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tighter leading-tight">
@@ -437,14 +437,14 @@ export default function AnalisadorPage() {
         </header>
 
         <main className="flex-grow flex flex-col md:flex-row overflow-hidden">
-            {/* Secção 1: Analisador (55% no mobile) */}
+            {/* Analisador (55% no mobile, 420px no desktop) */}
             <div className="w-full md:w-[420px] h-[55%] md:h-full shrink-0">
-                <div className="w-full h-full bg-card/40 backdrop-blur-xl border-b md:border-b-0 md:border-r border-white/10 flex flex-col items-center justify-center overflow-hidden relative shine-effect">
+                <div className="w-full h-full bg-card/40 backdrop-blur-xl border-b md:border-b-0 md:border-r border-white/10 flex flex-col items-center justify-center overflow-hidden relative glass-panel">
                     {renderContent()}
                 </div>
             </div>
 
-            {/* Secção 2: Gráfico (45% no mobile) */}
+            {/* Gráfico (45% no mobile, preenchimento no desktop) */}
             <div className="flex-grow h-[45%] md:h-full relative overflow-hidden bg-black">
                 {isOtcAsset ? (
                     <div className="w-full h-full flex items-center justify-center bg-black/20 p-6">

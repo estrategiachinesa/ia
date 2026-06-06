@@ -21,9 +21,9 @@ export function OtcIntelligence({ asset }: { asset: string }) {
       const now = new Date();
       const currentMinute = now.getMinutes();
       
-      // 1. Gerar uma SEED baseada no Ativo e no Intervalo de 10 segundos
-      // Isso garante que o valor mude, mas seja constante para todos no mesmo segundo/ativo
-      const timeStep = Math.floor(now.getTime() / 10000); 
+      // 1. Gerar uma SEED baseada no Ativo e no Intervalo de 30 segundos
+      // Isso garante que o valor mude, mas seja constante para todos no mesmo intervalo/ativo
+      const timeStep = Math.floor(now.getTime() / 30000); 
       const assetSeed = asset.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
       const combinedSeed = timeStep + assetSeed;
 
@@ -34,7 +34,6 @@ export function OtcIntelligence({ asset }: { asset: string }) {
       };
 
       // 2. Lógica de Janelas "Excelente" (Frequência do Admin)
-      // Adicionamos um offset baseado no ativo para que nem todos fiquem verdes ao mesmo tempo
       const freq = config?.otcExcellentFrequency || 4;
       const cycleGap = Math.floor(60 / freq);
       const windowDuration = 3; 
@@ -54,14 +53,15 @@ export function OtcIntelligence({ asset }: { asset: string }) {
           const conf = 85.0 + deterministicRandom(combinedSeed) * 5.0;
           setConfidenceVal(conf);
 
-          // Volatilidade varia entre BAIXA e ALTA (raramente MÉDIA fora da janela excelente)
+          // Volatilidade varia entre BAIXA, MÉDIA e ALTA
           const volLevels = ['BAIXA', 'MÉDIA', 'ALTA'];
           const volIdx = Math.floor(deterministicRandom(combinedSeed + 500) * 3);
           setVolatility(volLevels[volIdx]);
       }
     };
 
-    const interval = setInterval(updateMetrics, 10000);
+    // Atualização a cada 30 segundos
+    const interval = setInterval(updateMetrics, 30000);
     updateMetrics();
 
     return () => clearInterval(interval);

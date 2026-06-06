@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -140,7 +141,7 @@ export function SignalForm({
 
         {/* INTEL PANEL (DINÂMICO) */}
         <div className="shrink-0 px-4 mb-4">
-            {showOTC ? <OtcIntelligence /> : <EconomicIntelligence asset={formData.asset} />}
+            {showOTC ? <OtcIntelligence asset={formData.asset} /> : <EconomicIntelligence asset={formData.asset} />}
         </div>
 
         {/* STATUS MERCADO FECHADO */}

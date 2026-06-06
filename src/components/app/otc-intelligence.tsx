@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -5,7 +6,11 @@ import { Cpu, Activity, Target, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppConfig } from '@/firebase/config-provider';
 
-export function OtcIntelligence() {
+/**
+ * @fileOverview Painel de métricas OTC com lógica determinística.
+ * Os valores mudam conforme o ATIVO e o TEMPO, mas são iguais para todos os usuários.
+ */
+export function OtcIntelligence({ asset }: { asset: string }) {
   const { config } = useAppConfig();
   const [confidenceVal, setConfidenceVal] = useState(87.4);
   const [volatility, setVolatility] = useState('MÉDIA');
@@ -16,27 +21,43 @@ export function OtcIntelligence() {
       const now = new Date();
       const currentMinute = now.getMinutes();
       
-      // Lógica de Janelas "Excelente" controlada pelo Admin
+      // 1. Gerar uma SEED baseada no Ativo e no Intervalo de 10 segundos
+      // Isso garante que o valor mude, mas seja constante para todos no mesmo segundo/ativo
+      const timeStep = Math.floor(now.getTime() / 10000); 
+      const assetSeed = asset.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+      const combinedSeed = timeStep + assetSeed;
+
+      // Função pseudo-aleatória determinística
+      const deterministicRandom = (seed: number) => {
+        const x = Math.sin(seed) * 10000;
+        return x - Math.floor(x);
+      };
+
+      // 2. Lógica de Janelas "Excelente" (Frequência do Admin)
+      // Adicionamos um offset baseado no ativo para que nem todos fiquem verdes ao mesmo tempo
       const freq = config?.otcExcellentFrequency || 4;
       const cycleGap = Math.floor(60 / freq);
-      const windowDuration = 3; // Janela dura 3 minutos
+      const windowDuration = 3; 
       
-      const isExcellent = (currentMinute % cycleGap) < windowDuration;
+      const assetOffset = assetSeed % cycleGap;
+      const isExcellent = ((currentMinute + assetOffset) % cycleGap) < windowDuration;
+      
       setIsExcellentTime(isExcellent);
 
       if (isExcellent) {
-          // Força valores de alta performance
-          setConfidenceVal(90.1 + Math.random() * 2.4);
+          // Força valores de alta performance (90.1% a 92.5%)
+          const val = 90.1 + deterministicRandom(combinedSeed) * 2.4;
+          setConfidenceVal(val);
           setVolatility('MÉDIA');
       } else {
-          // Valores normais oscilantes
-          const conf = 85 + Math.random() * 5.5; // Fica abaixo de 90.5
+          // Valores normais oscilantes (85.0% a 90.0%)
+          const conf = 85.0 + deterministicRandom(combinedSeed) * 5.0;
           setConfidenceVal(conf);
 
+          // Volatilidade varia entre BAIXA e ALTA (raramente MÉDIA fora da janela excelente)
           const volLevels = ['BAIXA', 'MÉDIA', 'ALTA'];
-          // Fora da janela, a volatilidade raramente é MÉDIA
-          const forceEdgeVol = Math.random() > 0.7 ? 1 : (Math.random() > 0.5 ? 0 : 2);
-          setVolatility(volLevels[forceEdgeVol]);
+          const volIdx = Math.floor(deterministicRandom(combinedSeed + 500) * 3);
+          setVolatility(volLevels[volIdx]);
       }
     };
 
@@ -44,7 +65,7 @@ export function OtcIntelligence() {
     updateMetrics();
 
     return () => clearInterval(interval);
-  }, [config?.otcExcellentFrequency]);
+  }, [config?.otcExcellentFrequency, asset]);
 
   const idealMoment = useMemo(() => {
     if (isExcellentWindow) {
@@ -56,7 +77,6 @@ export function OtcIntelligence() {
       };
     }
     
-    // CAUTELA se pelo menos a confiança for razoável
     if (confidenceVal > 88) {
       return { 
         label: 'CAUTELA', 
@@ -72,7 +92,7 @@ export function OtcIntelligence() {
       bg: 'bg-red-500',
       glow: 'shadow-[0_0_10px_rgba(239,68,68,0.3)]'
     };
-  }, [confidenceVal, volatility, isExcellentWindow]);
+  }, [confidenceVal, isExcellentWindow]);
 
   return (
     <div className="w-full h-[220px] flex flex-col bg-black/40 border border-white/5 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in duration-700">
@@ -136,7 +156,7 @@ export function OtcIntelligence() {
       </div>
       
       <div className="px-4 py-2 bg-black/60 border-t border-white/5 flex justify-center items-center">
-         <span className="text-[0.5rem] font-black text-primary/40 uppercase tracking-[0.3em] animate-pulse">Algoritmo V.2026 Otimizado</span>
+         <span className="text-[0.5rem] font-black text-primary/40 uppercase tracking-[0.3em] animate-pulse">Sincronizado: {asset}</span>
       </div>
     </div>
   );

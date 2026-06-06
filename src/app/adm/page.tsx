@@ -918,52 +918,52 @@ export default function AdminDashboard() {
                     </Button>
                 </div>
             </Card>
-        </div>
 
-        {/* VISIBILIDADE DE PÁGINAS (KILL SWITCH) */}
-        <Card className="bg-card/40 border-white/5 p-6 rounded-2xl">
-            <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-2">
-                    <Layout className="h-5 w-5 text-primary" />
-                    <h2 className="text-sm font-black uppercase tracking-widest">Visibilidade Páginas</h2>
-                </div>
-                <Button size="sm" onClick={handleSavePages} disabled={isSavingPages} className="h-8 bg-primary/20 text-primary border border-primary/20 hover:bg-primary hover:text-black">
-                    {isSavingPages ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                </Button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
-                {pagesConfig.map((p, idx) => (
-                    <div key={p.id} className="flex items-center justify-between p-2 bg-white/5 rounded-xl border border-white/5 group hover:border-primary/20 transition-all">
-                        <div className="flex items-center gap-2">
-                            <div className="flex flex-col gap-0.5">
-                                <Button variant="ghost" size="icon" className="h-4 w-4 p-0 opacity-40 hover:opacity-100" onClick={() => movePage(idx, 'up')} disabled={idx === 0}>
-                                    <ArrowUp className="h-3 w-3" />
-                                </Button>
-                                <Button variant="ghost" size="icon" className="h-4 w-4 p-0 opacity-40 hover:opacity-100" onClick={() => movePage(idx, 'down')} disabled={idx === pagesConfig.length - 1}>
-                                    <ArrowDown className="h-3 w-3" />
-                                </Button>
-                            </div>
-                            <div className="flex flex-col">
-                                <span className="text-[0.65rem] font-black uppercase leading-tight">{p.label}</span>
-                                <span className="text-[0.5rem] font-mono opacity-40">{p.path}</span>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-lg bg-white/5 hover:bg-white/10">
-                                <a href={p.path} target="_blank" rel="noopener noreferrer">
-                                    <ExternalLink className="h-3.5 w-3.5 opacity-60" />
-                                </a>
-                            </Button>
-                            <Switch 
-                                checked={p.enabled} 
-                                onCheckedChange={() => handleTogglePage(p.id)} 
-                                className="scale-75"
-                            />
-                        </div>
+            {/* VISIBILIDADE DE PÁGINAS (KILL SWITCH) */}
+            <Card className="bg-card/40 border-white/5 p-6 rounded-2xl lg:col-span-2">
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2">
+                        <Layout className="h-5 w-5 text-primary" />
+                        <h2 className="text-sm font-black uppercase tracking-widest">Visibilidade Páginas</h2>
                     </div>
-                ))}
-            </div>
-        </Card>
+                    <Button size="sm" onClick={handleSavePages} disabled={isSavingPages} className="h-8 bg-primary/20 text-primary border border-primary/20 hover:bg-primary hover:text-black">
+                        {isSavingPages ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    </Button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {pagesConfig.map((p, idx) => (
+                        <div key={p.id} className="flex items-center justify-between p-2 bg-white/5 rounded-xl border border-white/5 group hover:border-primary/20 transition-all">
+                            <div className="flex items-center gap-2">
+                                <div className="flex flex-col gap-0.5">
+                                    <Button variant="ghost" size="icon" className="h-4 w-4 p-0 opacity-40 hover:opacity-100" onClick={() => movePage(idx, 'up')} disabled={idx === 0}>
+                                        <ArrowUp className="h-3 w-3" />
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-4 w-4 p-0 opacity-40 hover:opacity-100" onClick={() => movePage(idx, 'down')} disabled={idx === pagesConfig.length - 1}>
+                                        <ArrowDown className="h-3 w-3" />
+                                    </Button>
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-[0.65rem] font-black uppercase leading-tight">{p.label}</span>
+                                    <span className="text-[0.5rem] font-mono opacity-40">{p.path}</span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <Button asChild variant="ghost" size="icon" className="h-8 w-8 rounded-lg bg-white/5 hover:bg-white/10">
+                                    <a href={p.path} target="_blank" rel="noopener noreferrer">
+                                        <ExternalLink className="h-3.5 w-3.5 opacity-60" />
+                                    </a>
+                                </Button>
+                                <Switch 
+                                    checked={p.enabled} 
+                                    onCheckedChange={() => handleTogglePage(p.id)} 
+                                    className="scale-75"
+                                />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </Card>
+        </div>
 
         {/* FILTERS AND TABLE */}
         <div className="flex flex-col xl:flex-row gap-6 items-start xl:items-end justify-between">

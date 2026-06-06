@@ -72,7 +72,14 @@ const StarRating = ({ count }: { count: 1 | 2 | 3 }) => (
 );
 
 export function EconomicIntelligence({ asset }: { asset: string }) {
-  const events = useMemo(() => generateMockNewsEvents(), []);
+  const allEvents = useMemo(() => generateMockNewsEvents(), []);
+
+  // Filtra as notícias com base nas moedas do par selecionado
+  const filteredEvents = useMemo(() => {
+    // Remove o sufixo (OTC) e divide pelo separador /
+    const currencies = asset.replace(' (OTC)', '').split('/');
+    return allEvents.filter(event => currencies.includes(event.currency));
+  }, [allEvents, asset]);
 
   return (
     <div className="w-full h-[220px] flex flex-col bg-black/40 border border-white/5 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in duration-700">
@@ -88,7 +95,7 @@ export function EconomicIntelligence({ asset }: { asset: string }) {
       </div>
       
       <div className="flex-grow overflow-y-auto no-scrollbar p-2.5 space-y-1.5">
-        {events.map((event, idx) => (
+        {filteredEvents.length > 0 ? filteredEvents.map((event, idx) => (
           <a 
             key={idx} 
             href="https://br.investing.com/economic-calendar/" 
@@ -113,7 +120,12 @@ export function EconomicIntelligence({ asset }: { asset: string }) {
               <ExternalLink className="h-2.5 w-2.5 ml-2 opacity-0 group-hover:opacity-100 group-hover:text-black transition-opacity" />
             </div>
           </a>
-        ))}
+        )) : (
+          <div className="h-full flex flex-col items-center justify-center opacity-30">
+            <Clock className="h-8 w-8 mb-2" />
+            <p className="text-[0.6rem] font-bold uppercase tracking-widest text-center px-4">Sem notícias relevantes para este par no momento</p>
+          </div>
+        )}
       </div>
       
       <div className="px-4 py-2 bg-black/60 border-t border-white/5 flex justify-center items-center">

@@ -22,6 +22,7 @@ import { getNextOpeningTime } from '@/lib/market-hours';
 
 /**
  * Widget de Calendário Económico ultra-clean: apenas Hora, Moeda e Touros.
+ * Ajustado para evitar clipping nas bordas e esconder o título da notícia.
  */
 function EconomicCalendarWidget({ asset }: { asset: string }) {
   const isEurUsd = asset.includes('EUR/USD');
@@ -38,11 +39,12 @@ function EconomicCalendarWidget({ asset }: { asset: string }) {
         <span className="text-[0.5rem] font-black text-muted-foreground uppercase tracking-[0.2em]">Impacto Econômico</span>
       </div>
       
-      <div className="h-[180px] w-full overflow-hidden relative bg-[#0a0a0a]">
-         <div className="relative w-[180%] left-[-15px] top-[-118px]">
+      <div className="h-[180px] w-full overflow-hidden relative bg-[#0a0a0a] flex justify-center">
+         {/* A largura de 220px e o overflow-hidden no pai cortam o nome do evento no lado direito */}
+         <div className="relative w-[220px] left-[8px] top-[-118px]">
             <iframe 
               src={`https://sslecal2.investing.com?columns=exc_flags,exc_currency,exc_importance&importance=2,3&features=timezone&countries=${countries}&calType=day&timeZone=12&lang=12`} 
-              width="100%" 
+              width="450" 
               height="800" 
               frameBorder="0" 
               allowTransparency={true}
@@ -244,7 +246,7 @@ export function SignalForm({
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="rounded-xl border-white/10 bg-black/95 backdrop-blur-2xl">
-                <SelectItem value="1m" className="rounded-lg font-black py-3 text-[0.75rem] uppercase text-center focus:bg-primary focus:text-primary-foreground transition-colors">M1 (1 MINUTO)</SelectItem>
+                <SelectItem value="1m" className="rounded-lg font-black py-3 text-[0.75rem] uppercase text-center focus:bg-primary focus:text-primary-foreground transition-colors">1 MINUTO</SelectItem>
                 <SelectItem value="5m" className="rounded-lg font-black py-3 text-[0.75rem] uppercase text-center focus:bg-primary focus:text-primary-foreground transition-colors">M5 (5 Minutos)</SelectItem>
               </SelectContent>
             </Select>

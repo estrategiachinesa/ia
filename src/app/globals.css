@@ -51,7 +51,7 @@ body {
   /* Painel de Vidro com Glow */
   .glass-panel {
     background: rgba(10, 10, 10, 0.6);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(16px);
     border-right: 1px solid rgba(255, 255, 255, 0.05);
     position: relative;
   }
@@ -71,7 +71,7 @@ body {
     background: linear-gradient(
       100deg,
       rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.2) 50%,
       rgba(255, 255, 255, 0) 100%
     );
     transform: skewX(-25deg);
@@ -101,17 +101,17 @@ body {
     0%, 100% { opacity: 0.5; transform: scale(1); }
     50% { opacity: 0.8; transform: scale(1.1); }
   }
+
+  /* Hover Profissional */
+  .hover-bright:hover {
+    border-color: hsl(var(--primary));
+    background-color: hsl(var(--primary) / 0.1);
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.15);
+    transform: translateY(-1px);
+  }
 }
 
 @layer utilities {
-  /* Hover de Alta Visibilidade */
-  .hover-bright:hover {
-    border-color: hsl(var(--primary));
-    background-color: hsl(var(--primary) / 0.05);
-    box-shadow: 0 0 15px hsl(var(--primary) / 0.1);
-    transform: translateY(-1px);
-  }
-
   /* No-Scroll Fixes */
   .no-scrollbar::-webkit-scrollbar {
     display: none;

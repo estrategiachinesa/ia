@@ -98,6 +98,18 @@
         "status",
         "submittedAt"
       ]
+    },
+    "AppConfig": {
+      "title": "App Configuration",
+      "description": "General settings for the application.",
+      "type": "object",
+      "properties": {
+        "registrationSecret": { "type": "string" },
+        "supportUrl": { "type": "string" },
+        "hourlySignalLimit": { "type": "number" },
+        "newsWarningDuration": { "type": "number" },
+        "otcExcellentFrequency": { "type": "number" }
+      }
     }
   },
   "auth": {
@@ -114,7 +126,7 @@
           "schema": {
             "$ref": "#/backend/entities/UserProfile"
           },
-          "description": "Stores user profile information. The document ID is the user's Firebase UID."
+          "description": "Stores user profile information."
         }
       },
       {
@@ -124,10 +136,28 @@
           "schema": {
             "$ref": "#/backend/entities/VipRequest"
           },
-          "description": "Stores VIP access requests. The document ID is the user's Firebase UID."
+          "description": "Stores VIP access requests."
+        }
+      },
+      {
+        "path": "/appConfig/{configId}",
+        "definition": {
+          "entityName": "AppConfig",
+          "schema": {
+            "$ref": "#/backend/entities/AppConfig"
+          },
+          "description": "Global configuration documents (time, pages, links, registration, etc.)."
+        }
+      },
+      {
+        "path": "/session/{sessionId}",
+        "definition": {
+          "entityName": "SessionData",
+          "schema": { "type": "object" },
+          "description": "Live session status and scoreboard (status, monthly_score)."
         }
       }
     ],
-    "reasoning": "Standard data structure for user profiles and VIP upgrade requests, with administrative access control."
+    "reasoning": "Standardized data structure to include application settings, user management, and live session control."
   }
 }

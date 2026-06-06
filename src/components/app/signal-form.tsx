@@ -36,7 +36,7 @@ function EconomicCalendarWidget({ asset }: { asset: string }) {
     <div className="w-full mb-1 rounded-xl overflow-hidden border border-white/5 bg-black/40 shadow-2xl animate-in fade-in slide-in-from-top-2 duration-500">
       <div className="px-2 py-1 bg-white/5 border-b border-white/5 flex items-center justify-center gap-1.5">
         <Zap className="h-3 w-3 text-primary animate-pulse" />
-        <span className="text-[0.5rem] font-black text-muted-foreground uppercase tracking-[0.2em]">Impact Stream</span>
+        <span className="text-[0.5rem] font-black text-muted-foreground uppercase tracking-[0.2em]">Impacto Econômico</span>
       </div>
       
       <div className="h-[180px] w-full overflow-hidden relative bg-[#0a0a0a]">
@@ -235,8 +235,14 @@ export function SignalForm({
           <div className="space-y-2">
             <Label className="text-[0.6rem] font-black text-muted-foreground uppercase tracking-widest opacity-60">Tempo de Expiração:</Label>
             <Select value={formData.expirationTime} onValueChange={(value) => setFormData({ ...formData, expirationTime: value as ExpirationTime })} disabled={isLoading}>
-              <SelectTrigger className="h-11 md:h-12 rounded-xl bg-white/5 border-white/10 text-[0.85rem] font-black uppercase text-center hover-glow transition-all duration-300">
-                <SelectValue placeholder="Tempo" />
+              <SelectTrigger className="h-11 md:h-12 rounded-xl bg-white/5 border-white/10 hover-glow transition-all duration-300">
+                <SelectValue asChild>
+                  <div className="flex items-center justify-center w-full">
+                    <span className="font-black text-[0.85rem] md:text-sm uppercase tracking-tight">
+                        {formData.expirationTime === '1m' ? 'M1 (60 SEG)' : 'M5 (5 MIN)'}
+                    </span>
+                  </div>
+                </SelectValue>
               </SelectTrigger>
               <SelectContent className="rounded-xl border-white/10 bg-black/95 backdrop-blur-2xl">
                 <SelectItem value="1m" className="rounded-lg font-black py-3 text-[0.75rem] uppercase text-center">M1 (60 Segundos)</SelectItem>

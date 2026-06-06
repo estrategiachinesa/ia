@@ -19,7 +19,6 @@ import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useFirebase } from '@/firebase';
 import { useAppConfig } from '@/firebase/config-provider';
 import { useToast } from '@/hooks/use-toast';
-import Link from 'next/link';
 
 type VipStatus = 'PENDING' | 'AWAITING_DEPOSIT' | 'DEPOSIT_PENDING' | 'APPROVED' | 'REJECTED' | 'PREMIUM';
 
@@ -170,17 +169,17 @@ export function VipStatusModal({
             <DialogHeader>
               <DialogTitle className="text-2xl font-headline text-primary">Cadastro Verificado! ✅</DialogTitle>
               <DialogDescription>
-                Seu ID foi encontrado. Agora, realize um depósito de qualquer valor para ativar os sinais ilimitados.
+                Seu ID foi encontrado. Agora, realize um depósito para ativar os sinais ilimitados.
               </DialogDescription>
             </DialogHeader>
             <div className="py-4 space-y-4">
               {showDepositLinks && (
                 <div className="grid grid-cols-2 gap-2 animate-in fade-in">
                   <Button variant="outline" className="h-12" asChild>
-                    <a href={config.iqOptionPremiumUrl || config.iqOptionUrl} target="_blank" rel="noopener noreferrer">IQ Option</a>
+                    <a href={config.iqOptionPremiumUrl} target="_blank" rel="noopener noreferrer">IQ Option</a>
                   </Button>
                   <Button variant="outline" className="h-12" asChild>
-                    <a href={config.exnovaPremiumUrl || config.exnovaUrl} target="_blank" rel="noopener noreferrer">Exnova</a>
+                    <a href={config.exnovaPremiumUrl} target="_blank" rel="noopener noreferrer">Exnova</a>
                   </Button>
                 </div>
               )}
@@ -232,7 +231,7 @@ export function VipStatusModal({
                 <p className="text-xs font-bold uppercase opacity-60">Tente novamente:</p>
                 <div className="grid grid-cols-2 gap-2">
                   <Button variant="outline" size="sm" asChild>
-                    <a href={config.exnovaPremiumUrl || config.exnovaUrl} target="_blank" rel="noopener noreferrer">Nova Conta</a>
+                    <a href={config.exnovaPremiumUrl} target="_blank" rel="noopener noreferrer">Nova Conta</a>
                   </Button>
                   <div className="flex gap-1">
                     <Input
@@ -264,7 +263,7 @@ export function VipStatusModal({
             </DialogHeader>
             <div className="py-6 space-y-4">
                <Button className="w-full h-12 font-black" asChild>
-                  <a href={config.exnovaPremiumUrl || config.exnovaUrl} target="_blank" rel="noopener noreferrer">CRIAR CONTA NA CORRETORA</a>
+                  <a href={config.exnovaPremiumUrl} target="_blank" rel="noopener noreferrer">CRIAR CONTA NA CORRETORA</a>
                </Button>
                <div className="flex gap-2">
                   <Input 

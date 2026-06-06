@@ -5,23 +5,20 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAffiliateRouter } from '@/hooks/use-affiliate-router';
 import { usePathname } from 'next/navigation';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
 } from '@/components/ui/dialog'; 
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import YoutubePlayer from '@/components/youtube-player';
-
 
 import { SignalForm } from '@/components/app/signal-form';
 import { SignalResult } from '@/components/app/signal-result';
 import { isMarketOpenForAsset } from '@/lib/market-hours';
-import { Loader2, AlertTriangle, ChevronDown, ChevronUp, BarChart, LogOut, User, Calendar, ShieldAlert, ExternalLink, Zap, Search, Radio, Crown } from 'lucide-react';
+import { Loader2, AlertTriangle, ChevronDown, ChevronUp, BarChart, LogOut, ShieldAlert, Crown } from 'lucide-react';
 import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
 import { useAppConfig } from '@/firebase/config-provider';
 import { Button } from '@/components/ui/button';
@@ -137,6 +134,7 @@ export default function AnalisadorPage() {
         .filter((p: any) => p && p.label);
   }, [config]);
 
+  // Kill Switch & Access Verification
   useEffect(() => {
     if (isUserLoading || isProfileLoading) {
         setAccessState('checking');
@@ -154,6 +152,7 @@ export default function AnalisadorPage() {
       return;
     }
 
+    // KILL SWITCH LOGIC: Redirect to root if page is disabled
     if (config?.pages?.analisador === false) {
         router.replace('/');
         setAccessState('disabled');
@@ -201,22 +200,26 @@ export default function AnalisadorPage() {
     }
   }, [appState, isPremium, usageStorageKey, config]);
 
+  // Market Status Logic: Auto-OTC with Manual Override
+  const [lastMarketOpen, setLastMarketOpen] = useState(true);
+
   useEffect(() => {
     const checkMarketStatus = () => {
-      const open = isMarketOpenForAsset(formData.asset);
+      const baseAsset = formData.asset.replace(' (OTC)', '') as Asset;
+      const open = isMarketOpenForAsset(baseAsset);
       setIsMarketOpen(open);
 
-      // Lógica de Troca Automática para OTC se o mercado estiver fechado
-      if (!open && !formData.asset.includes('(OTC)')) {
-        const otcAsset = `${formData.asset} (OTC)` as Asset;
+      // Auto-switch to OTC if market just closed AND user is NOT already in OTC
+      if (!open && lastMarketOpen && !showOTC) {
         setShowOTC(true);
-        setFormData(prev => ({ ...prev, asset: otcAsset }));
       }
+      setLastMarketOpen(open);
     };
+    
     checkMarketStatus();
     const interval = setInterval(checkMarketStatus, 10000); 
     return () => clearInterval(interval);
-  }, [formData.asset]);
+  }, [formData.asset, lastMarketOpen, showOTC]);
 
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined;
@@ -321,14 +324,6 @@ export default function AnalisadorPage() {
     router.push('/login');
   }
 
-  const handleUpgradeClick = () => {
-    if (vipData) {
-      setStatusModalOpen(true);
-    } else {
-      setUpgradeModalOpen(true);
-    }
-  };
-
   if (accessState === 'checking' || isVipLoading || isConfigLoading || isProfileLoading) {
       return (
           <div className="flex h-screen w-full items-center justify-center bg-black">
@@ -407,37 +402,37 @@ export default function AnalisadorPage() {
       <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/90 to-background" />
 
       <div className="flex flex-col min-h-screen">
-        <header className="px-4 py-2 md:py-4 flex flex-col md:flex-row justify-between items-center gap-2 md:gap-6 border-b border-border/10 bg-card/30 backdrop-blur-md sticky top-0 z-50 h-[72px] md:h-auto">
-          <div className="flex items-center justify-between w-full md:w-auto relative">
+        <header className="px-4 py-3 md:px-8 md:py-4 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 border-b border-border/10 bg-card/30 backdrop-blur-md sticky top-0 z-50">
+          <div className="flex items-center justify-between w-full md:w-auto">
              <div className="flex flex-col flex-1 items-center md:items-start text-center md:text-left">
-                <h1 className="text-base md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tighter leading-tight">
+                <h1 className="text-lg md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tighter leading-tight">
                     ESTRATÉGIA CHINESA
                 </h1>
-                <p className="text-[0.5rem] md:text-[0.6rem] text-primary/60 font-black tracking-[0.2em] uppercase mt-[-1px]">Intelligence Analyzer</p>
+                <p className="text-[0.55rem] md:text-[0.6rem] text-primary/60 font-black tracking-[0.2em] uppercase mt-[-1px] md:mt-[-2px]">Intelligence Analyzer</p>
              </div>
              
-             <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-2 md:hidden">
+             <div className="flex items-center gap-2 md:hidden">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleLogout}
-                  className="text-[0.55rem] font-black text-muted-foreground hover:text-destructive transition-all rounded-full px-2.5 border border-white/5 h-7 uppercase tracking-tighter"
+                  className="text-[0.6rem] font-black text-muted-foreground hover:text-destructive transition-all rounded-full px-3 border border-white/5 h-8 uppercase tracking-widest"
                 >
-                  <LogOut className="h-3 w-3 mr-1" />
+                  <LogOut className="h-3 w-3 mr-1.5" />
                   Sair
                 </Button>
              </div>
           </div>
 
-          <div className="flex items-center gap-1 w-full md:w-auto overflow-x-auto no-scrollbar justify-center">
-            <nav className="flex items-center gap-1 bg-black/40 p-0.5 rounded-lg border border-white/5 shadow-2xl shrink-0">
+          <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto no-scrollbar pb-1 md:pb-0 justify-center">
+            <nav className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/5 shadow-2xl shrink-0">
                {navigationItems.map((item) => (
-                  <Button key={item.id} asChild variant="ghost" size="sm" className={cn("h-7 md:h-10 px-2 md:px-4 rounded-md md:rounded-xl text-[0.55rem] md:text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === item.path ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
-                      <AffiliateLink href={item.path} className="flex items-center gap-1 md:gap-2">
+                  <Button key={item.id} asChild variant="ghost" size="sm" className={cn("h-8 md:h-10 px-3 md:px-4 rounded-lg md:rounded-xl text-[0.6rem] md:text-[0.65rem] font-black uppercase tracking-widest transition-all", pathname === item.path ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-primary")}>
+                      <AffiliateLink href={item.path} className="flex items-center gap-1.5 md:gap-2">
                           {item.label}
                           {item.id === 'sessaochinesa' && (
                               <span className={cn(
-                                  "w-1 h-1 md:w-2 md:h-2 rounded-full",
+                                  "w-1.5 h-1.5 md:w-2 md:h-2 rounded-full",
                                   isSessionOnline ? "bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-red-500"
                               )} />
                           )}
@@ -463,14 +458,14 @@ export default function AnalisadorPage() {
         <main className="flex-grow container max-w-[1400px] mx-auto p-0 md:p-10">
             <div className="w-full">
                 <div className="flex flex-col lg:flex-row gap-0 lg:gap-8 items-stretch justify-center">
-                    {/* Secção 1: Analisador */}
+                    {/* Secção 1: Analisador (Full Height no Mobile) */}
                     <div className="w-full lg:w-[450px] flex flex-col h-[calc(100dvh-72px)] lg:h-auto overflow-hidden">
-                        <div className="w-full h-full bg-card/50 backdrop-blur-xl border-x-0 md:border border-white/10 rounded-none md:rounded-3xl shadow-2xl p-4 md:p-10 flex flex-col items-center justify-between md:justify-center transition-all duration-500 overflow-hidden relative shine-effect">
+                        <div className="w-full h-full bg-card/50 backdrop-blur-xl border-x-0 md:border border-white/10 rounded-none md:rounded-3xl shadow-2xl p-6 md:p-10 flex flex-col items-center justify-between md:justify-center transition-all duration-500 relative shine-effect">
                             {renderContent()}
                         </div>
                     </div>
 
-                    {/* Secção 2: Gráfico */}
+                    {/* Secção 2: Gráfico (Full Height no Mobile ao deslizar) */}
                      <div className="flex flex-grow relative flex-col min-w-0 self-stretch h-[calc(100dvh-72px)] lg:h-auto mt-0 lg:mt-0">
                         {isOtcAsset ? (
                             <div className="w-full h-full flex items-center justify-center bg-card/40 backdrop-blur-xl border-x-0 md:border border-white/5 rounded-none md:rounded-3xl shadow-2xl p-10">

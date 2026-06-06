@@ -57,7 +57,7 @@ interface ConfigContextState {
 // Create the context
 const ConfigContext = createContext<ConfigContextState | undefined>(undefined);
 
-// Default configs (All pages ENABLED by default)
+// Default configs
 const defaultConfig: AppConfig = {
     hotmartUrl: "https://pay.hotmart.com/G102999657C",
     exnovaUrl: "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=openbroker",

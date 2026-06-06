@@ -2,16 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { Cpu, Activity, Target, ShieldCheck } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export function OtcIntelligence() {
-  const [confidence, setConfidence] = useState('94.8%');
+  const [confidence, setConfidence] = useState('87.4%');
   const [volatility, setVolatility] = useState('MÉDIA');
   const [filterStatus, setFilterStatus] = useState('Protegido');
 
   useEffect(() => {
     const updateMetrics = () => {
-      // Confiança: 91% a 99% com uma casa decimal
-      const conf = (91 + Math.random() * 8).toFixed(1);
+      // Confiança: 85.0% a 90.5% com uma casa decimal (Faixa solicitada)
+      const conf = (85 + Math.random() * 5.5).toFixed(1);
       setConfidence(`${conf}%`);
 
       // Volatilidade: Alterna entre os 3 estados
@@ -82,5 +83,3 @@ export function OtcIntelligence() {
     </div>
   );
 }
-
-import { cn } from '@/lib/utils';

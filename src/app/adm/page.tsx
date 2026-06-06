@@ -45,7 +45,8 @@ import {
   ExternalLink,
   ArrowUp,
   ArrowDown,
-  Clock
+  Clock,
+  Sparkles
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -138,6 +139,7 @@ export default function AdminDashboard() {
   const [invertSignals, setInvertSignals] = useState(false);
   const [signalLimit, setSignalLimit] = useState(3);
   const [newsWarningDuration, setNewsWarningDuration] = useState(60);
+  const [otcExcellentFrequency, setOtcExcellentFrequency] = useState(4);
   
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
@@ -177,6 +179,7 @@ export default function AdminDashboard() {
         if (remoteSnap.exists()) {
             setInvertSignals(remoteSnap.data().invertSignal || false);
             setNewsWarningDuration(remoteSnap.data().newsWarningDuration || 60);
+            setOtcExcellentFrequency(remoteSnap.data().otcExcellentFrequency || 4);
         }
         if (limitSnap.exists()) setSignalLimit(limitSnap.data().hourlySignalLimit || 3);
         if (linksSnap.exists()) setSupportLink(linksSnap.data().supportUrl || '');
@@ -215,7 +218,8 @@ export default function AdminDashboard() {
         setDoc(doc(firestore, 'appConfig', 'registration'), { registrationSecret: regSecret.trim() }, { merge: true }),
         setDoc(doc(firestore, 'appConfig', 'remoteValues'), { 
             invertSignal: invertSignals,
-            newsWarningDuration: newsWarningDuration
+            newsWarningDuration: newsWarningDuration,
+            otcExcellentFrequency: otcExcellentFrequency
         }, { merge: true }),
         setDoc(doc(firestore, 'appConfig', 'limitation'), { hourlySignalLimit: signalLimit }, { merge: true }),
         setDoc(doc(firestore, 'appConfig', 'links'), { supportUrl: supportLink.trim() }, { merge: true })
@@ -686,6 +690,17 @@ export default function AdminDashboard() {
                         />
                     </div>
 
+                    <div className="grid grid-cols-2 gap-3">
+                         <div className="space-y-1.5">
+                            <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><Clock className="h-3 w-3" /> Aviso Notícia (Min)</Label>
+                            <Input type="number" value={newsWarningDuration} onChange={(e) => setNewsWarningDuration(parseInt(e.target.value))} className="bg-white/5 border-white/10 h-10" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><Sparkles className="h-3 w-3" /> Janelas OTC/Hora</Label>
+                            <Input type="number" value={otcExcellentFrequency} onChange={(e) => setOtcExcellentFrequency(parseInt(e.target.value))} className="bg-white/5 border-white/10 h-10" />
+                        </div>
+                    </div>
+
                     <div className="space-y-1.5">
                         <Label className="text-[0.6rem] font-bold uppercase opacity-60">Chave Secret (Hotmart)</Label>
                         <div className="flex gap-2">
@@ -699,14 +714,10 @@ export default function AdminDashboard() {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 items-end">
+                    <div className="grid grid-cols-1 gap-3 items-end">
                         <div className="space-y-1.5">
-                            <Label className="text-[0.6rem] font-bold uppercase opacity-60">Trades/Hora</Label>
+                            <Label className="text-[0.6rem] font-bold uppercase opacity-60">Sinais p/ Hora (Free/VIP)</Label>
                             <Input type="number" value={signalLimit} onChange={(e) => setSignalLimit(parseInt(e.target.value))} className="bg-white/5 border-white/10 h-10" />
-                        </div>
-                        <div className="space-y-1.5">
-                            <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><Clock className="h-3 w-3" /> Aviso Notícia (Min)</Label>
-                            <Input type="number" value={newsWarningDuration} onChange={(e) => setNewsWarningDuration(parseInt(e.target.value))} className="bg-white/5 border-white/10 h-10" />
                         </div>
                     </div>
                     <Button onClick={handleSaveConfigs} disabled={isConfigSaving} className="w-full h-10 bg-primary text-black font-black uppercase tracking-tighter text-xs">

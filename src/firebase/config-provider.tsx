@@ -29,6 +29,7 @@ export interface AppConfig {
   premiumMinWait: number;
   premiumMaxWait: number;
   newsWarningDuration: number;
+  otcExcellentFrequency: number;
   visitCount?: number;
   checkoutClickCount?: number;
   // Page access status
@@ -77,6 +78,7 @@ const defaultConfig: AppConfig = {
     premiumMinWait: 1,
     premiumMaxWait: 10,
     newsWarningDuration: 60,
+    otcExcellentFrequency: 4,
     registrationSecret: "chines_2026",
     price: "R$ 197",
     visitCount: 0,

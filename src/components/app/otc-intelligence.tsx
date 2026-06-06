@@ -11,8 +11,8 @@ export function OtcIntelligence() {
 
   useEffect(() => {
     const updateMetrics = () => {
-      // Confiança: 85.0% a 90.5% com uma casa decimal (Faixa solicitada)
-      const conf = (85 + Math.random() * 5.5).toFixed(1);
+      // Confiança: 85.0% a 92.5% com uma casa decimal
+      const conf = (85 + Math.random() * 7.5).toFixed(1);
       setConfidence(`${conf}%`);
 
       // Volatilidade: Alterna entre os 3 estados

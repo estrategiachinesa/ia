@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -23,8 +22,6 @@ import { Firestore } from 'firebase/firestore';
  * Widget de Calendário Económico focado para preencher o espaço mobile.
  */
 function EconomicCalendarWidget({ asset }: { asset: string }) {
-  if (asset.includes('(OTC)')) return null;
-
   const isEurUsd = asset.includes('EUR/USD');
   const isEurJpy = asset.includes('EUR/JPY');
 
@@ -42,7 +39,7 @@ function EconomicCalendarWidget({ asset }: { asset: string }) {
         <div className="text-[0.5rem] font-bold text-muted-foreground/30 uppercase">Impact Stream</div>
       </div>
       
-      <div className="h-[200px] md:h-[240px] w-full overflow-hidden relative bg-[#0a0a0a]">
+      <div className="h-[180px] md:h-[240px] w-full overflow-hidden relative bg-[#0a0a0a]">
          <div className="relative w-[200%] left-[-10px] top-[-110px]">
             <iframe 
               src={`https://sslecal2.investing.com?columns=exc_flags,exc_currency,exc_importance&importance=1,2,3&countries=${countries}&calType=day&timeZone=12&lang=12`} 
@@ -128,13 +125,13 @@ export function SignalForm({
 
   return (
     <div className="w-full h-full flex flex-col justify-between text-center p-0">
-      <div className="space-y-6 md:space-y-10">
-        <div className="grid grid-cols-2 gap-4 mb-2">
-            <Button asChild variant="ghost" size="sm" className="h-12 md:h-14 text-[0.65rem] md:text-xs font-black uppercase tracking-widest border border-white/5 bg-white/5 hover:bg-white/10 rounded-xl transition-all">
-                <a href={config?.iqOptionOpenUrl || config?.iqOptionUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2"><ExternalLink className="h-4 w-4" /> IQ Option</a>
+      <div className="flex flex-col flex-grow">
+        <div className="grid grid-cols-2 gap-3 mb-4 md:mb-8">
+            <Button asChild variant="ghost" size="sm" className="h-11 md:h-14 text-[0.6rem] md:text-xs font-black uppercase tracking-widest border border-white/5 bg-white/5 hover:bg-white/10 rounded-xl transition-all">
+                <a href={config?.iqOptionOpenUrl || config?.iqOptionUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5"><ExternalLink className="h-3.5 w-3.5" /> IQ Option</a>
             </Button>
-            <Button asChild variant="ghost" size="sm" className="h-12 md:h-14 text-[0.65rem] md:text-xs font-black uppercase tracking-widest border border-white/5 bg-white/5 hover:bg-white/10 rounded-xl transition-all">
-                <a href={config?.exnovaOpenUrl || config?.exnovaUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2"><ExternalLink className="h-4 w-4" /> Exnova</a>
+            <Button asChild variant="ghost" size="sm" className="h-11 md:h-14 text-[0.6rem] md:text-xs font-black uppercase tracking-widest border border-white/5 bg-white/5 hover:bg-white/10 rounded-xl transition-all">
+                <a href={config?.exnovaOpenUrl || config?.exnovaUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5"><ExternalLink className="h-3.5 w-3.5" /> Exnova</a>
             </Button>
         </div>
 
@@ -147,21 +144,21 @@ export function SignalForm({
             </Alert>
         )}
 
-        <div className="space-y-6 md:space-y-10 text-left">
-          <div className="space-y-3">
+        <div className="space-y-4 md:space-y-8 text-left flex-grow">
+          <div className="space-y-2">
             <div className="flex justify-between items-center px-1">
-              <Label className="text-[0.65rem] md:text-[0.75rem] font-black text-muted-foreground uppercase tracking-[0.15em] opacity-60">Ativo Selecionado:</Label>
-              <div className="flex items-center space-x-2 bg-white/5 px-2.5 py-1 rounded-full border border-white/10">
-                <Label htmlFor="otc-switch" className="text-[0.55rem] font-black text-muted-foreground uppercase tracking-widest opacity-50">OTC</Label>
-                <Switch id="otc-switch" checked={showOTC} onCheckedChange={setShowOTC} disabled={isLoading} className="scale-[0.55] origin-right" />
+              <Label className="text-[0.6rem] md:text-[0.75rem] font-black text-muted-foreground uppercase tracking-[0.15em] opacity-60">Ativo Selecionado:</Label>
+              <div className="flex items-center space-x-1.5 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
+                <Label htmlFor="otc-switch" className="text-[0.5rem] font-black text-muted-foreground uppercase tracking-widest opacity-50">OTC</Label>
+                <Switch id="otc-switch" checked={showOTC} onCheckedChange={setShowOTC} disabled={isLoading} className="scale-[0.5] origin-right" />
               </div>
             </div>
             <Select value={formData.asset} onValueChange={(value) => setFormData({ ...formData, asset: value as Asset })} disabled={isLoading}>
-              <SelectTrigger className="h-14 md:h-20 text-xs md:text-sm rounded-2xl bg-white/5 border-white/10 hover:bg-white/10 transition-all">
+              <SelectTrigger className="h-12 md:h-20 text-xs md:text-sm rounded-xl md:rounded-2xl bg-white/5 border-white/10 hover:bg-white/10 transition-all">
                 <SelectValue asChild>
                   <div className="flex items-center gap-3">
                     <CurrencyFlags asset={formData.asset} />
-                    <span className="font-bold tracking-tight text-base">{formData.asset}</span>
+                    <span className="font-bold tracking-tight text-sm md:text-base">{formData.asset}</span>
                   </div>
                 </SelectValue>
               </SelectTrigger>
@@ -175,10 +172,10 @@ export function SignalForm({
             </Select>
           </div>
 
-          <div className="space-y-3">
-            <Label className="text-[0.65rem] md:text-[0.75rem] font-black text-muted-foreground uppercase tracking-[0.15em] opacity-60 px-1">Tempo de Expiração:</Label>
+          <div className="space-y-2">
+            <Label className="text-[0.6rem] md:text-[0.75rem] font-black text-muted-foreground uppercase tracking-[0.15em] opacity-60 px-1">Tempo de Expiração:</Label>
             <Select value={formData.expirationTime} onValueChange={(value) => setFormData({ ...formData, expirationTime: value as ExpirationTime })} disabled={isLoading}>
-              <SelectTrigger className="h-14 md:h-20 text-xs md:text-sm rounded-2xl bg-white/5 border-white/10 hover:bg-white/10 transition-all">
+              <SelectTrigger className="h-12 md:h-20 text-xs md:text-sm rounded-xl md:rounded-2xl bg-white/5 border-white/10 hover:bg-white/10 transition-all">
                 <SelectValue placeholder="Selecione o Tempo" />
               </SelectTrigger>
               <SelectContent className="rounded-2xl border-white/10 bg-card/95 backdrop-blur-2xl">
@@ -190,23 +187,23 @@ export function SignalForm({
         </div>
       </div>
 
-      <div className="w-full space-y-3 pt-8 pb-4">
+      <div className="w-full space-y-2 pt-6 pb-2">
           <Button
             size="lg"
-            className="w-full h-16 md:h-24 text-lg md:text-2xl font-black bg-primary text-primary-foreground shadow-2xl transition-all pulse-strong rounded-2xl uppercase tracking-tighter"
+            className="w-full h-16 md:h-24 text-lg md:text-2xl font-black bg-primary text-primary-foreground shadow-2xl transition-all pulse-strong rounded-xl md:rounded-2xl uppercase tracking-tighter"
             onClick={onSubmit}
             disabled={buttonDisabled}
           >
-            {isLoading ? <Loader2 className="mr-3 h-6 w-6 animate-spin" /> : (!isMarketOpen && !showOTC) ? <Lock className="mr-3 h-6 w-6" /> : (hasReachedLimit && !isPremium) || waitingMessage ? <Timer className="mr-3 h-6 w-6" /> : <BarChart className="mr-3 h-6 w-6" />}
+            {isLoading ? <Loader2 className="mr-3 h-5 w-5 md:h-6 md:w-6 animate-spin" /> : (!isMarketOpen && !showOTC) ? <Lock className="mr-3 h-5 w-5 md:h-6 md:w-6" /> : (hasReachedLimit && !isPremium) || waitingMessage ? <Timer className="mr-3 h-5 w-5 md:h-6 md:w-6" /> : <BarChart className="mr-3 h-5 w-5 md:h-6 md:w-6" />}
             {isLoading ? 'ANALISANDO...' : (!isMarketOpen && !showOTC) ? 'FECHADO' : (hasReachedLimit && !isPremium) || waitingMessage ? 'BLOQUEADO' : 'ANALISAR AGORA'}
           </Button>
           {!isPremium && (
-            <Button variant="link" className="w-full flex-row h-auto text-purple-400 hover:text-purple-300 group py-2" onClick={() => {
+            <Button variant="link" className="w-full flex-row h-auto text-purple-400 hover:text-purple-300 group py-1" onClick={() => {
               if (vipStatus) setVipModalOpen(true);
               else setUpgradeModalOpen(true);
             }}>
-                <Crown className="h-5 w-5 mr-2 group-hover:scale-110 transition-transform" />
-                <span className="text-[0.65rem] md:text-[0.75rem] font-black uppercase tracking-[0.2em]">ACESSO PREMIUM</span>
+                <Crown className="h-4 w-4 md:h-5 md:w-5 mr-2 group-hover:scale-110 transition-transform" />
+                <span className="text-[0.6rem] md:text-[0.75rem] font-black uppercase tracking-[0.2em]">ACESSO PREMIUM</span>
             </Button>
           )}
       </div>

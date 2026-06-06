@@ -530,7 +530,7 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      <main className="container mx-auto p-6 space-y-8">
+      <main className="container mx-auto p-6 space-y-8 pb-20">
         
         {/* STATS BAR */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">

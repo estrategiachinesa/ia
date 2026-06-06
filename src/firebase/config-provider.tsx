@@ -12,6 +12,10 @@ export interface AppConfig {
   hotmartUrl: string;
   exnovaUrl: string;
   iqOptionUrl: string;
+  exnovaOpenUrl: string;
+  iqOptionOpenUrl: string;
+  exnovaPremiumUrl: string;
+  iqOptionPremiumUrl: string;
   telegramUrl: string;
   blackFridayUrl: string;
   vipUrl?: string;
@@ -56,8 +60,12 @@ const ConfigContext = createContext<ConfigContextState | undefined>(undefined);
 // Default configs (All pages ENABLED by default)
 const defaultConfig: AppConfig = {
     hotmartUrl: "https://pay.hotmart.com/G102999657C",
-    exnovaUrl: "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=",
-    iqOptionUrl: "https://affiliate.iqoption.net/redir/?aff=198544&aff_model=revenue&afftrack=",
+    exnovaUrl: "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=openbroker",
+    iqOptionUrl: "https://affiliate.iqoption.net/redir/?aff=198544&aff_model=revenue&afftrack=openbroker",
+    exnovaOpenUrl: "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=openbroker",
+    iqOptionOpenUrl: "https://affiliate.iqoption.net/redir/?aff=198544&aff_model=revenue&afftrack=openbroker",
+    exnovaPremiumUrl: "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=iapremium",
+    iqOptionPremiumUrl: "https://affiliate.iqoption.net/redir/?aff=198544&aff_model=revenue&afftrack=iapremium",
     telegramUrl: "https://t.me/Trader_Chines",
     blackFridayUrl: "https://pay.hotmart.com/E101943327K?checkoutMode=2&off=cy5v5mrr",
     vipUrl: "https://pay.hotmart.com/T101931662P?checkoutMode=2",

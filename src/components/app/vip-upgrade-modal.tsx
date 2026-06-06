@@ -49,11 +49,11 @@ export function VipUpgradeModal({
   };
 
   const handleIdSubmit = async () => {
-    if (!/^\d{8,}$/.test(brokerId)) {
+    if (!/^\d{5,}$/.test(brokerId)) {
       toast({
         variant: 'destructive',
         title: 'ID Inválido',
-        description: 'O ID da corretora deve conter apenas números e ter no mínimo 8 dígitos.',
+        description: 'O ID da corretora deve conter apenas números.',
       });
       return;
     }
@@ -127,7 +127,7 @@ export function VipUpgradeModal({
       </DialogHeader>
       <div className="space-y-4 py-4">
         <Button className="w-full" asChild>
-            <Link href={config?.exnovaUrl || '#'} target="_blank">
+            <Link href={config?.exnovaPremiumUrl || config?.exnovaUrl || '#'} target="_blank">
                 Cadastrar na Corretora
             </Link>
         </Button>
@@ -138,10 +138,9 @@ export function VipUpgradeModal({
             value={brokerId}
             onChange={(e) => setBrokerId(e.target.value.replace(/\D/g, ''))}
             pattern="[0-9]*"
-            minLength={8}
             disabled={isSubmittingId}
             />
-            <Button type="submit" size="icon" onClick={handleIdSubmit} disabled={isSubmittingId || brokerId.length < 8}>
+            <Button type="submit" size="icon" onClick={handleIdSubmit} disabled={isSubmittingId || brokerId.length < 5}>
             {isSubmittingId ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
         </div>

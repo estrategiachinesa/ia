@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -133,10 +134,10 @@ export function SignalForm({
       <div className="space-y-4 md:space-y-8">
         <div className="grid grid-cols-2 gap-3 mb-1">
             <Button asChild variant="ghost" size="sm" className="h-10 md:h-12 text-[0.55rem] md:text-xs font-black uppercase tracking-widest border border-white/5 bg-white/5 hover:bg-white/10 rounded-lg transition-all">
-                <a href={config?.iqOptionUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5"><ExternalLink className="h-3 w-3" /> IQ Option</a>
+                <a href={config?.iqOptionOpenUrl || config?.iqOptionUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5"><ExternalLink className="h-3 w-3" /> IQ Option</a>
             </Button>
             <Button asChild variant="ghost" size="sm" className="h-10 md:h-12 text-[0.55rem] md:text-xs font-black uppercase tracking-widest border border-white/5 bg-white/5 hover:bg-white/10 rounded-lg transition-all">
-                <a href={config?.exnovaUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5"><ExternalLink className="h-3 w-3" /> Exnova</a>
+                <a href={config?.exnovaOpenUrl || config?.exnovaUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5"><ExternalLink className="h-3 w-3" /> Exnova</a>
             </Button>
         </div>
 

@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -420,12 +421,12 @@ export default function SessaoChinesaPage() {
                     </DialogHeader>
                     <DialogFooter className="flex flex-col gap-2 sm:flex-col sm:space-x-0 pt-4">
                         <Button asChild className="w-full h-12 font-black uppercase tracking-tighter bg-white text-black hover:bg-white/90">
-                            <AffiliateLink href={config?.exnovaUrl || '#'} target="_blank">
+                            <AffiliateLink href={config?.exnovaOpenUrl || config?.exnovaUrl || '#'} target="_blank">
                                 Abrir Conta Exnova
                             </AffiliateLink>
                         </Button>
                          <Button asChild variant="outline" className="w-full h-12 font-black uppercase tracking-tighter border-white/10">
-                            <AffiliateLink href={config?.iqOptionUrl || '#'} target="_blank">
+                            <AffiliateLink href={config?.iqOptionOpenUrl || config?.iqOptionUrl || '#'} target="_blank">
                                 Abrir Conta IQ Option
                             </AffiliateLink>
                         </Button>

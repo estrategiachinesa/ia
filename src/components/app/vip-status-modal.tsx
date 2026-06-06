@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -176,10 +177,10 @@ export function VipStatusModal({
               {showDepositLinks && (
                 <div className="grid grid-cols-2 gap-2 animate-in fade-in">
                   <Button variant="outline" className="h-12" asChild>
-                    <a href={config.iqOptionUrl} target="_blank" rel="noopener noreferrer">IQ Option</a>
+                    <a href={config.iqOptionPremiumUrl || config.iqOptionUrl} target="_blank" rel="noopener noreferrer">IQ Option</a>
                   </Button>
                   <Button variant="outline" className="h-12" asChild>
-                    <a href={config.exnovaUrl} target="_blank" rel="noopener noreferrer">Exnova</a>
+                    <a href={config.exnovaPremiumUrl || config.exnovaUrl} target="_blank" rel="noopener noreferrer">Exnova</a>
                   </Button>
                 </div>
               )}
@@ -231,7 +232,7 @@ export function VipStatusModal({
                 <p className="text-xs font-bold uppercase opacity-60">Tente novamente:</p>
                 <div className="grid grid-cols-2 gap-2">
                   <Button variant="outline" size="sm" asChild>
-                    <a href={config.exnovaUrl} target="_blank" rel="noopener noreferrer">Nova Conta</a>
+                    <a href={config.exnovaPremiumUrl || config.exnovaUrl} target="_blank" rel="noopener noreferrer">Nova Conta</a>
                   </Button>
                   <div className="flex gap-1">
                     <Input
@@ -263,7 +264,7 @@ export function VipStatusModal({
             </DialogHeader>
             <div className="py-6 space-y-4">
                <Button className="w-full h-12 font-black" asChild>
-                  <a href={config.exnovaUrl} target="_blank" rel="noopener noreferrer">CRIAR CONTA NA CORRETORA</a>
+                  <a href={config.exnovaPremiumUrl || config.exnovaUrl} target="_blank" rel="noopener noreferrer">CRIAR CONTA NA CORRETORA</a>
                </Button>
                <div className="flex gap-2">
                   <Input 

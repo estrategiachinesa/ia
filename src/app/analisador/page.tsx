@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -46,7 +47,7 @@ export type SignalData = {
   expirationTime: ExpirationTime;
   signal: 'CALL 🔼' | 'PUT 🔽';
   targetTime: string;
-  source: 'Aleatório';
+  source: 'Price Action';
   targetDate: Date;
   countdown: number | null;
   operationCountdown: number | null;
@@ -201,7 +202,17 @@ export default function AnalisadorPage() {
   }, [appState, isPremium, usageStorageKey, config]);
 
   useEffect(() => {
-    const checkMarketStatus = () => setIsMarketOpen(isMarketOpenForAsset(formData.asset));
+    const checkMarketStatus = () => {
+      const open = isMarketOpenForAsset(formData.asset);
+      setIsMarketOpen(open);
+
+      // Lógica de Troca Automática para OTC se o mercado estiver fechado
+      if (!open && !formData.asset.includes('(OTC)')) {
+        const otcAsset = `${formData.asset} (OTC)` as Asset;
+        setShowOTC(true);
+        setFormData(prev => ({ ...prev, asset: otcAsset }));
+      }
+    };
     checkMarketStatus();
     const interval = setInterval(checkMarketStatus, 10000); 
     return () => clearInterval(interval);
@@ -476,10 +487,10 @@ export default function AnalisadorPage() {
                                         </p>
                                         <div className="mt-10 grid grid-cols-2 gap-4">
                                             <Button asChild variant="secondary" className="font-bold h-12 rounded-xl border border-border/50">
-                                                <a href={config?.iqOptionUrl || '#'} target="_blank" rel="noopener noreferrer">IQ Option</a>
+                                                <a href={config?.iqOptionOpenUrl || config?.iqOptionUrl || '#'} target="_blank" rel="noopener noreferrer">IQ Option</a>
                                             </Button>
                                             <Button asChild variant="secondary" className="font-bold h-12 rounded-xl border border-border/50">
-                                                <a href={config?.exnovaUrl || '#'} target="_blank" rel="noopener noreferrer">Exnova</a>
+                                                <a href={config?.exnovaOpenUrl || config?.exnovaUrl || '#'} target="_blank" rel="noopener noreferrer">Exnova</a>
                                             </Button>
                                         </div>
                                     </div>

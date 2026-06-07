@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -8,10 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { LineChart, Loader2, Eye, EyeOff, UserCog } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 import AffiliateLink from '@/components/app/affiliate-link';
 import { useFirebase, useAppConfig } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { Logo } from '@/components/logo';
 
 export default function LoginPage() {
   const router = useAffiliateRouter();
@@ -114,10 +114,8 @@ export default function LoginPage() {
       <div className="flex flex-col min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-sm bg-background/50 backdrop-blur-sm border-border/50">
           <CardHeader className="text-center">
-            <div className="flex justify-center items-center gap-2 mb-4">
-               <div className="p-3 bg-primary/10 rounded-full border border-primary/20">
-                  <LineChart className="h-8 w-8 text-primary" />
-               </div>
+            <div className="flex justify-center items-center mb-6">
+                <Logo size={80} showText={false} />
             </div>
             <CardTitle className="font-headline text-3xl">Estratégia Chinesa</CardTitle>
             <CardDescription>Acesse com suas credenciais.</CardDescription>
@@ -202,5 +200,3 @@ export default function LoginPage() {
     </>
   );
 }
-
-    

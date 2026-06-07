@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -8,13 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { LineChart, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 import AffiliateLink from '@/components/app/affiliate-link';
 import { useFirebase, useAppConfig, setDocumentNonBlocking } from '@/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { doc, serverTimestamp } from 'firebase/firestore';
+import { Logo } from '@/components/logo';
 
 type RegistrationStep = 'codeValidation' | 'terms' | 'form';
 
@@ -232,10 +232,8 @@ export default function RegisterPage() {
       <div className="flex flex-col min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-sm bg-background/50 backdrop-blur-md border-white/10 shadow-2xl">
           <CardHeader className="text-center">
-            <div className="flex justify-center items-center gap-2 mb-4">
-               <div className="p-3 bg-primary/10 rounded-full border border-primary/20">
-                  <LineChart className="h-8 w-8 text-primary" />
-               </div>
+            <div className="flex justify-center items-center mb-6">
+               <Logo size={80} showText={false} />
             </div>
             <CardTitle className="font-headline text-3xl font-black uppercase tracking-tighter">Criar Conta</CardTitle>
             <CardDescription className="text-xs font-bold opacity-50 uppercase tracking-widest">Acesso à Estratégia Chinesa</CardDescription>

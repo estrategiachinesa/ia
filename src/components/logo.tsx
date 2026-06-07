@@ -1,4 +1,3 @@
-
 'use client';
 
 import Image from 'next/image';
@@ -20,7 +19,7 @@ export const Logo = ({ className, showText = true, size = 50 }: LogoProps) => {
     <Link href="/" className={cn("flex items-center gap-3 group", className)}>
       <div className="relative flex items-center justify-center">
         <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full scale-150 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        <div className="relative p-1.5 bg-gradient-to-br from-white/10 to-transparent rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+        <div className="relative p-1 bg-gradient-to-br from-white/10 to-transparent rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
            <Image 
              src={logoSrc}
              alt="Estratégia Chinesa Logo"

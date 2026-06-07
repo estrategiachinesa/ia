@@ -1,8 +1,8 @@
+
 'use client';
 
 import React, { useEffect, useRef } from 'react';
 
-// Define a mapping from app asset names to TradingView symbol names
 const symbolMap: { [key: string]: string } = {
   'EUR/USD': 'FX:EURUSD',
   'EUR/USD (OTC)': 'FX:EURUSD',
@@ -15,24 +15,21 @@ type TradingViewWidgetProps = {
   interval: string;
 };
 
-// A simple check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined';
 
 const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset, interval }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  // Using React.useId to ensure a unique ID for each widget instance
   const widgetContainerId = `tradingview_widget_${React.useId().replace(/:/g, '')}`;
 
   useEffect(() => {
-    // Don't run this effect on the server
     if (!isBrowser) return;
 
     const symbol = symbolMap[asset] || 'FX:EURUSD';
 
     const createWidget = () => {
       if (!containerRef.current || !(window as any).TradingView) return;
-      // Clear the container before creating a new widget
       containerRef.current.innerHTML = '';
+      
       new (window as any).TradingView.widget({
         autosize: true,
         symbol: symbol,
@@ -74,51 +71,41 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset, interval }
             "pane_context_menu",
             "volume_force_overlay"
         ],
-        enabled_features: [],
+        enabled_features: ["side_toolbar_in_fullscreen_mode"],
         overrides: {
             "mainSeriesProperties.showOHLC": false,
             "paneProperties.legendProperties.showStudyArguments": false,
             "paneProperties.legendProperties.showStudyTitles": false,
             "paneProperties.legendProperties.showStudyValues": false,
-            "paneProperties.legendProperties.showSeriesTitle": false,
-            "paneProperties.legendProperties.showSeriesOHLC": false,
-            "paneProperties.legendProperties.showLegend": false,
-            "paneProperties.background": "#0a0a0a",
-            "paneProperties.vertGridProperties.color": "rgba(42, 46, 57, 0)",
-            "paneProperties.horzGridProperties.color": "rgba(42, 46, 57, 0)",
-            "scalesProperties.textColor": "#AAA",
+            "paneProperties.background": "#020202",
+            "paneProperties.vertGridProperties.color": "rgba(255, 0, 0, 0.02)",
+            "paneProperties.horzGridProperties.color": "rgba(255, 0, 0, 0.02)",
+            "scalesProperties.textColor": "#FFFFFF",
             "mainSeriesProperties.candleStyle.drawBorder": true,
-            "mainSeriesProperties.candleStyle.borderUpColor": "#22c55e",
-            "mainSeriesProperties.candleStyle.borderDownColor": "#ef4444",
-            "mainSeriesProperties.candleStyle.upColor": "#22c55e",
-            "mainSeriesProperties.candleStyle.downColor": "#ef4444",
-            "mainSeriesProperties.candleStyle.wickUpColor": "#22c55e",
-            "mainSeriesProperties.candleStyle.wickDownColor": "#ef4444",
+            "mainSeriesProperties.candleStyle.borderUpColor": "#FFFFFF",
+            "mainSeriesProperties.candleStyle.borderDownColor": "#FF0000",
+            "mainSeriesProperties.candleStyle.upColor": "#FFFFFF",
+            "mainSeriesProperties.candleStyle.downColor": "#FF0000",
+            "mainSeriesProperties.candleStyle.wickUpColor": "#FFFFFF",
+            "mainSeriesProperties.candleStyle.wickDownColor": "#FF0000",
             "mainSeriesProperties.showPriceLine": true,
-            "mainSeriesProperties.priceLineWidth": 1,
-            "mainSeriesProperties.priceLineColor": "#666",
         },
         studies_overrides: {
-            "Bollinger Bands.Upper.color": "#22c55e",
-            "Bollinger Bands.Lower.color": "#FF5252",
-            "Bollinger Bands.Basis.color": "#FFFFFF",
-            "Bollinger Bands.Upper.linewidth": 1,
-            "Bollinger Bands.Lower.linewidth": 1,
+            "Bollinger Bands.Upper.color": "#FF0000", // Superior Vermelha
+            "Bollinger Bands.Lower.color": "#22C55E", // Inferior Verde
+            "Bollinger Bands.Basis.color": "#FFFFFF", // Central Branca
+            "Bollinger Bands.Upper.linewidth": 2,
+            "Bollinger Bands.Lower.linewidth": 2,
             "Bollinger Bands.Background.transparency": 95,
-            "volume.volume.visible": false,
         }
       });
     };
 
-    // Check if the script is already on the page
     if (document.getElementById('tradingview-widget-script')) {
       if ((window as any).TradingView) {
-        // If script is loaded and ready, create the widget
         createWidget();
       }
-      // If script tag is present but not ready, the 'onload' will handle it.
     } else {
-      // If script is not present, create and load it.
       const script = document.createElement('script');
       script.id = 'tradingview-widget-script';
       script.src = 'https://s3.tradingview.com/tv.js';
@@ -127,7 +114,7 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset, interval }
       document.head.appendChild(script);
     }
     
-  }, [asset, interval, widgetContainerId]); // Re-run when asset or the unique ID changes
+  }, [asset, interval, widgetContainerId]);
 
   return (
     <div 

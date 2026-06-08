@@ -913,6 +913,15 @@ export default function AdminDashboard() {
                             <Input type="number" value={signalLimit} onChange={(e) => setSignalLimit(parseInt(e.target.value))} className="bg-white/5 border-white/10 h-10" />
                         </div>
                     </div>
+
+                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                        <div className="flex flex-col">
+                            <Label className="text-[0.6rem] font-black uppercase tracking-widest">Inverter Sinais</Label>
+                            <span className="text-[0.5rem] font-bold text-muted-foreground uppercase">Inverte Call/Put</span>
+                        </div>
+                        <Switch checked={invertSignals} onCheckedChange={setInvertSignals} />
+                    </div>
+
                     <Button onClick={handleSaveConfigs} disabled={isConfigSaving} className="w-full h-10 bg-primary text-black font-black uppercase tracking-tighter text-xs">
                         {isConfigSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-1.5" />} Salvar Configurações
                     </Button>

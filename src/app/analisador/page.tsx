@@ -31,6 +31,7 @@ import { AnalysisAnimation } from '@/components/app/analysis-animation';
 import TradingViewWidget from '@/components/app/tradingview-widget';
 import { cn } from '@/lib/utils';
 import { generateMockNewsEvents, isNewsCurrentlyActive } from '@/lib/news-events';
+import { Logo } from '@/components/logo';
 
 export type FormData = {
   asset: Asset;
@@ -418,12 +419,7 @@ export default function AnalisadorPage() {
       <div className="flex flex-col h-[100dvh] overflow-hidden">
         <header className="h-[50px] md:h-[60px] px-4 md:px-8 flex justify-between items-center border-b border-border/10 bg-card/30 backdrop-blur-md shrink-0">
           <div className="flex items-center gap-3">
-             <div className="flex flex-col">
-                <h1 className="text-sm md:text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tighter leading-tight">
-                    ESTRATÉGIA CHINESA
-                </h1>
-                <p className="text-[0.5rem] text-primary/60 font-black tracking-[0.2em] uppercase mt-[-1px]">Intelligence Analyzer</p>
-             </div>
+             <Logo size={32} />
           </div>
 
           <div className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-[50%] md:max-w-none">

@@ -51,6 +51,7 @@ import { useAppConfig } from '@/firebase/config-provider';
 import { Badge } from '@/components/ui/badge';
 import { doc } from 'firebase/firestore';
 import AffiliateLink from '@/components/app/affiliate-link';
+import { Logo } from '@/components/logo';
 
 type Timeframe = ExpirationTime;
 type Direction = 'CALL' | 'PUT' | 'BOTH';
@@ -342,12 +343,7 @@ export default function CatalogadorPage() {
     <div className="min-h-screen bg-[#0a0a0a] text-foreground font-body pb-20">
        <header className="px-4 py-3 md:px-8 md:py-4 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 border-b border-border/10 bg-card/30 backdrop-blur-md sticky top-0 z-50">
           <div className="flex items-center justify-between w-full md:w-auto">
-             <div className="flex flex-col">
-                <h1 className="text-lg md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-400 font-headline tracking-tighter leading-tight">
-                    ESTRATÉGIA CHINESA
-                </h1>
-                <p className="text-[0.55rem] md:text-[0.6rem] text-primary/60 font-black tracking-[0.2em] uppercase mt-[-1px] md:mt-[-2px]">Intelligence Analyzer</p>
-             </div>
+             <Logo size={32} />
              
              <div className="flex items-center gap-2 md:hidden">
                 <Button

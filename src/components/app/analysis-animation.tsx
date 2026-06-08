@@ -5,10 +5,10 @@ import { cn } from '@/lib/utils';
 import { Cpu, Zap, Activity, ShieldCheck, Search, Database } from 'lucide-react';
 
 const analysisSteps = [
-  'INICIALIZANDO ALGORITMO...',
+  'INICIALIZANDO ANÁLISE...',
   'FILTRANDO RUÍDO DO MERCADO...',
   'MAPEANDO FLUXO INSTITUCIONAL...',
-  'IDENTIFICANDO CONFLUÊNCIAS PA...',
+  'IDENTIFICANDO CONFLUÊNCIAS...',
   'CALCULANDO ASSERTIVIDADE...',
   'SINCRONIZANDO SINAL...',
 ];

@@ -19,7 +19,7 @@ export const Logo = ({ className, showText = true, size = 45, isPremium = false 
   // URLs de fallback caso o JSON falhe
   const defaultLogo = isPremium 
     ? "https://64.media.tumblr.com/20f22b5ead0b32442eabcf709e99d4d2/e5e4f321477c6743-63/s1280x1920/1c547ddd7dfe6f9075d19dfedb72a115a1a4c78b.pnj"
-    : "https://64.media.tumblr.com/7a6cdcb5842a7c945879bfe4866998b3/d4f22ded93d2836f-ba/s1280x1920/a1bca9f23b071d3bc24a95cf6ddd9a69454b4d78.pnj";
+    : "https://64.media.tumblr.com/0a29dad9d6f04fe39aca48bdf61b5557/a07313c3fc2b7863-a1/s1280x1920/3cfd53145ec0d969f9d236011f0a0234e188b87e.pnj";
     
   const logoSrc = logoData?.imageUrl || defaultLogo;
 

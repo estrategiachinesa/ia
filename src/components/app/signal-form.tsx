@@ -213,14 +213,14 @@ export function SignalForm({
                 <SelectValue asChild>
                   <div className="flex items-center justify-center w-full">
                     <span className="font-black text-sm md:text-base uppercase tracking-[0.1em]">
-                        {formData.expirationTime === '1m' ? '1 MINUTO' : 'M5 (5 MINUTOS)'}
+                        {formData.expirationTime === '1m' ? '1 MINUTO' : '5 MINUTOS'}
                     </span>
                   </div>
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="rounded-xl border-white/10 bg-black/95 backdrop-blur-2xl">
                 <SelectItem value="1m" className="rounded-lg font-black py-3 md:py-4 text-sm uppercase text-center focus:bg-primary focus:text-primary-foreground transition-colors">1 MINUTO</SelectItem>
-                <SelectItem value="5m" className="rounded-lg font-black py-3 md:py-4 text-sm uppercase text-center focus:bg-primary focus:text-primary-foreground transition-colors">M5 (5 MINUTOS)</SelectItem>
+                <SelectItem value="5m" className="rounded-lg font-black py-3 md:py-4 text-sm uppercase text-center focus:bg-primary focus:text-primary-foreground transition-colors">5 MINUTOS</SelectItem>
               </SelectContent>
             </Select>
           </div>

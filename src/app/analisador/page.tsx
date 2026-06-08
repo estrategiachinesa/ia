@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
@@ -419,7 +420,7 @@ export default function AnalisadorPage() {
       <div className="flex flex-col h-[100dvh] overflow-hidden">
         <header className="h-[50px] md:h-[60px] px-4 md:px-8 flex justify-between items-center border-b border-border/10 bg-card/30 backdrop-blur-md shrink-0">
           <div className="flex items-center gap-3">
-             <Logo size={32} />
+             <Logo size={32} isPremium={isPremium} />
           </div>
 
           <div className="flex items-center gap-1 overflow-x-auto no-scrollbar max-w-[50%] md:max-w-none">

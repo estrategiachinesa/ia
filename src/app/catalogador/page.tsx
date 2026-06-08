@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -343,7 +344,7 @@ export default function CatalogadorPage() {
     <div className="min-h-screen bg-[#0a0a0a] text-foreground font-body pb-20">
        <header className="px-4 py-3 md:px-8 md:py-4 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 border-b border-border/10 bg-card/30 backdrop-blur-md sticky top-0 z-50">
           <div className="flex items-center justify-between w-full md:w-auto">
-             <Logo size={32} />
+             <Logo size={32} isPremium={isPremium} />
              
              <div className="flex items-center gap-2 md:hidden">
                 <Button

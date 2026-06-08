@@ -5,7 +5,13 @@
       "id": "app-logo",
       "description": "Logo Oficial Dragão Vermelho",
       "imageUrl": "https://64.media.tumblr.com/7a6cdcb5842a7c945879bfe4866998b3/d4f22ded93d2836f-ba/s1280x1920/a1bca9f23b071d3bc24a95cf6ddd9a69454b4d78.pnj",
-      "imageHint": "red dragon logo"
+      "imageHint": "red dragon"
+    },
+    {
+      "id": "premium-logo",
+      "description": "Logo Premium Dragão Roxo",
+      "imageUrl": "https://64.media.tumblr.com/20f22b5ead0b32442eabcf709e99d4d2/e5e4f321477c6743-63/s1280x1920/1c547ddd7dfe6f9075d19dfedb72a115a1a4c78b.pnj",
+      "imageHint": "purple dragon"
     }
   ]
 }

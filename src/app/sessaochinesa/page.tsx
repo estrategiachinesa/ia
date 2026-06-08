@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -133,6 +134,7 @@ export default function SessaoChinesaPage() {
     const [isSubmitting, setIsSubmitting] = React.useState(false);
     const [isFailureAlertOpen, setFailureAlertOpen] = React.useState(false);
     const [isIdConfirmed, setIsIdConfirmed] = React.useState(false);
+    const [isPremium, setIsPremium] = React.useState(false);
     
     const statusRef = useMemoFirebase(() => firestore ? doc(firestore, 'session', 'status') : null, [firestore]);
     const scoreRef = useMemoFirebase(() => firestore ? doc(firestore, 'session', 'monthly_score') : null, [firestore]);
@@ -145,12 +147,23 @@ export default function SessaoChinesaPage() {
     const losses = (scoreData as any)?.losses;
     const managedLink = (statusData as any)?.zoomLink;
 
-    // Check visibility
+    // Check visibility and Premium status
+    const vipRequestRef = useMemoFirebase(() => {
+        if (!firestore || !user) return null;
+        return doc(firestore, 'vipRequests', user.uid);
+    }, [firestore, user]);
+    const { data: vipData } = useDoc(vipRequestRef);
+
     React.useEffect(() => {
         if (config?.pages?.sessaochinesa === false) {
             router.replace('/');
         }
     }, [config, router]);
+
+    React.useEffect(() => {
+        const premium = vipData && ['PREMIUM', 'APPROVED'].includes((vipData as any).status);
+        setIsPremium(!!premium);
+    }, [vipData]);
 
     // Dynamic Navigation based on Admin Order
     const navigationItems = React.useMemo(() => {
@@ -259,7 +272,7 @@ export default function SessaoChinesaPage() {
 
             <header className="px-4 py-3 md:px-8 md:py-4 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6 border-b border-border/10 bg-card/30 backdrop-blur-md sticky top-0 z-50">
               <div className="flex items-center justify-between w-full md:w-auto">
-                 <Logo size={32} />
+                 <Logo size={32} isPremium={isPremium} />
                  
                  <div className="flex items-center gap-2 md:hidden">
                     <Button

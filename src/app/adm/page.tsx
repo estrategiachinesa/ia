@@ -55,7 +55,9 @@ import {
   Activity,
   Target,
   ArrowUpCircle,
-  ArrowDownCircle
+  ArrowDownCircle,
+  Trophy,
+  Calendar
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -176,6 +178,7 @@ type CopyTradeResult = {
     direction: 'CALL' | 'PUT';
     result: 'WIN' | 'LOSS';
     time: string;
+    date: string;
     netChange: number;
     value: number;
 };
@@ -226,6 +229,7 @@ export default function AdminDashboard() {
   const [tradeValue, setTradeValue] = useState(100);
   const [tradePayout, setTradePayout] = useState(87);
   const [tradeTime, setTradeTime] = useState(new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+  const [tradeDate, setTradeDate] = useState(new Date().toISOString().split('T')[0]);
 
   // Market Schedules state
   const [eurUsdSchedule, setEurUsdSchedule] = useState<ScheduleEdit>({ 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] });
@@ -347,6 +351,12 @@ export default function AdminDashboard() {
     return ((wins / copyResults.length) * 100).toFixed(1) + '%';
   }, [copyResults]);
 
+  const scoreboard = useMemo(() => {
+    const wins = copyResults.filter(r => r.result === 'WIN').length;
+    const losses = copyResults.filter(r => r.result === 'LOSS').length;
+    return { wins, losses };
+  }, [copyResults]);
+
   const currentProfit = useMemo(() => {
       return copyResults.reduce((acc, curr) => acc + curr.netChange, 0);
   }, [copyResults]);
@@ -382,6 +392,7 @@ export default function AdminDashboard() {
           direction: tradeDirection,
           result,
           time: tradeTime || new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+          date: tradeDate || new Date().toISOString().split('T')[0],
           netChange,
           value: tradeValue
       };
@@ -1031,6 +1042,22 @@ export default function AdminDashboard() {
                         </div>
                     </div>
 
+                    {/* PLACAR LIVE */}
+                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                        <div className="flex flex-col">
+                            <span className="text-[0.6rem] font-black uppercase opacity-40">Placar Atual</span>
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm font-black text-green-500">{scoreboard.wins}W</span>
+                                <span className="text-xs font-black opacity-20">-</span>
+                                <span className="text-sm font-black text-red-500">{scoreboard.losses}L</span>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <span className="text-[0.6rem] font-black uppercase opacity-40">Assertividade</span>
+                            <p className="text-sm font-black text-primary">{winRate}</p>
+                        </div>
+                    </div>
+
                     {/* TERMINAL DE LANÇAMENTO (SOLICITAÇÃO) */}
                     <div className="p-4 bg-white/5 border border-white/5 rounded-xl space-y-4">
                         <div className="flex items-center justify-between">
@@ -1073,9 +1100,15 @@ export default function AdminDashboard() {
                                 <Input type="number" value={tradePayout} onChange={(e) => setTradePayout(Number(e.target.value))} className="h-8 bg-black/40 text-[0.65rem] border-white/5 font-mono" />
                              </div>
                         </div>
-                        <div className="space-y-1">
-                            <Label className="text-[0.55rem] font-bold uppercase opacity-40">Horário</Label>
-                            <Input type="time" value={tradeTime} onChange={(e) => setTradeTime(e.target.value)} className="h-8 bg-black/40 text-[0.65rem] border-white/5 font-mono" />
+                        <div className="grid grid-cols-2 gap-2">
+                             <div className="space-y-1">
+                                <Label className="text-[0.55rem] font-bold uppercase opacity-40">Data</Label>
+                                <Input type="date" value={tradeDate} onChange={(e) => setTradeDate(e.target.value)} className="h-8 bg-black/40 text-[0.6rem] border-white/5 font-mono" />
+                             </div>
+                             <div className="space-y-1">
+                                <Label className="text-[0.55rem] font-bold uppercase opacity-40">Horário</Label>
+                                <Input type="time" value={tradeTime} onChange={(e) => setTradeTime(e.target.value)} className="h-8 bg-black/40 text-[0.65rem] border-white/5 font-mono" />
+                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                             <Button 
@@ -1106,15 +1139,17 @@ export default function AdminDashboard() {
                     
                     {/* HISTÓRICO PARA REMOÇÃO */}
                     <div className="space-y-1.5">
-                        <Label className="text-[0.6rem] font-bold uppercase opacity-60">Histórico Recente</Label>
-                        <div className="max-h-[150px] overflow-y-auto no-scrollbar space-y-1">
+                        <Label className="text-[0.6rem] font-bold uppercase opacity-60">Histórico de Lançamentos</Label>
+                        <div className="max-h-[250px] overflow-y-auto no-scrollbar space-y-1">
                             {copyResults.map(res => (
                                 <div key={res.id} className="flex items-center justify-between p-2 bg-black/20 rounded-lg border border-white/5">
                                     <div className="flex items-center gap-2">
                                         <Badge className={cn("text-[0.5rem] py-0 px-1", res.result === 'WIN' ? "bg-green-600" : "bg-red-600")}>{res.result}</Badge>
-                                        <span className="text-[0.6rem] font-bold">{res.asset}</span>
+                                        <div className="flex flex-col">
+                                            <span className="text-[0.6rem] font-bold leading-none">{res.asset}</span>
+                                            <span className="text-[0.5rem] opacity-30 font-mono">{res.date} {res.time}</span>
+                                        </div>
                                         <span className={cn("text-[0.5rem] font-black", res.direction === 'CALL' ? "text-green-500" : "text-red-500")}>{res.direction}</span>
-                                        <span className="text-[0.5rem] opacity-40">{res.time}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className={cn("text-[0.6rem] font-black", res.netChange > 0 ? "text-green-500" : "text-red-500")}>

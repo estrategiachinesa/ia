@@ -16,7 +16,8 @@ import {
   RefreshCcw,
   Cpu,
   ArrowUpCircle,
-  ArrowDownCircle
+  ArrowDownCircle,
+  Trophy
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -62,6 +63,13 @@ export default function CopyPage() {
     winRate: config?.copyMasterWinRate || "0%",
     results: config?.copyResults || []
   };
+
+  const scoreboard = useMemo(() => {
+    const results = config?.copyResults || [];
+    const wins = results.filter((r: any) => r.result === 'WIN').length;
+    const losses = results.filter((r: any) => r.result === 'LOSS').length;
+    return { wins, losses };
+  }, [config?.copyResults]);
 
   const affiliateLink = config?.copyAffiliateUrl || "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy";
 
@@ -133,6 +141,25 @@ export default function CopyPage() {
                     </div>
                 </div>
 
+                {/* PLACAR LIVE */}
+                <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-3">
+                    <div className="flex items-center justify-between">
+                        <span className="text-[0.6rem] font-black uppercase opacity-40 flex items-center gap-1.5"><Trophy className="h-3 w-3" /> Placar da Sessão</span>
+                        <Badge variant="outline" className="text-[0.5rem] border-primary/30 text-primary">LIVE</Badge>
+                    </div>
+                    <div className="flex justify-center items-center gap-6">
+                         <div className="flex flex-col items-center">
+                            <span className="text-2xl font-black text-green-500">{scoreboard.wins}</span>
+                            <span className="text-[0.5rem] font-bold opacity-30 uppercase">Wins</span>
+                         </div>
+                         <div className="h-8 w-px bg-white/10" />
+                         <div className="flex flex-col items-center">
+                            <span className="text-2xl font-black text-red-500">{scoreboard.losses}</span>
+                            <span className="text-[0.5rem] font-bold opacity-30 uppercase">Losses</span>
+                         </div>
+                    </div>
+                </div>
+
                 <div className="space-y-4">
                     <div className="flex justify-between items-center px-2">
                         <span className="text-[0.7rem] font-black uppercase opacity-40">Assertividade Global</span>
@@ -156,7 +183,10 @@ export default function CopyPage() {
                         <div key={trade.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
                             <div className="flex items-center gap-3">
                                 <div className={cn("w-1.5 h-1.5 rounded-full", trade.result === 'WIN' ? "bg-green-500" : "bg-red-500")} />
-                                <span className="text-[0.7rem] font-black font-mono">{trade.time}</span>
+                                <div className="flex flex-col">
+                                    <span className="text-[0.7rem] font-black font-mono leading-none">{trade.time}</span>
+                                    <span className="text-[0.5rem] opacity-30 font-mono">{trade.date}</span>
+                                </div>
                                 <div className="flex items-center gap-1.5">
                                     <span className="text-xs font-bold">{trade.asset}</span>
                                     {trade.direction === 'CALL' ? (

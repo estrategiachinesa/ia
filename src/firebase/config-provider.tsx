@@ -36,6 +36,13 @@ export interface AppConfig {
   marketSchedules?: {
       [asset: string]: any;
   };
+  // Copy Trade Settings
+  copyMasterBalance?: string;
+  copyMasterProfit?: string;
+  copyMasterWinRate?: string;
+  copyActiveFollowers?: string;
+  copyMinLiquidity?: number;
+  copyAffiliateUrl?: string;
   // Page access status
   pages?: {
     analisador?: boolean;
@@ -88,6 +95,12 @@ const defaultConfig: AppConfig = {
     price: "R$ 197",
     visitCount: 0,
     checkoutClickCount: 0,
+    copyMasterBalance: "R$ 245.892,10",
+    copyMasterProfit: "+ R$ 14.320,45",
+    copyMasterWinRate: "94.2%",
+    copyActiveFollowers: "1,248",
+    copyMinLiquidity: 1000,
+    copyAffiliateUrl: "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy",
     pages: {
         analisador: true,
         catalogador: true,
@@ -199,7 +212,7 @@ export const ConfigProvider: React.FC<{ children: ReactNode, affiliateId?: strin
     trackVisit();
 
     const unsubscribers: (() => void)[] = [];
-    const docPaths = ['links', 'limitation', 'time', 'remoteValues', 'registration', 'offer', 'analytics', 'pages'];
+    const docPaths = ['links', 'limitation', 'time', 'remoteValues', 'registration', 'offer', 'analytics', 'pages', 'copy'];
     
     let loadedDocs = 0;
     const totalDocs = docPaths.length;

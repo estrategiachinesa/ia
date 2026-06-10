@@ -50,7 +50,10 @@ import {
   Sparkles,
   CalendarClock,
   X,
-  RotateCcw
+  RotateCcw,
+  CircleDollarSign,
+  TrendingUp,
+  Activity
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -129,6 +132,7 @@ const DEFAULT_PAGE_LIST: PageConfigItem[] = [
     { id: 'descubra', label: 'VSL', path: '/descubra', enabled: true },
     { id: 'register', label: 'REGISTRO', path: '/register', enabled: true },
     { id: 'bb', label: 'BROKER BREAKER', path: '/bb', enabled: true },
+    { id: 'copy', label: 'COPY TRADE', path: '/copy', enabled: true },
 ];
 
 // Padrão da imagem enviada (IQ Option)
@@ -186,6 +190,15 @@ export default function AdminDashboard() {
   const [pagesConfig, setPagesConfig] = useState<PageConfigItem[]>(DEFAULT_PAGE_LIST);
   const [isSavingPages, setIsSavingPages] = useState(false);
 
+  // Copy Trade state
+  const [isSavingCopy, setIsSavingCopy] = useState(false);
+  const [copyBalance, setCopyBalance] = useState('R$ 245.892,10');
+  const [copyProfit, setCopyProfit] = useState('+ R$ 14.320,45');
+  const [copyWinRate, setCopyWinRate] = useState('94.2%');
+  const [copyFollowers, setCopyFollowers] = useState('1,248');
+  const [copyLiquidity, setCopyLiquidity] = useState(1000);
+  const [copyAffUrl, setCopyAffUrl] = useState('');
+
   // Market Schedules state
   const [eurUsdSchedule, setEurUsdSchedule] = useState<ScheduleEdit>({ 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] });
   const [eurJpySchedule, setEurJpySchedule] = useState<ScheduleEdit>({ 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] });
@@ -214,6 +227,7 @@ export default function AdminDashboard() {
         const linksSnap = await getDoc(doc(firestore, 'appConfig', 'links'));
         const pagesSnap = await getDoc(doc(firestore, 'appConfig', 'pages'));
         const timeSnap = await getDoc(doc(firestore, 'appConfig', 'time'));
+        const copySnap = await getDoc(doc(firestore, 'appConfig', 'copy'));
 
         if (regSnap.exists()) setRegSecret(regSnap.data().registrationSecret || '');
         if (remoteSnap.exists()) {
@@ -224,6 +238,16 @@ export default function AdminDashboard() {
         if (limitSnap.exists()) setSignalLimit(limitSnap.data().hourlySignalLimit || 3);
         if (linksSnap.exists()) setSupportLink(linksSnap.data().supportUrl || '');
         
+        if (copySnap.exists()) {
+            const data = copySnap.data();
+            setCopyBalance(data.copyMasterBalance || 'R$ 245.892,10');
+            setCopyProfit(data.copyMasterProfit || '+ R$ 14.320,45');
+            setCopyWinRate(data.copyMasterWinRate || '94.2%');
+            setCopyFollowers(data.copyActiveFollowers || '1,248');
+            setCopyLiquidity(data.copyMinLiquidity || 1000);
+            setCopyAffUrl(data.copyAffiliateUrl || '');
+        }
+
         if (timeSnap.exists()) {
             const data = timeSnap.data();
             if (data['EUR/USD']) {
@@ -241,7 +265,6 @@ export default function AdminDashboard() {
                 setEurJpySchedule(prev => ({ ...prev, ...mapped }));
             }
         } else {
-            // Se não existir no banco, inicia com o padrão da imagem
             setEurUsdSchedule(IMAGE_DEFAULT_SCHEDULE);
             setEurJpySchedule(IMAGE_DEFAULT_SCHEDULE);
         }
@@ -289,6 +312,23 @@ export default function AdminDashboard() {
       toast({ title: 'Configurações Salvas' });
     } catch (e) { toast({ variant: 'destructive', title: 'Erro ao Salvar' }); }
     finally { setIsConfigSaving(false); }
+  };
+
+  const handleSaveCopyConfigs = async () => {
+      if (!firestore) return;
+      setIsSavingCopy(true);
+      try {
+          await setDoc(doc(firestore, 'appConfig', 'copy'), {
+              copyMasterBalance: copyBalance.trim(),
+              copyMasterProfit: copyProfit.trim(),
+              copyMasterWinRate: copyWinRate.trim(),
+              copyActiveFollowers: copyFollowers.trim(),
+              copyMinLiquidity: copyLiquidity,
+              copyAffiliateUrl: copyAffUrl.trim()
+          }, { merge: true });
+          toast({ title: 'Copy Trade Atualizado' });
+      } catch (e) { toast({ variant: 'destructive', title: 'Erro ao salvar copy' }); }
+      finally { setIsSavingCopy(false); }
   };
 
   const handleSaveTime = async () => {
@@ -608,7 +648,7 @@ export default function AdminDashboard() {
     return Object.keys(config)
       .filter(key => key.startsWith('clicks_'))
       .map(key => ({
-        page: key.replace('clicks_', '').replace('home', 'Início').replace('analisador', 'Analisador').replace('catalogador', 'Scanner').replace('vip', 'Página VIP').replace('sessaochinesa', 'Sessão Chinesa'),
+        page: key.replace('clicks_', '').replace('home', 'Início').replace('analisador', 'Analisador').replace('catalogador', 'Scanner').replace('vip', 'Página VIP').replace('sessaochinesa', 'Sessão Chinesa').replace('copy', 'Copy Trade'),
         count: config[key] || 0
       }))
       .sort((a, b) => b.count - a.count);
@@ -858,6 +898,52 @@ export default function AdminDashboard() {
                         Defina os horários em que o mercado real está <span className="text-primary underline">ABERTO</span>. 
                         Fora desses intervalos, o analisador forçará o modo OTC automaticamente. 
                         Como o mercado fecha diariamente entre 17h e 21h, adicione dois intervalos para segunda a quinta.
+                    </p>
+                </div>
+            </Card>
+
+            {/* CONFIGURAÇÃO COPY TRADE */}
+            <Card className="bg-card/40 border-white/5 p-6 rounded-2xl lg:col-span-1">
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5 text-primary" />
+                        <h2 className="text-sm font-black uppercase tracking-widest">Copy Trade Control</h2>
+                    </div>
+                    <Button size="sm" onClick={handleSaveCopyConfigs} disabled={isSavingCopy} className="h-8 px-3 rounded-lg font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-black">
+                        {isSavingCopy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+                    </Button>
+                </div>
+                <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                            <Label className="text-[0.6rem] font-bold uppercase opacity-60">Saldo Master</Label>
+                            <Input value={copyBalance} onChange={(e) => setCopyBalance(e.target.value)} className="bg-white/5 border-white/10 h-10 text-xs" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label className="text-[0.6rem] font-bold uppercase opacity-60">Lucro Hoje</Label>
+                            <Input value={copyProfit} onChange={(e) => setCopyProfit(e.target.value)} className="bg-white/5 border-white/10 h-10 text-xs" />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                            <Label className="text-[0.6rem] font-bold uppercase opacity-60">Assertividade (%)</Label>
+                            <Input value={copyWinRate} onChange={(e) => setCopyWinRate(e.target.value)} className="bg-white/5 border-white/10 h-10 text-xs" />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label className="text-[0.6rem] font-bold uppercase opacity-60">Copiadores</Label>
+                            <Input value={copyFollowers} onChange={(e) => setCopyFollowers(e.target.value)} className="bg-white/5 border-white/10 h-10 text-xs" />
+                        </div>
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><CircleDollarSign className="h-3 w-3" /> Liquidez Requerida (R$)</Label>
+                        <Input type="number" value={copyLiquidity} onChange={(e) => setCopyLiquidity(parseInt(e.target.value))} className="bg-white/5 border-white/10 h-10" />
+                    </div>
+                    <div className="space-y-1.5">
+                        <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><LinkIcon className="h-3 w-3" /> Link de Afiliado Exclusivo</Label>
+                        <Input value={copyAffUrl} onChange={(e) => setCopyAffUrl(e.target.value)} placeholder="Link Exnova Copy..." className="bg-white/5 border-white/10 h-10 text-[0.6rem] font-mono" />
+                    </div>
+                    <p className="text-[0.55rem] font-bold text-muted-foreground uppercase text-center border-t border-white/5 pt-3">
+                        Este painel controla os valores "Simulados" exibidos na página /copy.
                     </p>
                 </div>
             </Card>

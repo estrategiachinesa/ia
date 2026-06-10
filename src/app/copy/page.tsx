@@ -25,25 +25,34 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Logo } from '@/components/logo';
 import { useAppConfig } from '@/firebase/config-provider';
+import { useRouter } from 'next/navigation';
 
 type ConnectionStep = 'IDLE' | 'VALIDATING' | 'SUCCESS' | 'ERROR_LIQUIDITY';
 
 export default function CopyPage() {
-  const { config } = useAppConfig();
+  const { config, isConfigLoading } = useAppConfig();
+  const router = useRouter();
   const [brokerId, setBrokerId] = useState('');
   const [step, setStep] = useState<ConnectionStep>('IDLE');
   const [progress, setProgress] = useState(0);
   const [simulatedTrades, setSimulatedTrades] = useState<any[]>([]);
 
-  // Dados da Conta Master (Fixos para autoridade)
+  // Kill switch check
+  useEffect(() => {
+    if (!isConfigLoading && config?.pages?.copy === false) {
+      router.replace('/');
+    }
+  }, [config, isConfigLoading, router]);
+
+  // Dados da Conta Master dinâmicos
   const masterStats = {
-    balance: "R$ 245.892,10",
-    profitToday: "+ R$ 14.320,45",
-    winRate: "94.2%",
-    activeFollowers: "1,248"
+    balance: config?.copyMasterBalance || "R$ 245.892,10",
+    profitToday: config?.copyMasterProfit || "+ R$ 14.320,45",
+    winRate: config?.copyMasterWinRate || "94.2%",
+    activeFollowers: config?.copyActiveFollowers || "1,248"
   };
 
-  const affiliateLink = "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy";
+  const affiliateLink = config?.copyAffiliateUrl || "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy";
 
   // Simulação de feed de operações
   useEffect(() => {
@@ -80,6 +89,10 @@ export default function CopyPage() {
 
     setStep('ERROR_LIQUIDITY');
   };
+
+  if (isConfigLoading) {
+    return <div className="flex h-screen w-full items-center justify-center bg-black"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-foreground font-body pb-20">
@@ -253,7 +266,7 @@ export default function CopyPage() {
                             </p>
                             <div className="flex items-center justify-between p-4 bg-red-500/5 rounded-xl border border-red-500/10">
                                 <span className="text-xs font-bold uppercase text-zinc-500">Liquidez Necessária:</span>
-                                <span className="text-lg font-black text-white">R$ 1.000,00</span>
+                                <span className="text-lg font-black text-white">R$ {(config?.copyMinLiquidity || 1000).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                             </div>
                         </div>
 
@@ -299,7 +312,7 @@ export default function CopyPage() {
       <footer className="mt-12 text-center space-y-4 px-6 opacity-30">
           <Logo size={24} showText={false} className="mx-auto" />
           <p className="text-[0.55rem] font-bold uppercase tracking-widest max-w-2xl mx-auto leading-relaxed">
-            Aviso de Risco: O copy trading não garante lucros. A margem de R$ 1.000 é um requisito técnico para garantir a execução das ordens sem slippage excessivo.
+            Aviso de Risco: O copy trading não garante lucros. A margem de R$ {(config?.copyMinLiquidity || 1000)} é um requisito técnico para garantir a execução das ordens sem slippage excessivo.
           </p>
       </footer>
     </div>

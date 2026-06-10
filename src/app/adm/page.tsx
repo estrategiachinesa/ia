@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -53,7 +52,8 @@ import {
   RotateCcw,
   CircleDollarSign,
   TrendingUp,
-  Activity
+  Activity,
+  Target
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -94,6 +94,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -135,7 +142,6 @@ const DEFAULT_PAGE_LIST: PageConfigItem[] = [
     { id: 'copy', label: 'COPY TRADE', path: '/copy', enabled: true },
 ];
 
-// Padrão da imagem enviada (IQ Option)
 const IMAGE_DEFAULT_SCHEDULE: ScheduleEdit = {
     0: [{ start: '21:00', end: '23:59' }],
     1: [{ start: '00:00', end: '17:00' }, { start: '21:00', end: '23:59' }],
@@ -157,6 +163,15 @@ const timeToDecimal = (time: string): number => {
     const [h, m] = time.split(':').map(Number);
     return h + (m / 60);
 };
+
+const formatCurrency = (val: number) => {
+    return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+};
+
+const parseCurrency = (str: string) => {
+    if (typeof str !== 'string') return str || 0;
+    return parseFloat(str.replace('R$', '').replace(/\./g, '').replace(',', '.').replace('+', '').trim()) || 0;
+}
 
 export default function AdminDashboard() {
   const { auth, user, isUserLoading, firestore } = useFirebase();
@@ -192,12 +207,17 @@ export default function AdminDashboard() {
 
   // Copy Trade state
   const [isSavingCopy, setIsSavingCopy] = useState(false);
-  const [copyBalance, setCopyBalance] = useState('R$ 245.892,10');
-  const [copyProfit, setCopyProfit] = useState('+ R$ 14.320,45');
+  const [copyBalance, setCopyBalance] = useState(245892.10);
+  const [copyProfit, setCopyProfit] = useState(14320.45);
   const [copyWinRate, setCopyWinRate] = useState('94.2%');
   const [copyFollowers, setCopyFollowers] = useState('1,248');
   const [copyLiquidity, setCopyLiquidity] = useState(1000);
   const [copyAffUrl, setCopyAffUrl] = useState('');
+
+  // Local trade states for launching results
+  const [tradeAsset, setTradeAsset] = useState('EUR/USD');
+  const [tradeValue, setTradeValue] = useState(100);
+  const [tradePayout, setTradePayout] = useState(87);
 
   // Market Schedules state
   const [eurUsdSchedule, setEurUsdSchedule] = useState<ScheduleEdit>({ 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] });
@@ -240,8 +260,11 @@ export default function AdminDashboard() {
         
         if (copySnap.exists()) {
             const data = copySnap.data();
-            setCopyBalance(data.copyMasterBalance || 'R$ 245.892,10');
-            setCopyProfit(data.copyMasterProfit || '+ R$ 14.320,45');
+            const b = data.copyMasterBalance;
+            setCopyBalance(typeof b === 'number' ? b : parseCurrency(b));
+            const p = data.copyMasterProfit;
+            setCopyProfit(typeof p === 'number' ? p : parseCurrency(p));
+            
             setCopyWinRate(data.copyMasterWinRate || '94.2%');
             setCopyFollowers(data.copyActiveFollowers || '1,248');
             setCopyLiquidity(data.copyMinLiquidity || 1000);
@@ -319,8 +342,8 @@ export default function AdminDashboard() {
       setIsSavingCopy(true);
       try {
           await setDoc(doc(firestore, 'appConfig', 'copy'), {
-              copyMasterBalance: copyBalance.trim(),
-              copyMasterProfit: copyProfit.trim(),
+              copyMasterBalance: copyBalance,
+              copyMasterProfit: copyProfit,
               copyMasterWinRate: copyWinRate.trim(),
               copyActiveFollowers: copyFollowers.trim(),
               copyMinLiquidity: copyLiquidity,
@@ -329,6 +352,33 @@ export default function AdminDashboard() {
           toast({ title: 'Copy Trade Atualizado' });
       } catch (e) { toast({ variant: 'destructive', title: 'Erro ao salvar copy' }); }
       finally { setIsSavingCopy(false); }
+  };
+
+  const handlePostTrade = async (result: 'WIN' | 'LOSS') => {
+      const netChange = result === 'WIN' 
+          ? (tradeValue * tradePayout / 100) 
+          : -tradeValue;
+      
+      const newProfit = copyProfit + netChange;
+      const newBalance = copyBalance + netChange;
+      
+      setCopyProfit(newProfit);
+      setCopyBalance(newBalance);
+
+      if (firestore) {
+          try {
+              await setDoc(doc(firestore, 'appConfig', 'copy'), {
+                  copyMasterBalance: newBalance,
+                  copyMasterProfit: newProfit
+              }, { merge: true });
+              toast({ 
+                  title: `Operação ${result} Lançada!`, 
+                  description: `${tradeAsset}: ${netChange > 0 ? '+' : ''}${formatCurrency(netChange)}` 
+              });
+          } catch (e) {
+              toast({ variant: 'destructive', title: 'Erro ao registrar operação' });
+          }
+      }
   };
 
   const handleSaveTime = async () => {
@@ -747,7 +797,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-foreground font-body">
+    <div className="min-h-screen bg-[#0a0a0a] text-foreground font-body pb-20">
       <header className="border-b border-white/5 bg-black/40 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -917,13 +967,64 @@ export default function AdminDashboard() {
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
                             <Label className="text-[0.6rem] font-bold uppercase opacity-60">Saldo Master</Label>
-                            <Input value={copyBalance} onChange={(e) => setCopyBalance(e.target.value)} className="bg-white/5 border-white/10 h-10 text-xs" />
+                            <div className="relative">
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[0.6rem] font-bold opacity-40">R$</span>
+                                <Input type="number" value={copyBalance} onChange={(e) => setCopyBalance(Number(e.target.value))} className="bg-white/5 border-white/10 h-10 pl-7 text-xs font-mono" />
+                            </div>
                         </div>
                         <div className="space-y-1.5">
                             <Label className="text-[0.6rem] font-bold uppercase opacity-60">Lucro Hoje</Label>
-                            <Input value={copyProfit} onChange={(e) => setCopyProfit(e.target.value)} className="bg-white/5 border-white/10 h-10 text-xs" />
+                            <div className="relative">
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[0.6rem] font-bold opacity-40">R$</span>
+                                <Input type="number" value={copyProfit} onChange={(e) => setCopyProfit(Number(e.target.value))} className="bg-white/5 border-white/10 h-10 pl-7 text-xs font-mono" />
+                            </div>
                         </div>
                     </div>
+
+                    {/* TERMINAL DE LANÇAMENTO (SOLICITAÇÃO) */}
+                    <div className="p-4 bg-white/5 border border-white/5 rounded-xl space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-primary/70 flex items-center gap-1.5"><Zap className="h-3 w-3" /> Lançar Operação</h3>
+                            <span className="text-[0.55rem] font-bold opacity-30 uppercase">Instant Update</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                             <div className="space-y-1">
+                                <Label className="text-[0.55rem] font-bold uppercase opacity-40">Par</Label>
+                                <Select value={tradeAsset} onValueChange={setTradeAsset}>
+                                    <SelectTrigger className="h-8 bg-black/40 text-[0.6rem] border-white/5">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-black border-white/10">
+                                        <SelectItem value="EUR/USD" className="text-xs">EUR/USD</SelectItem>
+                                        <SelectItem value="EUR/JPY" className="text-xs">EUR/JPY</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                             </div>
+                             <div className="space-y-1">
+                                <Label className="text-[0.55rem] font-bold uppercase opacity-40">Payout %</Label>
+                                <Input type="number" value={tradePayout} onChange={(e) => setTradePayout(Number(e.target.value))} className="h-8 bg-black/40 text-[0.65rem] border-white/5 font-mono" />
+                             </div>
+                        </div>
+                        <div className="space-y-1">
+                            <Label className="text-[0.55rem] font-bold uppercase opacity-40">Entrada (R$)</Label>
+                            <Input type="number" value={tradeValue} onChange={(e) => setTradeValue(Number(e.target.value))} className="h-8 bg-black/40 text-[0.65rem] border-white/5 font-mono" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <Button 
+                                onClick={() => handlePostTrade('WIN')} 
+                                className="bg-green-600 hover:bg-green-700 text-white font-black text-[0.65rem] uppercase tracking-widest h-9 rounded-lg"
+                            >
+                                WIN
+                            </Button>
+                            <Button 
+                                onClick={() => handlePostTrade('LOSS')} 
+                                className="bg-red-600 hover:bg-red-700 text-white font-black text-[0.65rem] uppercase tracking-widest h-9 rounded-lg"
+                            >
+                                LOSS
+                            </Button>
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
                             <Label className="text-[0.6rem] font-bold uppercase opacity-60">Assertividade (%)</Label>
@@ -942,9 +1043,6 @@ export default function AdminDashboard() {
                         <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><LinkIcon className="h-3 w-3" /> Link de Afiliado Exclusivo</Label>
                         <Input value={copyAffUrl} onChange={(e) => setCopyAffUrl(e.target.value)} placeholder="Link Exnova Copy..." className="bg-white/5 border-white/10 h-10 text-[0.6rem] font-mono" />
                     </div>
-                    <p className="text-[0.55rem] font-bold text-muted-foreground uppercase text-center border-t border-white/5 pt-3">
-                        Este painel controla os valores "Simulados" exibidos na página /copy.
-                    </p>
                 </div>
             </Card>
 
@@ -1274,3 +1372,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+

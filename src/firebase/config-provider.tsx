@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { createContext, useContext, ReactNode, useState, useEffect, Suspense, useCallback } from 'react';
@@ -37,8 +36,8 @@ export interface AppConfig {
       [asset: string]: any;
   };
   // Copy Trade Settings
-  copyMasterBalance?: string;
-  copyMasterProfit?: string;
+  copyMasterBalance?: number;
+  copyMasterProfit?: number;
   copyMasterWinRate?: string;
   copyActiveFollowers?: string;
   copyMinLiquidity?: number;
@@ -95,8 +94,8 @@ const defaultConfig: AppConfig = {
     price: "R$ 197",
     visitCount: 0,
     checkoutClickCount: 0,
-    copyMasterBalance: "R$ 245.892,10",
-    copyMasterProfit: "+ R$ 14.320,45",
+    copyMasterBalance: 245892.10,
+    copyMasterProfit: 14320.45,
     copyMasterWinRate: "94.2%",
     copyActiveFollowers: "1,248",
     copyMinLiquidity: 1000,

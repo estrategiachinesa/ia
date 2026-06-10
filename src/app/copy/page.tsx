@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -44,10 +43,20 @@ export default function CopyPage() {
     }
   }, [config, isConfigLoading, router]);
 
+  const formatCurrency = (val: any) => {
+      const num = typeof val === 'number' ? val : (parseFloat(String(val).replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0);
+      return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
+
+  const getProfitPrefix = (val: any) => {
+      const num = typeof val === 'number' ? val : (parseFloat(String(val).replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0);
+      return num >= 0 ? '+ ' : '';
+  };
+
   // Dados da Conta Master dinâmicos
   const masterStats = {
-    balance: config?.copyMasterBalance || "R$ 245.892,10",
-    profitToday: config?.copyMasterProfit || "+ R$ 14.320,45",
+    balance: formatCurrency(config?.copyMasterBalance ?? 245892.10),
+    profitToday: getProfitPrefix(config?.copyMasterProfit ?? 14320.45) + formatCurrency(config?.copyMasterProfit ?? 14320.45),
     winRate: config?.copyMasterWinRate || "94.2%",
     activeFollowers: config?.copyActiveFollowers || "1,248"
   };
@@ -56,7 +65,7 @@ export default function CopyPage() {
 
   // Simulação de feed de operações
   useEffect(() => {
-    const assets = ['EUR/USD', 'EUR/JPY', 'GBP/USD', 'USD/JPY'];
+    const assets = ['EUR/USD', 'EUR/JPY'];
     const generateTrade = () => {
       const asset = assets[Math.floor(Math.random() * assets.length)];
       const direction = Math.random() > 0.5 ? 'CALL' : 'PUT';
@@ -126,11 +135,14 @@ export default function CopyPage() {
                 <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
                         <p className="text-[0.6rem] font-bold text-muted-foreground uppercase mb-1">Saldo em Banca</p>
-                        <p className="text-lg font-black font-mono text-white">{masterStats.balance}</p>
+                        <p className="text-lg font-black font-mono text-white tracking-tighter">{masterStats.balance}</p>
                     </div>
-                    <div className="p-4 bg-green-500/5 rounded-2xl border border-green-500/10">
-                        <p className="text-[0.6rem] font-bold text-green-500 uppercase mb-1">Lucro Hoje</p>
-                        <p className="text-lg font-black font-mono text-green-500">{masterStats.profitToday}</p>
+                    <div className={cn(
+                        "p-4 rounded-2xl border",
+                        masterStats.profitToday.includes('-') ? "bg-red-500/5 border-red-500/10" : "bg-green-500/5 border-green-500/10"
+                    )}>
+                        <p className={cn("text-[0.6rem] font-bold uppercase mb-1", masterStats.profitToday.includes('-') ? "text-red-500" : "text-green-500")}>Lucro Hoje</p>
+                        <p className={cn("text-lg font-black font-mono tracking-tighter", masterStats.profitToday.includes('-') ? "text-red-500" : "text-green-500")}>{masterStats.profitToday}</p>
                     </div>
                 </div>
 
@@ -139,7 +151,7 @@ export default function CopyPage() {
                         <span className="text-[0.7rem] font-black uppercase opacity-40">Assertividade Global</span>
                         <span className="text-sm font-black text-primary">{masterStats.winRate}</span>
                     </div>
-                    <Progress value={94} className="h-2 bg-white/5" />
+                    <Progress value={parseFloat(masterStats.winRate) || 94} className="h-2 bg-white/5" />
                 </div>
 
                 <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 flex items-center gap-4">
@@ -312,9 +324,10 @@ export default function CopyPage() {
       <footer className="mt-12 text-center space-y-4 px-6 opacity-30">
           <Logo size={24} showText={false} className="mx-auto" />
           <p className="text-[0.55rem] font-bold uppercase tracking-widest max-w-2xl mx-auto leading-relaxed">
-            Aviso de Risco: O copy trading não garante lucros. A margem de R$ {(config?.copyMinLiquidity || 1000)} é um requisito técnico para garantir a execução das ordens sem slippage excessivo.
+            Aviso de Risco: O copy trading não garante lucros. A margem de R$ {(config?.copyMinLiquidity || 1000).toLocaleString('pt-BR')} é um requisito técnico para garantir a execução das ordens sem slippage excessivo.
           </p>
       </footer>
     </div>
   );
 }
+

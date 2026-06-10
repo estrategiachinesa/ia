@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -28,6 +29,7 @@ import { cn } from '@/lib/utils';
 import { Logo } from '@/components/logo';
 import { useAppConfig } from '@/firebase/config-provider';
 import { useRouter } from 'next/navigation';
+import { CurrencyFlags } from '@/components/app/currency-flags';
 
 type ConnectionStep = 'IDLE' | 'VALIDATING' | 'SUCCESS' | 'ERROR_LIQUIDITY';
 
@@ -53,6 +55,17 @@ export default function CopyPage() {
   const getProfitPrefix = (val: any) => {
       const num = typeof val === 'number' ? val : (parseFloat(String(val).replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0);
       return num >= 0 ? '+ ' : '';
+  };
+
+  const formatShortDate = (dateStr: string) => {
+      if (!dateStr) return '';
+      try {
+          const [year, month, day] = dateStr.split('-').map(Number);
+          const date = new Date(year, month - 1, day);
+          return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '');
+      } catch (e) {
+          return dateStr;
+      }
   };
 
   // Dados da Conta Master dinâmicos vindos do ADM
@@ -180,25 +193,48 @@ export default function CopyPage() {
              <CardContent className="px-4 pb-4">
                 <div className="space-y-2">
                     {masterStats.results.length > 0 ? masterStats.results.map((trade: any) => (
-                        <div key={trade.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
-                            <div className="flex items-center gap-3">
-                                <div className={cn("w-1.5 h-1.5 rounded-full", trade.result === 'WIN' ? "bg-green-500" : "bg-red-500")} />
+                        <div key={trade.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 group hover:border-white/10 transition-all">
+                            <div className="flex items-center gap-4">
+                                {/* Time and Date Stack */}
                                 <div className="flex flex-col">
-                                    <span className="text-[0.7rem] font-black font-mono leading-none">{trade.time}</span>
-                                    <span className="text-[0.5rem] opacity-30 font-mono">{trade.date}</span>
+                                    <span className="text-sm font-black font-mono leading-tight text-white">{trade.time}</span>
+                                    <span className="text-[0.6rem] font-bold opacity-30 uppercase">{formatShortDate(trade.date)}</span>
                                 </div>
-                                <div className="flex items-center gap-1.5">
-                                    <span className="text-xs font-bold">{trade.asset}</span>
+                                
+                                {/* Flags and Asset Name */}
+                                <div className="flex items-center gap-2">
+                                    <CurrencyFlags asset={trade.asset} />
+                                    <span className="text-sm font-black text-zinc-100 uppercase tracking-tight">{trade.asset}</span>
+                                </div>
+                            </div>
+
+                            {/* Direction and Result */}
+                            <div className="flex items-center gap-4">
+                                <div className="flex flex-col items-end">
+                                    <span className={cn(
+                                        "text-[0.6rem] font-black uppercase tracking-widest",
+                                        trade.result === 'WIN' ? "text-green-500" : "text-red-500"
+                                    )}>
+                                        {trade.result}
+                                    </span>
+                                    <span className={cn(
+                                        "text-[0.5rem] font-bold opacity-40 uppercase",
+                                        trade.direction === 'CALL' ? "text-green-500/60" : "text-red-500/60"
+                                    )}>
+                                        {trade.direction}
+                                    </span>
+                                </div>
+                                <div className={cn(
+                                    "p-1.5 rounded-lg transition-transform group-hover:scale-110",
+                                    trade.result === 'WIN' ? "bg-green-500/10" : "bg-red-500/10"
+                                )}>
                                     {trade.direction === 'CALL' ? (
-                                        <ArrowUpCircle className="h-3 w-3 text-green-500" />
+                                        <ArrowUpCircle className="h-5 w-5 text-green-500" />
                                     ) : (
-                                        <ArrowDownCircle className="h-3 w-3 text-red-500" />
+                                        <ArrowDownCircle className="h-5 w-5 text-red-500" />
                                     )}
                                 </div>
                             </div>
-                            <span className={cn("text-[0.7rem] font-black", trade.result === 'WIN' ? "text-green-500" : "text-red-500")}>
-                                {trade.result} {trade.netChange > 0 ? '+' : ''}{formatCurrency(trade.netChange)}
-                            </span>
                         </div>
                     )) : (
                         <p className="text-center py-8 text-[0.6rem] font-black uppercase opacity-30 tracking-widest">Aguardando operações...</p>

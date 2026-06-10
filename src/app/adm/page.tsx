@@ -53,7 +53,9 @@ import {
   CircleDollarSign,
   TrendingUp,
   Activity,
-  Target
+  Target,
+  ArrowUpCircle,
+  ArrowDownCircle
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -168,14 +170,10 @@ const formatCurrency = (val: number) => {
     return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 };
 
-const parseCurrency = (str: string) => {
-    if (typeof str !== 'string') return str || 0;
-    return parseFloat(str.replace('R$', '').replace(/\./g, '').replace(',', '.').replace('+', '').trim()) || 0;
-}
-
 type CopyTradeResult = {
     id: string;
     asset: string;
+    direction: 'CALL' | 'PUT';
     result: 'WIN' | 'LOSS';
     time: string;
     netChange: number;
@@ -224,8 +222,10 @@ export default function AdminDashboard() {
 
   // Local trade states for launching results
   const [tradeAsset, setTradeAsset] = useState('EUR/USD');
+  const [tradeDirection, setTradeDirection] = useState<'CALL' | 'PUT'>('CALL');
   const [tradeValue, setTradeValue] = useState(100);
   const [tradePayout, setTradePayout] = useState(87);
+  const [tradeTime, setTradeTime] = useState(new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
 
   // Market Schedules state
   const [eurUsdSchedule, setEurUsdSchedule] = useState<ScheduleEdit>({ 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] });
@@ -379,8 +379,9 @@ export default function AdminDashboard() {
       const newResult: CopyTradeResult = {
           id: Date.now().toString(),
           asset: tradeAsset,
+          direction: tradeDirection,
           result,
-          time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+          time: tradeTime || new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
           netChange,
           value: tradeValue
       };
@@ -392,7 +393,6 @@ export default function AdminDashboard() {
 
       if (firestore) {
           try {
-              // Calcula a nova assertividade para salvar
               const wins = updatedResults.filter(r => r.result === 'WIN').length;
               const newWinRate = ((wins / updatedResults.length) * 100).toFixed(1) + '%';
               const newProfit = updatedResults.reduce((acc, curr) => acc + curr.netChange, 0);
@@ -405,7 +405,7 @@ export default function AdminDashboard() {
               }, { merge: true });
               toast({ 
                   title: `Operação ${result} Lançada!`, 
-                  description: `${tradeAsset}: ${netChange > 0 ? '+' : ''}${formatCurrency(netChange)}` 
+                  description: `${tradeAsset} ${tradeDirection}: ${netChange > 0 ? '+' : ''}${formatCurrency(netChange)}` 
               });
           } catch (e) {
               toast({ variant: 'destructive', title: 'Erro ao registrar operação' });
@@ -574,17 +574,6 @@ export default function AdminDashboard() {
       setIsResetDialogOpen(false);
     } catch (e) { toast({ variant: 'destructive', title: 'Erro ao Resetar' }); }
     finally { setIsResetting(false); }
-  };
-
-  const handleCopySecret = () => {
-    navigator.clipboard.writeText(regSecret);
-    toast({ title: 'Copiado!', description: 'Chave de registo copiada.' });
-  };
-
-  const handleCopyRegisterLink = () => {
-    const link = 'https://estrategiachinesa.com.br/register';
-    navigator.clipboard.writeText(link);
-    toast({ title: 'Copiado!', description: 'Link de cadastro oficial copiado.' });
   };
 
   const usersQuery = useMemoFirebase(() => {
@@ -828,7 +817,7 @@ export default function AdminDashboard() {
                                       onChange={(e) => updateSlot(target, day, idx, 'end', e.target.value)}
                                       className="h-7 w-[75px] bg-transparent border-none text-[0.7rem] p-0 text-center font-mono"
                                   />
-                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500/50 hover:text-red-500 p-0" onClick={() => removeSlot(target, day, idx)}>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500/50 hover:text-red-500" onClick={() => removeSlot(target, day, idx)}>
                                       <Trash2 className="h-3.5 w-3.5" />
                                   </Button>
                               </div>
@@ -1062,13 +1051,31 @@ export default function AdminDashboard() {
                                 </Select>
                              </div>
                              <div className="space-y-1">
+                                <Label className="text-[0.55rem] font-bold uppercase opacity-40">Direção</Label>
+                                <Select value={tradeDirection} onValueChange={(v: any) => setTradeDirection(v)}>
+                                    <SelectTrigger className="h-8 bg-black/40 text-[0.6rem] border-white/5">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-black border-white/10">
+                                        <SelectItem value="CALL" className="text-xs">CALL (Alta)</SelectItem>
+                                        <SelectItem value="PUT" className="text-xs">PUT (Baixa)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                             </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                             <div className="space-y-1">
+                                <Label className="text-[0.55rem] font-bold uppercase opacity-40">Entrada (R$)</Label>
+                                <Input type="number" value={tradeValue} onChange={(e) => setTradeValue(Number(e.target.value))} className="h-8 bg-black/40 text-[0.65rem] border-white/5 font-mono" />
+                             </div>
+                             <div className="space-y-1">
                                 <Label className="text-[0.55rem] font-bold uppercase opacity-40">Payout %</Label>
                                 <Input type="number" value={tradePayout} onChange={(e) => setTradePayout(Number(e.target.value))} className="h-8 bg-black/40 text-[0.65rem] border-white/5 font-mono" />
                              </div>
                         </div>
                         <div className="space-y-1">
-                            <Label className="text-[0.55rem] font-bold uppercase opacity-40">Entrada (R$)</Label>
-                            <Input type="number" value={tradeValue} onChange={(e) => setTradeValue(Number(e.target.value))} className="h-8 bg-black/40 text-[0.65rem] border-white/5 font-mono" />
+                            <Label className="text-[0.55rem] font-bold uppercase opacity-40">Horário</Label>
+                            <Input type="time" value={tradeTime} onChange={(e) => setTradeTime(e.target.value)} className="h-8 bg-black/40 text-[0.65rem] border-white/5 font-mono" />
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                             <Button 
@@ -1106,6 +1113,7 @@ export default function AdminDashboard() {
                                     <div className="flex items-center gap-2">
                                         <Badge className={cn("text-[0.5rem] py-0 px-1", res.result === 'WIN' ? "bg-green-600" : "bg-red-600")}>{res.result}</Badge>
                                         <span className="text-[0.6rem] font-bold">{res.asset}</span>
+                                        <span className={cn("text-[0.5rem] font-black", res.direction === 'CALL' ? "text-green-500" : "text-red-500")}>{res.direction}</span>
                                         <span className="text-[0.5rem] opacity-40">{res.time}</span>
                                     </div>
                                     <div className="flex items-center gap-2">

@@ -14,7 +14,9 @@ import {
   History,
   CheckCircle2,
   RefreshCcw,
-  Cpu
+  Cpu,
+  ArrowUpCircle,
+  ArrowDownCircle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -155,7 +157,14 @@ export default function CopyPage() {
                             <div className="flex items-center gap-3">
                                 <div className={cn("w-1.5 h-1.5 rounded-full", trade.result === 'WIN' ? "bg-green-500" : "bg-red-500")} />
                                 <span className="text-[0.7rem] font-black font-mono">{trade.time}</span>
-                                <span className="text-xs font-bold">{trade.asset}</span>
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-xs font-bold">{trade.asset}</span>
+                                    {trade.direction === 'CALL' ? (
+                                        <ArrowUpCircle className="h-3 w-3 text-green-500" />
+                                    ) : (
+                                        <ArrowDownCircle className="h-3 w-3 text-red-500" />
+                                    )}
+                                </div>
                             </div>
                             <span className={cn("text-[0.7rem] font-black", trade.result === 'WIN' ? "text-green-500" : "text-red-500")}>
                                 {trade.result} {trade.netChange > 0 ? '+' : ''}{formatCurrency(trade.netChange)}

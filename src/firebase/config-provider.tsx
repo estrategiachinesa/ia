@@ -37,9 +37,10 @@ export interface AppConfig {
   };
   // Copy Trade Settings
   copyMasterBalance?: number;
+  copyInitialBalance?: number;
   copyMasterProfit?: number;
   copyMasterWinRate?: string;
-  copyActiveFollowers?: string;
+  copyResults?: any[];
   copyMinLiquidity?: number;
   copyAffiliateUrl?: string;
   // Page access status
@@ -95,9 +96,10 @@ const defaultConfig: AppConfig = {
     visitCount: 0,
     checkoutClickCount: 0,
     copyMasterBalance: 245892.10,
+    copyInitialBalance: 240000.00,
     copyMasterProfit: 14320.45,
-    copyMasterWinRate: "94.2%",
-    copyActiveFollowers: "1,248",
+    copyMasterWinRate: "0%",
+    copyResults: [],
     copyMinLiquidity: 1000,
     copyAffiliateUrl: "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy",
     pages: {

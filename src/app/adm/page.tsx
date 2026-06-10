@@ -173,6 +173,15 @@ const parseCurrency = (str: string) => {
     return parseFloat(str.replace('R$', '').replace(/\./g, '').replace(',', '.').replace('+', '').trim()) || 0;
 }
 
+type CopyTradeResult = {
+    id: string;
+    asset: string;
+    result: 'WIN' | 'LOSS';
+    time: string;
+    netChange: number;
+    value: number;
+};
+
 export default function AdminDashboard() {
   const { auth, user, isUserLoading, firestore } = useFirebase();
   const { config } = useAppConfig();
@@ -208,9 +217,8 @@ export default function AdminDashboard() {
   // Copy Trade state
   const [isSavingCopy, setIsSavingCopy] = useState(false);
   const [copyBalance, setCopyBalance] = useState(245892.10);
-  const [copyProfit, setCopyProfit] = useState(14320.45);
-  const [copyWinRate, setCopyWinRate] = useState('94.2%');
-  const [copyFollowers, setCopyFollowers] = useState('1,248');
+  const [copyInitialBalance, setCopyInitialBalance] = useState(240000.00);
+  const [copyResults, setCopyResults] = useState<CopyTradeResult[]>([]);
   const [copyLiquidity, setCopyLiquidity] = useState(1000);
   const [copyAffUrl, setCopyAffUrl] = useState('');
 
@@ -260,15 +268,11 @@ export default function AdminDashboard() {
         
         if (copySnap.exists()) {
             const data = copySnap.data();
-            const b = data.copyMasterBalance;
-            setCopyBalance(typeof b === 'number' ? b : parseCurrency(b));
-            const p = data.copyMasterProfit;
-            setCopyProfit(typeof p === 'number' ? p : parseCurrency(p));
-            
-            setCopyWinRate(data.copyMasterWinRate || '94.2%');
-            setCopyFollowers(data.copyActiveFollowers || '1,248');
-            setCopyLiquidity(data.copyMinLiquidity || 1000);
+            setCopyBalance(Number(data.copyMasterBalance) || 245892.10);
+            setCopyInitialBalance(Number(data.copyInitialBalance) || 240000.00);
+            setCopyLiquidity(Number(data.copyMinLiquidity) || 1000);
             setCopyAffUrl(data.copyAffiliateUrl || '');
+            setCopyResults(data.copyResults || []);
         }
 
         if (timeSnap.exists()) {
@@ -337,17 +341,28 @@ export default function AdminDashboard() {
     finally { setIsConfigSaving(false); }
   };
 
+  const winRate = useMemo(() => {
+    if (copyResults.length === 0) return '0%';
+    const wins = copyResults.filter(r => r.result === 'WIN').length;
+    return ((wins / copyResults.length) * 100).toFixed(1) + '%';
+  }, [copyResults]);
+
+  const currentProfit = useMemo(() => {
+      return copyResults.reduce((acc, curr) => acc + curr.netChange, 0);
+  }, [copyResults]);
+
   const handleSaveCopyConfigs = async () => {
       if (!firestore) return;
       setIsSavingCopy(true);
       try {
           await setDoc(doc(firestore, 'appConfig', 'copy'), {
               copyMasterBalance: copyBalance,
-              copyMasterProfit: copyProfit,
-              copyMasterWinRate: copyWinRate.trim(),
-              copyActiveFollowers: copyFollowers.trim(),
+              copyInitialBalance: copyInitialBalance,
+              copyMasterProfit: currentProfit,
+              copyMasterWinRate: winRate,
               copyMinLiquidity: copyLiquidity,
-              copyAffiliateUrl: copyAffUrl.trim()
+              copyAffiliateUrl: copyAffUrl.trim(),
+              copyResults: copyResults
           }, { merge: true });
           toast({ title: 'Copy Trade Atualizado' });
       } catch (e) { toast({ variant: 'destructive', title: 'Erro ao salvar copy' }); }
@@ -359,17 +374,34 @@ export default function AdminDashboard() {
           ? (tradeValue * tradePayout / 100) 
           : -tradeValue;
       
-      const newProfit = copyProfit + netChange;
       const newBalance = copyBalance + netChange;
       
-      setCopyProfit(newProfit);
+      const newResult: CopyTradeResult = {
+          id: Date.now().toString(),
+          asset: tradeAsset,
+          result,
+          time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+          netChange,
+          value: tradeValue
+      };
+
+      const updatedResults = [newResult, ...copyResults];
+      
       setCopyBalance(newBalance);
+      setCopyResults(updatedResults);
 
       if (firestore) {
           try {
+              // Calcula a nova assertividade para salvar
+              const wins = updatedResults.filter(r => r.result === 'WIN').length;
+              const newWinRate = ((wins / updatedResults.length) * 100).toFixed(1) + '%';
+              const newProfit = updatedResults.reduce((acc, curr) => acc + curr.netChange, 0);
+
               await setDoc(doc(firestore, 'appConfig', 'copy'), {
                   copyMasterBalance: newBalance,
-                  copyMasterProfit: newProfit
+                  copyMasterProfit: newProfit,
+                  copyMasterWinRate: newWinRate,
+                  copyResults: updatedResults
               }, { merge: true });
               toast({ 
                   title: `Operação ${result} Lançada!`, 
@@ -377,6 +409,35 @@ export default function AdminDashboard() {
               });
           } catch (e) {
               toast({ variant: 'destructive', title: 'Erro ao registrar operação' });
+          }
+      }
+  };
+
+  const removeTradeResult = async (id: string) => {
+      const tradeToRemove = copyResults.find(r => r.id === id);
+      if (!tradeToRemove) return;
+
+      const updatedResults = copyResults.filter(r => r.id !== id);
+      const updatedBalance = copyBalance - tradeToRemove.netChange;
+      
+      setCopyResults(updatedResults);
+      setCopyBalance(updatedBalance);
+
+      if (firestore) {
+          try {
+              const wins = updatedResults.length > 0 ? updatedResults.filter(r => r.result === 'WIN').length : 0;
+              const newWinRate = updatedResults.length > 0 ? ((wins / updatedResults.length) * 100).toFixed(1) + '%' : '0%';
+              const newProfit = updatedResults.reduce((acc, curr) => acc + curr.netChange, 0);
+
+              await setDoc(doc(firestore, 'appConfig', 'copy'), {
+                  copyMasterBalance: updatedBalance,
+                  copyMasterProfit: newProfit,
+                  copyMasterWinRate: newWinRate,
+                  copyResults: updatedResults
+              }, { merge: true });
+              toast({ title: 'Operação Removida' });
+          } catch (e) {
+              toast({ variant: 'destructive', title: 'Erro ao remover' });
           }
       }
   };
@@ -966,17 +1027,17 @@ export default function AdminDashboard() {
                 <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
-                            <Label className="text-[0.6rem] font-bold uppercase opacity-60">Saldo Master</Label>
+                            <Label className="text-[0.6rem] font-bold uppercase opacity-60">Saldo Inicial</Label>
                             <div className="relative">
                                 <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[0.6rem] font-bold opacity-40">R$</span>
-                                <Input type="number" value={copyBalance} onChange={(e) => setCopyBalance(Number(e.target.value))} className="bg-white/5 border-white/10 h-10 pl-7 text-xs font-mono" />
+                                <Input type="number" value={copyInitialBalance} onChange={(e) => setCopyInitialBalance(Number(e.target.value))} className="bg-white/5 border-white/10 h-10 pl-7 text-xs font-mono" />
                             </div>
                         </div>
                         <div className="space-y-1.5">
-                            <Label className="text-[0.6rem] font-bold uppercase opacity-60">Lucro Hoje</Label>
+                            <Label className="text-[0.6rem] font-bold uppercase opacity-60">Saldo Atual</Label>
                             <div className="relative">
                                 <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[0.6rem] font-bold opacity-40">R$</span>
-                                <Input type="number" value={copyProfit} onChange={(e) => setCopyProfit(Number(e.target.value))} className="bg-white/5 border-white/10 h-10 pl-7 text-xs font-mono" />
+                                <Input type="number" value={copyBalance} onChange={(e) => setCopyBalance(Number(e.target.value))} className="bg-white/5 border-white/10 h-10 pl-7 text-xs font-mono" />
                             </div>
                         </div>
                     </div>
@@ -985,7 +1046,7 @@ export default function AdminDashboard() {
                     <div className="p-4 bg-white/5 border border-white/5 rounded-xl space-y-4">
                         <div className="flex items-center justify-between">
                             <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-primary/70 flex items-center gap-1.5"><Zap className="h-3 w-3" /> Lançar Operação</h3>
-                            <span className="text-[0.55rem] font-bold opacity-30 uppercase">Instant Update</span>
+                            <span className="text-[0.55rem] font-bold opacity-30 uppercase">Manual Update</span>
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                              <div className="space-y-1">
@@ -1027,14 +1088,39 @@ export default function AdminDashboard() {
 
                     <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
-                            <Label className="text-[0.6rem] font-bold uppercase opacity-60">Assertividade (%)</Label>
-                            <Input value={copyWinRate} onChange={(e) => setCopyWinRate(e.target.value)} className="bg-white/5 border-white/10 h-10 text-xs" />
+                            <Label className="text-[0.6rem] font-bold uppercase opacity-60">Assertividade (Auto)</Label>
+                            <Input value={winRate} readOnly className="bg-white/5 border-white/10 h-10 text-xs font-black text-primary" />
                         </div>
                         <div className="space-y-1.5">
-                            <Label className="text-[0.6rem] font-bold uppercase opacity-60">Copiadores</Label>
-                            <Input value={copyFollowers} onChange={(e) => setCopyFollowers(e.target.value)} className="bg-white/5 border-white/10 h-10 text-xs" />
+                            <Label className="text-[0.6rem] font-bold uppercase opacity-60">Lucro Hoje (Auto)</Label>
+                            <Input value={formatCurrency(currentProfit)} readOnly className="bg-white/5 border-white/10 h-10 text-xs font-black text-green-500" />
                         </div>
                     </div>
+                    
+                    {/* HISTÓRICO PARA REMOÇÃO */}
+                    <div className="space-y-1.5">
+                        <Label className="text-[0.6rem] font-bold uppercase opacity-60">Histórico Recente</Label>
+                        <div className="max-h-[150px] overflow-y-auto no-scrollbar space-y-1">
+                            {copyResults.map(res => (
+                                <div key={res.id} className="flex items-center justify-between p-2 bg-black/20 rounded-lg border border-white/5">
+                                    <div className="flex items-center gap-2">
+                                        <Badge className={cn("text-[0.5rem] py-0 px-1", res.result === 'WIN' ? "bg-green-600" : "bg-red-600")}>{res.result}</Badge>
+                                        <span className="text-[0.6rem] font-bold">{res.asset}</span>
+                                        <span className="text-[0.5rem] opacity-40">{res.time}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className={cn("text-[0.6rem] font-black", res.netChange > 0 ? "text-green-500" : "text-red-500")}>
+                                            {res.netChange > 0 ? '+' : ''}{res.netChange.toFixed(2)}
+                                        </span>
+                                        <Button size="icon" variant="ghost" className="h-5 w-5 text-red-500/50 hover:text-red-500" onClick={() => removeTradeResult(res.id)}>
+                                            <X className="h-3 w-3" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
                     <div className="space-y-1.5">
                         <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><CircleDollarSign className="h-3 w-3" /> Liquidez Requerida (R$)</Label>
                         <Input type="number" value={copyLiquidity} onChange={(e) => setCopyLiquidity(parseInt(e.target.value))} className="bg-white/5 border-white/10 h-10" />
@@ -1372,4 +1458,3 @@ export default function AdminDashboard() {
     </div>
   );
 }
-

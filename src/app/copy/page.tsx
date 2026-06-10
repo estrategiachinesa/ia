@@ -34,7 +34,6 @@ export default function CopyPage() {
   const [brokerId, setBrokerId] = useState('');
   const [step, setStep] = useState<ConnectionStep>('IDLE');
   const [progress, setProgress] = useState(0);
-  const [simulatedTrades, setSimulatedTrades] = useState<any[]>([]);
 
   // Kill switch check
   useEffect(() => {
@@ -53,34 +52,16 @@ export default function CopyPage() {
       return num >= 0 ? '+ ' : '';
   };
 
-  // Dados da Conta Master dinâmicos
+  // Dados da Conta Master dinâmicos vindos do ADM
   const masterStats = {
     balance: formatCurrency(config?.copyMasterBalance ?? 245892.10),
+    initialBalance: formatCurrency(config?.copyInitialBalance ?? 240000.00),
     profitToday: getProfitPrefix(config?.copyMasterProfit ?? 14320.45) + formatCurrency(config?.copyMasterProfit ?? 14320.45),
-    winRate: config?.copyMasterWinRate || "94.2%",
-    activeFollowers: config?.copyActiveFollowers || "1,248"
+    winRate: config?.copyMasterWinRate || "0%",
+    results: config?.copyResults || []
   };
 
   const affiliateLink = config?.copyAffiliateUrl || "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy";
-
-  // Simulação de feed de operações
-  useEffect(() => {
-    const assets = ['EUR/USD', 'EUR/JPY'];
-    const generateTrade = () => {
-      const asset = assets[Math.floor(Math.random() * assets.length)];
-      const direction = Math.random() > 0.5 ? 'CALL' : 'PUT';
-      const profit = (Math.random() * 450 + 50).toFixed(2);
-      return { id: Date.now(), asset, direction, profit, time: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) };
-    };
-
-    setSimulatedTrades([generateTrade(), generateTrade(), generateTrade()]);
-
-    const interval = setInterval(() => {
-      setSimulatedTrades(prev => [generateTrade(), ...prev.slice(0, 4)]);
-    }, 8000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   const handleStartSync = async () => {
     if (brokerId.length < 5) return;
@@ -92,7 +73,7 @@ export default function CopyPage() {
     for (let i = 0; i <= 100; i += 5) {
       setProgress(i);
       await new Promise(r => setTimeout(r, 150));
-      if (i === 40) await new Promise(r => setTimeout(r, 1000)); // Simula latência de rede
+      if (i === 40) await new Promise(r => setTimeout(r, 1000)); 
       if (i === 80) await new Promise(r => setTimeout(r, 800));
     }
 
@@ -132,16 +113,20 @@ export default function CopyPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                        <p className="text-[0.6rem] font-bold text-muted-foreground uppercase mb-1">Saldo em Banca</p>
+                <div className="space-y-4">
+                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5 flex justify-between items-center">
+                        <p className="text-[0.6rem] font-bold text-muted-foreground uppercase">Saldo Inicial</p>
+                        <p className="text-sm font-black font-mono text-white opacity-60">{masterStats.initialBalance}</p>
+                    </div>
+                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5 flex justify-between items-center">
+                        <p className="text-[0.6rem] font-bold text-muted-foreground uppercase">Saldo Atual</p>
                         <p className="text-lg font-black font-mono text-white tracking-tighter">{masterStats.balance}</p>
                     </div>
                     <div className={cn(
-                        "p-4 rounded-2xl border",
+                        "p-4 rounded-2xl border flex justify-between items-center",
                         masterStats.profitToday.includes('-') ? "bg-red-500/5 border-red-500/10" : "bg-green-500/5 border-green-500/10"
                     )}>
-                        <p className={cn("text-[0.6rem] font-bold uppercase mb-1", masterStats.profitToday.includes('-') ? "text-red-500" : "text-green-500")}>Lucro Hoje</p>
+                        <p className={cn("text-[0.6rem] font-bold uppercase", masterStats.profitToday.includes('-') ? "text-red-500" : "text-green-500")}>Lucro Hoje</p>
                         <p className={cn("text-lg font-black font-mono tracking-tighter", masterStats.profitToday.includes('-') ? "text-red-500" : "text-green-500")}>{masterStats.profitToday}</p>
                     </div>
                 </div>
@@ -151,43 +136,34 @@ export default function CopyPage() {
                         <span className="text-[0.7rem] font-black uppercase opacity-40">Assertividade Global</span>
                         <span className="text-sm font-black text-primary">{masterStats.winRate}</span>
                     </div>
-                    <Progress value={parseFloat(masterStats.winRate) || 94} className="h-2 bg-white/5" />
-                </div>
-
-                <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10 flex items-center gap-4">
-                    <div className="flex -space-x-3">
-                        {[1,2,3,4].map(i => (
-                            <div key={i} className="w-8 h-8 rounded-full border-2 border-[#0a0a0a] bg-zinc-800 flex items-center justify-center text-[0.6rem] font-bold">
-                                {String.fromCharCode(64 + i)}
-                            </div>
-                        ))}
-                    </div>
-                    <p className="text-[0.65rem] font-black uppercase text-primary tracking-tighter">
-                        {masterStats.activeFollowers} traders copiando agora
-                    </p>
+                    <Progress value={parseFloat(masterStats.winRate) || 0} className="h-2 bg-white/5" />
                 </div>
             </CardContent>
           </Card>
 
-          {/* HISTÓRICO EM TEMPO REAL */}
+          {/* HISTÓRICO REAL (MANUAL DO ADM) */}
           <Card className="bg-card/30 border-white/5 rounded-3xl overflow-hidden hidden md:block">
              <CardHeader className="pb-2">
                 <CardTitle className="text-xs font-black uppercase tracking-[0.2em] opacity-50 flex items-center gap-2">
-                    <Activity className="h-4 w-4 text-primary" /> Live Feed
+                    <Activity className="h-4 w-4 text-primary" /> Operações Recentes
                 </CardTitle>
              </CardHeader>
              <CardContent className="px-4 pb-4">
                 <div className="space-y-2">
-                    {simulatedTrades.map((trade) => (
-                        <div key={trade.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 animate-in slide-in-from-top-2 duration-500">
+                    {masterStats.results.length > 0 ? masterStats.results.map((trade: any) => (
+                        <div key={trade.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
                             <div className="flex items-center gap-3">
-                                <div className={cn("w-1.5 h-1.5 rounded-full", trade.direction === 'CALL' ? "bg-green-500" : "bg-red-500")} />
+                                <div className={cn("w-1.5 h-1.5 rounded-full", trade.result === 'WIN' ? "bg-green-500" : "bg-red-500")} />
                                 <span className="text-[0.7rem] font-black font-mono">{trade.time}</span>
                                 <span className="text-xs font-bold">{trade.asset}</span>
                             </div>
-                            <span className="text-[0.7rem] font-black text-green-500">WIN +R$ {trade.profit}</span>
+                            <span className={cn("text-[0.7rem] font-black", trade.result === 'WIN' ? "text-green-500" : "text-red-500")}>
+                                {trade.result} {trade.netChange > 0 ? '+' : ''}{formatCurrency(trade.netChange)}
+                            </span>
                         </div>
-                    ))}
+                    )) : (
+                        <p className="text-center py-8 text-[0.6rem] font-black uppercase opacity-30 tracking-widest">Aguardando operações...</p>
+                    )}
                 </div>
              </CardContent>
           </Card>
@@ -330,4 +306,3 @@ export default function CopyPage() {
     </div>
   );
 }
-

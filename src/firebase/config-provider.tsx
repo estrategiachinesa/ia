@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, ReactNode, useState, useEffect, Suspense, useCallback } from 'react';
@@ -44,6 +45,7 @@ export interface AppConfig {
     descubra?: boolean;
     register?: boolean;
     bb?: boolean;
+    copy?: boolean;
   };
   // Detalhamento por página
   [key: string]: any; 
@@ -93,7 +95,8 @@ const defaultConfig: AppConfig = {
         vip: true,
         descubra: true,
         register: true,
-        bb: true
+        bb: true,
+        copy: true
     },
     afiliados: {
       "wm": "https://go.hotmart.com/D103007301M?dp=1"

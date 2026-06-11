@@ -128,7 +128,7 @@ export default function CopyPage() {
     return { wins, losses };
   }, [config?.copyResults]);
 
-  const affiliateLink = config?.copyAffiliateUrl || "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy";
+  const affiliateLink = "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy";
 
   const handleRequestVerification = async () => {
     if (!formData.name || !formData.email || formData.brokerId.length < 5 || !firestore) return;
@@ -353,10 +353,10 @@ export default function CopyPage() {
 
                     <div className="space-y-4 text-left">
                         <div className="space-y-1.5">
-                            <Label className="text-[0.6rem] font-black uppercase opacity-40 ml-2">Nome do Titular</Label>
+                            <Label className="text-[0.6rem] font-black uppercase opacity-40 ml-2">Nome Completo</Label>
                             <div className="relative">
                                 <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/40" />
-                                <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Seu nome completo..." className="pl-12 h-12 bg-black/40 border-white/5 rounded-xl" />
+                                <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Seu nome..." className="pl-12 h-12 bg-black/40 border-white/5 rounded-xl" />
                             </div>
                         </div>
                         <div className="space-y-1.5">
@@ -459,7 +459,7 @@ export default function CopyPage() {
                                 className="w-full h-16 bg-white text-black font-black uppercase tracking-tighter text-lg rounded-2xl hover:bg-zinc-200 transition-all shadow-2xl"
                             >
                                 <a href={affiliateLink} target="_blank" rel="noopener noreferrer">
-                                    ATIVAR MARGEM DE SEGURANÇA <CircleDollarSign className="ml-2 h-6 w-6" />
+                                    ATIVAR MARGEM DE SEGURANÇA AGORA <CircleDollarSign className="ml-2 h-6 w-6" />
                                 </a>
                             </Button>
                             <p className="text-[0.6rem] font-bold text-muted-foreground uppercase opacity-40">O sistema re-sincronizará automaticamente após a detecção de liquidez.</p>

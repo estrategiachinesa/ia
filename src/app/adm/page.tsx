@@ -65,7 +65,8 @@ import {
   MessageSquare,
   CheckCircle2,
   Mail,
-  User as UserIcon
+  User as UserIcon,
+  Check
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -1323,12 +1324,14 @@ export default function AdminDashboard() {
                                         <Badge className={cn(
                                             "text-[0.5rem] font-black uppercase",
                                             req.status === 'PENDING' ? "bg-orange-500" :
+                                            req.status === 'AWAITING_DEPOSIT' ? "bg-cyan-500 text-black" :
                                             req.status === 'APPROVED' ? "bg-green-500" :
-                                            req.status === 'ERROR_LIQUIDITY' ? "bg-red-500" : "bg-zinc-700"
+                                            req.status === 'REJECTED' ? "bg-red-500" : "bg-zinc-700"
                                         )}>
-                                            {req.status === 'PENDING' ? 'Em Análise' : 
-                                             req.status === 'APPROVED' ? 'Aprovado' : 
-                                             req.status === 'ERROR_LIQUIDITY' ? 'Erro Liquidez' : req.status}
+                                            {req.status === 'PENDING' ? 'Validar ID' : 
+                                             req.status === 'AWAITING_DEPOSIT' ? 'Aguard. Depósito' :
+                                             req.status === 'APPROVED' ? 'Sincronizado' : 
+                                             req.status === 'REJECTED' ? 'Recusado' : req.status}
                                         </Badge>
                                     </div>
                                     <div className="flex items-center justify-between text-[0.6rem] bg-black/20 p-2 rounded-xl border border-white/5">
@@ -1336,17 +1339,17 @@ export default function AdminDashboard() {
                                         <span className="font-mono opacity-20">{formatDate(req.submittedAt)}</span>
                                     </div>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                        <Button size="sm" onClick={() => handleUpdateCopyRequest(req.id, 'AWAITING_DEPOSIT')} className="h-8 bg-cyan-600 text-white text-[0.5rem] font-black uppercase">
+                                            <UserCheck className="h-3 w-3 mr-1" /> Validar ID
+                                        </Button>
                                         <Button size="sm" onClick={() => handleUpdateCopyRequest(req.id, 'APPROVED')} className="h-8 bg-green-600 text-white text-[0.5rem] font-black uppercase">
-                                            Aprovar
+                                            <Check className="h-3 w-3 mr-1" /> Liberar Sync
                                         </Button>
-                                        <Button size="sm" onClick={() => handleUpdateCopyRequest(req.id, 'ERROR_LIQUIDITY')} className="h-8 bg-red-600 text-white text-[0.5rem] font-black uppercase">
-                                            Erro Liquidez
+                                        <Button size="sm" onClick={() => handleUpdateCopyRequest(req.id, 'REJECTED')} variant="outline" className="h-8 text-[0.5rem] font-black uppercase text-red-500">
+                                            <Ban className="h-3 w-3 mr-1" /> Recusar
                                         </Button>
-                                        <Button size="sm" onClick={() => handleUpdateCopyRequest(req.id, 'PENDING')} variant="outline" className="h-8 text-[0.5rem] font-black uppercase">
-                                            Pendente
-                                        </Button>
-                                        <Button size="sm" variant="ghost" onClick={() => handleDeleteCopyRequest(req.id)} className="h-8 text-red-500 text-[0.5rem] font-black uppercase">
-                                            Excluir
+                                        <Button size="sm" variant="ghost" onClick={() => handleDeleteCopyRequest(req.id)} className="h-8 text-zinc-500 text-[0.5rem] font-black uppercase">
+                                            <Trash2 className="h-3 w-3 mr-1" /> Excluir
                                         </Button>
                                     </div>
                                 </div>

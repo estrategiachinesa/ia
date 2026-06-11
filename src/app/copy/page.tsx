@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -23,7 +24,9 @@ import {
   MessageSquare,
   Mail,
   User as UserIcon,
-  ShieldAlert
+  ShieldAlert,
+  Clock,
+  Lock
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,7 +43,7 @@ import Image from 'next/image';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, setDoc, doc, serverTimestamp } from 'firebase/firestore';
 
-type ConnectionStep = 'STEP_1_REGISTER' | 'STEP_2_FORM' | 'STEP_3_PENDING' | 'STEP_4_SUCCESS' | 'STEP_5_ERROR_LIQUIDITY';
+type ConnectionStep = 'STEP_1_REGISTER' | 'STEP_2_FORM' | 'STEP_3_PENDING' | 'STEP_4_AWAITING_DEPOSIT' | 'STEP_5_SUCCESS' | 'STEP_6_REJECTED';
 
 export default function CopyPage() {
   const { config, isConfigLoading } = useAppConfig();
@@ -50,7 +53,6 @@ export default function CopyPage() {
   const [formData, setFormData] = useState({ name: '', email: '', brokerId: '' });
   const [step, setStep] = useState<ConnectionStep>('STEP_1_REGISTER');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [progress, setProgress] = useState(0);
 
   // Pedidos de verificação (cliente só vê o seu pelo ID guardado localmente)
   const [savedRequestId, setSavedRequestId] = useState<string | null>(null);
@@ -71,8 +73,10 @@ export default function CopyPage() {
   useEffect(() => {
     if (myRequest) {
         if (myRequest.status === 'PENDING') setStep('STEP_3_PENDING');
-        else if (myRequest.status === 'APPROVED') setStep('STEP_4_SUCCESS');
-        else if (myRequest.status === 'ERROR_LIQUIDITY') setStep('STEP_5_ERROR_LIQUIDITY');
+        else if (myRequest.status === 'AWAITING_DEPOSIT') setStep('STEP_4_AWAITING_DEPOSIT');
+        else if (myRequest.status === 'APPROVED') setStep('STEP_5_SUCCESS');
+        else if (myRequest.status === 'REJECTED') setStep('STEP_6_REJECTED');
+        else if (myRequest.status === 'ERROR_LIQUIDITY') setStep('STEP_4_AWAITING_DEPOSIT'); // fallback
     }
   }, [myRequest]);
 
@@ -162,7 +166,7 @@ export default function CopyPage() {
       <header className="h-16 px-6 flex items-center justify-between border-b border-white/5 bg-black/40 backdrop-blur-md sticky top-0 z-50">
         <Logo size={32} />
         <Badge className="bg-primary/10 text-primary border-primary/20 font-black uppercase tracking-widest px-3 py-1">
-          Copy System V.2026
+          Copy Protocol V.2026
         </Badge>
       </header>
 
@@ -392,22 +396,58 @@ export default function CopyPage() {
                         <div className="absolute inset-0 border-4 border-primary/20 rounded-full" />
                         <div className="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin" style={{ animationDuration: '2s' }} />
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <ShieldCheck className="h-16 w-16 text-primary animate-pulse" />
+                            <Clock className="h-16 w-16 text-primary animate-pulse" />
                         </div>
                     </div>
                     <div className="space-y-4">
                         <h3 className="text-2xl font-black uppercase text-white">Escaneando Registro</h3>
                         <p className="text-sm text-muted-foreground leading-relaxed">
-                            O cluster de cópia está validando o Handshake com o ID: <span className="text-primary font-mono">{myRequest?.brokerId || formData.brokerId}</span>. O espelhamento será ativado assim que a integridade dos dados for confirmada.
+                            O cluster de cópia está validando o Handshake com o ID: <span className="text-primary font-mono">{myRequest?.brokerId || formData.brokerId}</span>. A liberação ocorrerá assim que a integridade dos dados for confirmada pela equipe.
                         </p>
                         <div className="p-3 bg-primary/5 rounded-xl border border-primary/10">
-                            <p className="text-[0.6rem] font-black text-primary uppercase tracking-widest animate-pulse">Status: AGUARDANDO AUTORIZAÇÃO DO PROTOCOLO MASTER</p>
+                            <p className="text-[0.6rem] font-black text-primary uppercase tracking-widest animate-pulse">Status: AGUARDANDO AUTORIZAÇÃO DO PROTOCOLO</p>
                         </div>
                     </div>
                 </div>
             )}
 
-            {step === 'STEP_4_SUCCESS' && (
+            {step === 'STEP_4_AWAITING_DEPOSIT' && (
+                <div className="max-w-xl w-full space-y-8 z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="bg-primary/5 border border-primary/20 p-8 rounded-[2rem] text-center space-y-6">
+                        <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto border border-primary/30">
+                            <ShieldCheck className="h-10 w-10 text-primary" />
+                        </div>
+                        <div className="space-y-2">
+                            <h2 className="text-2xl font-headline font-black uppercase text-white">ID Validado com Sucesso!</h2>
+                            <p className="text-primary text-xs font-black uppercase tracking-widest">Ativação de Margem Requerida</p>
+                        </div>
+                        
+                        <div className="p-6 bg-black/40 rounded-2xl border border-white/5 text-left space-y-4">
+                            <p className="text-sm text-zinc-300 leading-relaxed">
+                                Para sincronizar com as ordens de alta frequência do Master Trader ({masterStats.traderName}), o algoritmo exige uma **Margem de Segurança Proporcional**. Devido ao alto valor das operações (entradas de R$ 1.000+), a corretora requer liquidez mínima em sua conta para garantir o espelhamento sem rejeição.
+                            </p>
+                            <div className="flex items-center justify-between p-4 bg-primary/5 rounded-xl border border-primary/10">
+                                <span className="text-xs font-bold uppercase text-zinc-500">Liquidez Mínima Requerida:</span>
+                                <span className="text-lg font-black text-white">R$ {(config?.copyMinLiquidity || 1000).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <Button 
+                                asChild
+                                className="w-full h-16 bg-primary text-black font-black uppercase tracking-tighter text-lg rounded-2xl hover:bg-primary/90 transition-all shadow-2xl shadow-primary/20"
+                            >
+                                <a href={affiliateLink} target="_blank" rel="noopener noreferrer">
+                                    ATIVAR MARGEM E CONECTAR AGORA <CircleDollarSign className="ml-2 h-6 w-6" />
+                                </a>
+                            </Button>
+                            <p className="text-[0.6rem] font-bold text-muted-foreground uppercase opacity-40">O sistema liberará a sincronização automaticamente após a detecção do aporte.</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {step === 'STEP_5_SUCCESS' && (
                 <div className="max-w-md w-full text-center space-y-8 z-10 animate-in fade-in zoom-in-95">
                     <div className="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mx-auto border border-green-500/30">
                         <CheckCircle2 className="h-12 w-12 text-green-500" />
@@ -415,7 +455,7 @@ export default function CopyPage() {
                     <div className="space-y-4">
                         <h2 className="text-3xl font-headline font-black uppercase text-white">Sincronização Ativa!</h2>
                         <p className="text-muted-foreground text-sm">
-                            Conexão de baixa latência estabelecida. Todas as ordens da conta Master de {masterStats.traderName} estão sendo replicadas agora.
+                            Conexão de baixa latência estabelecida. Todas as ordens da conta Master de {masterStats.traderName} estão sendo replicadas em sua conta agora.
                         </p>
                         <div className="flex items-center justify-center gap-4 bg-black/40 p-4 rounded-2xl border border-white/5">
                             <div className="flex flex-col">
@@ -432,38 +472,20 @@ export default function CopyPage() {
                 </div>
             )}
 
-            {step === 'STEP_5_ERROR_LIQUIDITY' && (
-                <div className="max-w-xl w-full space-y-8 z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                    <div className="bg-red-600/10 border border-red-500/20 p-8 rounded-[2rem] text-center space-y-6">
-                        <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto border border-red-500/30">
-                            <ShieldAlert className="h-10 w-10 text-red-500" />
-                        </div>
-                        <div className="space-y-2">
-                            <h2 className="text-2xl font-headline font-black uppercase text-white">Erro: Margem de Segurança</h2>
-                            <p className="text-red-400/80 text-xs font-black uppercase tracking-widest">Protocolo de Liquidez Proporcional</p>
-                        </div>
-                        
-                        <div className="p-6 bg-black/40 rounded-2xl border border-white/5 text-left space-y-4">
-                            <p className="text-sm text-zinc-300 leading-relaxed">
-                                Para sincronizar com a conta Master de {masterStats.traderName} ({masterStats.balance}), o algoritmo exige uma **Margem de Segurança Mínima**. Devido ao alto valor das operações, a corretora requer liquidez na sua conta para garantir a execução das ordens sem rejeição.
-                            </p>
-                            <div className="flex items-center justify-between p-4 bg-red-500/5 rounded-xl border border-red-500/10">
-                                <span className="text-xs font-bold uppercase text-zinc-500">Liquidez Requerida:</span>
-                                <span className="text-lg font-black text-white">R$ {(config?.copyMinLiquidity || 1000).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                            </div>
-                        </div>
-
-                        <div className="space-y-4">
-                            <Button 
-                                asChild
-                                className="w-full h-16 bg-white text-black font-black uppercase tracking-tighter text-lg rounded-2xl hover:bg-zinc-200 transition-all shadow-2xl"
-                            >
-                                <a href={affiliateLink} target="_blank" rel="noopener noreferrer">
-                                    ATIVAR MARGEM DE SEGURANÇA AGORA <CircleDollarSign className="ml-2 h-6 w-6" />
-                                </a>
-                            </Button>
-                            <p className="text-[0.6rem] font-bold text-muted-foreground uppercase opacity-40">O sistema re-sincronizará automaticamente após a detecção de liquidez.</p>
-                        </div>
+            {step === 'STEP_6_REJECTED' && (
+                <div className="max-w-md w-full text-center space-y-8 z-10 animate-in zoom-in-95">
+                    <div className="w-24 h-24 bg-red-500/20 rounded-full flex items-center justify-center mx-auto border border-red-500/30">
+                        <Lock className="h-12 w-12 text-red-500" />
+                    </div>
+                    <div className="space-y-4">
+                        <h2 className="text-3xl font-headline font-black uppercase text-white">ID Não Reconhecido</h2>
+                        <p className="text-muted-foreground text-sm">
+                            O ID informado não está vinculado à nossa rede de sincronização master. Certifique-se de ter criado a conta pelo link oficial abaixo.
+                        </p>
+                        <Button asChild className="w-full h-12 bg-white text-black font-black uppercase">
+                            <a href={affiliateLink} target="_blank">CRIAR CONTA OFICIAL</a>
+                        </Button>
+                        <Button variant="ghost" onClick={() => setStep('STEP_2_FORM')} className="text-xs font-bold opacity-40">TENTAR OUTRO ID</Button>
                     </div>
                 </div>
             )}
@@ -488,7 +510,7 @@ export default function CopyPage() {
       <footer className="mt-12 text-center space-y-4 px-6 opacity-30">
           <Logo size={24} showText={false} className="mx-auto" />
           <p className="text-[0.55rem] font-bold uppercase tracking-widest max-w-2xl mx-auto leading-relaxed">
-            Aviso Legal: O Copy Trading utiliza algoritmos de espelhamento que requerem margem de garantia de R$ {(config?.copyMinLiquidity || 1000).toLocaleString('pt-BR')} para operações de alta frequência.
+            Aviso Legal: O Copy Trading utiliza algoritmos de espelhamento que requerem margem de garantia proporcional para operações de alta frequência.
           </p>
       </footer>
     </div>

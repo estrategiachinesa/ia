@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -57,7 +58,11 @@ import {
   ArrowUpCircle,
   ArrowDownCircle,
   Trophy,
-  Calendar
+  Calendar,
+  Image as ImageIcon,
+  Instagram,
+  Send,
+  MessageSquare
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -222,6 +227,12 @@ export default function AdminDashboard() {
   const [copyResults, setCopyResults] = useState<CopyTradeResult[]>([]);
   const [copyLiquidity, setCopyLiquidity] = useState(1000);
   const [copyAffUrl, setCopyAffUrl] = useState('');
+  const [copyTraderName, setCopyTraderName] = useState('Trader Chines');
+  const [copyProfilePicUrl, setCopyProfilePicUrl] = useState('');
+  const [copyInstagramUrl, setCopyInstagramUrl] = useState('');
+  const [copyTikTokUrl, setCopyTikTokUrl] = useState('');
+  const [copyTelegramUrl, setCopyTelegramUrl] = useState('');
+  const [copyIsActive, setCopyIsActive] = useState(true);
 
   // Local trade states for launching results
   const [tradeAsset, setTradeAsset] = useState('EUR/USD');
@@ -230,6 +241,7 @@ export default function AdminDashboard() {
   const [tradePayout, setTradePayout] = useState(87);
   const [tradeTime, setTradeTime] = useState(new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
   const [tradeDate, setTradeDate] = useState(new Date().toISOString().split('T')[0]);
+  const [editingTradeId, setEditingTradeId] = useState<string | null>(null);
 
   // Market Schedules state
   const [eurUsdSchedule, setEurUsdSchedule] = useState<ScheduleEdit>({ 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] });
@@ -277,6 +289,12 @@ export default function AdminDashboard() {
             setCopyLiquidity(Number(data.copyMinLiquidity) || 1000);
             setCopyAffUrl(data.copyAffiliateUrl || '');
             setCopyResults(data.copyResults || []);
+            setCopyTraderName(data.copyTraderName || 'Trader Chines');
+            setCopyProfilePicUrl(data.copyProfilePicUrl || '');
+            setCopyInstagramUrl(data.copyInstagramUrl || '');
+            setCopyTikTokUrl(data.copyTikTokUrl || '');
+            setCopyTelegramUrl(data.copyTelegramUrl || '');
+            setCopyIsActive(data.copyIsActive ?? true);
         }
 
         if (timeSnap.exists()) {
@@ -372,7 +390,13 @@ export default function AdminDashboard() {
               copyMasterWinRate: winRate,
               copyMinLiquidity: copyLiquidity,
               copyAffiliateUrl: copyAffUrl.trim(),
-              copyResults: copyResults
+              copyResults: copyResults,
+              copyTraderName: copyTraderName.trim(),
+              copyProfilePicUrl: copyProfilePicUrl.trim(),
+              copyInstagramUrl: copyInstagramUrl.trim(),
+              copyTikTokUrl: copyTikTokUrl.trim(),
+              copyTelegramUrl: copyTelegramUrl.trim(),
+              copyIsActive: copyIsActive
           }, { merge: true });
           toast({ title: 'Copy Trade Atualizado' });
       } catch (e) { toast({ variant: 'destructive', title: 'Erro ao salvar copy' }); }
@@ -384,23 +408,51 @@ export default function AdminDashboard() {
           ? (tradeValue * tradePayout / 100) 
           : -tradeValue;
       
-      const newBalance = copyBalance + netChange;
-      
-      const newResult: CopyTradeResult = {
-          id: Date.now().toString(),
-          asset: tradeAsset,
-          direction: tradeDirection,
-          result,
-          time: tradeTime || new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-          date: tradeDate || new Date().toISOString().split('T')[0],
-          netChange,
-          value: tradeValue
-      };
+      let updatedResults;
+      let newBalance;
 
-      const updatedResults = [newResult, ...copyResults];
+      if (editingTradeId) {
+          const oldTrade = copyResults.find(r => r.id === editingTradeId);
+          const baseBalance = oldTrade ? copyBalance - oldTrade.netChange : copyBalance;
+          
+          const updatedTrade: CopyTradeResult = {
+              id: editingTradeId,
+              asset: tradeAsset,
+              direction: tradeDirection,
+              result,
+              time: tradeTime,
+              date: tradeDate,
+              netChange,
+              value: tradeValue
+          };
+
+          updatedResults = copyResults.map(r => r.id === editingTradeId ? updatedTrade : r);
+          newBalance = baseBalance + netChange;
+      } else {
+          const newResult: CopyTradeResult = {
+              id: Date.now().toString(),
+              asset: tradeAsset,
+              direction: tradeDirection,
+              result,
+              time: tradeTime || new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+              date: tradeDate || new Date().toISOString().split('T')[0],
+              netChange,
+              value: tradeValue
+          };
+          updatedResults = [newResult, ...copyResults];
+          newBalance = copyBalance + netChange;
+      }
+
+      // Sort by date and time
+      updatedResults.sort((a, b) => {
+          const dateTimeA = new Date(`${a.date}T${a.time}`).getTime();
+          const dateTimeB = new Date(`${b.date}T${b.time}`).getTime();
+          return dateTimeB - dateTimeA;
+      });
       
       setCopyBalance(newBalance);
       setCopyResults(updatedResults);
+      setEditingTradeId(null);
 
       if (firestore) {
           try {
@@ -415,13 +467,23 @@ export default function AdminDashboard() {
                   copyResults: updatedResults
               }, { merge: true });
               toast({ 
-                  title: `Operação ${result} Lançada!`, 
+                  title: editingTradeId ? 'Operação Atualizada!' : `Operação ${result} Lançada!`, 
                   description: `${tradeAsset} ${tradeDirection}: ${netChange > 0 ? '+' : ''}${formatCurrency(netChange)}` 
               });
           } catch (e) {
               toast({ variant: 'destructive', title: 'Erro ao registrar operação' });
           }
       }
+  };
+
+  const startEditingTrade = (trade: CopyTradeResult) => {
+      setEditingTradeId(trade.id);
+      setTradeAsset(trade.asset);
+      setTradeDirection(trade.direction);
+      setTradeValue(trade.value);
+      setTradeTime(trade.time);
+      setTradeDate(trade.date);
+      toast({ title: 'Editando Operação', description: `Ajuste os dados e salve clicando em WIN ou LOSS.` });
   };
 
   const removeTradeResult = async (id: string) => {
@@ -1014,165 +1076,199 @@ export default function AdminDashboard() {
             </Card>
 
             {/* CONFIGURAÇÃO COPY TRADE */}
-            <Card className="bg-card/40 border-white/5 p-6 rounded-2xl lg:col-span-1">
+            <Card className="bg-card/40 border-white/5 p-6 rounded-2xl lg:col-span-2">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-2">
                         <TrendingUp className="h-5 w-5 text-primary" />
                         <h2 className="text-sm font-black uppercase tracking-widest">Copy Trade Control</h2>
                     </div>
-                    <Button size="sm" onClick={handleSaveCopyConfigs} disabled={isSavingCopy} className="h-8 px-3 rounded-lg font-bold bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-black">
-                        {isSavingCopy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
-                    </Button>
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full border border-white/5">
+                            <span className="text-[0.6rem] font-black uppercase opacity-60">Status Copy</span>
+                            <Switch checked={copyIsActive} onCheckedChange={setCopyIsActive} className="scale-75" />
+                        </div>
+                        <Button size="sm" onClick={handleSaveCopyConfigs} disabled={isSavingCopy} className="h-9 px-4 rounded-xl font-bold bg-primary text-black hover:bg-primary/90">
+                            {isSavingCopy ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Save className="h-4 w-4 mr-1.5" /> Salvar Perfil</>}
+                        </Button>
+                    </div>
                 </div>
-                <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                            <Label className="text-[0.6rem] font-bold uppercase opacity-60">Saldo Inicial</Label>
-                            <div className="relative">
-                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[0.6rem] font-bold opacity-40">R$</span>
-                                <Input type="number" value={copyInitialBalance} onChange={(e) => setCopyInitialBalance(Number(e.target.value))} className="bg-white/5 border-white/10 h-10 pl-7 text-xs font-mono" />
+
+                <Tabs defaultValue="perfil" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 bg-black/40 border border-white/5 rounded-xl h-10 mb-4">
+                        <TabsTrigger value="perfil" className="text-[0.6rem] font-black uppercase tracking-widest">Configuração Perfil</TabsTrigger>
+                        <TabsTrigger value="operacoes" className="text-[0.6rem] font-black uppercase tracking-widest">Terminal Operações</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="perfil" className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <Label className="text-[0.6rem] font-bold uppercase opacity-60">Nome do Trader</Label>
+                                <Input value={copyTraderName} onChange={(e) => setCopyTraderName(e.target.value)} className="bg-white/5 border-white/10 h-10 text-xs" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><ImageIcon className="h-3 w-3"/> Link Foto de Perfil (JPG/PNG)</Label>
+                                <Input value={copyProfilePicUrl} onChange={(e) => setCopyProfilePicUrl(e.target.value)} placeholder="https://link-da-foto.com/foto.jpg" className="bg-white/5 border-white/10 h-10 text-xs" />
                             </div>
                         </div>
-                        <div className="space-y-1.5">
-                            <Label className="text-[0.6rem] font-bold uppercase opacity-60">Saldo Atual</Label>
-                            <div className="relative">
-                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[0.6rem] font-bold opacity-40">R$</span>
-                                <Input type="number" value={copyBalance} onChange={(e) => setCopyBalance(Number(e.target.value))} className="bg-white/5 border-white/10 h-10 pl-7 text-xs font-mono" />
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="space-y-1.5">
+                                <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><Instagram className="h-3 w-3"/> Instagram URL</Label>
+                                <Input value={copyInstagramUrl} onChange={(e) => setCopyInstagramUrl(e.target.value)} className="bg-white/5 border-white/10 h-10 text-xs" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><MessageSquare className="h-3 w-3"/> TikTok URL</Label>
+                                <Input value={copyTikTokUrl} onChange={(e) => setCopyTikTokUrl(e.target.value)} className="bg-white/5 border-white/10 h-10 text-xs" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><Send className="h-3 w-3"/> Telegram URL</Label>
+                                <Input value={copyTelegramUrl} onChange={(e) => setCopyTelegramUrl(e.target.value)} className="bg-white/5 border-white/10 h-10 text-xs" />
                             </div>
                         </div>
-                    </div>
 
-                    {/* PLACAR LIVE */}
-                    <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
-                        <div className="flex flex-col">
-                            <span className="text-[0.6rem] font-black uppercase opacity-40">Placar Atual</span>
-                            <div className="flex items-center gap-3">
-                                <span className="text-sm font-black text-green-500">{scoreboard.wins}W</span>
-                                <span className="text-xs font-black opacity-20">-</span>
-                                <span className="text-sm font-black text-red-500">{scoreboard.losses}L</span>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><CircleDollarSign className="h-3 w-3" /> Liquidez Requerida (R$)</Label>
+                                <Input type="number" value={copyLiquidity} onChange={(e) => setCopyLiquidity(parseInt(e.target.value))} className="bg-white/5 border-white/10 h-10 text-xs" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><LinkIcon className="h-3 w-3" /> Link Afiliado Exclusivo</Label>
+                                <Input value={copyAffUrl} onChange={(e) => setCopyAffUrl(e.target.value)} placeholder="Link Exnova..." className="bg-white/5 border-white/10 h-10 text-xs font-mono" />
                             </div>
                         </div>
-                        <div className="text-right">
-                            <span className="text-[0.6rem] font-black uppercase opacity-40">Assertividade</span>
-                            <p className="text-sm font-black text-primary">{winRate}</p>
-                        </div>
-                    </div>
 
-                    {/* TERMINAL DE LANÇAMENTO (SOLICITAÇÃO) */}
-                    <div className="p-4 bg-white/5 border border-white/5 rounded-xl space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-primary/70 flex items-center gap-1.5"><Zap className="h-3 w-3" /> Lançar Operação</h3>
-                            <span className="text-[0.55rem] font-bold opacity-30 uppercase">Manual Update</span>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1.5">
+                                <Label className="text-[0.6rem] font-bold uppercase opacity-60">Saldo Inicial</Label>
+                                <Input type="number" value={copyInitialBalance} onChange={(e) => setCopyInitialBalance(Number(e.target.value))} className="bg-white/5 border-white/10 h-10 text-xs font-mono" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[0.6rem] font-bold uppercase opacity-60">Saldo Atual (Manual)</Label>
+                                <Input type="number" value={copyBalance} onChange={(e) => setCopyBalance(Number(e.target.value))} className="bg-white/5 border-white/10 h-10 text-xs font-mono" />
+                            </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
-                             <div className="space-y-1">
-                                <Label className="text-[0.55rem] font-bold uppercase opacity-40">Par</Label>
-                                <Select value={tradeAsset} onValueChange={setTradeAsset}>
-                                    <SelectTrigger className="h-8 bg-black/40 text-[0.6rem] border-white/5">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-black border-white/10">
-                                        <SelectItem value="EUR/USD" className="text-xs">EUR/USD</SelectItem>
-                                        <SelectItem value="EUR/JPY" className="text-xs">EUR/JPY</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                             </div>
-                             <div className="space-y-1">
-                                <Label className="text-[0.55rem] font-bold uppercase opacity-40">Direção</Label>
-                                <Select value={tradeDirection} onValueChange={(v: any) => setTradeDirection(v)}>
-                                    <SelectTrigger className="h-8 bg-black/40 text-[0.6rem] border-white/5">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-black border-white/10">
-                                        <SelectItem value="CALL" className="text-xs">CALL (Alta)</SelectItem>
-                                        <SelectItem value="PUT" className="text-xs">PUT (Baixa)</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                             </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                             <div className="space-y-1">
-                                <Label className="text-[0.55rem] font-bold uppercase opacity-40">Entrada (R$)</Label>
-                                <Input type="number" value={tradeValue} onChange={(e) => setTradeValue(Number(e.target.value))} className="h-8 bg-black/40 text-[0.65rem] border-white/5 font-mono" />
-                             </div>
-                             <div className="space-y-1">
-                                <Label className="text-[0.55rem] font-bold uppercase opacity-40">Payout %</Label>
-                                <Input type="number" value={tradePayout} onChange={(e) => setTradePayout(Number(e.target.value))} className="h-8 bg-black/40 text-[0.65rem] border-white/5 font-mono" />
-                             </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                             <div className="space-y-1">
-                                <Label className="text-[0.55rem] font-bold uppercase opacity-40">Data</Label>
-                                <Input type="date" value={tradeDate} onChange={(e) => setTradeDate(e.target.value)} className="h-8 bg-black/40 text-[0.6rem] border-white/5 font-mono" />
-                             </div>
-                             <div className="space-y-1">
-                                <Label className="text-[0.55rem] font-bold uppercase opacity-40">Horário</Label>
-                                <Input type="time" value={tradeTime} onChange={(e) => setTradeTime(e.target.value)} className="h-8 bg-black/40 text-[0.65rem] border-white/5 font-mono" />
-                             </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                            <Button 
-                                onClick={() => handlePostTrade('WIN')} 
-                                className="bg-green-600 hover:bg-green-700 text-white font-black text-[0.65rem] uppercase tracking-widest h-9 rounded-lg"
-                            >
-                                WIN
-                            </Button>
-                            <Button 
-                                onClick={() => handlePostTrade('LOSS')} 
-                                className="bg-red-600 hover:bg-red-700 text-white font-black text-[0.65rem] uppercase tracking-widest h-9 rounded-lg"
-                            >
-                                LOSS
-                            </Button>
-                        </div>
-                    </div>
+                    </TabsContent>
 
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-1.5">
-                            <Label className="text-[0.6rem] font-bold uppercase opacity-60">Assertividade (Auto)</Label>
-                            <Input value={winRate} readOnly className="bg-white/5 border-white/10 h-10 text-xs font-black text-primary" />
-                        </div>
-                        <div className="space-y-1.5">
-                            <Label className="text-[0.6rem] font-bold uppercase opacity-60">Lucro Hoje (Auto)</Label>
-                            <Input value={formatCurrency(currentProfit)} readOnly className="bg-white/5 border-white/10 h-10 text-xs font-black text-green-500" />
-                        </div>
-                    </div>
-                    
-                    {/* HISTÓRICO PARA REMOÇÃO */}
-                    <div className="space-y-1.5">
-                        <Label className="text-[0.6rem] font-bold uppercase opacity-60">Histórico de Lançamentos</Label>
-                        <div className="max-h-[250px] overflow-y-auto no-scrollbar space-y-1">
-                            {copyResults.map(res => (
-                                <div key={res.id} className="flex items-center justify-between p-2 bg-black/20 rounded-lg border border-white/5">
-                                    <div className="flex items-center gap-2">
-                                        <Badge className={cn("text-[0.5rem] py-0 px-1", res.result === 'WIN' ? "bg-green-600" : "bg-red-600")}>{res.result}</Badge>
-                                        <div className="flex flex-col">
-                                            <span className="text-[0.6rem] font-bold leading-none">{res.asset}</span>
-                                            <span className="text-[0.5rem] opacity-30 font-mono">{res.date} {res.time}</span>
-                                        </div>
-                                        <span className={cn("text-[0.5rem] font-black", res.direction === 'CALL' ? "text-green-500" : "text-red-500")}>{res.direction}</span>
+                    <TabsContent value="operacoes" className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-4">
+                                <div className="p-4 bg-white/5 border border-white/5 rounded-xl space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-primary/70 flex items-center gap-1.5"><Zap className="h-3 w-3" /> {editingTradeId ? 'Editar Operação' : 'Lançar Operação'}</h3>
+                                        {editingTradeId && <Button variant="ghost" size="sm" onClick={() => setEditingTradeId(null)} className="h-6 text-[0.5rem] font-black uppercase text-red-500">Cancelar</Button>}
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className={cn("text-[0.6rem] font-black", res.netChange > 0 ? "text-green-500" : "text-red-500")}>
-                                            {res.netChange > 0 ? '+' : ''}{res.netChange.toFixed(2)}
-                                        </span>
-                                        <Button size="icon" variant="ghost" className="h-5 w-5 text-red-500/50 hover:text-red-500" onClick={() => removeTradeResult(res.id)}>
-                                            <X className="h-3 w-3" />
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="space-y-1">
+                                            <Label className="text-[0.55rem] font-bold uppercase opacity-40">Par</Label>
+                                            <Select value={tradeAsset} onValueChange={setTradeAsset}>
+                                                <SelectTrigger className="h-8 bg-black/40 text-[0.6rem] border-white/5">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-black border-white/10">
+                                                    <SelectItem value="EUR/USD" className="text-xs">EUR/USD</SelectItem>
+                                                    <SelectItem value="EUR/JPY" className="text-xs">EUR/JPY</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-[0.55rem] font-bold uppercase opacity-40">Direção</Label>
+                                            <Select value={tradeDirection} onValueChange={(v: any) => setTradeDirection(v)}>
+                                                <SelectTrigger className="h-8 bg-black/40 text-[0.6rem] border-white/5">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-black border-white/10">
+                                                    <SelectItem value="CALL" className="text-xs">CALL (Alta)</SelectItem>
+                                                    <SelectItem value="PUT" className="text-xs">PUT (Baixa)</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="space-y-1">
+                                            <Label className="text-[0.55rem] font-bold uppercase opacity-40">Entrada (R$)</Label>
+                                            <Input type="number" value={tradeValue} onChange={(e) => setTradeValue(Number(e.target.value))} className="h-8 bg-black/40 text-[0.65rem] border-white/5 font-mono" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-[0.55rem] font-bold uppercase opacity-40">Payout %</Label>
+                                            <Input type="number" value={tradePayout} onChange={(e) => setTradePayout(Number(e.target.value))} className="h-8 bg-black/40 text-[0.65rem] border-white/5 font-mono" />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="space-y-1">
+                                            <Label className="text-[0.55rem] font-bold uppercase opacity-40">Data</Label>
+                                            <Input type="date" value={tradeDate} onChange={(e) => setTradeDate(e.target.value)} className="h-8 bg-black/40 text-[0.6rem] border-white/5 font-mono" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-[0.55rem] font-bold uppercase opacity-40">Horário</Label>
+                                            <Input type="time" value={tradeTime} onChange={(e) => setTradeTime(e.target.value)} className="h-8 bg-black/40 text-[0.65rem] border-white/5 font-mono" />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <Button 
+                                            onClick={() => handlePostTrade('WIN')} 
+                                            className="bg-green-600 hover:bg-green-700 text-white font-black text-[0.65rem] uppercase tracking-widest h-9 rounded-lg"
+                                        >
+                                            {editingTradeId ? 'SALVAR WIN' : 'LANÇAR WIN'}
+                                        </Button>
+                                        <Button 
+                                            onClick={() => handlePostTrade('LOSS')} 
+                                            className="bg-red-600 hover:bg-red-700 text-white font-black text-[0.65rem] uppercase tracking-widest h-9 rounded-lg"
+                                        >
+                                            {editingTradeId ? 'SALVAR LOSS' : 'LANÇAR LOSS'}
                                         </Button>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
+                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                                    <div className="flex flex-col">
+                                        <span className="text-[0.6rem] font-black uppercase opacity-40">Placar Acumulado</span>
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-sm font-black text-green-500">{scoreboard.wins}W</span>
+                                            <span className="text-xs font-black opacity-20">-</span>
+                                            <span className="text-sm font-black text-red-500">{scoreboard.losses}L</span>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="text-[0.6rem] font-black uppercase opacity-40">Assertividade</span>
+                                        <p className="text-sm font-black text-primary">{winRate}</p>
+                                    </div>
+                                </div>
+                            </div>
 
-                    <div className="space-y-1.5">
-                        <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><CircleDollarSign className="h-3 w-3" /> Liquidez Requerida (R$)</Label>
-                        <Input type="number" value={copyLiquidity} onChange={(e) => setCopyLiquidity(parseInt(e.target.value))} className="bg-white/5 border-white/10 h-10" />
-                    </div>
-                    <div className="space-y-1.5">
-                        <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><LinkIcon className="h-3 w-3" /> Link de Afiliado Exclusivo</Label>
-                        <Input value={copyAffUrl} onChange={(e) => setCopyAffUrl(e.target.value)} placeholder="Link Exnova Copy..." className="bg-white/5 border-white/10 h-10 text-[0.6rem] font-mono" />
-                    </div>
-                </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[0.6rem] font-bold uppercase opacity-60">Histórico de Lançamentos (Clique para Editar)</Label>
+                                <div className="max-h-[350px] overflow-y-auto no-scrollbar space-y-1 pr-1">
+                                    {copyResults.map(res => (
+                                        <div 
+                                            key={res.id} 
+                                            onClick={() => startEditingTrade(res)}
+                                            className={cn(
+                                                "flex items-center justify-between p-2 bg-black/20 rounded-lg border border-white/5 cursor-pointer hover:bg-white/5 transition-colors group",
+                                                editingTradeId === res.id && "border-primary bg-primary/5"
+                                            )}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <Badge className={cn("text-[0.5rem] py-0 px-1", res.result === 'WIN' ? "bg-green-600" : "bg-red-600")}>{res.result}</Badge>
+                                                <div className="flex flex-col">
+                                                    <span className="text-[0.6rem] font-bold leading-none">{res.asset}</span>
+                                                    <span className="text-[0.5rem] opacity-30 font-mono">{res.date} {res.time}</span>
+                                                </div>
+                                                <span className={cn("text-[0.5rem] font-black", res.direction === 'CALL' ? "text-green-500" : "text-red-500")}>{res.direction}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className={cn("text-[0.6rem] font-black", res.netChange > 0 ? "text-green-500" : "text-red-500")}>
+                                                    {res.netChange > 0 ? '+' : ''}{res.netChange.toFixed(2)}
+                                                </span>
+                                                <Button size="icon" variant="ghost" className="h-5 w-5 text-red-500/50 hover:text-red-500" onClick={(e) => { e.stopPropagation(); removeTradeResult(res.id); }}>
+                                                    <X className="h-3 w-3" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </TabsContent>
+                </Tabs>
             </Card>
 
             {/* GLOBAL CONFIGS */}

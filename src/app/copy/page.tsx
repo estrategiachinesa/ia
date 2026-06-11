@@ -18,7 +18,10 @@ import {
   Cpu,
   ArrowUpCircle,
   ArrowDownCircle,
-  Trophy
+  Trophy,
+  Instagram,
+  Send,
+  MessageSquare
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,6 +33,7 @@ import { Logo } from '@/components/logo';
 import { useAppConfig } from '@/firebase/config-provider';
 import { useRouter } from 'next/navigation';
 import { CurrencyFlags } from '@/components/app/currency-flags';
+import Image from 'next/image';
 
 type ConnectionStep = 'IDLE' | 'VALIDATING' | 'SUCCESS' | 'ERROR_LIQUIDITY';
 
@@ -52,11 +56,6 @@ export default function CopyPage() {
       return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   };
 
-  const getProfitPrefix = (val: any) => {
-      const num = typeof val === 'number' ? val : (parseFloat(String(val).replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0);
-      return num >= 0 ? '+ ' : '';
-  };
-
   const formatShortDate = (dateStr: string) => {
       if (!dateStr) return '';
       try {
@@ -68,13 +67,27 @@ export default function CopyPage() {
       }
   };
 
-  // Dados da Conta Master dinâmicos vindos do ADM
+  // Cálculo de Lucro Hoje baseado na data atual
+  const profitTodayRaw = useMemo(() => {
+    const todayIso = new Date().toISOString().split('T')[0];
+    const results = config?.copyResults || [];
+    return results
+      .filter((r: any) => r.date === todayIso)
+      .reduce((acc: number, curr: any) => acc + curr.netChange, 0);
+  }, [config?.copyResults]);
+
   const masterStats = {
+    traderName: config?.copyTraderName || "Trader Chines",
+    profilePic: config?.copyProfilePicUrl || "https://picsum.photos/seed/trader/200/200",
+    instagram: config?.copyInstagramUrl || "#",
+    tiktok: config?.copyTikTokUrl || "#",
+    telegram: config?.copyTelegramUrl || "#",
     balance: formatCurrency(config?.copyMasterBalance ?? 245892.10),
     initialBalance: formatCurrency(config?.copyInitialBalance ?? 240000.00),
-    profitToday: getProfitPrefix(config?.copyMasterProfit ?? 14320.45) + formatCurrency(config?.copyMasterProfit ?? 14320.45),
+    profitToday: (profitTodayRaw >= 0 ? '+ ' : '') + formatCurrency(profitTodayRaw),
     winRate: config?.copyMasterWinRate || "0%",
-    results: config?.copyResults || []
+    results: config?.copyResults || [],
+    isActive: config?.copyIsActive ?? true
   };
 
   const scoreboard = useMemo(() => {
@@ -92,7 +105,6 @@ export default function CopyPage() {
     setStep('VALIDATING');
     setProgress(0);
 
-    // Animação de progresso técnica
     for (let i = 0; i <= 100; i += 5) {
       setProgress(i);
       await new Promise(r => setTimeout(r, 150));
@@ -124,19 +136,34 @@ export default function CopyPage() {
         <div className="lg:col-span-4 space-y-6">
           <Card className="bg-card/40 border-white/5 shadow-2xl backdrop-blur-xl rounded-3xl overflow-hidden shine-effect">
             <div className="h-1.5 bg-primary w-full" />
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-3 bg-primary/10 rounded-2xl">
-                    <UserCheck className="h-6 w-6 text-primary" />
+            <CardContent className="pt-8 space-y-6">
+                <div className="flex flex-col items-center text-center space-y-4">
+                    <div className="relative group">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-primary to-purple-600 rounded-full blur opacity-40 group-hover:opacity-100 transition-opacity" />
+                        <div className="relative h-24 w-24 rounded-full border-2 border-white/10 overflow-hidden bg-black">
+                            <Image src={masterStats.profilePic} alt={masterStats.traderName} fill className="object-cover" unoptimized />
+                        </div>
+                    </div>
+                    <div>
+                        <h3 className="text-[0.65rem] font-black uppercase tracking-[0.3em] opacity-40">Master Trader</h3>
+                        <p className="text-2xl font-headline font-black text-white uppercase tracking-tighter">{masterStats.traderName}</p>
+                    </div>
+                    
+                    {/* SOCIAL REDES */}
+                    <div className="flex items-center gap-3">
+                        <a href={masterStats.instagram} target="_blank" className="p-2.5 bg-white/5 rounded-xl border border-white/5 hover:bg-primary hover:text-black transition-all">
+                            <Instagram className="h-4 w-4" />
+                        </a>
+                        <a href={masterStats.tiktok} target="_blank" className="p-2.5 bg-white/5 rounded-xl border border-white/5 hover:bg-primary hover:text-black transition-all">
+                            <MessageSquare className="h-4 w-4" />
+                        </a>
+                        <a href={masterStats.telegram} target="_blank" className="p-2.5 bg-white/5 rounded-xl border border-white/5 hover:bg-primary hover:text-black transition-all">
+                            <Send className="h-4 w-4" />
+                        </a>
+                    </div>
                 </div>
-                <div>
-                    <h3 className="text-sm font-black uppercase tracking-widest opacity-60">Trader Master</h3>
-                    <p className="text-xl font-headline font-black text-white">CHINÊS OFICIAL</p>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-                <div className="space-y-4">
+
+                <div className="space-y-4 pt-4">
                     <div className="p-4 bg-white/5 rounded-2xl border border-white/5 flex justify-between items-center">
                         <p className="text-[0.6rem] font-bold text-muted-foreground uppercase">Saldo Inicial</p>
                         <p className="text-sm font-black font-mono text-white opacity-60">{masterStats.initialBalance}</p>
@@ -147,18 +174,23 @@ export default function CopyPage() {
                     </div>
                     <div className={cn(
                         "p-4 rounded-2xl border flex justify-between items-center",
-                        masterStats.profitToday.includes('-') ? "bg-red-500/5 border-red-500/10" : "bg-green-500/5 border-green-500/10"
+                        profitTodayRaw < 0 ? "bg-red-500/5 border-red-500/10" : "bg-green-500/5 border-green-500/10"
                     )}>
-                        <p className={cn("text-[0.6rem] font-bold uppercase", masterStats.profitToday.includes('-') ? "text-red-500" : "text-green-500")}>Lucro Hoje</p>
-                        <p className={cn("text-lg font-black font-mono tracking-tighter", masterStats.profitToday.includes('-') ? "text-red-500" : "text-green-500")}>{masterStats.profitToday}</p>
+                        <p className={cn("text-[0.6rem] font-bold uppercase", profitTodayRaw < 0 ? "text-red-500" : "text-green-500")}>Lucro Hoje</p>
+                        <p className={cn("text-lg font-black font-mono tracking-tighter", profitTodayRaw < 0 ? "text-red-500" : "text-green-500")}>{masterStats.profitToday}</p>
                     </div>
                 </div>
 
                 {/* PLACAR LIVE */}
                 <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-3">
                     <div className="flex items-center justify-between">
-                        <span className="text-[0.6rem] font-black uppercase opacity-40 flex items-center gap-1.5"><Trophy className="h-3 w-3" /> Placar da Sessão</span>
-                        <Badge variant="outline" className="text-[0.5rem] border-primary/30 text-primary">LIVE</Badge>
+                        <span className="text-[0.6rem] font-black uppercase opacity-40 flex items-center gap-1.5"><Trophy className="h-3 w-3" /> Histórico Placar</span>
+                        <Badge variant="outline" className={cn(
+                            "text-[0.5rem] border-none font-black animate-pulse",
+                            masterStats.isActive ? "bg-green-500/20 text-green-500" : "bg-red-500/20 text-red-500"
+                        )}>
+                            {masterStats.isActive ? "ATIVO" : "OFFLINE"}
+                        </Badge>
                     </div>
                     <div className="flex justify-center items-center gap-6">
                          <div className="flex flex-col items-center">
@@ -183,11 +215,11 @@ export default function CopyPage() {
             </CardContent>
           </Card>
 
-          {/* HISTÓRICO REAL (MANUAL DO ADM) */}
+          {/* HISTÓRICO REAL */}
           <Card className="bg-card/30 border-white/5 rounded-3xl overflow-hidden hidden md:block">
              <CardHeader className="pb-2">
                 <CardTitle className="text-xs font-black uppercase tracking-[0.2em] opacity-50 flex items-center gap-2">
-                    <Activity className="h-4 w-4 text-primary" /> Operações Recentes
+                    <Activity className="h-4 w-4 text-primary" /> Histórico de Trading
                 </CardTitle>
              </CardHeader>
              <CardContent className="px-4 pb-4">
@@ -195,20 +227,15 @@ export default function CopyPage() {
                     {masterStats.results.length > 0 ? masterStats.results.map((trade: any) => (
                         <div key={trade.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 group hover:border-white/10 transition-all">
                             <div className="flex items-center gap-4">
-                                {/* Time and Date Stack */}
                                 <div className="flex flex-col">
                                     <span className="text-sm font-black font-mono leading-tight text-white">{trade.time}</span>
                                     <span className="text-[0.6rem] font-bold opacity-30 uppercase">{formatShortDate(trade.date)}</span>
                                 </div>
-                                
-                                {/* Flags and Asset Name */}
                                 <div className="flex items-center gap-2">
                                     <CurrencyFlags asset={trade.asset} />
                                     <span className="text-sm font-black text-zinc-100 uppercase tracking-tight">{trade.asset}</span>
                                 </div>
                             </div>
-
-                            {/* Direction and Result */}
                             <div className="flex items-center gap-4">
                                 <div className="flex flex-col items-end">
                                     <span className={cn(
@@ -248,7 +275,6 @@ export default function CopyPage() {
         <div className="lg:col-span-8 space-y-6">
           <Card className="bg-card/40 border-white/5 shadow-2xl backdrop-blur-xl rounded-3xl p-8 min-h-[500px] flex flex-col items-center justify-center relative overflow-hidden">
             
-            {/* Background decoration */}
             <div className="absolute top-0 right-0 p-8 opacity-5">
                 <Cpu className="w-64 h-64 text-primary" />
             </div>
@@ -261,7 +287,7 @@ export default function CopyPage() {
                         </div>
                         <h2 className="text-3xl font-headline font-black uppercase tracking-tighter text-white">Sincronização Master</h2>
                         <p className="text-muted-foreground text-sm leading-relaxed">
-                            Conecte sua conta da corretora para começar a copiar automaticamente todas as entradas do Master Chinês em tempo real.
+                            Conecte sua conta da corretora para começar a copiar automaticamente todas as entradas do Master {masterStats.traderName} em tempo real.
                         </p>
                     </div>
 
@@ -277,10 +303,10 @@ export default function CopyPage() {
                         </div>
                         <Button 
                             onClick={handleStartSync}
-                            disabled={brokerId.length < 5}
+                            disabled={brokerId.length < 5 || !masterStats.isActive}
                             className="w-full h-16 bg-primary text-black font-black uppercase tracking-tighter text-lg shadow-xl shadow-primary/20 rounded-2xl hover:scale-[1.02] transition-all"
                         >
-                            VERIFICAR E CONECTAR <ArrowRight className="ml-2 h-5 w-5" />
+                            {!masterStats.isActive ? 'SISTEMA OFFLINE' : <><ArrowRight className="mr-2 h-5 w-5" /> VERIFICAR E CONECTAR</>}
                         </Button>
                         <p className="text-[0.6rem] text-muted-foreground uppercase font-bold tracking-widest">
                             * Não possui conta? <a href={affiliateLink} target="_blank" className="text-primary underline">Clique aqui para criar</a>
@@ -325,10 +351,10 @@ export default function CopyPage() {
                         
                         <div className="p-6 bg-black/40 rounded-2xl border border-white/5 text-left space-y-4">
                             <p className="text-sm text-zinc-300 leading-relaxed">
-                                Para sincronizar com a conta Master (Saldo: {masterStats.balance}), o algoritmo exige uma **Margem de Segurança mínima em sua conta**.
+                                Para sincronizar com a conta Master de {masterStats.traderName} (Saldo: {masterStats.balance}), o algoritmo exige uma **Margem de Segurança mínima**.
                             </p>
                             <div className="flex items-center justify-between p-4 bg-red-500/5 rounded-xl border border-red-500/10">
-                                <span className="text-xs font-bold uppercase text-zinc-500">Liquidez Necessária:</span>
+                                <span className="text-xs font-bold uppercase text-zinc-500">Margem Requerida:</span>
                                 <span className="text-lg font-black text-white">R$ {(config?.copyMinLiquidity || 1000).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                             </div>
                         </div>
@@ -355,7 +381,6 @@ export default function CopyPage() {
             )}
           </Card>
 
-          {/* BENEFÍCIOS DO COPY */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
              {[
                { icon: ShieldCheck, title: "100% Automático", desc: "As ordens abrem sozinhas em sua conta." },
@@ -375,7 +400,7 @@ export default function CopyPage() {
       <footer className="mt-12 text-center space-y-4 px-6 opacity-30">
           <Logo size={24} showText={false} className="mx-auto" />
           <p className="text-[0.55rem] font-bold uppercase tracking-widest max-w-2xl mx-auto leading-relaxed">
-            Aviso de Risco: O copy trading não garante lucros. A margem de R$ {(config?.copyMinLiquidity || 1000).toLocaleString('pt-BR')} é um requisito técnico para garantir a execução das ordens sem slippage excessivo.
+            Aviso de Risco: O copy trading não garante lucros. A margem de R$ {(config?.copyMinLiquidity || 1000).toLocaleString('pt-BR')} é um requisito técnico para garantir a execução das ordens.
           </p>
       </footer>
     </div>

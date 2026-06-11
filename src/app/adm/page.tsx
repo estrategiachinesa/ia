@@ -62,7 +62,10 @@ import {
   Image as ImageIcon,
   Instagram,
   Send,
-  MessageSquare
+  MessageSquare,
+  CheckCircle2,
+  Mail,
+  User as UserIcon
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -254,6 +257,33 @@ export default function AdminDashboard() {
   const sessionScoreRef = useMemoFirebase(() => firestore ? doc(firestore, 'session', 'monthly_score') : null, [firestore]);
   const { data: sessionStatus } = useDoc(sessionStatusRef);
   const { data: sessionScore } = useDoc(sessionScoreRef);
+
+  // Pedidos Copy Trade
+  const copyRequestsQuery = useMemoFirebase(() => {
+      if (!firestore || !isAdmin) return null;
+      return collection(firestore, 'copyRequests');
+  }, [firestore, isAdmin]);
+  const { data: copyRequests, isLoading: isCopyRequestsLoading } = useCollection(copyRequestsQuery);
+
+  const handleUpdateCopyRequest = async (requestId: string, status: string) => {
+    if (!firestore) return;
+    try {
+        await setDoc(doc(firestore, 'copyRequests', requestId), { status, updatedAt: serverTimestamp() }, { merge: true });
+        toast({ title: 'Status do Pedido Atualizado' });
+    } catch (e) {
+        toast({ variant: 'destructive', title: 'Erro ao atualizar' });
+    }
+  };
+
+  const handleDeleteCopyRequest = async (requestId: string) => {
+    if (!firestore) return;
+    try {
+        await deleteDoc(doc(firestore, 'copyRequests', requestId));
+        toast({ title: 'Pedido Removido' });
+    } catch (e) {
+        toast({ variant: 'destructive', title: 'Erro ao remover' });
+    }
+  };
 
   useEffect(() => {
     if (sessionStatus && (sessionStatus as any).zoomLink !== undefined) {
@@ -1094,9 +1124,18 @@ export default function AdminDashboard() {
                 </div>
 
                 <Tabs defaultValue="perfil" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 bg-black/40 border border-white/5 rounded-xl h-10 mb-4">
-                        <TabsTrigger value="perfil" className="text-[0.6rem] font-black uppercase tracking-widest">Configuração Perfil</TabsTrigger>
-                        <TabsTrigger value="operacoes" className="text-[0.6rem] font-black uppercase tracking-widest">Terminal Operações</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-3 bg-black/40 border border-white/5 rounded-xl h-10 mb-4">
+                        <TabsTrigger value="perfil" className="text-[0.6rem] font-black uppercase tracking-widest">Perfil</TabsTrigger>
+                        <TabsTrigger value="operacoes" className="text-[0.6rem] font-black uppercase tracking-widest">Operações</TabsTrigger>
+                        <TabsTrigger value="pedidos" className="text-[0.6rem] font-black uppercase tracking-widest relative">
+                            Pedidos
+                            {copyRequests && copyRequests.filter(r => r.status === 'PENDING').length > 0 && (
+                                <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                                </span>
+                            )}
+                        </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="perfil" className="space-y-4">
@@ -1266,6 +1305,54 @@ export default function AdminDashboard() {
                                     ))}
                                 </div>
                             </div>
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="pedidos" className="space-y-4">
+                        <div className="max-h-[500px] overflow-y-auto space-y-2 pr-1">
+                            {copyRequests && copyRequests.length > 0 ? copyRequests.map((req) => (
+                                <div key={req.id} className="p-4 bg-white/5 border border-white/5 rounded-2xl flex flex-col gap-3">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-primary/10 rounded-full"><UserIcon className="h-4 w-4 text-primary" /></div>
+                                            <div className="flex flex-col">
+                                                <span className="text-xs font-black text-white">{req.name}</span>
+                                                <span className="text-[0.6rem] font-mono opacity-40">{req.email}</span>
+                                            </div>
+                                        </div>
+                                        <Badge className={cn(
+                                            "text-[0.5rem] font-black uppercase",
+                                            req.status === 'PENDING' ? "bg-orange-500" :
+                                            req.status === 'APPROVED' ? "bg-green-500" :
+                                            req.status === 'ERROR_LIQUIDITY' ? "bg-red-500" : "bg-zinc-700"
+                                        )}>
+                                            {req.status === 'PENDING' ? 'Em Análise' : 
+                                             req.status === 'APPROVED' ? 'Aprovado' : 
+                                             req.status === 'ERROR_LIQUIDITY' ? 'Erro Liquidez' : req.status}
+                                        </Badge>
+                                    </div>
+                                    <div className="flex items-center justify-between text-[0.6rem] bg-black/20 p-2 rounded-xl border border-white/5">
+                                        <span className="font-bold opacity-40">ID CORRETORA: <span className="text-primary">{req.brokerId}</span></span>
+                                        <span className="font-mono opacity-20">{formatDate(req.submittedAt)}</span>
+                                    </div>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                        <Button size="sm" onClick={() => handleUpdateCopyRequest(req.id, 'APPROVED')} className="h-8 bg-green-600 text-white text-[0.5rem] font-black uppercase">
+                                            Aprovar
+                                        </Button>
+                                        <Button size="sm" onClick={() => handleUpdateCopyRequest(req.id, 'ERROR_LIQUIDITY')} className="h-8 bg-red-600 text-white text-[0.5rem] font-black uppercase">
+                                            Erro Liquidez
+                                        </Button>
+                                        <Button size="sm" onClick={() => handleUpdateCopyRequest(req.id, 'PENDING')} variant="outline" className="h-8 text-[0.5rem] font-black uppercase">
+                                            Pendente
+                                        </Button>
+                                        <Button size="sm" variant="ghost" onClick={() => handleDeleteCopyRequest(req.id)} className="h-8 text-red-500 text-[0.5rem] font-black uppercase">
+                                            Excluir
+                                        </Button>
+                                    </div>
+                                </div>
+                            )) : (
+                                <p className="text-center py-12 text-[0.6rem] font-black uppercase opacity-20 tracking-widest">Nenhum pedido de conexão.</p>
+                            )}
                         </div>
                     </TabsContent>
                 </Tabs>

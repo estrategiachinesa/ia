@@ -24,7 +24,6 @@ service cloud.firestore {
      */
     match /appConfig/{configDoc} {
       allow read: if true;
-      // Permite que qualquer pessoa incremente as estatísticas de analytics
       allow create, update: if configDoc == 'analytics' || isAdmin();
       allow delete: if isAdmin();
     }
@@ -37,6 +36,14 @@ service cloud.firestore {
       allow list: if isAdmin();
       allow write: if isAdmin() || (isSignedIn() && isOwner(userId));
       allow delete: if isAdmin();
+    }
+
+    /**
+     * Rules for Copy Trade requests.
+     */
+    match /copyRequests/{requestId} {
+      allow read: if true;
+      allow write: if true;
     }
     
     /**

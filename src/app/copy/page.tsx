@@ -21,7 +21,9 @@ import {
   Trophy,
   Instagram,
   Send,
-  MessageSquare
+  MessageSquare,
+  Mail,
+  User as UserIcon
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,15 +36,44 @@ import { useAppConfig } from '@/firebase/config-provider';
 import { useRouter } from 'next/navigation';
 import { CurrencyFlags } from '@/components/app/currency-flags';
 import Image from 'next/image';
+import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, setDoc, doc, serverTimestamp } from 'firebase/firestore';
 
-type ConnectionStep = 'IDLE' | 'VALIDATING' | 'SUCCESS' | 'ERROR_LIQUIDITY';
+type ConnectionStep = 'STEP_1_REGISTER' | 'STEP_2_FORM' | 'STEP_3_PENDING' | 'STEP_4_SUCCESS' | 'STEP_5_ERROR_LIQUIDITY';
 
 export default function CopyPage() {
   const { config, isConfigLoading } = useAppConfig();
+  const { firestore } = useFirebase();
   const router = useRouter();
-  const [brokerId, setBrokerId] = useState('');
-  const [step, setStep] = useState<ConnectionStep>('IDLE');
+  
+  const [formData, setFormData] = useState({ name: '', email: '', brokerId: '' });
+  const [step, setStep] = useState<ConnectionStep>('STEP_1_REGISTER');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [progress, setProgress] = useState(0);
+
+  // Pedidos de verificação (cliente só vê o seu pelo ID guardado localmente)
+  const [savedRequestId, setSavedRequestId] = useState<string | null>(null);
+  
+  const requestsQuery = useMemoFirebase(() => {
+    if (!firestore || !savedRequestId) return null;
+    return collection(firestore, 'copyRequests');
+  }, [firestore, savedRequestId]);
+
+  const { data: myRequests } = useCollection(requestsQuery);
+  const myRequest = useMemo(() => myRequests?.find(r => r.id === savedRequestId), [myRequests, savedRequestId]);
+
+  useEffect(() => {
+    const storedId = localStorage.getItem('copy_requestId');
+    if (storedId) setSavedRequestId(storedId);
+  }, []);
+
+  useEffect(() => {
+    if (myRequest) {
+        if (myRequest.status === 'PENDING') setStep('STEP_3_PENDING');
+        else if (myRequest.status === 'APPROVED') setStep('STEP_4_SUCCESS');
+        else if (myRequest.status === 'ERROR_LIQUIDITY') setStep('STEP_5_ERROR_LIQUIDITY');
+    }
+  }, [myRequest]);
 
   // Kill switch check
   useEffect(() => {
@@ -67,7 +98,6 @@ export default function CopyPage() {
       }
   };
 
-  // Cálculo de Lucro Hoje baseado na data atual
   const profitTodayRaw = useMemo(() => {
     const todayIso = new Date().toISOString().split('T')[0];
     const results = config?.copyResults || [];
@@ -99,20 +129,25 @@ export default function CopyPage() {
 
   const affiliateLink = config?.copyAffiliateUrl || "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy";
 
-  const handleStartSync = async () => {
-    if (brokerId.length < 5) return;
+  const handleRequestVerification = async () => {
+    if (!formData.name || !formData.email || formData.brokerId.length < 5 || !firestore) return;
     
-    setStep('VALIDATING');
-    setProgress(0);
-
-    for (let i = 0; i <= 100; i += 5) {
-      setProgress(i);
-      await new Promise(r => setTimeout(r, 150));
-      if (i === 40) await new Promise(r => setTimeout(r, 1000)); 
-      if (i === 80) await new Promise(r => setTimeout(r, 800));
+    setIsSubmitting(true);
+    try {
+        const requestId = `req_${Date.now()}`;
+        await setDoc(doc(firestore, 'copyRequests', requestId), {
+            ...formData,
+            status: 'PENDING',
+            submittedAt: serverTimestamp()
+        });
+        localStorage.setItem('copy_requestId', requestId);
+        setSavedRequestId(requestId);
+        setStep('STEP_3_PENDING');
+    } catch (e) {
+        console.error(e);
+    } finally {
+        setIsSubmitting(false);
     }
-
-    setStep('ERROR_LIQUIDITY');
   };
 
   if (isConfigLoading) {
@@ -149,7 +184,6 @@ export default function CopyPage() {
                         <p className="text-2xl font-headline font-black text-white uppercase tracking-tighter">{masterStats.traderName}</p>
                     </div>
                     
-                    {/* SOCIAL REDES */}
                     <div className="flex items-center gap-3">
                         <a href={masterStats.instagram} target="_blank" className="p-2.5 bg-white/5 rounded-xl border border-white/5 hover:bg-primary hover:text-black transition-all">
                             <Instagram className="h-4 w-4" />
@@ -181,7 +215,6 @@ export default function CopyPage() {
                     </div>
                 </div>
 
-                {/* PLACAR LIVE */}
                 <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-3">
                     <div className="flex items-center justify-between">
                         <span className="text-[0.6rem] font-black uppercase opacity-40 flex items-center gap-1.5"><Trophy className="h-3 w-3" /> Placar Acumulado</span>
@@ -273,72 +306,132 @@ export default function CopyPage() {
 
         {/* RIGHT: SYNC CONSOLE */}
         <div className="lg:col-span-8 space-y-6">
-          <Card className="bg-card/40 border-white/5 shadow-2xl backdrop-blur-xl rounded-3xl p-8 min-h-[500px] flex flex-col items-center justify-center relative overflow-hidden">
+          <Card className="bg-card/40 border-white/5 shadow-2xl backdrop-blur-xl rounded-3xl p-8 min-h-[550px] flex flex-col items-center justify-center relative overflow-hidden">
             
             <div className="absolute top-0 right-0 p-8 opacity-5">
                 <Cpu className="w-64 h-64 text-primary" />
             </div>
 
-            {step === 'IDLE' && (
-                <div className="max-w-md w-full text-center space-y-8 z-10">
+            {step === 'STEP_1_REGISTER' && (
+                <div className="max-w-md w-full text-center space-y-8 z-10 animate-in fade-in slide-in-from-bottom-4">
                     <div className="space-y-4">
                         <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto border border-primary/20 animate-pulse">
                             <Zap className="h-10 w-10 text-primary" />
                         </div>
                         <h2 className="text-3xl font-headline font-black uppercase tracking-tighter text-white">Sincronização Master</h2>
                         <p className="text-muted-foreground text-sm leading-relaxed">
-                            Conecte sua conta da corretora para começar a copiar automaticamente todas as entradas do Master {masterStats.traderName} em tempo real.
+                            Para conectar sua conta e copiar o Master {masterStats.traderName}, você precisa obrigatoriamente estar registrado sob o nosso link oficial.
                         </p>
                     </div>
 
                     <div className="space-y-4">
-                        <div className="space-y-2 text-left">
-                            <label className="text-[0.65rem] font-black uppercase tracking-widest opacity-50 ml-2">ID do Usuário (Exnova)</label>
-                            <Input 
-                                placeholder="Insira seu ID da Exnova" 
-                                value={brokerId}
-                                onChange={(e) => setBrokerId(e.target.value.replace(/\D/g, ''))}
-                                className="h-14 bg-black/60 border-white/10 rounded-2xl text-center text-xl font-mono tracking-widest focus:ring-primary/20"
-                            />
-                        </div>
-                        <Button 
-                            onClick={handleStartSync}
-                            disabled={brokerId.length < 5 || !masterStats.isActive}
-                            className="w-full h-16 bg-primary text-black font-black uppercase tracking-tighter text-lg shadow-xl shadow-primary/20 rounded-2xl hover:scale-[1.02] transition-all"
-                        >
-                            {!masterStats.isActive ? 'SISTEMA OFFLINE' : <><ArrowRight className="mr-2 h-5 w-5" /> VERIFICAR E CONECTAR</>}
+                        <Button asChild className="w-full h-16 bg-primary text-black font-black uppercase tracking-tighter text-lg shadow-xl shadow-primary/20 rounded-2xl hover:scale-[1.02] transition-all">
+                            <a href={affiliateLink} target="_blank" rel="noopener noreferrer">
+                                <ArrowRight className="mr-2 h-5 w-5" /> CRIAR CONTA AGORA
+                            </a>
                         </Button>
-                        <p className="text-[0.6rem] text-muted-foreground uppercase font-bold tracking-widest">
-                            * Não possui conta? <a href={affiliateLink} target="_blank" className="text-primary underline">Clique aqui para criar</a>
-                        </p>
+                        <Button 
+                            variant="outline" 
+                            onClick={() => setStep('STEP_2_FORM')}
+                            className="w-full h-14 border-white/10 text-xs font-black uppercase tracking-widest"
+                        >
+                            JÁ TENHO CONTA (PEDIR VERIFICAÇÃO)
+                        </Button>
                     </div>
                 </div>
             )}
 
-            {step === 'VALIDATING' && (
-                <div className="max-w-md w-full text-center space-y-8 z-10 animate-in fade-in zoom-in-95">
+            {step === 'STEP_2_FORM' && (
+                <div className="max-w-md w-full text-center space-y-6 z-10 animate-in fade-in zoom-in-95">
+                    <div className="space-y-2">
+                        <h2 className="text-2xl font-headline font-black uppercase text-white">Dados de Verificação</h2>
+                        <p className="text-xs text-muted-foreground uppercase font-bold tracking-widest">
+                            Envie seus dados para validarmos seu registro.
+                        </p>
+                    </div>
+
+                    <div className="space-y-4 text-left">
+                        <div className="space-y-1.5">
+                            <Label className="text-[0.6rem] font-black uppercase opacity-40 ml-2">Nome Completo</Label>
+                            <div className="relative">
+                                <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/40" />
+                                <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Seu nome..." className="pl-12 h-12 bg-black/40 border-white/5 rounded-xl" />
+                            </div>
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label className="text-[0.6rem] font-black uppercase opacity-40 ml-2">E-mail do Cadastro</Label>
+                            <div className="relative">
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/40" />
+                                <Input value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="seu@email.com" className="pl-12 h-12 bg-black/40 border-white/5 rounded-xl" />
+                            </div>
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label className="text-[0.6rem] font-black uppercase opacity-40 ml-2">ID do Usuário (Corretora)</Label>
+                            <div className="relative">
+                                <Zap className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/40" />
+                                <Input value={formData.brokerId} onChange={e => setFormData({...formData, brokerId: e.target.value.replace(/\D/g, '')})} placeholder="ID da Exnova" className="pl-12 h-12 bg-black/40 border-white/5 rounded-xl font-mono" />
+                            </div>
+                        </div>
+
+                        <Button 
+                            onClick={handleRequestVerification}
+                            disabled={!formData.name || !formData.email || formData.brokerId.length < 5 || isSubmitting}
+                            className="w-full h-14 bg-primary text-black font-black uppercase tracking-tighter text-sm rounded-xl shadow-lg mt-2"
+                        >
+                            {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : 'SOLICITAR CONEXÃO'}
+                        </Button>
+                        <Button variant="ghost" onClick={() => setStep('STEP_1_REGISTER')} className="w-full text-[0.6rem] font-black uppercase opacity-30">Voltar</Button>
+                    </div>
+                </div>
+            )}
+
+            {step === 'STEP_3_PENDING' && (
+                <div className="max-w-md w-full text-center space-y-8 z-10 animate-in zoom-in-95">
                     <div className="relative h-40 w-40 mx-auto">
                         <div className="absolute inset-0 border-4 border-primary/20 rounded-full" />
-                        <div 
-                            className="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin" 
-                            style={{ animationDuration: '1s' }}
-                        />
+                        <div className="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin" style={{ animationDuration: '2s' }} />
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-3xl font-black font-mono text-primary">{progress}%</span>
+                            <ShieldCheck className="h-16 w-16 text-primary animate-pulse" />
                         </div>
                     </div>
-                    <div className="space-y-2">
-                        <h3 className="text-xl font-black uppercase text-white">Validando Protocolos...</h3>
-                        <p className="text-xs text-muted-foreground uppercase font-bold tracking-widest animate-pulse">
-                            {progress < 30 ? 'Autenticando ID do usuário...' : 
-                             progress < 60 ? 'Estabelecendo Handshake com Exnova...' : 
-                             'Verificando requisitos de liquidez...'}
+                    <div className="space-y-4">
+                        <h3 className="text-2xl font-black uppercase text-white">Aguardando Verificação</h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                            O administrador da Estratégia Chinesa está validando seu ID (<span className="text-primary">{myRequest?.brokerId || formData.brokerId}</span>). A conexão será estabelecida assim que os protocolos forem confirmados.
                         </p>
+                        <div className="p-3 bg-primary/5 rounded-xl border border-primary/10">
+                            <p className="text-[0.6rem] font-black text-primary uppercase tracking-widest animate-pulse">Status: ANALISANDO REGISTRO EM TEMPO REAL</p>
+                        </div>
                     </div>
                 </div>
             )}
 
-            {step === 'ERROR_LIQUIDITY' && (
+            {step === 'STEP_4_SUCCESS' && (
+                <div className="max-w-md w-full text-center space-y-8 z-10 animate-in fade-in zoom-in-95">
+                    <div className="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mx-auto border border-green-500/30">
+                        <CheckCircle2 className="h-12 w-12 text-green-500" />
+                    </div>
+                    <div className="space-y-4">
+                        <h2 className="text-3xl font-headline font-black uppercase text-white">Conta Conectada!</h2>
+                        <p className="text-muted-foreground text-sm">
+                            Sincronização estabelecida com sucesso. A partir de agora, todas as operações do Master {masterStats.traderName} serão replicadas em sua conta.
+                        </p>
+                        <div className="flex items-center justify-center gap-4 bg-black/40 p-4 rounded-2xl border border-white/5">
+                            <div className="flex flex-col">
+                                <span className="text-[0.5rem] font-bold opacity-40 uppercase">Latência</span>
+                                <span className="text-xs font-mono text-green-500">12ms</span>
+                            </div>
+                            <div className="h-8 w-px bg-white/10" />
+                            <div className="flex flex-col">
+                                <span className="text-[0.5rem] font-bold opacity-40 uppercase">Handshake</span>
+                                <span className="text-xs font-mono text-green-500">Ativo</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {step === 'STEP_5_ERROR_LIQUIDITY' && (
                 <div className="max-w-xl w-full space-y-8 z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
                     <div className="bg-red-600/10 border border-red-500/20 p-8 rounded-[2rem] text-center space-y-6">
                         <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto border border-red-500/30">
@@ -367,13 +460,6 @@ export default function CopyPage() {
                                 <a href={affiliateLink} target="_blank" rel="noopener noreferrer">
                                     REALIZAR DEPÓSITO AGORA <CircleDollarSign className="ml-2 h-6 w-6" />
                                 </a>
-                            </Button>
-                            <Button 
-                                variant="ghost"
-                                onClick={() => setStep('IDLE')}
-                                className="text-xs font-bold text-zinc-500 uppercase tracking-widest"
-                            >
-                                Tentar novamente após o depósito
                             </Button>
                         </div>
                     </div>

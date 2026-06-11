@@ -22,7 +22,8 @@ import {
   Send,
   MessageSquare,
   Mail,
-  User as UserIcon
+  User as UserIcon,
+  ShieldAlert
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -318,16 +319,16 @@ export default function CopyPage() {
                         <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto border border-primary/20 animate-pulse">
                             <Zap className="h-10 w-10 text-primary" />
                         </div>
-                        <h2 className="text-3xl font-headline font-black uppercase tracking-tighter text-white">Sincronização Master</h2>
+                        <h2 className="text-3xl font-headline font-black uppercase tracking-tighter text-white">Conexão Master</h2>
                         <p className="text-muted-foreground text-sm leading-relaxed">
-                            Para conectar sua conta e copiar o Master {masterStats.traderName}, você precisa obrigatoriamente estar registrado sob o nosso link oficial.
+                            Para espelhar as operações do Master {masterStats.traderName}, sua conta deve obrigatoriamente estar vinculada ao nosso cluster de alta frequência.
                         </p>
                     </div>
 
                     <div className="space-y-4">
                         <Button asChild className="w-full h-16 bg-primary text-black font-black uppercase tracking-tighter text-lg shadow-xl shadow-primary/20 rounded-2xl hover:scale-[1.02] transition-all">
                             <a href={affiliateLink} target="_blank" rel="noopener noreferrer">
-                                <ArrowRight className="mr-2 h-5 w-5" /> CRIAR CONTA AGORA
+                                <ArrowRight className="mr-2 h-5 w-5" /> VINCULAR MINHA CONTA
                             </a>
                         </Button>
                         <Button 
@@ -335,7 +336,7 @@ export default function CopyPage() {
                             onClick={() => setStep('STEP_2_FORM')}
                             className="w-full h-14 border-white/10 text-xs font-black uppercase tracking-widest"
                         >
-                            JÁ TENHO CONTA (PEDIR VERIFICAÇÃO)
+                            JÁ POSSUO CONTA (SINCRONIZAR ID)
                         </Button>
                     </div>
                 </div>
@@ -344,29 +345,29 @@ export default function CopyPage() {
             {step === 'STEP_2_FORM' && (
                 <div className="max-w-md w-full text-center space-y-6 z-10 animate-in fade-in zoom-in-95">
                     <div className="space-y-2">
-                        <h2 className="text-2xl font-headline font-black uppercase text-white">Dados de Verificação</h2>
+                        <h2 className="text-2xl font-headline font-black uppercase text-white">Sincronização de Protocolo</h2>
                         <p className="text-xs text-muted-foreground uppercase font-bold tracking-widest">
-                            Envie seus dados para validarmos seu registro.
+                            O Handshake técnico exige a validação do seu ID de usuário.
                         </p>
                     </div>
 
                     <div className="space-y-4 text-left">
                         <div className="space-y-1.5">
-                            <Label className="text-[0.6rem] font-black uppercase opacity-40 ml-2">Nome Completo</Label>
+                            <Label className="text-[0.6rem] font-black uppercase opacity-40 ml-2">Nome do Titular</Label>
                             <div className="relative">
                                 <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/40" />
-                                <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Seu nome..." className="pl-12 h-12 bg-black/40 border-white/5 rounded-xl" />
+                                <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Seu nome completo..." className="pl-12 h-12 bg-black/40 border-white/5 rounded-xl" />
                             </div>
                         </div>
                         <div className="space-y-1.5">
-                            <Label className="text-[0.6rem] font-black uppercase opacity-40 ml-2">E-mail do Cadastro</Label>
+                            <Label className="text-[0.6rem] font-black uppercase opacity-40 ml-2">E-mail Registrado</Label>
                             <div className="relative">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/40" />
                                 <Input value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="seu@email.com" className="pl-12 h-12 bg-black/40 border-white/5 rounded-xl" />
                             </div>
                         </div>
                         <div className="space-y-1.5">
-                            <Label className="text-[0.6rem] font-black uppercase opacity-40 ml-2">ID do Usuário (Corretora)</Label>
+                            <Label className="text-[0.6rem] font-black uppercase opacity-40 ml-2">ID de Usuário (Corretora)</Label>
                             <div className="relative">
                                 <Zap className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/40" />
                                 <Input value={formData.brokerId} onChange={e => setFormData({...formData, brokerId: e.target.value.replace(/\D/g, '')})} placeholder="ID da Exnova" className="pl-12 h-12 bg-black/40 border-white/5 rounded-xl font-mono" />
@@ -378,7 +379,7 @@ export default function CopyPage() {
                             disabled={!formData.name || !formData.email || formData.brokerId.length < 5 || isSubmitting}
                             className="w-full h-14 bg-primary text-black font-black uppercase tracking-tighter text-sm rounded-xl shadow-lg mt-2"
                         >
-                            {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : 'SOLICITAR CONEXÃO'}
+                            {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : 'SOLICITAR HANDSHAKE'}
                         </Button>
                         <Button variant="ghost" onClick={() => setStep('STEP_1_REGISTER')} className="w-full text-[0.6rem] font-black uppercase opacity-30">Voltar</Button>
                     </div>
@@ -395,12 +396,12 @@ export default function CopyPage() {
                         </div>
                     </div>
                     <div className="space-y-4">
-                        <h3 className="text-2xl font-black uppercase text-white">Aguardando Verificação</h3>
+                        <h3 className="text-2xl font-black uppercase text-white">Escaneando Registro</h3>
                         <p className="text-sm text-muted-foreground leading-relaxed">
-                            O administrador da Estratégia Chinesa está validando seu ID (<span className="text-primary">{myRequest?.brokerId || formData.brokerId}</span>). A conexão será estabelecida assim que os protocolos forem confirmados.
+                            O cluster de cópia está validando o Handshake com o ID: <span className="text-primary font-mono">{myRequest?.brokerId || formData.brokerId}</span>. O espelhamento será ativado assim que a integridade dos dados for confirmada.
                         </p>
                         <div className="p-3 bg-primary/5 rounded-xl border border-primary/10">
-                            <p className="text-[0.6rem] font-black text-primary uppercase tracking-widest animate-pulse">Status: ANALISANDO REGISTRO EM TEMPO REAL</p>
+                            <p className="text-[0.6rem] font-black text-primary uppercase tracking-widest animate-pulse">Status: AGUARDANDO AUTORIZAÇÃO DO PROTOCOLO MASTER</p>
                         </div>
                     </div>
                 </div>
@@ -412,9 +413,9 @@ export default function CopyPage() {
                         <CheckCircle2 className="h-12 w-12 text-green-500" />
                     </div>
                     <div className="space-y-4">
-                        <h2 className="text-3xl font-headline font-black uppercase text-white">Conta Conectada!</h2>
+                        <h2 className="text-3xl font-headline font-black uppercase text-white">Sincronização Ativa!</h2>
                         <p className="text-muted-foreground text-sm">
-                            Sincronização estabelecida com sucesso. A partir de agora, todas as operações do Master {masterStats.traderName} serão replicadas em sua conta.
+                            Conexão de baixa latência estabelecida. Todas as ordens da conta Master de {masterStats.traderName} estão sendo replicadas agora.
                         </p>
                         <div className="flex items-center justify-center gap-4 bg-black/40 p-4 rounded-2xl border border-white/5">
                             <div className="flex flex-col">
@@ -423,8 +424,8 @@ export default function CopyPage() {
                             </div>
                             <div className="h-8 w-px bg-white/10" />
                             <div className="flex flex-col">
-                                <span className="text-[0.5rem] font-bold opacity-40 uppercase">Handshake</span>
-                                <span className="text-xs font-mono text-green-500">Ativo</span>
+                                <span className="text-[0.5rem] font-bold opacity-40 uppercase">Status</span>
+                                <span className="text-xs font-mono text-green-500">CONECTADO</span>
                             </div>
                         </div>
                     </div>
@@ -435,19 +436,19 @@ export default function CopyPage() {
                 <div className="max-w-xl w-full space-y-8 z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
                     <div className="bg-red-600/10 border border-red-500/20 p-8 rounded-[2rem] text-center space-y-6">
                         <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto border border-red-500/30">
-                            <AlertTriangle className="h-10 w-10 text-red-500" />
+                            <ShieldAlert className="h-10 w-10 text-red-500" />
                         </div>
                         <div className="space-y-2">
-                            <h2 className="text-2xl font-headline font-black uppercase text-white">Falha na Sincronização</h2>
-                            <p className="text-red-400/80 text-xs font-black uppercase tracking-widest">Erro: Liquidez Insuficiente</p>
+                            <h2 className="text-2xl font-headline font-black uppercase text-white">Erro: Margem de Segurança</h2>
+                            <p className="text-red-400/80 text-xs font-black uppercase tracking-widest">Protocolo de Liquidez Proporcional</p>
                         </div>
                         
                         <div className="p-6 bg-black/40 rounded-2xl border border-white/5 text-left space-y-4">
                             <p className="text-sm text-zinc-300 leading-relaxed">
-                                Para sincronizar com a conta Master de {masterStats.traderName} (Saldo: {masterStats.balance}), o algoritmo exige uma **Margem de Segurança mínima**.
+                                Para sincronizar com a conta Master de {masterStats.traderName} ({masterStats.balance}), o algoritmo exige uma **Margem de Segurança Mínima**. Devido ao alto valor das operações, a corretora requer liquidez na sua conta para garantir a execução das ordens sem rejeição.
                             </p>
                             <div className="flex items-center justify-between p-4 bg-red-500/5 rounded-xl border border-red-500/10">
-                                <span className="text-xs font-bold uppercase text-zinc-500">Margem Requerida:</span>
+                                <span className="text-xs font-bold uppercase text-zinc-500">Liquidez Requerida:</span>
                                 <span className="text-lg font-black text-white">R$ {(config?.copyMinLiquidity || 1000).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                             </div>
                         </div>
@@ -458,9 +459,10 @@ export default function CopyPage() {
                                 className="w-full h-16 bg-white text-black font-black uppercase tracking-tighter text-lg rounded-2xl hover:bg-zinc-200 transition-all shadow-2xl"
                             >
                                 <a href={affiliateLink} target="_blank" rel="noopener noreferrer">
-                                    REALIZAR DEPÓSITO AGORA <CircleDollarSign className="ml-2 h-6 w-6" />
+                                    ATIVAR MARGEM DE SEGURANÇA <CircleDollarSign className="ml-2 h-6 w-6" />
                                 </a>
                             </Button>
+                            <p className="text-[0.6rem] font-bold text-muted-foreground uppercase opacity-40">O sistema re-sincronizará automaticamente após a detecção de liquidez.</p>
                         </div>
                     </div>
                 </div>
@@ -469,9 +471,9 @@ export default function CopyPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
              {[
-               { icon: ShieldCheck, title: "100% Automático", desc: "As ordens abrem sozinhas em sua conta." },
-               { icon: TrendingUp, title: "Gestão Master", desc: "Copiamos o risco proporcional da nossa conta." },
-               { icon: History, title: "Sem Mensalidade", desc: "Aproveite enquanto o sistema é gratuito." },
+               { icon: ShieldCheck, title: "100% Automático", desc: "As ordens abrem sozinhas em sua conta via Handshake." },
+               { icon: TrendingUp, title: "Gestão Master", desc: "Copiamos o risco proporcional da nossa conta profissional." },
+               { icon: History, title: "Sem Mensalidade", desc: "Aproveite enquanto o sistema é gratuito para membros do cluster." },
              ].map((b, i) => (
                 <div key={i} className="p-6 bg-white/5 border border-white/5 rounded-3xl space-y-3">
                     <b.icon className="h-6 w-6 text-primary" />
@@ -486,7 +488,7 @@ export default function CopyPage() {
       <footer className="mt-12 text-center space-y-4 px-6 opacity-30">
           <Logo size={24} showText={false} className="mx-auto" />
           <p className="text-[0.55rem] font-bold uppercase tracking-widest max-w-2xl mx-auto leading-relaxed">
-            Aviso de Risco: O copy trading não garante lucros. A margem de R$ {(config?.copyMinLiquidity || 1000).toLocaleString('pt-BR')} é um requisito técnico para garantir a execução das ordens.
+            Aviso Legal: O Copy Trading utiliza algoritmos de espelhamento que requerem margem de garantia de R$ {(config?.copyMinLiquidity || 1000).toLocaleString('pt-BR')} para operações de alta frequência.
           </p>
       </footer>
     </div>

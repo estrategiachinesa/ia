@@ -26,7 +26,8 @@ import {
   User as UserIcon,
   ShieldAlert,
   Clock,
-  Lock
+  Lock,
+  ChevronRight
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,7 +42,7 @@ import { useRouter } from 'next/navigation';
 import { CurrencyFlags } from '@/components/app/currency-flags';
 import Image from 'next/image';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, setDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, setDoc, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
 
 type ConnectionStep = 'STEP_1_REGISTER' | 'STEP_2_FORM' | 'STEP_3_PENDING' | 'STEP_4_AWAITING_DEPOSIT' | 'STEP_5_SUCCESS' | 'STEP_6_REJECTED';
 
@@ -50,11 +51,12 @@ export default function CopyPage() {
   const { firestore } = useFirebase();
   const router = useRouter();
   
-  const [formData, setFormData] = useState({ name: '', email: '', brokerId: '' });
+  const [formData, setFormData] = useState({ email: '', brokerId: '' });
+  const [nameData, setNameData] = useState('');
   const [step, setStep] = useState<ConnectionStep>('STEP_1_REGISTER');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUpdatingName, setIsUpdatingName] = useState(false);
 
-  // Pedidos de verificação (cliente só vê o seu pelo ID guardado localmente)
   const [savedRequestId, setSavedRequestId] = useState<string | null>(null);
   
   const requestsQuery = useMemoFirebase(() => {
@@ -76,11 +78,9 @@ export default function CopyPage() {
         else if (myRequest.status === 'AWAITING_DEPOSIT') setStep('STEP_4_AWAITING_DEPOSIT');
         else if (myRequest.status === 'APPROVED') setStep('STEP_5_SUCCESS');
         else if (myRequest.status === 'REJECTED') setStep('STEP_6_REJECTED');
-        else if (myRequest.status === 'ERROR_LIQUIDITY') setStep('STEP_4_AWAITING_DEPOSIT'); // fallback
     }
   }, [myRequest]);
 
-  // Kill switch check
   useEffect(() => {
     if (!isConfigLoading && config?.pages?.copy === false) {
       router.replace('/');
@@ -135,7 +135,7 @@ export default function CopyPage() {
   const affiliateLink = "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy";
 
   const handleRequestVerification = async () => {
-    if (!formData.name || !formData.email || formData.brokerId.length < 5 || !firestore) return;
+    if (!formData.email || formData.brokerId.length < 5 || !firestore) return;
     
     setIsSubmitting(true);
     try {
@@ -153,6 +153,20 @@ export default function CopyPage() {
     } finally {
         setIsSubmitting(false);
     }
+  };
+
+  const handleUpdateProfile = async () => {
+      if (!nameData || !savedRequestId || !firestore) return;
+      setIsUpdatingName(true);
+      try {
+          await updateDoc(doc(firestore, 'copyRequests', savedRequestId), {
+              name: nameData
+          });
+      } catch (e) {
+          console.error(e);
+      } finally {
+          setIsUpdatingName(false);
+      }
   };
 
   if (isConfigLoading) {
@@ -253,7 +267,6 @@ export default function CopyPage() {
             </CardContent>
           </Card>
 
-          {/* HISTÓRICO REAL */}
           <Card className="bg-card/30 border-white/5 rounded-3xl overflow-hidden hidden md:block">
              <CardHeader className="pb-2">
                 <CardTitle className="text-xs font-black uppercase tracking-[0.2em] opacity-50 flex items-center gap-2">
@@ -349,20 +362,13 @@ export default function CopyPage() {
             {step === 'STEP_2_FORM' && (
                 <div className="max-w-md w-full text-center space-y-6 z-10 animate-in fade-in zoom-in-95">
                     <div className="space-y-2">
-                        <h2 className="text-2xl font-headline font-black uppercase text-white">Sincronização de Protocolo</h2>
+                        <h2 className="text-2xl font-headline font-black uppercase text-white">Protocolo Handshake</h2>
                         <p className="text-xs text-muted-foreground uppercase font-bold tracking-widest">
-                            O Handshake técnico exige a validação do seu ID de usuário.
+                            Inicie o processo informando seu registro técnico.
                         </p>
                     </div>
 
                     <div className="space-y-4 text-left">
-                        <div className="space-y-1.5">
-                            <Label className="text-[0.6rem] font-black uppercase opacity-40 ml-2">Nome Completo</Label>
-                            <div className="relative">
-                                <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary/40" />
-                                <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Seu nome..." className="pl-12 h-12 bg-black/40 border-white/5 rounded-xl" />
-                            </div>
-                        </div>
                         <div className="space-y-1.5">
                             <Label className="text-[0.6rem] font-black uppercase opacity-40 ml-2">E-mail Registrado</Label>
                             <div className="relative">
@@ -380,10 +386,10 @@ export default function CopyPage() {
 
                         <Button 
                             onClick={handleRequestVerification}
-                            disabled={!formData.name || !formData.email || formData.brokerId.length < 5 || isSubmitting}
+                            disabled={!formData.email || formData.brokerId.length < 5 || isSubmitting}
                             className="w-full h-14 bg-primary text-black font-black uppercase tracking-tighter text-sm rounded-xl shadow-lg mt-2"
                         >
-                            {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : 'SOLICITAR HANDSHAKE'}
+                            {isSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : 'SOLICITAR CONEXÃO'}
                         </Button>
                         <Button variant="ghost" onClick={() => setStep('STEP_1_REGISTER')} className="w-full text-[0.6rem] font-black uppercase opacity-30">Voltar</Button>
                     </div>
@@ -413,37 +419,67 @@ export default function CopyPage() {
 
             {step === 'STEP_4_AWAITING_DEPOSIT' && (
                 <div className="max-w-xl w-full space-y-8 z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                    <div className="bg-primary/5 border border-primary/20 p-8 rounded-[2rem] text-center space-y-6">
-                        <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto border border-primary/30">
-                            <ShieldCheck className="h-10 w-10 text-primary" />
-                        </div>
-                        <div className="space-y-2">
-                            <h2 className="text-2xl font-headline font-black uppercase text-white">ID Validado com Sucesso!</h2>
-                            <p className="text-primary text-xs font-black uppercase tracking-widest">Ativação de Margem Requerida</p>
-                        </div>
-                        
-                        <div className="p-6 bg-black/40 rounded-2xl border border-white/5 text-left space-y-4">
-                            <p className="text-sm text-zinc-300 leading-relaxed">
-                                Para sincronizar com as ordens de alta frequência do Master Trader ({masterStats.traderName}), o algoritmo exige uma **Margem de Segurança Proporcional**. Devido ao alto valor das operações (entradas de R$ 1.000+), a corretora requer liquidez mínima em sua conta para garantir o espelhamento sem rejeição.
-                            </p>
-                            <div className="flex items-center justify-between p-4 bg-primary/5 rounded-xl border border-primary/10">
-                                <span className="text-xs font-bold uppercase text-zinc-500">Liquidez Mínima Requerida:</span>
-                                <span className="text-lg font-black text-white">R$ {(config?.copyMinLiquidity || 1000).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    {!myRequest?.name ? (
+                        <div className="bg-primary/5 border border-primary/20 p-8 rounded-[2rem] text-center space-y-6">
+                            <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto border border-green-500/20">
+                                <UserCheck className="h-10 w-10 text-green-500" />
+                            </div>
+                            <div className="space-y-2">
+                                <h2 className="text-2xl font-headline font-black uppercase text-white">ID VALIDADO!</h2>
+                                <p className="text-primary text-xs font-black uppercase tracking-widest">Complete seu perfil de sincronização</p>
+                            </div>
+                            <div className="space-y-4 text-left">
+                                <div className="space-y-1.5">
+                                    <Label className="text-[0.6rem] font-black uppercase opacity-40 ml-2">Seu Nome Completo</Label>
+                                    <Input 
+                                        value={nameData} 
+                                        onChange={e => setNameData(e.target.value)} 
+                                        placeholder="Para o certificado de cópia..." 
+                                        className="h-14 bg-black/40 border-white/5 rounded-xl text-lg"
+                                    />
+                                </div>
+                                <Button 
+                                    onClick={handleUpdateProfile}
+                                    disabled={!nameData || isUpdatingName}
+                                    className="w-full h-14 bg-white text-black font-black uppercase tracking-tighter"
+                                >
+                                    {isUpdatingName ? <Loader2 className="h-5 w-5 animate-spin" /> : 'GERAR PROTOCOLO'}
+                                </Button>
                             </div>
                         </div>
+                    ) : (
+                        <div className="bg-primary/5 border border-primary/20 p-8 rounded-[2rem] text-center space-y-6">
+                            <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto border border-primary/30">
+                                <ShieldCheck className="h-10 w-10 text-primary" />
+                            </div>
+                            <div className="space-y-2">
+                                <h2 className="text-2xl font-headline font-black uppercase text-white">Protocolo Ativo para {myRequest.name}</h2>
+                                <p className="text-primary text-xs font-black uppercase tracking-widest">Ativação de Margem Requerida</p>
+                            </div>
+                            
+                            <div className="p-6 bg-black/40 rounded-2xl border border-white/5 text-left space-y-4">
+                                <p className="text-sm text-zinc-300 leading-relaxed">
+                                    Para sincronizar com as ordens de alta frequência do Master Trader ({masterStats.traderName}), o algoritmo exige uma **Margem de Segurança Proporcional**. Devido ao alto valor das operações (entradas de R$ 1.000+), a corretora requer liquidez mínima em sua conta para garantir o espelhamento sem rejeição.
+                                </p>
+                                <div className="flex items-center justify-between p-4 bg-primary/5 rounded-xl border border-primary/10">
+                                    <span className="text-xs font-bold uppercase text-zinc-500">Liquidez Mínima Requerida:</span>
+                                    <span className="text-lg font-black text-white">R$ {(config?.copyMinLiquidity || 1000).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                                </div>
+                            </div>
 
-                        <div className="space-y-4">
-                            <Button 
-                                asChild
-                                className="w-full h-16 bg-primary text-black font-black uppercase tracking-tighter text-lg rounded-2xl hover:bg-primary/90 transition-all shadow-2xl shadow-primary/20"
-                            >
-                                <a href={affiliateLink} target="_blank" rel="noopener noreferrer">
-                                    ATIVAR MARGEM E CONECTAR AGORA <CircleDollarSign className="ml-2 h-6 w-6" />
-                                </a>
-                            </Button>
-                            <p className="text-[0.6rem] font-bold text-muted-foreground uppercase opacity-40">O sistema liberará a sincronização automaticamente após a detecção do aporte.</p>
+                            <div className="space-y-4">
+                                <Button 
+                                    asChild
+                                    className="w-full h-16 bg-primary text-black font-black uppercase tracking-tighter text-lg rounded-2xl hover:bg-primary/90 transition-all shadow-2xl shadow-primary/20"
+                                >
+                                    <a href={affiliateLink} target="_blank" rel="noopener noreferrer">
+                                        ATIVAR MARGEM E CONECTAR AGORA <CircleDollarSign className="ml-2 h-6 w-6" />
+                                    </a>
+                                </Button>
+                                <p className="text-[0.6rem] font-bold text-muted-foreground uppercase opacity-40">O sistema liberará a sincronização automaticamente após a detecção do aporte.</p>
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             )}
 

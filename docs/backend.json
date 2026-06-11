@@ -107,10 +107,10 @@
         "name": { "type": "string" },
         "email": { "type": "string", "format": "email" },
         "brokerId": { "type": "string" },
-        "status": { "type": "string", "enum": ["PENDING", "APPROVED", "ERROR_LIQUIDITY", "REJECTED"] },
+        "status": { "type": "string", "enum": ["PENDING", "APPROVED", "ERROR_LIQUIDITY", "REJECTED", "AWAITING_DEPOSIT"] },
         "submittedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["name", "email", "brokerId", "status", "submittedAt"]
+      "required": ["email", "brokerId", "status", "submittedAt"]
     },
     "AppConfig": {
       "title": "App Configuration",

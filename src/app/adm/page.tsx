@@ -1317,7 +1317,7 @@ export default function AdminDashboard() {
                                         <div className="flex items-center gap-3">
                                             <div className="p-2 bg-primary/10 rounded-full"><UserIcon className="h-4 w-4 text-primary" /></div>
                                             <div className="flex flex-col">
-                                                <span className="text-xs font-black text-white">{req.name}</span>
+                                                <span className="text-xs font-black text-white">{req.name || 'Aguardando Nome...'}</span>
                                                 <span className="text-[0.6rem] font-mono opacity-40">{req.email}</span>
                                             </div>
                                         </div>

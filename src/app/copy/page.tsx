@@ -184,12 +184,12 @@ export default function CopyPage() {
                 {/* PLACAR LIVE */}
                 <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-3">
                     <div className="flex items-center justify-between">
-                        <span className="text-[0.6rem] font-black uppercase opacity-40 flex items-center gap-1.5"><Trophy className="h-3 w-3" /> Histórico Placar</span>
+                        <span className="text-[0.6rem] font-black uppercase opacity-40 flex items-center gap-1.5"><Trophy className="h-3 w-3" /> Placar Acumulado</span>
                         <Badge variant="outline" className={cn(
                             "text-[0.5rem] border-none font-black animate-pulse",
                             masterStats.isActive ? "bg-green-500/20 text-green-500" : "bg-red-500/20 text-red-500"
                         )}>
-                            {masterStats.isActive ? "ATIVO" : "OFFLINE"}
+                            {masterStats.isActive ? "LIVE" : "OFFLINE"}
                         </Badge>
                     </div>
                     <div className="flex justify-center items-center gap-6">
@@ -208,9 +208,9 @@ export default function CopyPage() {
                 <div className="space-y-4">
                     <div className="flex justify-between items-center px-2">
                         <span className="text-[0.7rem] font-black uppercase opacity-40">Assertividade Global</span>
-                        <span className="text-sm font-black text-primary">{masterStats.winRate}</span>
+                        <span className="text-sm font-black text-green-500">{masterStats.winRate}</span>
                     </div>
-                    <Progress value={parseFloat(masterStats.winRate) || 0} className="h-2 bg-white/5" />
+                    <Progress value={parseFloat(masterStats.winRate) || 0} className="h-2 bg-white/5" indicatorClassName="bg-green-500" />
                 </div>
             </CardContent>
           </Card>

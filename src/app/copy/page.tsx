@@ -296,6 +296,12 @@ export default function CopyPage() {
                                         {trade.result}
                                     </span>
                                     <span className={cn(
+                                        "text-[0.7rem] font-black font-mono leading-none my-0.5",
+                                        trade.netChange > 0 ? "text-green-500" : "text-red-500"
+                                    )}>
+                                        {trade.netChange > 0 ? '+' : ''}{formatCurrency(trade.netChange)}
+                                    </span>
+                                    <span className={cn(
                                         "text-[0.5rem] font-bold opacity-40 uppercase",
                                         trade.direction === 'CALL' ? "text-green-500/60" : "text-red-500/60"
                                     )}>
@@ -509,7 +515,7 @@ export default function CopyPage() {
             )}
 
             {step === 'STEP_6_REJECTED' && (
-                <div className="max-w-md w-full text-center space-y-8 z-10 animate-in zoom-in-95">
+                <div className="max-w-md w-full text-center space-y-8 z-10 animate-in fade-in zoom-in-95">
                     <div className="w-24 h-24 bg-red-500/20 rounded-full flex items-center justify-center mx-auto border border-red-500/30">
                         <Lock className="h-12 w-12 text-red-500" />
                     </div>

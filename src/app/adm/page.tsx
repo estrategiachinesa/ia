@@ -67,7 +67,11 @@ import {
   Mail,
   User as UserIcon,
   Check,
-  Bot
+  Bot,
+  MessageSquareCode,
+  BellRing,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -252,6 +256,19 @@ export default function AdminDashboard() {
   const [tgBotToken, setTgBotToken] = useState('');
   const [tgChatId, setTgChatId] = useState('');
 
+  // Bot Settings state
+  const [tgEnabled, setTgEnabled] = useState(true);
+  const [tgNotifyWin, setTgNotifyWin] = useState(true);
+  const [tgNotifyLoss, setTgNotifyLoss] = useState(true);
+  const [tgNotifyDraw, setTgNotifyDraw] = useState(true);
+  const [tgNotifyStatus, setTgNotifyStatus] = useState(true);
+  const [tgNotifyLeads, setTgNotifyLeads] = useState(true);
+  const [tgMsgWin, setTgMsgWin] = useState('🚀 *NOVA OPERAÇÃO COPIADA!*\n\n✅ Resultado: *WIN*\n📊 Ativo: *{{asset}}*\n🚀 Ação: *{{direction}}*\n💰 Lucro: *{{profit}}*\n\n🎯 *Membro sincronizado está lucrando agora.*\n🔗 [CLIQUE AQUI PARA CONECTAR]({{url}})');
+  const [tgMsgLoss, setTgMsgLoss] = useState('📉 *OPERAÇÃO FINALIZADA*\n\n❌ Resultado: *LOSS*\n📊 Ativo: *{{asset}}*\n🚀 Ação: *{{direction}}*\n💰 Resultado: *{{profit}}*\n\n⚠️ Faz parte da gestão. O Master segue operando.\n🔗 [CLIQUE AQUI PARA CONECTAR]({{url}})');
+  const [tgMsgDraw, setTgMsgDraw] = useState('⚪ *OPERAÇÃO EMPATADA*\n\n📊 Ativo: *{{asset}}*\n🚀 Ação: *{{direction}}*\n💰 Resultado: *0.00*\n\n🛡️ O algoritmo protegeu o capital do cluster.\n🔗 [CLIQUE AQUI PARA CONECTAR]({{url}})');
+  const [tgMsgActive, setTgMsgActive] = useState('🚀 *COPY TRADE ATIVADO!*\n\nO algoritmo acaba de identificar liquidez. Todas as contas sincronizadas começarão a copiar agora.\n\n🔗 [CONECTAR AGORA]({{url}})');
+  const [tgMsgReport, setTgMsgReport] = useState('📊 *RELATÓRIO DIÁRIO - ESTRATÉGIA CHINESA*\n\n✅ Placar: *{{wins}}W - {{losses}}L*\n💰 Lucro Acumulado: *{{profit}}*\n🎯 Assertividade: *{{winrate}}*\n\nQuem seguiu o Copy Master hoje saiu no lucro. Conecte-se para amanhã!\n\n🔗 [CLIQUE AQUI]({{url}})');
+
   // Local trade states for launching results
   const [tradeAsset, setTradeAsset] = useState('EUR/USD');
   const [tradeDirection, setTradeDirection] = useState<'CALL' | 'PUT'>('CALL');
@@ -343,6 +360,19 @@ export default function AdminDashboard() {
             setPrevCopyIsActive(data.copyIsActive ?? true);
             setTgBotToken(data.tgBotToken || '');
             setTgChatId(data.tgChatId || '');
+
+            // Bot Configs
+            setTgEnabled(data.tgEnabled ?? true);
+            setTgNotifyWin(data.tgNotifyWin ?? true);
+            setTgNotifyLoss(data.tgNotifyLoss ?? true);
+            setTgNotifyDraw(data.tgNotifyDraw ?? true);
+            setTgNotifyStatus(data.tgNotifyStatus ?? true);
+            setTgNotifyLeads(data.tgNotifyLeads ?? true);
+            if (data.tgMsgWin) setTgMsgWin(data.tgMsgWin);
+            if (data.tgMsgLoss) setTgMsgLoss(data.tgMsgLoss);
+            if (data.tgMsgDraw) setTgMsgDraw(data.tgMsgDraw);
+            if (data.tgMsgActive) setTgMsgActive(data.tgMsgActive);
+            if (data.tgMsgReport) setTgMsgReport(data.tgMsgReport);
         }
 
         if (timeSnap.exists()) {
@@ -428,7 +458,7 @@ export default function AdminDashboard() {
   }, [copyResults]);
 
   const sendSimpleNotification = async (message: string) => {
-    if (!tgBotToken || !tgChatId) return;
+    if (!tgEnabled || !tgBotToken || !tgChatId) return;
     try {
         await fetch(`https://api.telegram.org/bot${tgBotToken}/sendMessage`, {
             method: 'POST',
@@ -461,16 +491,34 @@ export default function AdminDashboard() {
               copyTelegramUrl: copyTelegramUrl.trim(),
               copyIsActive: copyIsActive,
               tgBotToken: tgBotToken.trim(),
-              tgChatId: tgChatId.trim()
+              tgChatId: tgChatId.trim(),
+              tgEnabled,
+              tgNotifyWin,
+              tgNotifyLoss,
+              tgNotifyDraw,
+              tgNotifyStatus,
+              tgNotifyLeads,
+              tgMsgWin,
+              tgMsgLoss,
+              tgMsgDraw,
+              tgMsgActive,
+              tgMsgReport
           }, { merge: true });
 
           // Notificações de Status Telegram
-          if (copyIsActive !== prevCopyIsActive) {
+          if (tgNotifyStatus && copyIsActive !== prevCopyIsActive) {
               if (copyIsActive) {
-                  sendSimpleNotification(`🚀 *COPY TRADE ATIVADO!*\n\nO algoritmo acaba de identificar liquidez. Todas as contas sincronizadas começarão a copiar agora.\n\n🔗 [CONECTAR AGORA](${window.location.origin}/copy)`);
+                  const msg = tgMsgActive.replace('{{url}}', `${window.location.origin}/copy`);
+                  sendSimpleNotification(msg);
               } else {
                   const profitText = currentProfit >= 0 ? `+ ${formatCurrency(currentProfit)}` : formatCurrency(currentProfit);
-                  sendSimpleNotification(`📊 *RELATÓRIO DIÁRIO - ESTRATÉGIA CHINESA*\n\n✅ Placar: *${scoreboard.wins}W - ${scoreboard.losses}L*\n💰 Lucro Acumulado: *${profitText}*\n🎯 Assertividade: *${winRate}*\n\nQuem seguiu o Copy Master hoje saiu no lucro. Conecte-se para amanhã!\n\n🔗 [CLIQUE AQUI](${window.location.origin}/copy)`);
+                  const msg = tgMsgReport
+                    .replace('{{wins}}', scoreboard.wins.toString())
+                    .replace('{{losses}}', scoreboard.losses.toString())
+                    .replace('{{profit}}', profitText)
+                    .replace('{{winrate}}', winRate)
+                    .replace('{{url}}', `${window.location.origin}/copy`);
+                  sendSimpleNotification(msg);
               }
               setPrevCopyIsActive(copyIsActive);
           }
@@ -481,20 +529,21 @@ export default function AdminDashboard() {
   };
 
   const sendTelegramTradeNotification = async (asset: string, direction: string, result: string, profit: number) => {
-    if (!tgBotToken || !tgChatId) return;
+    if (!tgEnabled || !tgBotToken || !tgChatId) return;
 
-    const emoji = result === 'WIN' ? '✅' : (result === 'LOSS' ? '❌' : '⚪');
+    let msg = '';
     const profitText = profit >= 0 ? `+ ${formatCurrency(profit)}` : formatCurrency(profit);
-    
-    const message = `🚀 *NOVA OPERAÇÃO COPIADA!*\n\n` +
-                  `${emoji} Resultado: *${result}*\n` +
-                  `📊 Ativo: *${asset}*\n` +
-                  `🚀 Ação: *${direction}*\n` +
-                  `💰 Lucro: *${profitText}*\n\n` +
-                  `🎯 *Membro sincronizado está lucrando agora.*\n` +
-                  `🔗 [CLIQUE AQUI PARA CONECTAR](${window.location.origin}/copy)`;
+    const url = `${window.location.origin}/copy`;
 
-    sendSimpleNotification(message);
+    if (result === 'WIN' && tgNotifyWin) {
+        msg = tgMsgWin.replace('{{asset}}', asset).replace('{{direction}}', direction).replace('{{profit}}', profitText).replace('{{url}}', url);
+    } else if (result === 'LOSS' && tgNotifyLoss) {
+        msg = tgMsgLoss.replace('{{asset}}', asset).replace('{{direction}}', direction).replace('{{profit}}', profitText).replace('{{url}}', url);
+    } else if (result === 'DRAW' && tgNotifyDraw) {
+        msg = tgMsgDraw.replace('{{asset}}', asset).replace('{{direction}}', direction).replace('{{url}}', url);
+    }
+
+    if (msg) sendSimpleNotification(msg);
   };
 
   const handlePostTrade = async (result: 'WIN' | 'LOSS' | 'DRAW') => {
@@ -1184,14 +1233,15 @@ export default function AdminDashboard() {
                             <Switch checked={copyIsActive} onCheckedChange={setCopyIsActive} className="scale-75" />
                         </div>
                         <Button size="sm" onClick={handleSaveCopyConfigs} disabled={isSavingCopy} className="h-9 px-4 rounded-xl font-bold bg-primary text-black hover:bg-primary/90">
-                            {isSavingCopy ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Save className="h-4 w-4 mr-1.5" /> Salvar Perfil</>}
+                            {isSavingCopy ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Save className="h-4 w-4 mr-1.5" /> Salvar Configs</>}
                         </Button>
                     </div>
                 </div>
 
                 <Tabs defaultValue="perfil" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3 bg-black/40 border border-white/5 rounded-xl h-10 mb-4">
+                    <TabsList className="grid w-full grid-cols-4 bg-black/40 border border-white/5 rounded-xl h-10 mb-4">
                         <TabsTrigger value="perfil" className="text-[0.6rem] font-black uppercase tracking-widest">Perfil</TabsTrigger>
+                        <TabsTrigger value="bots" className="text-[0.6rem] font-black uppercase tracking-widest"><Bot className="h-3 w-3 mr-1" /> Bots</TabsTrigger>
                         <TabsTrigger value="operacoes" className="text-[0.6rem] font-black uppercase tracking-widest">Operações</TabsTrigger>
                         <TabsTrigger value="pedidos" className="text-[0.6rem] font-black uppercase tracking-widest relative">
                             Pedidos
@@ -1247,17 +1297,6 @@ export default function AdminDashboard() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-white/5 pt-4">
-                            <div className="space-y-1.5">
-                                <Label className="text-[0.6rem] font-black uppercase text-primary flex items-center gap-1.5"><Bot className="h-3 w-3" /> Telegram Bot Token</Label>
-                                <Input type="password" value={tgBotToken} onChange={(e) => setTgBotToken(e.target.value)} placeholder="123456:ABC-DEF..." className="bg-white/5 border-white/10 h-10 text-xs font-mono" />
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label className="text-[0.6rem] font-black uppercase text-primary flex items-center gap-1.5"><Send className="h-3 w-3" /> Chat ID do Grupo</Label>
-                                <Input value={tgChatId} onChange={(e) => setTgChatId(e.target.value)} placeholder="-100123456789" className="bg-white/5 border-white/10 h-10 text-xs font-mono" />
-                            </div>
-                        </div>
-
                         <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-1.5">
                                 <Label className="text-[0.6rem] font-bold uppercase opacity-60">Saldo Inicial</Label>
@@ -1266,6 +1305,81 @@ export default function AdminDashboard() {
                             <div className="space-y-1.5">
                                 <Label className="text-[0.6rem] font-bold uppercase opacity-60">Saldo Atual (Manual)</Label>
                                 <Input type="number" value={copyBalance} onChange={(e) => setCopyBalance(Number(e.target.value))} className="bg-white/5 border-white/10 h-10 text-xs font-mono" />
+                            </div>
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="bots" className="space-y-6">
+                        <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className={cn("p-2 rounded-full", tgEnabled ? "bg-primary/20 text-primary" : "bg-zinc-800 text-zinc-500")}>
+                                    {tgEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+                                </div>
+                                <div>
+                                    <h3 className="text-xs font-black uppercase text-white">Bot Telegram Global</h3>
+                                    <p className="text-[0.55rem] font-bold text-muted-foreground uppercase">Habilitar todas as notificações</p>
+                                </div>
+                            </div>
+                            <Switch checked={tgEnabled} onCheckedChange={setTgEnabled} />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* CONFIGURAÇÕES TÉCNICAS */}
+                            <div className="space-y-4">
+                                <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-4">
+                                    <h4 className="text-[0.65rem] font-black uppercase tracking-widest text-primary/70 flex items-center gap-2"><Key className="h-3 w-3" /> Credenciais Bot</h4>
+                                    <div className="space-y-3">
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[0.55rem] font-black uppercase opacity-40">Bot Token (BotFather)</Label>
+                                            <Input type="password" value={tgBotToken} onChange={(e) => setTgBotToken(e.target.value)} placeholder="123456:ABC-DEF..." className="bg-white/5 border-white/10 h-9 text-xs font-mono" />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[0.55rem] font-black uppercase opacity-40">Chat ID (Grupo/Canal)</Label>
+                                            <Input value={tgChatId} onChange={(e) => setTgChatId(e.target.value)} placeholder="-100..." className="bg-white/5 border-white/10 h-9 text-xs font-mono" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-4">
+                                    <h4 className="text-[0.65rem] font-black uppercase tracking-widest text-primary/70 flex items-center gap-2"><BellRing className="h-3 w-3" /> Eventos Notificáveis</h4>
+                                    <div className="grid grid-cols-1 gap-2.5">
+                                        {[
+                                            { label: 'Notificar WIN', state: tgNotifyWin, setter: setTgNotifyWin },
+                                            { label: 'Notificar LOSS', state: tgNotifyLoss, setter: setTgNotifyLoss },
+                                            { label: 'Notificar EMPATE', state: tgNotifyDraw, setter: setTgNotifyDraw },
+                                            { label: 'Mudança de Status (ON/OFF)', state: tgNotifyStatus, setter: setTgNotifyStatus },
+                                            { label: 'Novas Solicitações (Leads)', state: tgNotifyLeads, setter: setTgNotifyLeads },
+                                        ].map((item, idx) => (
+                                            <div key={idx} className="flex items-center justify-between p-2.5 bg-white/5 rounded-xl border border-white/5">
+                                                <span className="text-[0.6rem] font-black uppercase text-zinc-400">{item.label}</span>
+                                                <Switch checked={item.state} onCheckedChange={item.setter} className="scale-75" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* CUSTOMIZAÇÃO DE TEXTO */}
+                            <div className="space-y-4">
+                                <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-4">
+                                    <h4 className="text-[0.65rem] font-black uppercase tracking-widest text-primary/70 flex items-center gap-2"><MessageSquareCode className="h-3 w-3" /> Templates de Mensagens</h4>
+                                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1 no-scrollbar">
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[0.55rem] font-black uppercase opacity-40">Operação Vencedora (WIN)</Label>
+                                            <Textarea value={tgMsgWin} onChange={(e) => setTgMsgWin(e.target.value)} className="bg-white/5 border-white/10 text-[0.65rem] h-24 font-mono leading-relaxed" />
+                                            <span className="text-[0.5rem] opacity-30 italic">Variáveis: {'{{asset}}'}, {'{{direction}}'}, {'{{profit}}'}, {'{{url}}'}</span>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[0.55rem] font-black uppercase opacity-40">Copy Trade Ativado (Online)</Label>
+                                            <Textarea value={tgMsgActive} onChange={(e) => setTgMsgActive(e.target.value)} className="bg-white/5 border-white/10 text-[0.65rem] h-24 font-mono leading-relaxed" />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[0.55rem] font-black uppercase opacity-40">Relatório de Fechamento (Offline)</Label>
+                                            <Textarea value={tgMsgReport} onChange={(e) => setTgMsgReport(e.target.value)} className="bg-white/5 border-white/10 text-[0.65rem] h-32 font-mono leading-relaxed" />
+                                            <span className="text-[0.5rem] opacity-30 italic">Variáveis: {'{{wins}}'}, {'{{losses}}'}, {'{{profit}}'}, {'{{winrate}}'}, {'{{url}}'}</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </TabsContent>

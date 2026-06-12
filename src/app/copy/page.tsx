@@ -153,8 +153,9 @@ export default function CopyPage() {
   };
 
   const handleRequestVerification = async () => {
-    if (!formData.email.includes('@') || !formData.email.includes('.com')) {
-        alert("E-mail inválido. Por favor, verifique.");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email) || !formData.email.includes('.com')) {
+        alert("E-mail válido.");
         return;
     }
 
@@ -261,7 +262,7 @@ export default function CopyPage() {
                         </a>
                         <a href={masterStats.tiktok} target="_blank" className="p-2.5 bg-white/5 rounded-xl border border-white/5 hover:bg-primary hover:text-black transition-all">
                             <svg fill="currentColor" viewBox="0 0 448 512" className="h-4 w-4">
-                                <path d="M448 209.91a210.06 210.06 0 0 1 -122.77-39.25v178.72A162.55 162.55 0 1 1 185 188.31v89.89a74.62 74.62 0 1 0 52.23 71.18V0h88a121.18 121.18 0 0 0 1.86 22.17h0A122.18 121.18 0 0 0 381 102.39a121.43 121.43 0 0 0 67 20.14Z" />
+                                <path d="M448 209.91a210.06 210.06 0 0 1 -122.77-39.25v178.72A162.55 162.55 0 1 1 185 188.31v89.89a74.62 74.62 0 1 0 52.23 71.18V0h88a121.18 121.18 0 0 0 1.86 22.17h0A122.18 122.18 0 0 0 381 102.39a121.43 121.43 0 0 0 67 20.14Z" />
                             </svg>
                         </a>
                         <a href={masterStats.telegram} target="_blank" className="p-2.5 bg-white/5 rounded-xl border border-white/5 hover:bg-primary hover:text-black transition-all">

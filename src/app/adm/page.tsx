@@ -190,7 +190,11 @@ const formatFullDate = (dateStr: string, timeStr: string) => {
     if (!dateStr || !timeStr) return '--/--/-- --:--';
     try {
         const [y, m, d] = dateStr.split('-');
-        return `${d}/${m}/${y.substring(2)} ${timeStr}`;
+        const date = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = y.toString().substring(2);
+        return `${day}/${month}/${year} ${timeStr}`;
     } catch (e) {
         return `${dateStr} ${timeStr}`;
     }
@@ -1510,6 +1514,16 @@ export default function AdminDashboard() {
                                             <span className="text-[0.5rem] opacity-30 italic">Variáveis: {'{{asset}}'}, {'{{direction}}'}, {'{{profit}}'}, {'{{url}}'}</span>
                                         </div>
                                         <div className="space-y-1.5">
+                                            <Label className="text-[0.55rem] font-black uppercase opacity-40">Operação Perdedora (LOSS)</Label>
+                                            <Textarea value={tgMsgLoss} onChange={(e) => setTgMsgLoss(e.target.value)} className="bg-white/5 border-white/10 text-[0.65rem] h-24 font-mono leading-relaxed" />
+                                            <span className="text-[0.5rem] opacity-30 italic">Variáveis: {'{{asset}}'}, {'{{direction}}'}, {'{{profit}}'}, {'{{url}}'}</span>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[0.55rem] font-black uppercase opacity-40">Operação Empatada (DRAW)</Label>
+                                            <Textarea value={tgMsgDraw} onChange={(e) => setTgMsgDraw(e.target.value)} className="bg-white/5 border-white/10 text-[0.65rem] h-24 font-mono leading-relaxed" />
+                                            <span className="text-[0.5rem] opacity-30 italic">Variáveis: {'{{asset}}'}, {'{{direction}}'}, {'{{url}}'}</span>
+                                        </div>
+                                        <div className="space-y-1.5">
                                             <Label className="text-[0.55rem] font-black uppercase opacity-40">Copy Trade Ativado (Online)</Label>
                                             <Textarea value={tgMsgActive} onChange={(e) => setTgMsgActive(e.target.value)} className="bg-white/5 border-white/10 text-[0.65rem] h-24 font-mono leading-relaxed" />
                                         </div>
@@ -1554,7 +1568,7 @@ export default function AdminDashboard() {
                             <div className="space-y-1.5">
                                 <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5">
                                     <svg fill="currentColor" viewBox="0 0 448 512" className="h-3 w-3">
-                                        <path d="M448 209.91a210.06 210.06 0 0 1 -122.77-39.25v178.72A162.55 162.55 0 1 1 185 188.31v89.89a74.62 74.62 0 1 0 52.23 71.18V0h88a121.18 121.18 0 0 0 1.86 22.17h0A122.18 121.18 0 0 0 381 102.39a121.43 121.43 0 0 0 67 20.14Z" />
+                                        <path d="M448 209.91a210.06 210.06 0 0 1 -122.77-39.25v178.72A162.55 162.55 0 1 1 185 188.31v89.89a74.62 74.62 0 1 0 52.23 71.18V0h88a121.18 121.18 0 0 0 1.86 22.17h0A122.18 122.18 0 0 0 381 102.39a121.43 121.43 0 0 0 67 20.14Z" />
                                     </svg>
                                     TikTok URL
                                 </Label>

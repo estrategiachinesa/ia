@@ -185,7 +185,7 @@ type CopyTradeResult = {
     id: string;
     asset: string;
     direction: 'CALL' | 'PUT';
-    result: 'WIN' | 'LOSS';
+    result: 'WIN' | 'LOSS' | 'DRAW';
     time: string;
     date: string;
     netChange: number;
@@ -434,10 +434,10 @@ export default function AdminDashboard() {
       finally { setIsSavingCopy(false); }
   };
 
-  const handlePostTrade = async (result: 'WIN' | 'LOSS') => {
+  const handlePostTrade = async (result: 'WIN' | 'LOSS' | 'DRAW') => {
       const netChange = result === 'WIN' 
           ? (tradeValue * tradePayout / 100) 
-          : -tradeValue;
+          : (result === 'LOSS' ? -tradeValue : 0);
       
       let updatedResults;
       let newBalance;
@@ -488,7 +488,7 @@ export default function AdminDashboard() {
       if (firestore) {
           try {
               const wins = updatedResults.filter(r => r.result === 'WIN').length;
-              const newWinRate = ((wins / updatedResults.length) * 100).toFixed(1) + '%';
+              const newWinRate = updatedResults.length > 0 ? ((wins / updatedResults.length) * 100).toFixed(1) + '%' : '0%';
               const newProfit = updatedResults.reduce((acc, curr) => acc + curr.netChange, 0);
 
               await setDoc(doc(firestore, 'appConfig', 'copy'), {
@@ -514,7 +514,7 @@ export default function AdminDashboard() {
       setTradeValue(trade.value);
       setTradeTime(trade.time);
       setTradeDate(trade.date);
-      toast({ title: 'Editando Operação', description: `Ajuste os dados e salve clicando em WIN ou LOSS.` });
+      toast({ title: 'Editando Operação', description: `Ajuste os dados e salve clicando em WIN, LOSS ou EMPATE.` });
   };
 
   const removeTradeResult = async (id: string) => {
@@ -1243,7 +1243,7 @@ export default function AdminDashboard() {
                                             <Input type="time" value={tradeTime} onChange={(e) => setTradeTime(e.target.value)} className="h-8 bg-black/40 text-[0.65rem] border-white/5 font-mono" />
                                         </div>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-2">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                                         <Button 
                                             onClick={() => handlePostTrade('WIN')} 
                                             className="bg-green-600 hover:bg-green-700 text-white font-black text-[0.65rem] uppercase tracking-widest h-9 rounded-lg"
@@ -1255,6 +1255,12 @@ export default function AdminDashboard() {
                                             className="bg-red-600 hover:bg-red-700 text-white font-black text-[0.65rem] uppercase tracking-widest h-9 rounded-lg"
                                         >
                                             {editingTradeId ? 'SALVAR LOSS' : 'LANÇAR LOSS'}
+                                        </Button>
+                                        <Button 
+                                            onClick={() => handlePostTrade('DRAW')} 
+                                            className="bg-zinc-600 hover:bg-zinc-700 text-white font-black text-[0.65rem] uppercase tracking-widest h-9 rounded-lg"
+                                        >
+                                            {editingTradeId ? 'SALVAR EMPATE' : 'EMPATE'}
                                         </Button>
                                     </div>
                                 </div>
@@ -1287,7 +1293,10 @@ export default function AdminDashboard() {
                                             )}
                                         >
                                             <div className="flex items-center gap-2">
-                                                <Badge className={cn("text-[0.5rem] py-0 px-1", res.result === 'WIN' ? "bg-green-600" : "bg-red-600")}>{res.result}</Badge>
+                                                <Badge className={cn(
+                                                    "text-[0.5rem] py-0 px-1", 
+                                                    res.result === 'WIN' ? "bg-green-600" : (res.result === 'LOSS' ? "bg-red-600" : "bg-zinc-600")
+                                                )}>{res.result}</Badge>
                                                 <div className="flex flex-col">
                                                     <span className="text-[0.6rem] font-bold leading-none">{res.asset}</span>
                                                     <span className="text-[0.5rem] opacity-30 font-mono">{res.date} {res.time}</span>
@@ -1295,7 +1304,10 @@ export default function AdminDashboard() {
                                                 <span className={cn("text-[0.5rem] font-black", res.direction === 'CALL' ? "text-green-500" : "text-red-500")}>{res.direction}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <span className={cn("text-[0.6rem] font-black", res.netChange > 0 ? "text-green-500" : "text-red-500")}>
+                                                <span className={cn(
+                                                    "text-[0.6rem] font-black", 
+                                                    res.netChange > 0 ? "text-green-500" : (res.netChange < 0 ? "text-red-500" : "text-zinc-500")
+                                                )}>
                                                     {res.netChange > 0 ? '+' : ''}{res.netChange.toFixed(2)}
                                                 </span>
                                                 <Button size="icon" variant="ghost" className="h-5 w-5 text-red-500/50 hover:text-red-500" onClick={(e) => { e.stopPropagation(); removeTradeResult(res.id); }}>

@@ -104,11 +104,9 @@ export default function CopyPage() {
   };
 
   const profitTodayRaw = useMemo(() => {
-    const todayIso = new Date().toISOString().split('T')[0];
     const results = config?.copyResults || [];
-    return results
-      .filter((r: any) => r.date === todayIso)
-      .reduce((acc: number, curr: any) => acc + curr.netChange, 0);
+    if (results.length === 0) return 0;
+    return results[0].netChange;
   }, [config?.copyResults]);
 
   const masterStats = {
@@ -135,7 +133,13 @@ export default function CopyPage() {
   const affiliateLink = "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy";
 
   const handleRequestVerification = async () => {
-    if (!formData.email || formData.brokerId.length < 5 || !firestore) return;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+        alert("Por favor, insira um e-mail válido contendo @ e .com");
+        return;
+    }
+
+    if (formData.brokerId.length < 5 || !firestore) return;
     
     setIsSubmitting(true);
     try {
@@ -227,10 +231,10 @@ export default function CopyPage() {
                     </div>
                     <div className={cn(
                         "p-4 rounded-2xl border flex justify-between items-center",
-                        profitTodayRaw < 0 ? "bg-red-500/5 border-red-500/10" : "bg-green-500/5 border-green-500/10"
+                        profitTodayRaw < 0 ? "bg-red-500/5 border-red-500/10" : (profitTodayRaw === 0 ? "bg-zinc-500/5 border-zinc-500/10" : "bg-green-500/5 border-green-500/10")
                     )}>
-                        <p className={cn("text-[0.6rem] font-bold uppercase", profitTodayRaw < 0 ? "text-red-500" : "text-green-500")}>Lucro Hoje</p>
-                        <p className={cn("text-lg font-black font-mono tracking-tighter", profitTodayRaw < 0 ? "text-red-500" : "text-green-500")}>{masterStats.profitToday}</p>
+                        <p className={cn("text-[0.6rem] font-bold uppercase", profitTodayRaw < 0 ? "text-red-500" : (profitTodayRaw === 0 ? "text-zinc-500" : "text-green-500"))}>Lucro Hoje</p>
+                        <p className={cn("text-lg font-black font-mono tracking-tighter", profitTodayRaw < 0 ? "text-red-500" : (profitTodayRaw === 0 ? "text-zinc-500" : "text-green-500"))}>{masterStats.profitToday}</p>
                     </div>
                 </div>
 
@@ -291,13 +295,13 @@ export default function CopyPage() {
                                 <div className="flex flex-col items-end">
                                     <span className={cn(
                                         "text-[0.6rem] font-black uppercase tracking-widest",
-                                        trade.result === 'WIN' ? "text-green-500" : "text-red-500"
+                                        trade.result === 'WIN' ? "text-green-500" : (trade.result === 'LOSS' ? "text-red-500" : "text-zinc-500")
                                     )}>
                                         {trade.result}
                                     </span>
                                     <span className={cn(
                                         "text-[0.7rem] font-black font-mono leading-none my-0.5",
-                                        trade.netChange > 0 ? "text-green-500" : "text-red-500"
+                                        trade.netChange > 0 ? "text-green-500" : (trade.netChange < 0 ? "text-red-500" : "text-zinc-500")
                                     )}>
                                         {trade.netChange > 0 ? '+' : ''}{formatCurrency(trade.netChange)}
                                     </span>
@@ -310,7 +314,7 @@ export default function CopyPage() {
                                 </div>
                                 <div className={cn(
                                     "p-1.5 rounded-lg transition-transform group-hover:scale-110",
-                                    trade.result === 'WIN' ? "bg-green-500/10" : "bg-red-500/10"
+                                    trade.result === 'WIN' ? "bg-green-500/10" : (trade.result === 'LOSS' ? "bg-red-500/10" : "bg-zinc-500/10")
                                 )}>
                                     {trade.direction === 'CALL' ? (
                                         <ArrowUpCircle className="h-5 w-5 text-green-500" />

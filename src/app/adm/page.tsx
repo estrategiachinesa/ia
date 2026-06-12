@@ -66,7 +66,8 @@ import {
   CheckCircle2,
   Mail,
   User as UserIcon,
-  Check
+  Check,
+  Bot
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -247,6 +248,8 @@ export default function AdminDashboard() {
   const [copyTikTokUrl, setCopyTikTokUrl] = useState('');
   const [copyTelegramUrl, setCopyTelegramUrl] = useState('');
   const [copyIsActive, setCopyIsActive] = useState(true);
+  const [tgBotToken, setTgBotToken] = useState('');
+  const [tgChatId, setTgChatId] = useState('');
 
   // Local trade states for launching results
   const [tradeAsset, setTradeAsset] = useState('EUR/USD');
@@ -336,6 +339,8 @@ export default function AdminDashboard() {
             setCopyTikTokUrl(data.copyTikTokUrl || '');
             setCopyTelegramUrl(data.copyTelegramUrl || '');
             setCopyIsActive(data.copyIsActive ?? true);
+            setTgBotToken(data.tgBotToken || '');
+            setTgChatId(data.tgChatId || '');
         }
 
         if (timeSnap.exists()) {
@@ -437,11 +442,42 @@ export default function AdminDashboard() {
               copyInstagramUrl: copyInstagramUrl.trim(),
               copyTikTokUrl: copyTikTokUrl.trim(),
               copyTelegramUrl: copyTelegramUrl.trim(),
-              copyIsActive: copyIsActive
+              copyIsActive: copyIsActive,
+              tgBotToken: tgBotToken.trim(),
+              tgChatId: tgChatId.trim()
           }, { merge: true });
           toast({ title: 'Copy Trade Atualizado' });
       } catch (e) { toast({ variant: 'destructive', title: 'Erro ao salvar copy' }); }
       finally { setIsSavingCopy(false); }
+  };
+
+  const sendTelegramNotification = async (asset: string, direction: string, result: string, profit: number) => {
+    if (!tgBotToken || !tgChatId) return;
+
+    const emoji = result === 'WIN' ? '✅' : (result === 'LOSS' ? '❌' : '⚪');
+    const profitText = profit >= 0 ? `+ ${formatCurrency(profit)}` : formatCurrency(profit);
+    
+    const message = `🚀 *NOVA OPERAÇÃO COPIADA!*\n\n` +
+                  `${emoji} Resultado: *${result}*\n` +
+                  `📊 Ativo: *${asset}*\n` +
+                  `🚀 Ação: *${direction}*\n` +
+                  `💰 Lucro: *${profitText}*\n\n` +
+                  `🎯 *Membro sincronizado está lucrando agora.*\n` +
+                  `🔗 [CLIQUE AQUI PARA CONECTAR](${window.location.origin}/copy)`;
+
+    try {
+        await fetch(`https://api.telegram.org/bot${tgBotToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: tgChatId,
+                text: message,
+                parse_mode: 'Markdown'
+            })
+        });
+    } catch (e) {
+        console.error("Erro ao enviar Telegram:", e);
+    }
   };
 
   const handlePostTrade = async (result: 'WIN' | 'LOSS' | 'DRAW') => {
@@ -507,6 +543,10 @@ export default function AdminDashboard() {
                   copyMasterWinRate: newWinRate,
                   copyResults: updatedResults
               }, { merge: true });
+
+              // Enviar Notificação Telegram
+              sendTelegramNotification(tradeAsset, tradeDirection, result, netChange);
+
               toast({ 
                   title: editingTradeId ? 'Operação Atualizada!' : `Operação ${result} Lançada!`, 
                   description: `${tradeAsset} ${tradeDirection}: ${netChange > 0 ? '+' : ''}${formatCurrency(netChange)}` 
@@ -1189,6 +1229,17 @@ export default function AdminDashboard() {
                             <div className="space-y-1.5">
                                 <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><LinkIcon className="h-3 w-3" /> Link Afiliado Exclusivo</Label>
                                 <Input value={copyAffUrl} onChange={(e) => setCopyAffUrl(e.target.value)} placeholder="Link Exnova..." className="bg-white/5 border-white/10 h-10 text-xs font-mono" />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-white/5 pt-4">
+                            <div className="space-y-1.5">
+                                <Label className="text-[0.6rem] font-black uppercase text-primary flex items-center gap-1.5"><Bot className="h-3 w-3" /> Telegram Bot Token</Label>
+                                <Input type="password" value={tgBotToken} onChange={(e) => setTgBotToken(e.target.value)} placeholder="123456:ABC-DEF..." className="bg-white/5 border-white/10 h-10 text-xs font-mono" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[0.6rem] font-black uppercase text-primary flex items-center gap-1.5"><Send className="h-3 w-3" /> Chat ID do Grupo</Label>
+                                <Input value={tgChatId} onChange={(e) => setTgChatId(e.target.value)} placeholder="-100123456789" className="bg-white/5 border-white/10 h-10 text-xs font-mono" />
                             </div>
                         </div>
 

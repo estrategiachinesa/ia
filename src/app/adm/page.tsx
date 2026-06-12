@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -18,6 +17,7 @@ import {
   Save,
   Tv,
   Plus,
+  Minus,
   Link as LinkIcon,
   MousePointer2,
   Eye,
@@ -790,10 +790,10 @@ export default function AdminDashboard() {
     finally { setIsSavingLink(false); }
   };
 
-  const handleUpdateScore = async (field: 'wins' | 'losses', current: number) => {
+  const handleUpdateScore = async (field: 'wins' | 'losses', newValue: number) => {
     if (!firestore) return;
     try {
-      await setDoc(doc(firestore, 'session', 'monthly_score'), { [field]: current + 1 }, { merge: true });
+      await setDoc(doc(firestore, 'session', 'monthly_score'), { [field]: Math.max(0, newValue) }, { merge: true });
       toast({ title: 'Placar Atualizado' });
     } catch (e) { toast({ variant: 'destructive', title: 'Erro ao atualizar placar' }); }
   };
@@ -847,7 +847,7 @@ export default function AdminDashboard() {
     } catch (e) { toast({ variant: 'destructive', title: 'Erro ao avaliar' }); }
   };
 
-  const handleUpdateVipStatus = async (userId: string, newStatus: string, email: string) => {
+  const handleUpdateVipStatus = async (userId: string, email: string, newStatus: string) => {
     if (!firestore) return;
     
     try {
@@ -1168,15 +1168,17 @@ export default function AdminDashboard() {
                         <div className="space-y-2">
                             <Label className="text-[0.6rem] font-bold uppercase opacity-60">Wins (Mês)</Label>
                             <div className="flex items-center gap-2">
+                                <Button size="icon" variant="outline" className="h-10 w-10" onClick={() => handleUpdateScore('wins', ((sessionScore as any)?.wins || 0) - 1)} disabled={((sessionScore as any)?.wins || 0) <= 0}><Minus className="h-4 w-4" /></Button>
                                 <Input readOnly value={(sessionScore as any)?.wins || 0} className="bg-white/5 border-white/10 text-center text-green-500 font-black" />
-                                <Button size="icon" variant="outline" className="h-10 w-10" onClick={() => handleUpdateScore('wins', (sessionScore as any)?.wins || 0)}><Plus className="h-4 w-4" /></Button>
+                                <Button size="icon" variant="outline" className="h-10 w-10" onClick={() => handleUpdateScore('wins', ((sessionScore as any)?.wins || 0) + 1)}><Plus className="h-4 w-4" /></Button>
                             </div>
                         </div>
                         <div className="space-y-2">
                             <Label className="text-[0.6rem] font-bold uppercase opacity-60">Losses (Mês)</Label>
                             <div className="flex items-center gap-2">
+                                <Button size="icon" variant="outline" className="h-10 w-10" onClick={() => handleUpdateScore('losses', ((sessionScore as any)?.losses || 0) - 1)} disabled={((sessionScore as any)?.losses || 0) <= 0}><Minus className="h-4 w-4" /></Button>
                                 <Input readOnly value={(sessionScore as any)?.losses || 0} className="bg-white/5 border-white/10 text-center text-red-500 font-black" />
-                                <Button size="icon" variant="outline" className="h-10 w-10" onClick={() => handleUpdateScore('losses', (sessionScore as any)?.losses || 0)}><Plus className="h-4 w-4" /></Button>
+                                <Button size="icon" variant="outline" className="h-10 w-10" onClick={() => handleUpdateScore('losses', ((sessionScore as any)?.losses || 0) + 1)}><Plus className="h-4 w-4" /></Button>
                             </div>
                         </div>
                     </div>
@@ -1815,23 +1817,23 @@ export default function AdminDashboard() {
                       <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 rounded-full"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-black/95 border-white/10 w-64 p-2">
                         
-                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'PREMIUM', u.email)} className="text-xs font-bold text-purple-400 focus:bg-purple-400/10 mb-1">
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, u.email, 'PREMIUM')} className="text-xs font-bold text-purple-400 focus:bg-purple-400/10 mb-1">
                           <UserCheck className="h-4 w-4 mr-3" /> Aprovar para PREMIUM
                         </DropdownMenuItem>
 
-                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'DEPOSIT_PENDING', u.email)} className="text-xs font-bold text-emerald-400 focus:bg-emerald-400/10 mb-1">
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, u.email, 'DEPOSIT_PENDING')} className="text-xs font-bold text-emerald-400 focus:bg-emerald-400/10 mb-1">
                           <RefreshCcw className="h-4 w-4 mr-3" /> Mudar: Depósito Pendente
                         </DropdownMenuItem>
 
-                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'AWAITING_DEPOSIT', u.email)} className="text-xs font-bold text-cyan-400 focus:bg-cyan-400/10 mb-1">
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, u.email, 'AWAITING_DEPOSIT')} className="text-xs font-bold text-cyan-400 focus:bg-cyan-400/10 mb-1">
                           <Timer className="h-4 w-4 mr-3" /> Mudar: Aguard. Depósito
                         </DropdownMenuItem>
 
-                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'PENDING', u.email)} className="text-xs font-bold text-orange-400 focus:bg-orange-400/10 mb-1">
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, u.email, 'PENDING')} className="text-xs font-bold text-orange-400 focus:bg-orange-400/10 mb-1">
                           <RefreshCcw className="h-4 w-4 mr-3" /> Mudar: Pendente
                         </DropdownMenuItem>
 
-                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'VIP_RESET', u.email)} className="text-xs font-bold text-yellow-400 focus:bg-yellow-400/10 mb-1">
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, u.email, 'VIP_RESET')} className="text-xs font-bold text-yellow-400 focus:bg-yellow-400/10 mb-1">
                           <Zap className="h-4 w-4 mr-3" /> Tornar VIP (Reset)
                         </DropdownMenuItem>
                         
@@ -1852,7 +1854,7 @@ export default function AdminDashboard() {
 
                         <DropdownMenuSeparator className="bg-white/5" />
 
-                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, 'REJECTED', u.email)} className="text-xs font-bold text-red-400 focus:bg-red-400/10 mb-1">
+                        <DropdownMenuItem onClick={() => handleUpdateVipStatus(u.id, u.email, 'REJECTED')} className="text-xs font-bold text-red-400 focus:bg-red-400/10 mb-1">
                           <Ban className="h-4 w-4 mr-3" /> Recusar / Rebaixar
                         </DropdownMenuItem>
                         

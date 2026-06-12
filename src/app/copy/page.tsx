@@ -137,10 +137,24 @@ export default function CopyPage() {
 
   const affiliateLink = "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy";
 
+  const sendTelegramNotification = async (message: string) => {
+    if (!config?.tgEnabled || !config?.tgBotToken || !config?.tgChatId) return;
+    try {
+        await fetch(`https://api.telegram.org/bot${config.tgBotToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: config.tgChatId,
+                text: message,
+                parse_mode: 'Markdown'
+            })
+        });
+    } catch (e) { console.error("Erro Telegram:", e); }
+  };
+
   const handleRequestVerification = async () => {
-    // Validação de E-mail obrigatório com @ e .com
     if (!formData.email.includes('@') || !formData.email.includes('.com')) {
-        alert("Por favor, insira um e-mail válido.");
+        alert("E-mail inválido. Por favor, verifique.");
         return;
     }
 
@@ -157,6 +171,14 @@ export default function CopyPage() {
         localStorage.setItem('copy_requestId', requestId);
         setSavedRequestId(requestId);
         setStep('STEP_3_PENDING');
+
+        // Notificação de Lead
+        if (config?.tgNotifyLeads && config?.tgMsgLead) {
+            const msg = config.tgMsgLead
+                .replace('{{id}}', formData.brokerId)
+                .replace('{{url}}', `${window.location.origin}/copy`);
+            sendTelegramNotification(msg);
+        }
     } catch (e) {
         console.error(e);
     } finally {
@@ -186,6 +208,12 @@ export default function CopyPage() {
               status: 'DEPOSIT_PENDING'
           });
           setStep('STEP_7_VERIFYING_DEPOSIT');
+
+          // Notificação de Depósito
+          if (config?.tgNotifyLeads && config?.tgMsgDeposit) {
+            const msg = config.tgMsgDeposit.replace('{{url}}', `${window.location.origin}/copy`);
+            sendTelegramNotification(msg);
+          }
       } catch (e) {
           console.error(e);
       } finally {

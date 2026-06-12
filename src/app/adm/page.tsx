@@ -263,11 +263,14 @@ export default function AdminDashboard() {
   const [tgNotifyDraw, setTgNotifyDraw] = useState(true);
   const [tgNotifyStatus, setTgNotifyStatus] = useState(true);
   const [tgNotifyLeads, setTgNotifyLeads] = useState(true);
+  
   const [tgMsgWin, setTgMsgWin] = useState('🚀 *NOVA OPERAÇÃO COPIADA!*\n\n✅ Resultado: *WIN*\n📊 Ativo: *{{asset}}*\n🚀 Ação: *{{direction}}*\n💰 Lucro: *{{profit}}*\n\n🎯 *Membro sincronizado está lucrando agora.*\n🔗 [CLIQUE AQUI PARA CONECTAR]({{url}})');
   const [tgMsgLoss, setTgMsgLoss] = useState('📉 *OPERAÇÃO FINALIZADA*\n\n❌ Resultado: *LOSS*\n📊 Ativo: *{{asset}}*\n🚀 Ação: *{{direction}}*\n💰 Resultado: *{{profit}}*\n\n⚠️ Faz parte da gestão. O Master segue operando.\n🔗 [CLIQUE AQUI PARA CONECTAR]({{url}})');
   const [tgMsgDraw, setTgMsgDraw] = useState('⚪ *OPERAÇÃO EMPATADA*\n\n📊 Ativo: *{{asset}}*\n🚀 Ação: *{{direction}}*\n💰 Resultado: *0.00*\n\n🛡️ O algoritmo protegeu o capital do cluster.\n🔗 [CLIQUE AQUI PARA CONECTAR]({{url}})');
   const [tgMsgActive, setTgMsgActive] = useState('🚀 *COPY TRADE ATIVADO!*\n\nO algoritmo acaba de identificar liquidez. Todas as contas sincronizadas começarão a copiar agora.\n\n🔗 [CONECTAR AGORA]({{url}})');
   const [tgMsgReport, setTgMsgReport] = useState('📊 *RELATÓRIO DIÁRIO - ESTRATÉGIA CHINESA*\n\n✅ Placar: *{{wins}}W - {{losses}}L*\n💰 Lucro Acumulado: *{{profit}}*\n🎯 Assertividade: *{{winrate}}*\n\nQuem seguiu o Copy Master hoje saiu no lucro. Conecte-se para amanhã!\n\n🔗 [CLIQUE AQUI]({{url}})');
+  const [tgMsgLead, setTgMsgLead] = useState('👤 *NOVA SOLICITAÇÃO DE CONEXÃO!*\n\nUm novo membro acaba de enviar o ID para validação no Cluster de Elite.\n\n🆔 ID Corretora: *{{id}}*\n⏳ Status: *EM ANÁLISE*\n\nRestam poucas vagas para a sincronização gratuita hoje!\n\n🔗 [QUERO MINHA VAGA]({{url}})');
+  const [tgMsgDeposit, setTgMsgDeposit] = useState('💰 *MARGEM DE SEGURANÇA ATIVADA!*\n\nO sistema detectou um novo aporte de capital. Mais uma conta sincronizada com o Master Trader com sucesso!\n\n✅ Sincronização: *LIBERADA*\n🎯 Operações: *ATIVAS*\n\n🔗 [CONECTAR MEU ID TAMBÉM]({{url}})');
 
   // Local trade states for launching results
   const [tradeAsset, setTradeAsset] = useState('EUR/USD');
@@ -373,6 +376,8 @@ export default function AdminDashboard() {
             if (data.tgMsgDraw) setTgMsgDraw(data.tgMsgDraw);
             if (data.tgMsgActive) setTgMsgActive(data.tgMsgActive);
             if (data.tgMsgReport) setTgMsgReport(data.tgMsgReport);
+            if (data.tgMsgLead) setTgMsgLead(data.tgMsgLead);
+            if (data.tgMsgDeposit) setTgMsgDeposit(data.tgMsgDeposit);
         }
 
         if (timeSnap.exists()) {
@@ -444,7 +449,9 @@ export default function AdminDashboard() {
   const winRate = useMemo(() => {
     if (copyResults.length === 0) return '0%';
     const wins = copyResults.filter(r => r.result === 'WIN').length;
-    return ((wins / copyResults.length) * 100).toFixed(1) + '%';
+    const losses = copyResults.filter(r => r.result === 'LOSS').length;
+    if (wins + losses === 0) return '0%';
+    return ((wins / (wins + losses)) * 100).toFixed(1) + '%';
   }, [copyResults]);
 
   const scoreboard = useMemo(() => {
@@ -502,7 +509,9 @@ export default function AdminDashboard() {
               tgMsgLoss,
               tgMsgDraw,
               tgMsgActive,
-              tgMsgReport
+              tgMsgReport,
+              tgMsgLead,
+              tgMsgDeposit
           }, { merge: true });
 
           // Notificações de Status Telegram
@@ -599,7 +608,8 @@ export default function AdminDashboard() {
       if (firestore) {
           try {
               const wins = updatedResults.filter(r => r.result === 'WIN').length;
-              const newWinRate = updatedResults.length > 0 ? ((wins / updatedResults.length) * 100).toFixed(1) + '%' : '0%';
+              const losses = updatedResults.filter(r => r.result === 'LOSS').length;
+              const newWinRate = (wins + losses) > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) + '%' : '0%';
               const newProfit = updatedResults.reduce((acc, curr) => acc + curr.netChange, 0);
 
               await setDoc(doc(firestore, 'appConfig', 'copy'), {
@@ -643,8 +653,9 @@ export default function AdminDashboard() {
 
       if (firestore) {
           try {
-              const wins = updatedResults.length > 0 ? updatedResults.filter(r => r.result === 'WIN').length : 0;
-              const newWinRate = updatedResults.length > 0 ? ((wins / updatedResults.length) * 100).toFixed(1) + '%' : '0%';
+              const wins = updatedResults.filter(r => r.result === 'WIN').length;
+              const losses = updatedResults.filter(r => r.result === 'LOSS').length;
+              const newWinRate = (wins + losses) > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) + '%' : '0%';
               const newProfit = updatedResults.reduce((acc, curr) => acc + curr.netChange, 0);
 
               await setDoc(doc(firestore, 'appConfig', 'copy'), {
@@ -1506,6 +1517,16 @@ export default function AdminDashboard() {
                                             <Label className="text-[0.55rem] font-black uppercase opacity-40">Relatório de Fechamento (Offline)</Label>
                                             <Textarea value={tgMsgReport} onChange={(e) => setTgMsgReport(e.target.value)} className="bg-white/5 border-white/10 text-[0.65rem] h-32 font-mono leading-relaxed" />
                                             <span className="text-[0.5rem] opacity-30 italic">Variáveis: {'{{wins}}'}, {'{{losses}}'}, {'{{profit}}'}, {'{{winrate}}'}, {'{{url}}'}</span>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[0.55rem] font-black uppercase opacity-40">Nova Solicitação (Lead)</Label>
+                                            <Textarea value={tgMsgLead} onChange={(e) => setTgMsgLead(e.target.value)} className="bg-white/5 border-white/10 text-[0.65rem] h-24 font-mono leading-relaxed" />
+                                            <span className="text-[0.5rem] opacity-30 italic">Variáveis: {'{{id}}'}, {'{{url}}'}</span>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[0.55rem] font-black uppercase opacity-40">Depósito/Margem Ativada</Label>
+                                            <Textarea value={tgMsgDeposit} onChange={(e) => setTgMsgDeposit(e.target.value)} className="bg-white/5 border-white/10 text-[0.65rem] h-24 font-mono leading-relaxed" />
+                                            <span className="text-[0.5rem] opacity-30 italic">Variável: {'{{url}}'}</span>
                                         </div>
                                     </div>
                                 </div>

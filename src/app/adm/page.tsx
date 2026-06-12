@@ -1167,7 +1167,12 @@ export default function AdminDashboard() {
                                 <Input value={copyInstagramUrl} onChange={(e) => setCopyInstagramUrl(e.target.value)} className="bg-white/5 border-white/10 h-10 text-xs" />
                             </div>
                             <div className="space-y-1.5">
-                                <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><MessageSquare className="h-3 w-3"/> TikTok URL</Label>
+                                <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5">
+                                    <svg fill="currentColor" viewBox="0 0 448 512" className="h-3 w-3">
+                                        <path d="M448 209.91a210.06 210.06 0 0 1 -122.77-39.25v178.72A162.55 162.55 0 1 1 185 188.31v89.89a74.62 74.62 0 1 0 52.23 71.18V0h88a121.18 121.18 0 0 0 1.86 22.17h0A122.18 121.18 0 0 0 381 102.39a121.43 121.43 0 0 0 67 20.14Z" />
+                                    </svg>
+                                    TikTok URL
+                                </Label>
                                 <Input value={copyTikTokUrl} onChange={(e) => setCopyTikTokUrl(e.target.value)} className="bg-white/5 border-white/10 h-10 text-xs" />
                             </div>
                             <div className="space-y-1.5">

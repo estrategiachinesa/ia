@@ -21,7 +21,6 @@ import {
   Trophy,
   Instagram,
   Send,
-  MessageSquare,
   Mail,
   User as UserIcon,
   ShieldAlert,
@@ -99,7 +98,11 @@ export default function CopyPage() {
     if (!dateStr || !timeStr) return '--/--/-- --:--';
     try {
         const [y, m, d] = dateStr.split('-');
-        return `${d}/${m}/${y.substring(2)} ${timeStr}`;
+        const date = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = y.toString().substring(2);
+        return `${day}/${month}/${year} ${timeStr}`;
     } catch (e) {
         return `${dateStr} ${timeStr}`;
     }
@@ -137,7 +140,7 @@ export default function CopyPage() {
   const handleRequestVerification = async () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-        alert("E-mail válido necessário");
+        alert("Por favor, insira um e-mail válido.");
         return;
     }
 
@@ -229,7 +232,9 @@ export default function CopyPage() {
                             <Instagram className="h-4 w-4" />
                         </a>
                         <a href={masterStats.tiktok} target="_blank" className="p-2.5 bg-white/5 rounded-xl border border-white/5 hover:bg-primary hover:text-black transition-all">
-                            <MessageSquare className="h-4 w-4" />
+                            <svg fill="currentColor" viewBox="0 0 448 512" className="h-4 w-4">
+                                <path d="M448 209.91a210.06 210.06 0 0 1 -122.77-39.25v178.72A162.55 162.55 0 1 1 185 188.31v89.89a74.62 74.62 0 1 0 52.23 71.18V0h88a121.18 121.18 0 0 0 1.86 22.17h0A122.18 121.18 0 0 0 381 102.39a121.43 121.43 0 0 0 67 20.14Z" />
+                            </svg>
                         </a>
                         <a href={masterStats.telegram} target="_blank" className="p-2.5 bg-white/5 rounded-xl border border-white/5 hover:bg-primary hover:text-black transition-all">
                             <Send className="h-4 w-4" />

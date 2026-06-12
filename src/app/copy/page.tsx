@@ -138,8 +138,10 @@ export default function CopyPage() {
   const affiliateLink = "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy";
 
   const handleRequestVerification = async () => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+\.[^\s@]+$/; 
+    const simpleEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!simpleEmailRegex.test(formData.email)) {
         alert("Por favor, insira um e-mail válido.");
         return;
     }

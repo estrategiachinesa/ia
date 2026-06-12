@@ -248,6 +248,7 @@ export default function AdminDashboard() {
   const [copyTikTokUrl, setCopyTikTokUrl] = useState('');
   const [copyTelegramUrl, setCopyTelegramUrl] = useState('');
   const [copyIsActive, setCopyIsActive] = useState(true);
+  const [prevCopyIsActive, setPrevCopyIsActive] = useState(true);
   const [tgBotToken, setTgBotToken] = useState('');
   const [tgChatId, setTgChatId] = useState('');
 
@@ -339,6 +340,7 @@ export default function AdminDashboard() {
             setCopyTikTokUrl(data.copyTikTokUrl || '');
             setCopyTelegramUrl(data.copyTelegramUrl || '');
             setCopyIsActive(data.copyIsActive ?? true);
+            setPrevCopyIsActive(data.copyIsActive ?? true);
             setTgBotToken(data.tgBotToken || '');
             setTgChatId(data.tgChatId || '');
         }
@@ -425,6 +427,21 @@ export default function AdminDashboard() {
       return copyResults.reduce((acc, curr) => acc + curr.netChange, 0);
   }, [copyResults]);
 
+  const sendSimpleNotification = async (message: string) => {
+    if (!tgBotToken || !tgChatId) return;
+    try {
+        await fetch(`https://api.telegram.org/bot${tgBotToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: tgChatId,
+                text: message,
+                parse_mode: 'Markdown'
+            })
+        });
+    } catch (e) { console.error("Erro Telegram:", e); }
+  };
+
   const handleSaveCopyConfigs = async () => {
       if (!firestore) return;
       setIsSavingCopy(true);
@@ -446,12 +463,24 @@ export default function AdminDashboard() {
               tgBotToken: tgBotToken.trim(),
               tgChatId: tgChatId.trim()
           }, { merge: true });
+
+          // Notificações de Status Telegram
+          if (copyIsActive !== prevCopyIsActive) {
+              if (copyIsActive) {
+                  sendSimpleNotification(`🚀 *COPY TRADE ATIVADO!*\n\nO algoritmo acaba de identificar liquidez. Todas as contas sincronizadas começarão a copiar agora.\n\n🔗 [CONECTAR AGORA](${window.location.origin}/copy)`);
+              } else {
+                  const profitText = currentProfit >= 0 ? `+ ${formatCurrency(currentProfit)}` : formatCurrency(currentProfit);
+                  sendSimpleNotification(`📊 *RELATÓRIO DIÁRIO - ESTRATÉGIA CHINESA*\n\n✅ Placar: *${scoreboard.wins}W - ${scoreboard.losses}L*\n💰 Lucro Acumulado: *${profitText}*\n🎯 Assertividade: *${winRate}*\n\nQuem seguiu o Copy Master hoje saiu no lucro. Conecte-se para amanhã!\n\n🔗 [CLIQUE AQUI](${window.location.origin}/copy)`);
+              }
+              setPrevCopyIsActive(copyIsActive);
+          }
+
           toast({ title: 'Copy Trade Atualizado' });
       } catch (e) { toast({ variant: 'destructive', title: 'Erro ao salvar copy' }); }
       finally { setIsSavingCopy(false); }
   };
 
-  const sendTelegramNotification = async (asset: string, direction: string, result: string, profit: number) => {
+  const sendTelegramTradeNotification = async (asset: string, direction: string, result: string, profit: number) => {
     if (!tgBotToken || !tgChatId) return;
 
     const emoji = result === 'WIN' ? '✅' : (result === 'LOSS' ? '❌' : '⚪');
@@ -465,19 +494,7 @@ export default function AdminDashboard() {
                   `🎯 *Membro sincronizado está lucrando agora.*\n` +
                   `🔗 [CLIQUE AQUI PARA CONECTAR](${window.location.origin}/copy)`;
 
-    try {
-        await fetch(`https://api.telegram.org/bot${tgBotToken}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: tgChatId,
-                text: message,
-                parse_mode: 'Markdown'
-            })
-        });
-    } catch (e) {
-        console.error("Erro ao enviar Telegram:", e);
-    }
+    sendSimpleNotification(message);
   };
 
   const handlePostTrade = async (result: 'WIN' | 'LOSS' | 'DRAW') => {
@@ -520,7 +537,6 @@ export default function AdminDashboard() {
           newBalance = copyBalance + netChange;
       }
 
-      // Sort by date and time
       updatedResults.sort((a, b) => {
           const dateTimeA = new Date(`${a.date}T${a.time}`).getTime();
           const dateTimeB = new Date(`${b.date}T${b.time}`).getTime();
@@ -544,8 +560,7 @@ export default function AdminDashboard() {
                   copyResults: updatedResults
               }, { merge: true });
 
-              // Enviar Notificação Telegram
-              sendTelegramNotification(tradeAsset, tradeDirection, result, netChange);
+              sendTelegramTradeNotification(tradeAsset, tradeDirection, result, netChange);
 
               toast({ 
                   title: editingTradeId ? 'Operação Atualizada!' : `Operação ${result} Lançada!`, 
@@ -1265,7 +1280,7 @@ export default function AdminDashboard() {
                                     </div>
                                     <div className="grid grid-cols-2 gap-2">
                                         <div className="space-y-1">
-                                            <Label className="text-[0.55rem] font-bold uppercase opacity-40">Par</Label>
+                                            <Label className="text-[0.55rem] font-bold uppercase opacity-40">Ativo</Label>
                                             <Select value={tradeAsset} onValueChange={setTradeAsset}>
                                                 <SelectTrigger className="h-8 bg-black/40 text-[0.6rem] border-white/5">
                                                     <SelectValue />

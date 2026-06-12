@@ -27,7 +27,8 @@ import {
   ShieldAlert,
   Clock,
   Lock,
-  ChevronRight
+  ChevronRight,
+  Radio
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -44,7 +45,7 @@ import Image from 'next/image';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, setDoc, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
 
-type ConnectionStep = 'STEP_1_REGISTER' | 'STEP_2_FORM' | 'STEP_3_PENDING' | 'STEP_4_AWAITING_DEPOSIT' | 'STEP_5_SUCCESS' | 'STEP_6_REJECTED';
+type ConnectionStep = 'STEP_1_REGISTER' | 'STEP_2_FORM' | 'STEP_3_PENDING' | 'STEP_4_AWAITING_DEPOSIT' | 'STEP_5_SUCCESS' | 'STEP_6_REJECTED' | 'STEP_7_VERIFYING_DEPOSIT';
 
 export default function CopyPage() {
   const { config, isConfigLoading } = useAppConfig();
@@ -56,6 +57,7 @@ export default function CopyPage() {
   const [step, setStep] = useState<ConnectionStep>('STEP_1_REGISTER');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUpdatingName, setIsUpdatingName] = useState(false);
+  const [isConfirmingDeposit, setIsConfirmingDeposit] = useState(false);
 
   const [savedRequestId, setSavedRequestId] = useState<string | null>(null);
   
@@ -76,6 +78,7 @@ export default function CopyPage() {
     if (myRequest) {
         if (myRequest.status === 'PENDING') setStep('STEP_3_PENDING');
         else if (myRequest.status === 'AWAITING_DEPOSIT') setStep('STEP_4_AWAITING_DEPOSIT');
+        else if (myRequest.status === 'DEPOSIT_PENDING') setStep('STEP_7_VERIFYING_DEPOSIT');
         else if (myRequest.status === 'APPROVED') setStep('STEP_5_SUCCESS');
         else if (myRequest.status === 'REJECTED') setStep('STEP_6_REJECTED');
     }
@@ -102,7 +105,7 @@ export default function CopyPage() {
     }
   };
 
-  const profitTodayRaw = useMemo(() => {
+  const lastTradeResult = useMemo(() => {
     const results = config?.copyResults || [];
     if (results.length === 0) return 0;
     return results[0].netChange;
@@ -116,7 +119,7 @@ export default function CopyPage() {
     telegram: config?.copyTelegramUrl || "#",
     balance: formatCurrency(config?.copyMasterBalance ?? 245892.10),
     initialBalance: formatCurrency(config?.copyInitialBalance ?? 240000.00),
-    profitToday: (profitTodayRaw >= 0 ? '+ ' : '') + formatCurrency(profitTodayRaw),
+    profitToday: (lastTradeResult >= 0 ? '+ ' : '') + formatCurrency(lastTradeResult),
     winRate: config?.copyMasterWinRate || "0%",
     results: config?.copyResults || [],
     isActive: config?.copyIsActive ?? true
@@ -134,7 +137,7 @@ export default function CopyPage() {
   const handleRequestVerification = async () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-        alert("Por favor, insira um e-mail válido contendo @ e .com");
+        alert("E-mail válido necessário");
         return;
     }
 
@@ -169,6 +172,21 @@ export default function CopyPage() {
           console.error(e);
       } finally {
           setIsUpdatingName(false);
+      }
+  };
+
+  const handleConfirmDeposit = async () => {
+      if (!savedRequestId || !firestore) return;
+      setIsConfirmingDeposit(true);
+      try {
+          await updateDoc(doc(firestore, 'copyRequests', savedRequestId), {
+              status: 'DEPOSIT_PENDING'
+          });
+          setStep('STEP_7_VERIFYING_DEPOSIT');
+      } catch (e) {
+          console.error(e);
+      } finally {
+          setIsConfirmingDeposit(false);
       }
   };
 
@@ -230,10 +248,10 @@ export default function CopyPage() {
                     </div>
                     <div className={cn(
                         "p-4 rounded-2xl border flex justify-between items-center",
-                        profitTodayRaw < 0 ? "bg-red-500/5 border-red-500/10" : (profitTodayRaw === 0 ? "bg-zinc-500/5 border-zinc-500/10" : "bg-green-500/5 border-green-500/10")
+                        lastTradeResult < 0 ? "bg-red-500/5 border-red-500/10" : (lastTradeResult === 0 ? "bg-zinc-500/5 border-zinc-500/10" : "bg-green-500/5 border-green-500/10")
                     )}>
-                        <p className={cn("text-[0.6rem] font-bold uppercase", profitTodayRaw < 0 ? "text-red-500" : (profitTodayRaw === 0 ? "text-zinc-500" : "text-green-500"))}>Lucro Hoje</p>
-                        <p className={cn("text-lg font-black font-mono tracking-tighter", profitTodayRaw < 0 ? "text-red-500" : (profitTodayRaw === 0 ? "text-zinc-500" : "text-green-500"))}>{masterStats.profitToday}</p>
+                        <p className={cn("text-[0.6rem] font-bold uppercase", lastTradeResult < 0 ? "text-red-500" : (lastTradeResult === 0 ? "text-zinc-500" : "text-green-500"))}>Lucro Hoje</p>
+                        <p className={cn("text-lg font-black font-mono tracking-tighter", lastTradeResult < 0 ? "text-red-500" : (lastTradeResult === 0 ? "text-zinc-500" : "text-green-500"))}>{masterStats.profitToday}</p>
                     </div>
                 </div>
 
@@ -265,7 +283,7 @@ export default function CopyPage() {
                         <span className="text-[0.7rem] font-black uppercase opacity-40">Assertividade Global</span>
                         <span className="text-sm font-black text-green-500">{masterStats.winRate}</span>
                     </div>
-                    <Progress value={parseFloat(masterStats.winRate) || 0} className="h-2 bg-white/5" indicatorClassName="bg-green-500" />
+                    <Progress value={parseFloat(masterStats.winRate) || 0} indicatorClassName="bg-green-500" className="h-2 bg-white/5" />
                 </div>
             </CardContent>
           </Card>
@@ -282,7 +300,7 @@ export default function CopyPage() {
                         <div key={trade.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 group hover:border-white/10 transition-all">
                             <div className="flex items-center gap-4">
                                 <div className="flex flex-col">
-                                    <span className="text-[0.75rem] font-black font-mono leading-tight text-white/90">
+                                    <span className="text-[0.7rem] font-black font-mono leading-tight text-white/90">
                                         {formatFullDate(trade.date, trade.time)}
                                     </span>
                                 </div>
@@ -486,10 +504,39 @@ export default function CopyPage() {
                                         ATIVAR MARGEM E CONECTAR AGORA <CircleDollarSign className="ml-2 h-6 w-6" />
                                     </a>
                                 </Button>
+                                <Button 
+                                    variant="outline"
+                                    onClick={handleConfirmDeposit}
+                                    disabled={isConfirmingDeposit}
+                                    className="w-full h-14 border-white/10 text-xs font-black uppercase tracking-widest rounded-2xl"
+                                >
+                                    {isConfirmingDeposit ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <CheckCircle2 className="mr-2 h-4 w-4" />} JÁ FIZ O DEPÓSITO
+                                </Button>
                                 <p className="text-[0.6rem] font-bold text-muted-foreground uppercase opacity-40">O sistema liberará a sincronização automaticamente após a detecção do aporte.</p>
                             </div>
                         </div>
                     )}
+                </div>
+            )}
+
+            {step === 'STEP_7_VERIFYING_DEPOSIT' && (
+                <div className="max-w-md w-full text-center space-y-8 z-10 animate-in zoom-in-95">
+                    <div className="w-24 h-24 bg-cyan-500/10 rounded-full flex items-center justify-center mx-auto border border-cyan-500/20">
+                        <RefreshCcw className="h-12 w-12 text-cyan-500 animate-spin" style={{ animationDuration: '3s' }} />
+                    </div>
+                    <div className="space-y-4">
+                        <h2 className="text-2xl font-headline font-black uppercase text-white">Validando Aporte</h2>
+                        <p className="text-muted-foreground text-sm leading-relaxed">
+                            O cluster de segurança recebeu o seu sinal de depósito. Estamos a verificar junto à rede blockchain da corretora a integridade da margem para o ID <span className="text-primary font-mono">{myRequest?.brokerId}</span>.
+                        </p>
+                        <div className="p-4 bg-cyan-500/5 rounded-2xl border border-cyan-500/10 flex items-center justify-center gap-3">
+                            <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                            </span>
+                            <span className="text-[0.6rem] font-black text-cyan-500 uppercase tracking-[0.2em]">Status: VERIFICANDO LIQUIDEZ...</span>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -503,6 +550,18 @@ export default function CopyPage() {
                         <p className="text-muted-foreground text-sm">
                             Conexão de baixa latência estabelecida. Todas as ordens da conta Master de {masterStats.traderName} estão sendo replicadas em sua conta agora.
                         </p>
+                        
+                        {masterStats.isActive && (
+                            <div className="p-5 bg-green-500/10 rounded-2xl border border-green-500/30 space-y-2 animate-in slide-in-from-top-4 duration-1000">
+                                <div className="flex items-center justify-center gap-2">
+                                    <Radio className="h-4 w-4 text-green-500 animate-pulse" />
+                                    <span className="text-xs font-black text-green-500 uppercase tracking-widest">EXECUTANDO AGORA</span>
+                                </div>
+                                <h4 className="text-sm font-black text-white uppercase tracking-tighter">CONTA CONECTADA NO MOMENTO, TRADER EM ANÁLISE</h4>
+                                <p className="text-[0.55rem] text-green-500/60 font-bold uppercase">Aguarde a abertura da próxima ordem automática.</p>
+                            </div>
+                        )}
+
                         <div className="flex items-center justify-center gap-4 bg-black/40 p-4 rounded-2xl border border-white/5">
                             <div className="flex flex-col">
                                 <span className="text-[0.5rem] font-bold opacity-40 uppercase">Latência</span>

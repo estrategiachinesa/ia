@@ -1140,7 +1140,7 @@ export default function AdminDashboard() {
                         <TabsTrigger value="operacoes" className="text-[0.6rem] font-black uppercase tracking-widest">Operações</TabsTrigger>
                         <TabsTrigger value="pedidos" className="text-[0.6rem] font-black uppercase tracking-widest relative">
                             Pedidos
-                            {copyRequests && copyRequests.filter(r => r.status === 'PENDING').length > 0 && (
+                            {copyRequests && copyRequests.filter(r => r.status === 'PENDING' || r.status === 'DEPOSIT_PENDING').length > 0 && (
                                 <span className="absolute -top-1 -right-1 flex h-3 w-3">
                                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                                     <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
@@ -1347,11 +1347,13 @@ export default function AdminDashboard() {
                                             "text-[0.5rem] font-black uppercase",
                                             req.status === 'PENDING' ? "bg-orange-500" :
                                             req.status === 'AWAITING_DEPOSIT' ? "bg-cyan-500 text-black" :
+                                            req.status === 'DEPOSIT_PENDING' ? "bg-emerald-500 text-black animate-pulse" :
                                             req.status === 'APPROVED' ? "bg-green-500" :
                                             req.status === 'REJECTED' ? "bg-red-500" : "bg-zinc-700"
                                         )}>
                                             {req.status === 'PENDING' ? 'Validar ID' : 
                                              req.status === 'AWAITING_DEPOSIT' ? 'Aguard. Depósito' :
+                                             req.status === 'DEPOSIT_PENDING' ? 'Depósito Feito!' :
                                              req.status === 'APPROVED' ? 'Sincronizado' : 
                                              req.status === 'REJECTED' ? 'Recusado' : req.status}
                                         </Badge>

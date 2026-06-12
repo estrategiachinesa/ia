@@ -138,10 +138,8 @@ export default function CopyPage() {
   const affiliateLink = "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy";
 
   const handleRequestVerification = async () => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+\.[^\s@]+$/; 
-    const simpleEmailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
-    if (!simpleEmailRegex.test(formData.email)) {
+    // Validação de E-mail obrigatório com @ e .com
+    if (!formData.email.includes('@') || !formData.email.includes('.com')) {
         alert("Por favor, insira um e-mail válido.");
         return;
     }
@@ -611,7 +609,7 @@ export default function CopyPage() {
              ].map((b, i) => (
                 <div key={i} className="p-6 bg-white/5 border border-white/5 rounded-3xl space-y-3">
                     <b.icon className="h-6 w-6 text-primary" />
-                    <h4 className="text-sm font-black uppercase tracking-tight text-white">{b.title}</h4>
+                    <h4 className="text-sm font-black uppercase tracking tight text-white">{b.title}</h4>
                     <p className="text-[0.65rem] text-muted-foreground font-bold leading-relaxed">{b.desc}</p>
                 </div>
              ))}

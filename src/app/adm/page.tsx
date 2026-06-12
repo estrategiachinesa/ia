@@ -1238,11 +1238,8 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
-                <Tabs defaultValue="perfil" className="w-full">
+                <Tabs defaultValue="pedidos" className="w-full">
                     <TabsList className="grid w-full grid-cols-4 bg-black/40 border border-white/5 rounded-xl h-10 mb-4">
-                        <TabsTrigger value="perfil" className="text-[0.6rem] font-black uppercase tracking-widest">Perfil</TabsTrigger>
-                        <TabsTrigger value="bots" className="text-[0.6rem] font-black uppercase tracking-widest"><Bot className="h-3 w-3 mr-1" /> Bots</TabsTrigger>
-                        <TabsTrigger value="operacoes" className="text-[0.6rem] font-black uppercase tracking-widest">Operações</TabsTrigger>
                         <TabsTrigger value="pedidos" className="text-[0.6rem] font-black uppercase tracking-widest relative">
                             Pedidos
                             {copyRequests && copyRequests.filter(r => r.status === 'PENDING' || r.status === 'DEPOSIT_PENDING').length > 0 && (
@@ -1252,135 +1249,60 @@ export default function AdminDashboard() {
                                 </span>
                             )}
                         </TabsTrigger>
+                        <TabsTrigger value="operacoes" className="text-[0.6rem] font-black uppercase tracking-widest">Operações</TabsTrigger>
+                        <TabsTrigger value="bots" className="text-[0.6rem] font-black uppercase tracking-widest"><Bot className="h-3 w-3 mr-1" /> Bots</TabsTrigger>
+                        <TabsTrigger value="perfil" className="text-[0.6rem] font-black uppercase tracking-widest">Perfil</TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="perfil" className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                                <Label className="text-[0.6rem] font-bold uppercase opacity-60">Nome do Trader</Label>
-                                <Input value={copyTraderName} onChange={(e) => setCopyTraderName(e.target.value)} className="bg-white/5 border-white/10 h-10 text-xs" />
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><ImageIcon className="h-3 w-3"/> Link Foto de Perfil (JPG/PNG)</Label>
-                                <Input value={copyProfilePicUrl} onChange={(e) => setCopyProfilePicUrl(e.target.value)} placeholder="https://link-da-foto.com/foto.jpg" className="bg-white/5 border-white/10 h-10 text-xs" />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div className="space-y-1.5">
-                                <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><Instagram className="h-3 w-3"/> Instagram URL</Label>
-                                <Input value={copyInstagramUrl} onChange={(e) => setCopyInstagramUrl(e.target.value)} className="bg-white/5 border-white/10 h-10 text-xs" />
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5">
-                                    <svg fill="currentColor" viewBox="0 0 448 512" className="h-3 w-3">
-                                        <path d="M448 209.91a210.06 210.06 0 0 1 -122.77-39.25v178.72A162.55 162.55 0 1 1 185 188.31v89.89a74.62 74.62 0 1 0 52.23 71.18V0h88a121.18 121.18 0 0 0 1.86 22.17h0A122.18 121.18 0 0 0 381 102.39a121.43 121.43 0 0 0 67 20.14Z" />
-                                    </svg>
-                                    TikTok URL
-                                </Label>
-                                <Input value={copyTikTokUrl} onChange={(e) => setCopyTikTokUrl(e.target.value)} className="bg-white/5 border-white/10 h-10 text-xs" />
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><Send className="h-3 w-3"/> Telegram URL</Label>
-                                <Input value={copyTelegramUrl} onChange={(e) => setCopyTelegramUrl(e.target.value)} className="bg-white/5 border-white/10 h-10 text-xs" />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-1.5">
-                                <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><CircleDollarSign className="h-3 w-3" /> Liquidez Requerida (R$)</Label>
-                                <Input type="number" value={copyLiquidity} onChange={(e) => setCopyLiquidity(parseInt(e.target.value))} className="bg-white/5 border-white/10 h-10 text-xs" />
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><LinkIcon className="h-3 w-3" /> Link Afiliado Exclusivo</Label>
-                                <Input value={copyAffUrl} onChange={(e) => setCopyAffUrl(e.target.value)} placeholder="Link Exnova..." className="bg-white/5 border-white/10 h-10 text-xs font-mono" />
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3">
-                            <div className="space-y-1.5">
-                                <Label className="text-[0.6rem] font-bold uppercase opacity-60">Saldo Inicial</Label>
-                                <Input type="number" value={copyInitialBalance} onChange={(e) => setCopyInitialBalance(Number(e.target.value))} className="bg-white/5 border-white/10 h-10 text-xs font-mono" />
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label className="text-[0.6rem] font-bold uppercase opacity-60">Saldo Atual (Manual)</Label>
-                                <Input type="number" value={copyBalance} onChange={(e) => setCopyBalance(Number(e.target.value))} className="bg-white/5 border-white/10 h-10 text-xs font-mono" />
-                            </div>
-                        </div>
-                    </TabsContent>
-
-                    <TabsContent value="bots" className="space-y-6">
-                        <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className={cn("p-2 rounded-full", tgEnabled ? "bg-primary/20 text-primary" : "bg-zinc-800 text-zinc-500")}>
-                                    {tgEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
-                                </div>
-                                <div>
-                                    <h3 className="text-xs font-black uppercase text-white">Bot Telegram Global</h3>
-                                    <p className="text-[0.55rem] font-bold text-muted-foreground uppercase">Habilitar todas as notificações</p>
-                                </div>
-                            </div>
-                            <Switch checked={tgEnabled} onCheckedChange={setTgEnabled} />
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* CONFIGURAÇÕES TÉCNICAS */}
-                            <div className="space-y-4">
-                                <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-4">
-                                    <h4 className="text-[0.65rem] font-black uppercase tracking-widest text-primary/70 flex items-center gap-2"><Key className="h-3 w-3" /> Credenciais Bot</h4>
-                                    <div className="space-y-3">
-                                        <div className="space-y-1.5">
-                                            <Label className="text-[0.55rem] font-black uppercase opacity-40">Bot Token (BotFather)</Label>
-                                            <Input type="password" value={tgBotToken} onChange={(e) => setTgBotToken(e.target.value)} placeholder="123456:ABC-DEF..." className="bg-white/5 border-white/10 h-9 text-xs font-mono" />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <Label className="text-[0.55rem] font-black uppercase opacity-40">Chat ID (Grupo/Canal)</Label>
-                                            <Input value={tgChatId} onChange={(e) => setTgChatId(e.target.value)} placeholder="-100..." className="bg-white/5 border-white/10 h-9 text-xs font-mono" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-4">
-                                    <h4 className="text-[0.65rem] font-black uppercase tracking-widest text-primary/70 flex items-center gap-2"><BellRing className="h-3 w-3" /> Eventos Notificáveis</h4>
-                                    <div className="grid grid-cols-1 gap-2.5">
-                                        {[
-                                            { label: 'Notificar WIN', state: tgNotifyWin, setter: setTgNotifyWin },
-                                            { label: 'Notificar LOSS', state: tgNotifyLoss, setter: setTgNotifyLoss },
-                                            { label: 'Notificar EMPATE', state: tgNotifyDraw, setter: setTgNotifyDraw },
-                                            { label: 'Mudança de Status (ON/OFF)', state: tgNotifyStatus, setter: setTgNotifyStatus },
-                                            { label: 'Novas Solicitações (Leads)', state: tgNotifyLeads, setter: setTgNotifyLeads },
-                                        ].map((item, idx) => (
-                                            <div key={idx} className="flex items-center justify-between p-2.5 bg-white/5 rounded-xl border border-white/5">
-                                                <span className="text-[0.6rem] font-black uppercase text-zinc-400">{item.label}</span>
-                                                <Switch checked={item.state} onCheckedChange={item.setter} className="scale-75" />
+                    <TabsContent value="pedidos" className="space-y-4">
+                        <div className="max-h-[500px] overflow-y-auto space-y-2 pr-1">
+                            {copyRequests && copyRequests.length > 0 ? copyRequests.map((req) => (
+                                <div key={req.id} className="p-4 bg-white/5 border border-white/5 rounded-2xl flex flex-col gap-3">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-primary/10 rounded-full"><UserIcon className="h-4 w-4 text-primary" /></div>
+                                            <div className="flex flex-col">
+                                                <span className="text-xs font-black text-white">{req.name || 'Aguardando Nome...'}</span>
+                                                <span className="text-[0.6rem] font-mono opacity-40">{req.email}</span>
                                             </div>
-                                        ))}
+                                        </div>
+                                        <Badge className={cn(
+                                            "text-[0.5rem] font-black uppercase",
+                                            req.status === 'PENDING' ? "bg-orange-500" :
+                                            req.status === 'AWAITING_DEPOSIT' ? "bg-cyan-500 text-black" :
+                                            req.status === 'DEPOSIT_PENDING' ? "bg-emerald-500 text-black animate-pulse" :
+                                            req.status === 'APPROVED' ? "bg-green-500" :
+                                            req.status === 'REJECTED' ? "bg-red-500" : "bg-zinc-700"
+                                        )}>
+                                            {req.status === 'PENDING' ? 'Validar ID' : 
+                                             req.status === 'AWAITING_DEPOSIT' ? 'Aguard. Depósito' :
+                                             req.status === 'DEPOSIT_PENDING' ? 'Depósito Feito!' :
+                                             req.status === 'APPROVED' ? 'Sincronizado' : 
+                                             req.status === 'REJECTED' ? 'Recusado' : req.status}
+                                        </Badge>
+                                    </div>
+                                    <div className="flex items-center justify-between text-[0.6rem] bg-black/20 p-2 rounded-xl border border-white/5">
+                                        <span className="font-bold opacity-40">ID CORRETORA: <span className="text-primary">{req.brokerId}</span></span>
+                                        <span className="font-mono opacity-20">{formatDate(req.submittedAt)}</span>
+                                    </div>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                        <Button size="sm" onClick={() => handleUpdateCopyRequest(req.id, 'AWAITING_DEPOSIT')} className="h-8 bg-cyan-600 text-white text-[0.5rem] font-black uppercase">
+                                            <UserCheck className="h-3 w-3 mr-1" /> Validar ID
+                                        </Button>
+                                        <Button size="sm" onClick={() => handleUpdateCopyRequest(req.id, 'APPROVED')} className="h-8 bg-green-600 text-white text-[0.5rem] font-black uppercase">
+                                            <Check className="h-3 w-3 mr-1" /> Liberar Sync
+                                        </Button>
+                                        <Button size="sm" onClick={() => handleUpdateCopyRequest(req.id, 'REJECTED')} variant="outline" className="h-8 text-[0.5rem] font-black uppercase text-red-500">
+                                            <Ban className="h-3 w-3 mr-1" /> Recusar
+                                        </Button>
+                                        <Button size="sm" variant="ghost" onClick={() => handleDeleteCopyRequest(req.id)} className="h-8 text-zinc-500 text-[0.5rem] font-black uppercase">
+                                            <Trash2 className="h-3 w-3 mr-1" /> Excluir
+                                        </Button>
                                     </div>
                                 </div>
-                            </div>
-
-                            {/* CUSTOMIZAÇÃO DE TEXTO */}
-                            <div className="space-y-4">
-                                <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-4">
-                                    <h4 className="text-[0.65rem] font-black uppercase tracking-widest text-primary/70 flex items-center gap-2"><MessageSquareCode className="h-3 w-3" /> Templates de Mensagens</h4>
-                                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1 no-scrollbar">
-                                        <div className="space-y-1.5">
-                                            <Label className="text-[0.55rem] font-black uppercase opacity-40">Operação Vencedora (WIN)</Label>
-                                            <Textarea value={tgMsgWin} onChange={(e) => setTgMsgWin(e.target.value)} className="bg-white/5 border-white/10 text-[0.65rem] h-24 font-mono leading-relaxed" />
-                                            <span className="text-[0.5rem] opacity-30 italic">Variáveis: {'{{asset}}'}, {'{{direction}}'}, {'{{profit}}'}, {'{{url}}'}</span>
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <Label className="text-[0.55rem] font-black uppercase opacity-40">Copy Trade Ativado (Online)</Label>
-                                            <Textarea value={tgMsgActive} onChange={(e) => setTgMsgActive(e.target.value)} className="bg-white/5 border-white/10 text-[0.65rem] h-24 font-mono leading-relaxed" />
-                                        </div>
-                                        <div className="space-y-1.5">
-                                            <Label className="text-[0.55rem] font-black uppercase opacity-40">Relatório de Fechamento (Offline)</Label>
-                                            <Textarea value={tgMsgReport} onChange={(e) => setTgMsgReport(e.target.value)} className="bg-white/5 border-white/10 text-[0.65rem] h-32 font-mono leading-relaxed" />
-                                            <span className="text-[0.5rem] opacity-30 italic">Variáveis: {'{{wins}}'}, {'{{losses}}'}, {'{{profit}}'}, {'{{winrate}}'}, {'{{url}}'}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            )) : (
+                                <p className="text-center py-12 text-[0.6rem] font-black uppercase opacity-20 tracking-widest">Nenhum pedido de conexão.</p>
+                            )}
                         </div>
                     </TabsContent>
 
@@ -1516,55 +1438,133 @@ export default function AdminDashboard() {
                         </div>
                     </TabsContent>
 
-                    <TabsContent value="pedidos" className="space-y-4">
-                        <div className="max-h-[500px] overflow-y-auto space-y-2 pr-1">
-                            {copyRequests && copyRequests.length > 0 ? copyRequests.map((req) => (
-                                <div key={req.id} className="p-4 bg-white/5 border border-white/5 rounded-2xl flex flex-col gap-3">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-primary/10 rounded-full"><UserIcon className="h-4 w-4 text-primary" /></div>
-                                            <div className="flex flex-col">
-                                                <span className="text-xs font-black text-white">{req.name || 'Aguardando Nome...'}</span>
-                                                <span className="text-[0.6rem] font-mono opacity-40">{req.email}</span>
-                                            </div>
+                    <TabsContent value="bots" className="space-y-6">
+                        <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className={cn("p-2 rounded-full", tgEnabled ? "bg-primary/20 text-primary" : "bg-zinc-800 text-zinc-500")}>
+                                    {tgEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+                                </div>
+                                <div>
+                                    <h3 className="text-xs font-black uppercase text-white">Bot Telegram Global</h3>
+                                    <p className="text-[0.55rem] font-bold text-muted-foreground uppercase">Habilitar todas as notificações</p>
+                                </div>
+                            </div>
+                            <Switch checked={tgEnabled} onCheckedChange={setTgEnabled} />
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* CONFIGURAÇÕES TÉCNICAS */}
+                            <div className="space-y-4">
+                                <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-4">
+                                    <h4 className="text-[0.65rem] font-black uppercase tracking-widest text-primary/70 flex items-center gap-2"><Key className="h-3 w-3" /> Credenciais Bot</h4>
+                                    <div className="space-y-3">
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[0.55rem] font-black uppercase opacity-40">Bot Token (BotFather)</Label>
+                                            <Input type="password" value={tgBotToken} onChange={(e) => setTgBotToken(e.target.value)} placeholder="123456:ABC-DEF..." className="bg-white/5 border-white/10 h-9 text-xs font-mono" />
                                         </div>
-                                        <Badge className={cn(
-                                            "text-[0.5rem] font-black uppercase",
-                                            req.status === 'PENDING' ? "bg-orange-500" :
-                                            req.status === 'AWAITING_DEPOSIT' ? "bg-cyan-500 text-black" :
-                                            req.status === 'DEPOSIT_PENDING' ? "bg-emerald-500 text-black animate-pulse" :
-                                            req.status === 'APPROVED' ? "bg-green-500" :
-                                            req.status === 'REJECTED' ? "bg-red-500" : "bg-zinc-700"
-                                        )}>
-                                            {req.status === 'PENDING' ? 'Validar ID' : 
-                                             req.status === 'AWAITING_DEPOSIT' ? 'Aguard. Depósito' :
-                                             req.status === 'DEPOSIT_PENDING' ? 'Depósito Feito!' :
-                                             req.status === 'APPROVED' ? 'Sincronizado' : 
-                                             req.status === 'REJECTED' ? 'Recusado' : req.status}
-                                        </Badge>
-                                    </div>
-                                    <div className="flex items-center justify-between text-[0.6rem] bg-black/20 p-2 rounded-xl border border-white/5">
-                                        <span className="font-bold opacity-40">ID CORRETORA: <span className="text-primary">{req.brokerId}</span></span>
-                                        <span className="font-mono opacity-20">{formatDate(req.submittedAt)}</span>
-                                    </div>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                        <Button size="sm" onClick={() => handleUpdateCopyRequest(req.id, 'AWAITING_DEPOSIT')} className="h-8 bg-cyan-600 text-white text-[0.5rem] font-black uppercase">
-                                            <UserCheck className="h-3 w-3 mr-1" /> Validar ID
-                                        </Button>
-                                        <Button size="sm" onClick={() => handleUpdateCopyRequest(req.id, 'APPROVED')} className="h-8 bg-green-600 text-white text-[0.5rem] font-black uppercase">
-                                            <Check className="h-3 w-3 mr-1" /> Liberar Sync
-                                        </Button>
-                                        <Button size="sm" onClick={() => handleUpdateCopyRequest(req.id, 'REJECTED')} variant="outline" className="h-8 text-[0.5rem] font-black uppercase text-red-500">
-                                            <Ban className="h-3 w-3 mr-1" /> Recusar
-                                        </Button>
-                                        <Button size="sm" variant="ghost" onClick={() => handleDeleteCopyRequest(req.id)} className="h-8 text-zinc-500 text-[0.5rem] font-black uppercase">
-                                            <Trash2 className="h-3 w-3 mr-1" /> Excluir
-                                        </Button>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[0.55rem] font-black uppercase opacity-40">Chat ID (Grupo/Canal)</Label>
+                                            <Input value={tgChatId} onChange={(e) => setTgChatId(e.target.value)} placeholder="-100..." className="bg-white/5 border-white/10 h-9 text-xs font-mono" />
+                                        </div>
                                     </div>
                                 </div>
-                            )) : (
-                                <p className="text-center py-12 text-[0.6rem] font-black uppercase opacity-20 tracking-widest">Nenhum pedido de conexão.</p>
-                            )}
+
+                                <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-4">
+                                    <h4 className="text-[0.65rem] font-black uppercase tracking-widest text-primary/70 flex items-center gap-2"><BellRing className="h-3 w-3" /> Eventos Notificáveis</h4>
+                                    <div className="grid grid-cols-1 gap-2.5">
+                                        {[
+                                            { label: 'Notificar WIN', state: tgNotifyWin, setter: setTgNotifyWin },
+                                            { label: 'Notificar LOSS', state: tgNotifyLoss, setter: setTgNotifyLoss },
+                                            { label: 'Notificar EMPATE', state: tgNotifyDraw, setter: setTgNotifyDraw },
+                                            { label: 'Mudança de Status (ON/OFF)', state: tgNotifyStatus, setter: setTgNotifyStatus },
+                                            { label: 'Novas Solicitações (Leads)', state: tgNotifyLeads, setter: setTgNotifyLeads },
+                                        ].map((item, idx) => (
+                                            <div key={idx} className="flex items-center justify-between p-2.5 bg-white/5 rounded-xl border border-white/5">
+                                                <span className="text-[0.6rem] font-black uppercase text-zinc-400">{item.label}</span>
+                                                <Switch checked={item.state} onCheckedChange={item.setter} className="scale-75" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* CUSTOMIZAÇÃO DE TEXTO */}
+                            <div className="space-y-4">
+                                <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-4">
+                                    <h4 className="text-[0.65rem] font-black uppercase tracking-widest text-primary/70 flex items-center gap-2"><MessageSquareCode className="h-3 w-3" /> Templates de Mensagens</h4>
+                                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1 no-scrollbar">
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[0.55rem] font-black uppercase opacity-40">Operação Vencedora (WIN)</Label>
+                                            <Textarea value={tgMsgWin} onChange={(e) => setTgMsgWin(e.target.value)} className="bg-white/5 border-white/10 text-[0.65rem] h-24 font-mono leading-relaxed" />
+                                            <span className="text-[0.5rem] opacity-30 italic">Variáveis: {'{{asset}}'}, {'{{direction}}'}, {'{{profit}}'}, {'{{url}}'}</span>
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[0.55rem] font-black uppercase opacity-40">Copy Trade Ativado (Online)</Label>
+                                            <Textarea value={tgMsgActive} onChange={(e) => setTgMsgActive(e.target.value)} className="bg-white/5 border-white/10 text-[0.65rem] h-24 font-mono leading-relaxed" />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                            <Label className="text-[0.55rem] font-black uppercase opacity-40">Relatório de Fechamento (Offline)</Label>
+                                            <Textarea value={tgMsgReport} onChange={(e) => setTgMsgReport(e.target.value)} className="bg-white/5 border-white/10 text-[0.65rem] h-32 font-mono leading-relaxed" />
+                                            <span className="text-[0.5rem] opacity-30 italic">Variáveis: {'{{wins}}'}, {'{{losses}}'}, {'{{profit}}'}, {'{{winrate}}'}, {'{{url}}'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="perfil" className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <Label className="text-[0.6rem] font-bold uppercase opacity-60">Nome do Trader</Label>
+                                <Input value={copyTraderName} onChange={(e) => setCopyTraderName(e.target.value)} className="bg-white/5 border-white/10 h-10 text-xs" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><ImageIcon className="h-3 w-3"/> Link Foto de Perfil (JPG/PNG)</Label>
+                                <Input value={copyProfilePicUrl} onChange={(e) => setCopyProfilePicUrl(e.target.value)} placeholder="https://link-da-foto.com/foto.jpg" className="bg-white/5 border-white/10 h-10 text-xs" />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="space-y-1.5">
+                                <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><Instagram className="h-3 w-3"/> Instagram URL</Label>
+                                <Input value={copyInstagramUrl} onChange={(e) => setCopyInstagramUrl(e.target.value)} className="bg-white/5 border-white/10 h-10 text-xs" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5">
+                                    <svg fill="currentColor" viewBox="0 0 448 512" className="h-3 w-3">
+                                        <path d="M448 209.91a210.06 210.06 0 0 1 -122.77-39.25v178.72A162.55 162.55 0 1 1 185 188.31v89.89a74.62 74.62 0 1 0 52.23 71.18V0h88a121.18 121.18 0 0 0 1.86 22.17h0A122.18 121.18 0 0 0 381 102.39a121.43 121.43 0 0 0 67 20.14Z" />
+                                    </svg>
+                                    TikTok URL
+                                </Label>
+                                <Input value={copyTikTokUrl} onChange={(e) => setCopyTikTokUrl(e.target.value)} className="bg-white/5 border-white/10 h-10 text-xs" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><Send className="h-3 w-3"/> Telegram URL</Label>
+                                <Input value={copyTelegramUrl} onChange={(e) => setCopyTelegramUrl(e.target.value)} className="bg-white/5 border-white/10 h-10 text-xs" />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><CircleDollarSign className="h-3 w-3" /> Liquidez Requerida (R$)</Label>
+                                <Input type="number" value={copyLiquidity} onChange={(e) => setCopyLiquidity(parseInt(e.target.value))} className="bg-white/5 border-white/10 h-10 text-xs" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[0.6rem] font-bold uppercase opacity-60 flex items-center gap-1.5"><LinkIcon className="h-3 w-3" /> Link Afiliado Exclusivo</Label>
+                                <Input value={copyAffUrl} onChange={(e) => setCopyAffUrl(e.target.value)} placeholder="Link Exnova..." className="bg-white/5 border-white/10 h-10 text-xs font-mono" />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1.5">
+                                <Label className="text-[0.6rem] font-bold uppercase opacity-60">Saldo Inicial</Label>
+                                <Input type="number" value={copyInitialBalance} onChange={(e) => setCopyInitialBalance(Number(e.target.value))} className="bg-white/5 border-white/10 h-10 text-xs font-mono" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-[0.6rem] font-bold uppercase opacity-60">Saldo Atual (Manual)</Label>
+                                <Input type="number" value={copyBalance} onChange={(e) => setCopyBalance(Number(e.target.value))} className="bg-white/5 border-white/10 h-10 text-xs font-mono" />
+                            </div>
                         </div>
                     </TabsContent>
                 </Tabs>

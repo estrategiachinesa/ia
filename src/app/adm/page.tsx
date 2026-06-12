@@ -181,6 +181,16 @@ const formatCurrency = (val: number) => {
     return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 };
 
+const formatFullDate = (dateStr: string, timeStr: string) => {
+    if (!dateStr || !timeStr) return '--/--/-- --:--';
+    try {
+        const [y, m, d] = dateStr.split('-');
+        return `${d}/${m}/${y.substring(2)} ${timeStr}`;
+    } catch (e) {
+        return `${dateStr} ${timeStr}`;
+    }
+};
+
 type CopyTradeResult = {
     id: string;
     asset: string;
@@ -1299,7 +1309,7 @@ export default function AdminDashboard() {
                                                 )}>{res.result}</Badge>
                                                 <div className="flex flex-col">
                                                     <span className="text-[0.6rem] font-bold leading-none">{res.asset}</span>
-                                                    <span className="text-[0.5rem] opacity-30 font-mono">{res.date} {res.time}</span>
+                                                    <span className="text-[0.5rem] opacity-30 font-mono">{formatFullDate(res.date, res.time)}</span>
                                                 </div>
                                                 <span className={cn("text-[0.5rem] font-black", res.direction === 'CALL' ? "text-green-500" : "text-red-500")}>{res.direction}</span>
                                             </div>

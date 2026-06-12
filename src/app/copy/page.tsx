@@ -92,15 +92,14 @@ export default function CopyPage() {
       return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   };
 
-  const formatShortDate = (dateStr: string) => {
-      if (!dateStr) return '';
-      try {
-          const [year, month, day] = dateStr.split('-').map(Number);
-          const date = new Date(year, month - 1, day);
-          return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '');
-      } catch (e) {
-          return dateStr;
-      }
+  const formatFullDate = (dateStr: string, timeStr: string) => {
+    if (!dateStr || !timeStr) return '--/--/-- --:--';
+    try {
+        const [y, m, d] = dateStr.split('-');
+        return `${d}/${m}/${y.substring(2)} ${timeStr}`;
+    } catch (e) {
+        return `${dateStr} ${timeStr}`;
+    }
   };
 
   const profitTodayRaw = useMemo(() => {
@@ -283,8 +282,9 @@ export default function CopyPage() {
                         <div key={trade.id} className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 group hover:border-white/10 transition-all">
                             <div className="flex items-center gap-4">
                                 <div className="flex flex-col">
-                                    <span className="text-sm font-black font-mono leading-tight text-white">{trade.time}</span>
-                                    <span className="text-[0.6rem] font-bold opacity-30 uppercase">{formatShortDate(trade.date)}</span>
+                                    <span className="text-[0.75rem] font-black font-mono leading-tight text-white/90">
+                                        {formatFullDate(trade.date, trade.time)}
+                                    </span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <CurrencyFlags asset={trade.asset} />

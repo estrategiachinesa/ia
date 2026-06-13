@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -165,7 +164,7 @@ export default function CopyPage() {
         <div className="flex items-center gap-3">
              <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10">
                 <span className={cn("w-1.5 h-1.5 rounded-full", masterStats.isActive ? "bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.8)]" : "bg-red-500")} />
-                <span className="text-[0.55rem] font-black uppercase tracking-[0.2em] text-white/80">{masterStats.isActive ? "Cluster Online" : "Offline"}</span>
+                <span className="text-[0.55rem] font-black uppercase tracking-[0.2em] text-white/80">{masterStats.isActive ? "COPY ONLINE" : "Offline"}</span>
              </div>
         </div>
       </header>

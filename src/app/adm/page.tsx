@@ -453,9 +453,7 @@ export default function AdminDashboard() {
   const winRate = useMemo(() => {
     if (copyResults.length === 0) return '0%';
     const wins = copyResults.filter(r => r.result === 'WIN').length;
-    const losses = copyResults.filter(r => r.result === 'LOSS').length;
-    if (wins + losses === 0) return '0%';
-    return ((wins / (wins + losses)) * 100).toFixed(1) + '%';
+    return ((wins / copyResults.length) * 100).toFixed(1) + '%';
   }, [copyResults]);
 
   const scoreboard = useMemo(() => {
@@ -612,8 +610,7 @@ export default function AdminDashboard() {
       if (firestore) {
           try {
               const wins = updatedResults.filter(r => r.result === 'WIN').length;
-              const losses = updatedResults.filter(r => r.result === 'LOSS').length;
-              const newWinRate = (wins + losses) > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) + '%' : '0%';
+              const newWinRate = updatedResults.length > 0 ? ((wins / updatedResults.length) * 100).toFixed(1) + '%' : '0%';
               const newProfit = updatedResults.reduce((acc, curr) => acc + curr.netChange, 0);
 
               await setDoc(doc(firestore, 'appConfig', 'copy'), {
@@ -658,8 +655,7 @@ export default function AdminDashboard() {
       if (firestore) {
           try {
               const wins = updatedResults.filter(r => r.result === 'WIN').length;
-              const losses = updatedResults.filter(r => r.result === 'LOSS').length;
-              const newWinRate = (wins + losses) > 0 ? ((wins / (wins + losses)) * 100).toFixed(1) + '%' : '0%';
+              const newWinRate = updatedResults.length > 0 ? ((wins / updatedResults.length) * 100).toFixed(1) + '%' : '0%';
               const newProfit = updatedResults.reduce((acc, curr) => acc + curr.netChange, 0);
 
               await setDoc(doc(firestore, 'appConfig', 'copy'), {
@@ -1523,7 +1519,7 @@ export default function AdminDashboard() {
                                         <div className="space-y-1.5">
                                             <Label className="text-[0.55rem] font-black uppercase opacity-40">Operação Empatada (DRAW)</Label>
                                             <Textarea value={tgMsgDraw} onChange={(e) => setTgMsgDraw(e.target.value)} className="bg-white/5 border-white/10 text-[0.65rem] h-24 font-mono leading-relaxed" />
-                                            <span className="text-[0.5rem] opacity-30 italic">Variáveis: {'{{asset}}'}, {'{{direction}}'}, {'{{url}}'}</span>
+                                            <span className="text-[0.5rem] opacity-30 italic">Variáveis: {'{{asset}}'}, {'{{direction}}'}, {'{{profit}}'}, {'{{url}}'}</span>
                                         </div>
                                         <div className="space-y-1.5">
                                             <Label className="text-[0.55rem] font-black uppercase opacity-40">Copy Trade Ativado (Online)</Label>

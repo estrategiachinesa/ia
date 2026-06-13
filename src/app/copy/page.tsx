@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -232,9 +231,6 @@ export default function CopyPage() {
       
       <header className="h-16 px-6 flex items-center justify-between border-b border-white/5 bg-black/40 backdrop-blur-md sticky top-0 z-50">
         <Logo size={32} />
-        <Badge className="bg-primary/10 text-primary border-primary/20 font-black uppercase tracking-widest px-3 py-1">
-          Copy Protocol V.2026
-        </Badge>
       </header>
 
       <main className="container mx-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-7xl">
@@ -649,7 +645,7 @@ export default function CopyPage() {
       <footer className="mt-12 text-center space-y-4 px-6 opacity-30">
           <Logo size={24} showText={false} className="mx-auto" />
           <p className="text-[0.55rem] font-bold uppercase tracking-widest max-w-2xl mx-auto leading-relaxed">
-            Aviso Legal: O Copy Trading utiliza algoritmos de espelhamento que requerem margem de garantia proporcional para operações de alta frequência.
+            Aviso Legal: O Copy Trading utiliza algoritmos de espelarmento que requerem margem de garantia proporcional para operações de alta frequência.
           </p>
       </footer>
     </div>

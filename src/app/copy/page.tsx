@@ -111,6 +111,10 @@ export default function CopyPage() {
 
   const affiliateLink = config?.copyAffiliateUrl || "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy";
 
+  if (isConfigLoading) {
+    return <div className="flex h-screen w-full items-center justify-center bg-black"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
+
   const handleRequestVerification = async () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email) || !formData.email.includes('.com')) {
@@ -151,22 +155,6 @@ export default function CopyPage() {
       } catch (e) { console.error(e); } finally { setIsConfirmingDeposit(false); }
   };
 
-  const formatFullDate = (dateStr: string, timeStr: string) => {
-    if (!dateStr || !timeStr) return '--/-- --:--';
-    try {
-        const [y, m, d] = dateStr.split('-');
-        const day = d.padStart(2, '0');
-        const month = m.padStart(2, '0');
-        return `${day}/${month} ${timeStr}`;
-    } catch (e) {
-        return `${timeStr}`;
-    }
-  };
-
-  if (isConfigLoading) {
-    return <div className="flex h-screen w-full items-center justify-center bg-black"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
-  }
-
   return (
     <div className="h-[100dvh] bg-[#050505] text-foreground font-body overflow-hidden flex flex-col relative">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_50%,_#0e0e0e_0%,_#050505_100%)]" />
@@ -185,22 +173,22 @@ export default function CopyPage() {
       <main className="flex-grow overflow-y-auto snap-y snap-mandatory lg:overflow-hidden lg:snap-none lg:grid lg:grid-cols-12 lg:gap-6 lg:p-6 lg:max-w-[1600px] lg:mx-auto w-full no-scrollbar">
         
         {/* SLIDE 1: MASTER DASHBOARD */}
-        <div className="snap-start h-[calc(100dvh-56px)] lg:h-full flex flex-col p-4 lg:p-0 lg:col-span-3">
+        <div className="snap-start h-[calc(100dvh-56px)] lg:h-full flex flex-col p-3 lg:p-0 lg:col-span-3">
           <Card className="bg-card/40 border border-white/10 shadow-2xl backdrop-blur-3xl rounded-[2rem] overflow-hidden flex flex-col h-full">
             <div className="h-1 bg-primary w-full" />
-            <div className="flex-grow flex flex-col justify-between p-4 lg:p-6">
-                <div className="flex flex-col items-center text-center space-y-3">
+            <div className="flex-grow flex flex-col justify-between p-3 lg:p-6">
+                <div className="flex flex-col items-center text-center space-y-2 lg:space-y-3">
                     <div className="relative">
-                        <div className="relative h-20 w-20 md:h-24 md:w-24 rounded-full border-[3px] border-white/10 overflow-hidden bg-black shadow-xl">
+                        <div className="relative h-16 w-16 md:h-24 md:w-24 rounded-full border-[3px] border-white/10 overflow-hidden bg-black shadow-xl">
                             <Image src={masterStats.profilePic} alt={masterStats.traderName} fill className="object-cover" unoptimized />
                         </div>
                     </div>
                     <div className="space-y-0.5">
                         <h3 className="text-[0.55rem] font-black uppercase tracking-[0.4em] text-primary/70">GESTOR</h3>
-                        <p className="text-lg lg:text-xl font-headline font-black text-white uppercase tracking-tighter">{masterStats.traderName}</p>
+                        <p className="text-base lg:text-xl font-headline font-black text-white uppercase tracking-tighter">{masterStats.traderName}</p>
                     </div>
                     
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 lg:gap-2">
                         {[
                             { icon: Instagram, href: masterStats.instagram },
                             { icon: () => (
@@ -210,32 +198,32 @@ export default function CopyPage() {
                             ), href: masterStats.tiktok },
                             { icon: Send, href: masterStats.telegram }
                         ].map((social, i) => (
-                            <a key={i} href={social.href} target="_blank" className="p-2 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all duration-300">
-                                <social.icon className="h-3.5 w-3.5" />
+                            <a key={i} href={social.href} target="_blank" className="p-1.5 lg:p-2 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all duration-300">
+                                <social.icon className="h-3 w-3 lg:h-3.5 lg:h-3.5" />
                             </a>
                         ))}
                     </div>
                 </div>
 
-                <div className="space-y-2 my-4">
-                    <div className="p-3 bg-white/[0.02] rounded-xl border border-white/5 flex justify-between items-center">
+                <div className="space-y-1.5 lg:space-y-2 my-2 lg:my-4">
+                    <div className="p-2.5 lg:p-3 bg-white/[0.02] rounded-xl border border-white/5 flex justify-between items-center">
                         <p className="text-[0.55rem] font-black text-white/50 uppercase tracking-[0.2em]">Saldo Inicial</p>
                         <p className="text-xs font-black font-mono text-white/70">{masterStats.initialBalance}</p>
                     </div>
-                    <div className="p-4 bg-white/[0.05] rounded-xl border border-white/10 flex justify-between items-center shadow-2xl">
+                    <div className="p-3 lg:p-4 bg-white/[0.05] rounded-xl border border-white/10 flex justify-between items-center shadow-2xl">
                         <p className="text-[0.55rem] font-black text-white/60 uppercase tracking-[0.2em]">Saldo Atual</p>
-                        <p className="text-lg font-black font-mono text-white tracking-tighter">{masterStats.balance}</p>
+                        <p className="text-base lg:text-lg font-black font-mono text-white tracking-tighter">{masterStats.balance}</p>
                     </div>
                     <div className={cn(
-                        "p-4 rounded-xl border flex justify-between items-center",
+                        "p-3 lg:p-4 rounded-xl border flex justify-between items-center",
                         lastTradeResult < 0 ? "bg-red-500/5 border-red-500/10" : (lastTradeResult === 0 ? "bg-white/5 border-white/10" : "bg-green-500/5 border-green-500/10")
                     )}>
                         <p className={cn("text-[0.55rem] font-black uppercase tracking-[0.2em]", lastTradeResult < 0 ? "text-red-500/80" : (lastTradeResult === 0 ? "text-white/40" : "text-green-500/80"))}>Net Profit Hoje</p>
-                        <p className={cn("text-lg font-black font-mono tracking-tighter", lastTradeResult < 0 ? "text-red-500" : (lastTradeResult === 0 ? "text-zinc-600" : "text-green-500"))}>{masterStats.profitToday}</p>
+                        <p className={cn("text-base lg:text-lg font-black font-mono tracking-tighter", lastTradeResult < 0 ? "text-red-500" : (lastTradeResult === 0 ? "text-zinc-600" : "text-green-500"))}>{masterStats.profitToday}</p>
                     </div>
                 </div>
 
-                <div className="p-4 bg-black/60 rounded-[1.5rem] border border-white/10 space-y-3 shadow-inner">
+                <div className="p-3 lg:p-4 bg-black/60 rounded-[1.5rem] border border-white/10 space-y-2 lg:space-y-3 shadow-inner">
                     <div className="flex items-center justify-between">
                          <div className="flex items-center gap-2">
                              <Trophy className="h-3 w-3 text-primary" />
@@ -243,16 +231,16 @@ export default function CopyPage() {
                          </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                         <div className="flex flex-col items-center bg-white/5 p-2 rounded-lg border border-white/5">
-                            <span className="text-xl font-black text-green-500">{scoreboard.wins}</span>
+                         <div className="flex flex-col items-center bg-white/5 p-1.5 lg:p-2 rounded-lg border border-white/5">
+                            <span className="text-lg lg:text-xl font-black text-green-500">{scoreboard.wins}</span>
                             <span className="text-[0.5rem] font-bold text-white/40 uppercase">Wins</span>
                          </div>
-                         <div className="flex flex-col items-center bg-white/5 p-2 rounded-lg border border-white/5">
-                            <span className="text-xl font-black text-red-500">{scoreboard.losses}</span>
+                         <div className="flex flex-col items-center bg-white/5 p-1.5 lg:p-2 rounded-lg border border-white/5">
+                            <span className="text-lg lg:text-xl font-black text-red-500">{scoreboard.losses}</span>
                             <span className="text-[0.5rem] font-bold text-white/40 uppercase">Losses</span>
                          </div>
                     </div>
-                    <div className="pt-1">
+                    <div className="pt-0.5">
                         <div className="flex justify-between items-end mb-1">
                             <span className="text-[0.5rem] font-black uppercase text-white/50 tracking-[0.1em]">Assertividade IA</span>
                             <span className="text-[0.65rem] font-black text-green-500 font-mono">{masterStats.winRate}</span>
@@ -277,25 +265,34 @@ export default function CopyPage() {
              <CardContent className="p-3 lg:p-4 space-y-2 overflow-y-auto no-scrollbar flex-grow bg-black/40">
                 {masterStats.results.length > 0 ? masterStats.results.map((trade: any) => (
                     <div key={trade.id} className="grid grid-cols-12 items-center p-3 bg-white/[0.02] rounded-xl border border-white/5 transition-all hover:bg-white/[0.06]">
-                        <div className="col-span-3">
-                            <span className="text-[0.45rem] font-black font-mono text-white/30 block mb-0.5 uppercase">Time</span>
-                            <span className="text-[0.65rem] font-black text-white/80 whitespace-nowrap font-mono">{formatFullDate(trade.date, trade.time)}</span>
+                        <div className="col-span-3 flex flex-col justify-center">
+                             <span className="text-[0.85rem] font-black text-white/80 font-mono leading-none">
+                                {(() => {
+                                    try {
+                                        const parts = trade.date.split('-');
+                                        return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}`;
+                                    } catch(e) { return '--/--' }
+                                })()}
+                             </span>
+                             <span className="text-[0.85rem] font-black text-white/20 font-mono leading-none">
+                                {trade.time}
+                             </span>
                         </div>
                         <div className="col-span-4 flex items-center gap-2 pl-1">
                             <CurrencyFlags asset={trade.asset} />
-                            <span className="text-[0.65rem] font-black text-white uppercase truncate tracking-tight">{trade.asset.replace(' (OTC)', '')}</span>
+                            <span className="text-[0.85rem] font-black text-white uppercase truncate tracking-tight">{trade.asset.replace(' (OTC)', '')}</span>
                         </div>
                         <div className="col-span-5 flex flex-col items-end text-right">
                              <div className="flex items-center gap-2">
                                 <span className={cn(
-                                    "text-[0.55rem] font-black uppercase tracking-[0.1em]",
+                                    "text-[0.75rem] font-black uppercase tracking-[0.1em]",
                                     trade.result === 'WIN' ? "text-green-500" : (trade.result === 'LOSS' ? "text-red-500" : "text-zinc-500")
                                 )}>
                                     {trade.result}
                                 </span>
                              </div>
                              <span className={cn(
-                                "text-xs font-black font-mono leading-none mt-0.5 tracking-tighter",
+                                "text-[0.85rem] font-black font-mono leading-none mt-1 tracking-tighter",
                                 trade.netChange > 0 ? "text-green-500" : (trade.netChange < 0 ? "text-red-500" : "text-white/30")
                              )}>
                                 {trade.netChange > 0 ? '+' : ''}{trade.netChange.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
@@ -503,4 +500,3 @@ export default function CopyPage() {
     </div>
   );
 }
-

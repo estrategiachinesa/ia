@@ -91,7 +91,7 @@ export default function CopyPage() {
 
   const formatCurrency = (val: any) => {
       const num = typeof val === 'number' ? val : (parseFloat(String(val).replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0);
-      return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      return num.toLocaleString('pt-BR', { style: 'currency', currency: BRL });
   };
 
   const formatFullDate = (dateStr: string, timeStr: string) => {
@@ -118,9 +118,9 @@ export default function CopyPage() {
     instagram: config?.copyInstagramUrl || "#",
     tiktok: config?.copyTikTokUrl || "#",
     telegram: config?.copyTelegramUrl || "#",
-    balance: formatCurrency(config?.copyMasterBalance ?? 245892.10),
-    initialBalance: formatCurrency(config?.copyInitialBalance ?? 240000.00),
-    profitToday: (lastTradeResult >= 0 ? '+ ' : '') + formatCurrency(lastTradeResult),
+    balance: (config?.copyMasterBalance ?? 245892.10).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+    initialBalance: (config?.copyInitialBalance ?? 240000.00).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+    profitToday: (lastTradeResult >= 0 ? '+ ' : '') + (lastTradeResult).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
     winRate: config?.copyMasterWinRate || "0%",
     results: config?.copyResults || [],
     isActive: config?.copyIsActive ?? true
@@ -134,21 +134,6 @@ export default function CopyPage() {
   }, [config?.copyResults]);
 
   const affiliateLink = config?.copyAffiliateUrl || "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy";
-
-  const sendTelegramNotification = async (message: string) => {
-    if (!config?.tgEnabled || !config?.tgBotToken || !config?.tgChatId) return;
-    try {
-        await fetch(`https://api.telegram.org/bot${config.tgBotToken}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: config.tgChatId,
-                text: message,
-                parse_mode: 'Markdown'
-            })
-        });
-    } catch (e) { console.error("Erro Telegram:", e); }
-  };
 
   const handleRequestVerification = async () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -170,52 +155,24 @@ export default function CopyPage() {
         localStorage.setItem('copy_requestId', requestId);
         setSavedRequestId(requestId);
         setStep('STEP_3_PENDING');
-
-        if (config?.tgNotifyLeads && config?.tgMsgLead) {
-            const msg = config.tgMsgLead
-                .replace('{{id}}', formData.brokerId)
-                .replace('{{url}}', `${window.location.origin}/copy`);
-            sendTelegramNotification(msg);
-        }
-    } catch (e) {
-        console.error(e);
-    } finally {
-        setIsSubmitting(false);
-    }
+    } catch (e) { console.error(e); } finally { setIsSubmitting(false); }
   };
 
   const handleUpdateProfile = async () => {
       if (!nameData || !savedRequestId || !firestore) return;
       setIsUpdatingName(true);
       try {
-          await updateDoc(doc(firestore, 'copyRequests', savedRequestId), {
-              name: nameData
-          });
-      } catch (e) {
-          console.error(e);
-      } finally {
-          setIsUpdatingName(false);
-      }
+          await updateDoc(doc(firestore, 'copyRequests', savedRequestId), { name: nameData });
+      } catch (e) { console.error(e); } finally { setIsUpdatingName(false); }
   };
 
   const handleConfirmDeposit = async () => {
       if (!savedRequestId || !firestore) return;
       setIsConfirmingDeposit(true);
       try {
-          await updateDoc(doc(firestore, 'copyRequests', savedRequestId), {
-              status: 'DEPOSIT_PENDING'
-          });
+          await updateDoc(doc(firestore, 'copyRequests', savedRequestId), { status: 'DEPOSIT_PENDING' });
           setStep('STEP_7_VERIFYING_DEPOSIT');
-
-          if (config?.tgNotifyLeads && config?.tgMsgDeposit) {
-            const msg = config.tgMsgDeposit.replace('{{url}}', `${window.location.origin}/copy`);
-            sendTelegramNotification(msg);
-          }
-      } catch (e) {
-          console.error(e);
-      } finally {
-          setIsConfirmingDeposit(false);
-      }
+      } catch (e) { console.error(e); } finally { setIsConfirmingDeposit(false); }
   };
 
   if (isConfigLoading) {
@@ -223,348 +180,257 @@ export default function CopyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-foreground font-body pb-24 overflow-x-hidden">
+    <div className="min-h-screen bg-[#050505] text-foreground font-body overflow-hidden">
       <div className="fixed inset-0 -z-10 grid-bg opacity-[0.05]" />
       <div className="fixed inset-0 -z-10 bg-gradient-to-b from-primary/5 via-transparent to-transparent pointer-events-none" />
       
-      <header className="h-20 px-8 flex items-center justify-between border-b border-white/5 bg-black/60 backdrop-blur-xl sticky top-0 z-50 shadow-2xl">
+      <header className="h-20 px-6 md:px-8 flex items-center justify-between border-b border-white/5 bg-black/60 backdrop-blur-xl sticky top-0 z-50 shadow-2xl">
         <Logo size={36} />
         <div className="flex items-center gap-3">
-             <div className="hidden sm:flex items-center gap-2 px-4 py-1.5 bg-white/5 rounded-full border border-white/10">
-                <span className={cn("w-2 h-2 rounded-full", masterStats.isActive ? "bg-green-500 animate-pulse" : "bg-red-500")} />
-                <span className="text-[0.65rem] font-black uppercase tracking-widest text-white/60">{masterStats.isActive ? "Cluster Online" : "Cluster Offline"}</span>
+             <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-full border border-white/10">
+                <span className={cn("w-1.5 h-1.5 rounded-full", masterStats.isActive ? "bg-green-500 animate-pulse" : "bg-red-500")} />
+                <span className="text-[0.6rem] md:text-[0.65rem] font-black uppercase tracking-widest text-white/60">{masterStats.isActive ? "Cluster Online" : "Offline"}</span>
              </div>
         </div>
       </header>
 
-      <main className="container mx-auto p-4 md:p-10 grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-[1400px]">
+      <main className="h-[calc(100dvh-80px)] overflow-y-auto snap-y snap-mandatory scroll-smooth no-scrollbar md:h-auto md:overflow-visible md:snap-none lg:p-10 lg:grid lg:grid-cols-12 lg:gap-8 lg:max-w-[1440px] lg:mx-auto">
         
-        {/* LEFT: MASTER DASHBOARD */}
-        <div className="lg:col-span-4 space-y-8">
-          <Card className="bg-card/40 border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl rounded-[2.5rem] overflow-hidden group transition-all duration-500 hover:border-primary/20">
-            <div className="h-2.5 bg-gradient-to-r from-primary via-primary/50 to-primary w-full" />
-            <CardContent className="pt-10 px-8 pb-10 space-y-8">
-                <div className="flex flex-col items-center text-center space-y-6">
+        {/* SECTION 1: MASTER DASHBOARD (Slide 1 no Mobile) */}
+        <div className="snap-start min-h-[calc(100dvh-80px)] flex flex-col justify-center p-4 lg:p-0 lg:col-span-4 lg:min-h-0 lg:justify-start lg:space-y-8">
+          <Card className="bg-card/40 border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.5)] backdrop-blur-2xl rounded-[2rem] md:rounded-[2.5rem] overflow-hidden group transition-all duration-500 hover:border-primary/20">
+            <div className="h-2 bg-gradient-to-r from-primary via-primary/50 to-primary w-full" />
+            <CardContent className="pt-8 px-6 pb-8 md:pt-10 md:px-8 md:pb-10 space-y-6 md:space-y-8">
+                <div className="flex flex-col items-center text-center space-y-4 md:space-y-6">
                     <div className="relative">
-                        <div className="absolute -inset-2 bg-gradient-to-r from-primary to-purple-600 rounded-full blur-xl opacity-30 group-hover:opacity-60 transition-opacity duration-700" />
-                        <div className="relative h-40 w-40 rounded-full border-4 border-white/10 overflow-hidden bg-black shadow-2xl">
+                        <div className="absolute -inset-2 bg-gradient-to-r from-primary to-purple-600 rounded-full blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-700" />
+                        <div className="relative h-32 w-32 md:h-40 md:w-40 rounded-full border-4 border-white/10 overflow-hidden bg-black shadow-2xl">
                             <Image src={masterStats.profilePic} alt={masterStats.traderName} fill className="object-cover transform transition-transform duration-700 group-hover:scale-110" unoptimized />
                         </div>
                     </div>
                     <div>
-                        <h3 className="text-[0.7rem] font-black uppercase tracking-[0.4em] text-primary/60 mb-2">Master Portfolio</h3>
-                        <p className="text-4xl font-headline font-black text-white uppercase tracking-tighter">{masterStats.traderName}</p>
+                        <h3 className="text-[0.6rem] font-black uppercase tracking-[0.4em] text-primary/60 mb-1 md:mb-2">Master Portfolio</h3>
+                        <p className="text-3xl md:text-4xl font-headline font-black text-white uppercase tracking-tighter">{masterStats.traderName}</p>
                     </div>
                     
-                    <div className="flex items-center gap-4">
-                        <a href={masterStats.instagram} target="_blank" className="p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-primary hover:text-black hover:-translate-y-1 transition-all duration-300">
-                            <Instagram className="h-6 w-6" />
+                    <div className="flex items-center gap-3 md:gap-4">
+                        <a href={masterStats.instagram} target="_blank" className="p-3 md:p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-primary hover:text-black transition-all">
+                            <Instagram className="h-5 w-5 md:h-6 md:w-6" />
                         </a>
-                        <a href={masterStats.tiktok} target="_blank" className="p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-primary hover:text-black hover:-translate-y-1 transition-all duration-300">
-                            <svg fill="currentColor" viewBox="0 0 448 512" className="h-6 w-6">
+                        <a href={masterStats.tiktok} target="_blank" className="p-3 md:p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-primary hover:text-black transition-all">
+                            <svg fill="currentColor" viewBox="0 0 448 512" className="h-5 w-5 md:h-6 md:w-6">
                                 <path d="M448 209.91a210.06 210.06 0 0 1 -122.77-39.25v178.72A162.55 162.55 0 1 1 185 188.31v89.89a74.62 74.62 0 1 0 52.23 71.18V0h88a121.18 121.18 0 0 0 1.86 22.17h0A122.18 122.18 0 0 0 381 102.39a121.43 121.43 0 0 0 67 20.14Z" />
                             </svg>
                         </a>
-                        <a href={masterStats.telegram} target="_blank" className="p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-primary hover:text-black hover:-translate-y-1 transition-all duration-300">
-                            <Send className="h-6 w-6" />
+                        <a href={masterStats.telegram} target="_blank" className="p-3 md:p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-primary hover:text-black transition-all">
+                            <Send className="h-5 w-5 md:h-6 md:w-6" />
                         </a>
                     </div>
                 </div>
 
-                <div className="space-y-4">
-                    <div className="p-6 bg-white/[0.03] rounded-[1.5rem] border border-white/5 flex justify-between items-center group/item hover:bg-white/5 transition-colors">
-                        <p className="text-xs font-black text-white/40 uppercase tracking-widest">Saldo Inicial</p>
-                        <p className="text-lg font-black font-mono text-white/60">{masterStats.initialBalance}</p>
+                <div className="space-y-3">
+                    <div className="p-5 bg-white/[0.03] rounded-[1.25rem] border border-white/5 flex justify-between items-center">
+                        <p className="text-[0.65rem] font-black text-white/40 uppercase tracking-widest">Saldo Inicial</p>
+                        <p className="text-base font-black font-mono text-white/60">{masterStats.initialBalance}</p>
                     </div>
-                    <div className="p-7 bg-white/[0.05] rounded-[1.5rem] border border-white/10 flex justify-between items-center shadow-xl">
-                        <p className="text-xs font-black text-white/40 uppercase tracking-widest">Saldo em Conta</p>
-                        <p className="text-2xl font-black font-mono text-white tracking-tighter">{masterStats.balance}</p>
+                    <div className="p-6 bg-white/[0.05] rounded-[1.25rem] border border-white/10 flex justify-between items-center shadow-xl">
+                        <p className="text-[0.65rem] font-black text-white/40 uppercase tracking-widest">Saldo Atual</p>
+                        <p className="text-xl md:text-2xl font-black font-mono text-white tracking-tighter">{masterStats.balance}</p>
                     </div>
                     <div className={cn(
-                        "p-7 rounded-[1.5rem] border flex justify-between items-center transition-all duration-500",
+                        "p-6 rounded-[1.25rem] border flex justify-between items-center transition-all duration-500",
                         lastTradeResult < 0 ? "bg-red-500/10 border-red-500/20" : (lastTradeResult === 0 ? "bg-white/5 border-white/10" : "bg-green-500/10 border-green-500/20")
                     )}>
-                        <p className={cn("text-xs font-black uppercase tracking-widest", lastTradeResult < 0 ? "text-red-500" : (lastTradeResult === 0 ? "text-zinc-500" : "text-green-500"))}>Net Profit Hoje</p>
-                        <p className={cn("text-2xl font-black font-mono tracking-tighter", lastTradeResult < 0 ? "text-red-500" : (lastTradeResult === 0 ? "text-zinc-500" : "text-green-500"))}>{masterStats.profitToday}</p>
+                        <p className={cn("text-[0.65rem] font-black uppercase tracking-widest", lastTradeResult < 0 ? "text-red-500" : (lastTradeResult === 0 ? "text-zinc-500" : "text-green-500"))}>Net Profit Hoje</p>
+                        <p className={cn("text-xl md:text-2xl font-black font-mono tracking-tighter", lastTradeResult < 0 ? "text-red-500" : (lastTradeResult === 0 ? "text-zinc-500" : "text-green-500"))}>{masterStats.profitToday}</p>
                     </div>
                 </div>
 
-                <div className="p-8 bg-black/40 rounded-[2rem] border border-white/5 space-y-6 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4">
-                         <div className={cn(
-                            "px-3 py-1 rounded-full text-[0.6rem] font-black tracking-widest transition-all",
-                            masterStats.isActive ? "bg-green-500/20 text-green-500 border border-green-500/30 animate-pulse" : "bg-red-500/20 text-red-500 border border-red-500/30"
-                        )}>
-                            {masterStats.isActive ? "EXECUTANDO" : "STANDEBY"}
+                <div className="p-6 bg-black/40 rounded-[1.5rem] border border-white/5 space-y-4">
+                    <div className="flex items-center gap-2">
+                         <Trophy className="h-4 w-4 text-primary" />
+                         <span className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-white/40">Placar Acumulado</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                         <div className="flex flex-col items-center bg-white/5 p-3 rounded-xl border border-white/5">
+                            <span className="text-2xl md:text-3xl font-black text-green-500">{scoreboard.wins}</span>
+                            <span className="text-[0.55rem] font-bold text-white/30 uppercase">Wins</span>
+                         </div>
+                         <div className="flex flex-col items-center bg-white/5 p-3 rounded-xl border border-white/5">
+                            <span className="text-2xl md:text-3xl font-black text-red-500">{scoreboard.losses}</span>
+                            <span className="text-[0.55rem] font-bold text-white/30 uppercase">Losses</span>
+                         </div>
+                    </div>
+                    <div className="pt-2">
+                        <div className="flex justify-between items-end mb-2">
+                            <span className="text-[0.55rem] font-black uppercase tracking-[0.1em] text-white/40">Sincronia IA</span>
+                            <span className="text-sm font-black text-green-500 font-mono">{masterStats.winRate}</span>
                         </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                         <Trophy className="h-5 w-5 text-primary" />
-                         <span className="text-[0.65rem] font-black uppercase tracking-[0.2em] text-white/40">Performance Histórica</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                         <div className="flex flex-col items-center bg-white/5 p-4 rounded-2xl border border-white/5">
-                            <span className="text-4xl font-black text-green-500">{scoreboard.wins}</span>
-                            <span className="text-[0.65rem] font-bold text-white/30 uppercase mt-1">Wins</span>
-                         </div>
-                         <div className="flex flex-col items-center bg-white/5 p-4 rounded-2xl border border-white/5">
-                            <span className="text-4xl font-black text-red-500">{scoreboard.losses}</span>
-                            <span className="text-[0.65rem] font-bold text-white/30 uppercase mt-1">Losses</span>
-                         </div>
-                    </div>
-                </div>
-
-                <div className="space-y-4 px-2">
-                    <div className="flex justify-between items-end">
-                        <span className="text-[0.65rem] font-black uppercase tracking-[0.1em] text-white/40">Sincronia Algorítmica</span>
-                        <span className="text-xl font-black text-green-500 font-mono tracking-tighter">{masterStats.winRate}</span>
-                    </div>
-                    <div className="h-3 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
-                        <div 
-                            className="h-full bg-gradient-to-r from-green-600 to-green-400 transition-all duration-1000 ease-out" 
-                            style={{ width: masterStats.winRate }}
-                        />
+                        <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                            <div className="h-full bg-gradient-to-r from-green-600 to-green-400" style={{ width: masterStats.winRate }} />
+                        </div>
                     </div>
                 </div>
             </CardContent>
           </Card>
+        </div>
 
-          <Card className="bg-card/30 border border-white/5 rounded-[2rem] overflow-hidden hidden md:block">
-             <CardHeader className="p-8 pb-4">
-                <CardTitle className="text-[0.7rem] font-black uppercase tracking-[0.3em] text-white/30 flex items-center gap-3">
-                    <Activity className="h-5 w-5 text-primary/50" /> Operações em Tempo Real
+        {/* SECTION 2: OPERATIONS (Slide 2 no Mobile, Col 1 no Desktop) */}
+        <div className="snap-start min-h-[calc(100dvh-80px)] flex flex-col justify-center p-4 lg:p-0 lg:col-span-4 lg:min-h-0 lg:justify-start">
+          <Card className="bg-card/30 border border-white/5 rounded-[2rem] overflow-hidden h-full max-h-[85vh] lg:max-h-none flex flex-col">
+             <CardHeader className="p-6 pb-4 shrink-0">
+                <CardTitle className="text-[0.65rem] font-black uppercase tracking-[0.3em] text-white/30 flex items-center gap-3">
+                    <Activity className="h-4 w-4 text-primary/50" /> Operações HFT
                 </CardTitle>
              </CardHeader>
-             <CardContent className="px-6 pb-8 space-y-3">
-                {masterStats.results.length > 0 ? masterStats.results.slice(0, 8).map((trade: any) => (
-                    <div key={trade.id} className="grid grid-cols-12 items-center p-5 bg-white/[0.02] rounded-2xl border border-white/5 group hover:bg-white/[0.05] hover:border-white/10 transition-all duration-300">
+             <CardContent className="px-4 pb-6 space-y-2.5 overflow-y-auto no-scrollbar flex-grow">
+                {masterStats.results.length > 0 ? masterStats.results.map((trade: any) => (
+                    <div key={trade.id} className="grid grid-cols-12 items-center p-4 bg-white/[0.02] rounded-xl border border-white/5 group transition-all duration-300">
                         <div className="col-span-3">
-                            <span className="text-[0.6rem] font-black font-mono text-white/30 block mb-1">DATA/HORA</span>
-                            <span className="text-xs font-black text-white/80 whitespace-nowrap">{formatFullDate(trade.date, trade.time)}</span>
+                            <span className="text-[0.55rem] font-black font-mono text-white/20 block mb-1">HORÁRIO</span>
+                            <span className="text-[0.7rem] md:text-xs font-black text-white/80 whitespace-nowrap">{formatFullDate(trade.date, trade.time)}</span>
                         </div>
-                        <div className="col-span-4 flex items-center gap-3 pl-2">
-                            <div className="shrink-0"><CurrencyFlags asset={trade.asset} /></div>
-                            <span className="text-sm font-black text-white uppercase tracking-tight truncate">{trade.asset.replace(' (OTC)', '')}</span>
+                        <div className="col-span-4 flex items-center gap-2 pl-1">
+                            <div className="shrink-0 scale-75 md:scale-100"><CurrencyFlags asset={trade.asset} /></div>
+                            <span className="text-[0.7rem] md:text-sm font-black text-white uppercase tracking-tight truncate">{trade.asset.replace(' (OTC)', '')}</span>
                         </div>
                         <div className="col-span-5 flex flex-col items-end text-right">
-                             <div className="flex items-center gap-2">
+                             <div className="flex items-center gap-1.5">
                                 <span className={cn(
-                                    "text-[0.65rem] font-black uppercase tracking-widest",
+                                    "text-[0.6rem] font-black uppercase tracking-widest",
                                     trade.result === 'WIN' ? "text-green-500" : (trade.result === 'LOSS' ? "text-red-500" : "text-zinc-500")
                                 )}>
                                     {trade.result}
                                 </span>
-                                <div className={cn(
-                                    "w-1.5 h-1.5 rounded-full",
-                                    trade.result === 'WIN' ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" : (trade.result === 'LOSS' ? "bg-red-500" : "bg-zinc-500")
-                                )} />
+                                <div className={cn("w-1.5 h-1.5 rounded-full", trade.result === 'WIN' ? "bg-green-500" : (trade.result === 'LOSS' ? "bg-red-500" : "bg-zinc-500"))} />
                              </div>
                              <span className={cn(
-                                "text-lg font-black font-mono leading-none my-1 tracking-tighter",
+                                "text-base md:text-lg font-black font-mono leading-none my-1 tracking-tighter",
                                 trade.netChange > 0 ? "text-green-500" : (trade.netChange < 0 ? "text-red-500" : "text-white/20")
                              )}>
-                                {trade.netChange > 0 ? '+' : ''}{formatCurrency(trade.netChange)}
+                                {trade.netChange > 0 ? '+' : ''}{trade.netChange.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                              </span>
                         </div>
                     </div>
                 )) : (
-                    <div className="py-20 text-center opacity-20">
-                         <Clock className="h-10 w-10 mx-auto mb-3" />
-                         <p className="text-[0.6rem] font-black uppercase tracking-[0.2em]">Aguardando Fluxo...</p>
+                    <div className="py-20 text-center opacity-20 flex flex-col items-center">
+                         <Clock className="h-8 w-8 mb-3" />
+                         <p className="text-[0.6rem] font-black uppercase tracking-[0.2em]">Sincronizando Fluxo...</p>
                     </div>
                 )}
              </CardContent>
           </Card>
         </div>
 
-        {/* RIGHT: SYNC CONSOLE */}
-        <div className="lg:col-span-8 space-y-8">
-          <Card className="bg-card/40 border border-white/10 shadow-[0_0_60px_rgba(0,0,0,0.6)] backdrop-blur-3xl rounded-[3rem] p-6 md:p-16 min-h-[750px] flex flex-col items-center justify-center relative overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
+        {/* SECTION 3: SYNC CONSOLE (Slide 3 no Mobile, Col 2 no Desktop) */}
+        <div className="snap-start min-h-[calc(100dvh-80px)] flex flex-col justify-center p-4 lg:p-0 lg:col-span-8 lg:min-h-0 lg:justify-start lg:mt-0">
+          <Card className="bg-card/40 border border-white/10 shadow-2xl backdrop-blur-3xl rounded-[2.5rem] p-8 md:p-16 h-full flex flex-col items-center justify-center relative overflow-hidden">
             
             {step === 'STEP_1_REGISTER' && (
-                <div className="max-w-md w-full text-center space-y-12 z-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
-                    <div className="space-y-8">
-                        <div className="flex justify-center transform transition-transform duration-1000 hover:scale-105">
-                             <Logo size={120} showText={false} />
-                        </div>
-                        <div className="space-y-4">
-                            <h2 className="text-5xl font-headline font-black uppercase tracking-tighter text-white leading-none">Conexão Copy</h2>
-                            <p className="text-white/40 text-lg leading-relaxed max-w-[90%] mx-auto font-medium">
+                <div className="max-w-md w-full text-center space-y-10 z-10 animate-in fade-in duration-700">
+                    <div className="space-y-6">
+                        <div className="flex justify-center animate-bounce duration-[3000ms]"><Logo size={100} showText={false} /></div>
+                        <div className="space-y-3">
+                            <h2 className="text-4xl md:text-5xl font-headline font-black uppercase tracking-tighter text-white">Conexão Copy</h2>
+                            <p className="text-white/40 text-base md:text-lg leading-relaxed font-medium">
                                 Para espelhar as operações do Trader, sua conta deve obrigatoriamente estar vinculada ao nosso cluster de alta frequência.
                             </p>
                         </div>
                     </div>
-
-                    <div className="space-y-6 pt-4">
-                        <Button asChild className="w-full h-24 bg-primary text-primary-foreground font-black uppercase tracking-tighter text-2xl shadow-[0_20px_40px_rgba(255,0,0,0.2)] rounded-[2rem] hover:scale-[1.03] active:scale-95 transition-all duration-300 relative overflow-hidden group/btn">
+                    <div className="space-y-4 pt-4">
+                        <Button asChild className="w-full h-20 md:h-24 bg-primary text-primary-foreground font-black uppercase tracking-tighter text-xl md:text-2xl rounded-[1.5rem] md:rounded-[2rem] hover:scale-[1.03] transition-all relative overflow-hidden group/btn shadow-[0_20px_40px_rgba(255,0,0,0.15)]">
                             <a href={affiliateLink} target="_blank" rel="noopener noreferrer">
                                 <div className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-1000 skew-x-[-20deg]" />
-                                <ArrowRight className="mr-4 h-8 w-8" /> VINCULAR MINHA CONTA
+                                <ArrowRight className="mr-3 h-6 w-6 md:h-8 md:w-8" /> VINCULAR MINHA CONTA
                             </a>
                         </Button>
-                        <Button 
-                            variant="ghost" 
-                            onClick={() => setStep('STEP_2_FORM')}
-                            className="w-full h-16 border border-white/5 bg-white/[0.02] text-sm font-black uppercase tracking-[0.2em] text-white/50 hover:bg-white/5 rounded-2xl"
-                        >
+                        <Button variant="ghost" onClick={() => setStep('STEP_2_FORM')} className="w-full h-14 border border-white/5 bg-white/[0.02] text-[0.7rem] font-black uppercase tracking-[0.2em] text-white/50 rounded-xl">
                             JÁ POSSUO CONTA (SINCRONIZAR)
                         </Button>
-                    </div>
-                    
-                    <div className="flex items-center justify-center gap-6 pt-8 opacity-20">
-                         <div className="flex flex-col items-center gap-1">
-                            <ShieldCheck className="h-5 w-5" />
-                            <span className="text-[0.5rem] font-black uppercase">AES-256</span>
-                         </div>
-                         <div className="h-8 w-px bg-white/20" />
-                         <div className="flex flex-col items-center gap-1">
-                            <Cpu className="h-5 w-5" />
-                            <span className="text-[0.5rem] font-black uppercase">Handshake</span>
-                         </div>
                     </div>
                 </div>
             )}
 
             {step === 'STEP_2_FORM' && (
-                <div className="max-w-md w-full text-center space-y-10 z-10 animate-in fade-in zoom-in-95 duration-500">
-                    <div className="space-y-4">
-                        <div className="inline-flex p-4 bg-primary/10 rounded-3xl border border-primary/20 mb-4">
-                             <Zap className="h-8 w-8 text-primary animate-pulse" />
+                <div className="max-w-sm w-full text-center space-y-8 z-10 animate-in zoom-in-95 duration-500">
+                    <div className="space-y-2">
+                        <div className="inline-flex p-3 bg-primary/10 rounded-2xl border border-primary/20 mb-2">
+                             <Zap className="h-6 w-6 text-primary animate-pulse" />
                         </div>
-                        <h2 className="text-4xl font-headline font-black uppercase text-white tracking-tighter">Protocolo Handshake</h2>
-                        <p className="text-sm text-white/40 uppercase font-black tracking-[0.3em]">
-                            Inicie a validação do seu cluster técnico
-                        </p>
+                        <h2 className="text-3xl font-headline font-black uppercase text-white tracking-tighter">Handshake</h2>
+                        <p className="text-[0.6rem] text-white/30 uppercase font-black tracking-[0.3em]">Protocolo de Identificação</p>
                     </div>
-
-                    <div className="space-y-6 text-left">
-                        <div className="space-y-2.5">
-                            <Label className="text-[0.65rem] font-black uppercase tracking-[0.2em] text-white/30 ml-4">Canal de Comunicação (E-mail)</Label>
-                            <div className="relative group">
-                                <Mail className="absolute left-6 top-1/2 -translate-y-1/2 h-6 w-6 text-white/20 group-focus-within:text-primary transition-colors" />
-                                <Input value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="seu@email.com" className="pl-16 h-18 bg-black/60 border-white/10 rounded-3xl text-xl focus:ring-primary/20 focus:border-primary/40 transition-all" />
-                            </div>
+                    <div className="space-y-5 text-left">
+                        <div className="space-y-2">
+                            <Label className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-white/30 ml-3">Canal de E-mail</Label>
+                            <Input value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="seu@email.com" className="h-16 bg-black/60 border-white/10 rounded-2xl text-lg focus:ring-primary/20" />
                         </div>
-                        <div className="space-y-2.5">
-                            <Label className="text-[0.65rem] font-black uppercase tracking-[0.2em] text-white/30 ml-4">Terminal de Usuário (ID Corretora)</Label>
-                            <div className="relative group">
-                                <UserIcon className="absolute left-6 top-1/2 -translate-y-1/2 h-6 w-6 text-white/20 group-focus-within:text-primary transition-colors" />
-                                <Input value={formData.brokerId} onChange={e => setFormData({...formData, brokerId: e.target.value.replace(/\D/g, '')})} placeholder="ID da Exnova" className="pl-16 h-18 bg-black/60 border-white/10 rounded-3xl font-mono text-2xl tracking-[0.2em] focus:ring-primary/20 focus:border-primary/40 transition-all" />
-                            </div>
+                        <div className="space-y-2">
+                            <Label className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-white/30 ml-3">Terminal ID (Exnova)</Label>
+                            <Input value={formData.brokerId} onChange={e => setFormData({...formData, brokerId: e.target.value.replace(/\D/g, '')})} placeholder="ID do usuário" className="h-16 bg-black/60 border-white/10 rounded-2xl font-mono text-xl tracking-[0.2em] focus:ring-primary/20" />
                         </div>
-
-                        <div className="pt-6">
-                            <Button 
-                                onClick={handleRequestVerification}
-                                disabled={!formData.email || formData.brokerId.length < 5 || isSubmitting}
-                                className="w-full h-20 bg-primary text-primary-foreground font-black uppercase tracking-tighter text-xl rounded-[1.5rem] shadow-xl hover:scale-[1.02] active:scale-95 transition-all"
-                            >
-                                {isSubmitting ? <Loader2 className="h-8 w-8 animate-spin" /> : 'SOLICITAR SINCRONIZAÇÃO'}
+                        <div className="pt-4">
+                            <Button onClick={handleRequestVerification} disabled={!formData.email || formData.brokerId.length < 5 || isSubmitting} className="w-full h-18 bg-primary text-primary-foreground font-black uppercase text-lg rounded-[1.25rem] shadow-xl hover:scale-[1.02] transition-all">
+                                {isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : 'SOLICITAR SINCRONIZAÇÃO'}
                             </Button>
-                            <Button variant="ghost" onClick={() => setStep('STEP_1_REGISTER')} className="w-full h-12 text-[0.6rem] font-black uppercase tracking-[0.3em] text-white/20 mt-4 hover:text-white/60">Voltar para início</Button>
+                            <Button variant="ghost" onClick={() => setStep('STEP_1_REGISTER')} className="w-full h-10 text-[0.55rem] font-black uppercase tracking-[0.3em] text-white/10 mt-2">Voltar</Button>
                         </div>
                     </div>
                 </div>
             )}
 
             {step === 'STEP_3_PENDING' && (
-                <div className="max-w-md w-full text-center space-y-12 z-10 animate-in zoom-in-95 duration-500">
-                    <div className="relative h-56 w-56 mx-auto">
-                        <div className="absolute inset-0 border-[8px] border-primary/5 rounded-full" />
-                        <div className="absolute inset-0 border-[8px] border-primary rounded-full border-t-transparent animate-spin shadow-[0_0_30px_rgba(255,0,0,0.3)]" style={{ animationDuration: '1.5s' }} />
+                <div className="max-w-sm w-full text-center space-y-10 z-10 animate-in zoom-in-95 duration-500">
+                    <div className="relative h-48 w-48 mx-auto">
+                        <div className="absolute inset-0 border-[6px] border-primary/5 rounded-full" />
+                        <div className="absolute inset-0 border-[6px] border-primary rounded-full border-t-transparent animate-spin" style={{ animationDuration: '1s' }} />
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="flex flex-col items-center gap-1 animate-pulse">
-                                <Radio className="h-16 w-16 text-primary" />
-                                <span className="text-[0.6rem] font-black text-primary uppercase tracking-widest">Scanning</span>
-                            </div>
+                            <Radio className="h-12 w-12 text-primary animate-pulse" />
                         </div>
                     </div>
-                    <div className="space-y-8">
-                        <div className="space-y-4">
-                            <h3 className="text-4xl font-black uppercase text-white tracking-tighter">Validando Handshake</h3>
-                            <p className="text-lg text-white/40 leading-relaxed font-medium">
-                                O cluster está cruzando os dados do ID <span className="text-primary font-mono font-black">{myRequest?.brokerId || formData.brokerId}</span> com o servidor mestre. A liberação ocorrerá após a confirmação de integridade.
-                            </p>
-                        </div>
-                        <div className="p-6 bg-primary/5 rounded-[1.5rem] border border-primary/20 backdrop-blur-md">
-                            <div className="flex items-center justify-center gap-4">
-                                <Loader2 className="h-5 w-5 text-primary animate-spin" />
-                                <p className="text-xs font-black text-primary uppercase tracking-[0.3em]">Status: AGUARDANDO AUTORIZAÇÃO</p>
-                            </div>
+                    <div className="space-y-6">
+                        <h3 className="text-3xl font-black uppercase text-white tracking-tighter">Validando ID</h3>
+                        <p className="text-sm text-white/40 leading-relaxed font-medium">O cluster está processando o ID <span className="text-primary font-mono">{myRequest?.brokerId || formData.brokerId}</span>. A liberação ocorrerá após confirmação manual.</p>
+                        <div className="p-4 bg-primary/5 rounded-xl border border-primary/20">
+                            <p className="text-[0.6rem] font-black text-primary uppercase tracking-[0.3em]">Status: AGUARDANDO AUTORIZAÇÃO</p>
                         </div>
                     </div>
                 </div>
             )}
 
             {step === 'STEP_4_AWAITING_DEPOSIT' && (
-                <div className="max-w-xl w-full space-y-10 z-10 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                <div className="max-w-md w-full space-y-8 z-10 animate-in fade-in duration-700">
                     {!myRequest?.name ? (
-                        <div className="bg-white/[0.02] border border-white/10 p-12 md:p-20 rounded-[3rem] text-center space-y-10 backdrop-blur-3xl shadow-2xl">
-                            <div className="w-28 h-28 bg-green-500/10 rounded-[2rem] flex items-center justify-center mx-auto border border-green-500/20 shadow-[0_0_40px_rgba(34,197,94,0.2)]">
-                                <UserCheck className="h-14 w-14 text-green-500" />
+                        <div className="bg-white/[0.02] border border-white/10 p-10 rounded-[2.5rem] text-center space-y-8">
+                            <div className="w-20 h-20 bg-green-500/10 rounded-2xl flex items-center justify-center mx-auto border border-green-500/20"><UserCheck className="h-10 w-10 text-green-500" /></div>
+                            <div className="space-y-2">
+                                <h2 className="text-3xl font-black uppercase text-white tracking-tighter">ID Vinculado!</h2>
+                                <p className="text-primary text-[0.6rem] font-black uppercase tracking-[0.3em]">Complete seu perfil técnico</p>
                             </div>
-                            <div className="space-y-4">
-                                <h2 className="text-4xl font-headline font-black uppercase text-white tracking-tighter">ID Vinculado!</h2>
-                                <p className="text-primary text-[0.7rem] font-black uppercase tracking-[0.4em]">Finalize o seu perfil de mestre</p>
-                            </div>
-                            <div className="space-y-6 text-left">
-                                <div className="space-y-3">
-                                    <Label className="text-[0.6rem] font-black uppercase tracking-[0.3em] text-white/30 ml-6">Nome do Protocolo</Label>
-                                    <Input 
-                                        value={nameData} 
-                                        onChange={e => setNameData(e.target.value)} 
-                                        placeholder="Seu nome completo" 
-                                        className="h-20 bg-black/40 border-white/10 rounded-[1.5rem] text-2xl font-bold px-8 focus:ring-primary/20"
-                                    />
-                                </div>
-                                <Button 
-                                    onClick={handleUpdateProfile}
-                                    disabled={!nameData || isUpdatingName}
-                                    className="w-full h-20 bg-white text-black font-black uppercase tracking-tighter text-xl rounded-[1.5rem] hover:bg-white/90 shadow-2xl"
-                                >
-                                    {isUpdatingName ? <Loader2 className="h-8 w-8 animate-spin" /> : 'GERAR CERTIFICADO DE CÓPIA'}
+                            <div className="space-y-4 text-left">
+                                <Input value={nameData} onChange={e => setNameData(e.target.value)} placeholder="Seu nome completo" className="h-16 bg-black/40 border-white/10 rounded-xl text-xl font-bold px-6" />
+                                <Button onClick={handleUpdateProfile} disabled={!nameData || isUpdatingName} className="w-full h-16 bg-white text-black font-black uppercase text-lg rounded-xl shadow-2xl">
+                                    {isUpdatingName ? <Loader2 className="h-6 w-6 animate-spin" /> : 'GERAR CERTIFICADO'}
                                 </Button>
                             </div>
                         </div>
                     ) : (
-                        <div className="bg-white/[0.02] border border-white/10 p-10 md:p-16 rounded-[3rem] text-center space-y-10 backdrop-blur-3xl">
-                            <div className="w-28 h-28 bg-primary/20 rounded-[2.5rem] flex items-center justify-center mx-auto border border-primary/30 shadow-[0_0_50px_rgba(255,0,0,0.2)]">
-                                <ShieldCheck className="h-14 w-14 text-primary" />
+                        <div className="bg-white/[0.02] border border-white/10 p-8 rounded-[2.5rem] text-center space-y-8">
+                            <div className="w-20 h-20 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto border border-primary/20"><ShieldCheck className="h-10 w-10 text-primary" /></div>
+                            <div className="space-y-2">
+                                <h2 className="text-3xl font-black uppercase text-white tracking-tighter">Aguardando Margem</h2>
+                                <p className="text-primary text-[0.6rem] font-black uppercase tracking-[0.3em]">Liquidez Proporcional Requerida</p>
+                            </div>
+                            <div className="p-6 bg-black/60 rounded-2xl border border-white/5 text-left space-y-4">
+                                <p className="text-sm text-white/50 leading-relaxed font-medium">O algoritmo exige uma **Margem de Segurança** de R$ {(config?.copyMinLiquidity || 1000).toLocaleString('pt-BR')} para espelhar as entradas de alta frequência do Master.</p>
                             </div>
                             <div className="space-y-4">
-                                <h2 className="text-4xl font-headline font-black uppercase text-white tracking-tighter leading-tight">Protocolo Ativado<br />para {myRequest.name}</h2>
-                                <p className="text-primary text-[0.7rem] font-black uppercase tracking-[0.4em]">Margem de Segurança Requerida</p>
-                            </div>
-                            
-                            <div className="p-8 md:p-10 bg-black/60 rounded-[2rem] border border-white/5 text-left space-y-6 shadow-inner">
-                                <p className="text-lg text-white/50 leading-relaxed font-medium">
-                                    Para espelhar as ordens de alta frequência do Master {masterStats.traderName}, o algoritmo exige uma **Margem de Segurança Proporcional**. Devido ao alto valor das operações (entradas de R$ 1.000+), a corretora requer liquidez mínima para garantir o espelhamento total.
-                                </p>
-                                <div className="flex flex-col sm:flex-row items-center justify-between p-6 bg-white/[0.03] rounded-2xl border border-white/10 gap-4">
-                                    <span className="text-[0.65rem] font-black uppercase tracking-[0.2em] text-white/30">Liquidez Mínima:</span>
-                                    <span className="text-3xl font-black text-white font-mono tracking-tighter">R$ {(config?.copyMinLiquidity || 1000).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                                </div>
-                            </div>
-
-                            <div className="space-y-6">
-                                <Button 
-                                    asChild
-                                    className="w-full h-24 bg-primary text-primary-foreground font-black uppercase tracking-tighter text-2xl rounded-[2rem] hover:bg-primary/90 transition-all shadow-[0_25px_50px_rgba(255,0,0,0.3)] animate-pulse hover:animate-none"
-                                >
-                                    <a href={affiliateLink} target="_blank" rel="noopener noreferrer">
-                                        ATIVAR MARGEM AGORA <CircleDollarSign className="ml-4 h-8 w-8" />
-                                    </a>
+                                <Button asChild className="w-full h-20 bg-primary text-primary-foreground font-black uppercase text-xl rounded-2xl shadow-xl animate-pulse">
+                                    <a href={affiliateLink} target="_blank" rel="noopener noreferrer">ATIVAR MARGEM AGORA</a>
                                 </Button>
-                                <Button 
-                                    variant="outline"
-                                    onClick={handleConfirmDeposit}
-                                    disabled={isConfirmingDeposit}
-                                    className="w-full h-18 border-white/10 bg-white/[0.02] text-sm font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-white/5"
-                                >
-                                    {isConfirmingDeposit ? <Loader2 className="h-6 w-6 animate-spin mr-3" /> : <CheckCircle2 className="mr-3 h-6 w-6 text-green-500" />} JÁ REALIZEI O APORTE
+                                <Button variant="outline" onClick={handleConfirmDeposit} disabled={isConfirmingDeposit} className="w-full h-14 border-white/10 bg-white/[0.02] text-[0.7rem] font-black uppercase tracking-[0.2em] rounded-xl">
+                                    {isConfirmingDeposit ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <CheckCircle2 className="mr-2 h-5 w-5 text-green-500" />} JÁ REALIZEI O APORTE
                                 </Button>
-                                <p className="text-[0.6rem] font-black text-white/20 uppercase tracking-[0.3em]">O sistema liberará o Handshake automaticamente após detecção de saldo.</p>
                             </div>
                         </div>
                     )}
@@ -572,61 +438,34 @@ export default function CopyPage() {
             )}
 
             {step === 'STEP_7_VERIFYING_DEPOSIT' && (
-                <div className="max-md w-full text-center space-y-12 z-10 animate-in zoom-in-95 duration-500">
-                    <div className="w-32 h-32 bg-cyan-500/10 rounded-[2.5rem] flex items-center justify-center mx-auto border border-cyan-500/20 shadow-[0_0_50px_rgba(6,182,212,0.2)]">
-                        <RefreshCcw className="h-16 w-16 text-cyan-500 animate-spin" style={{ animationDuration: '3s' }} />
-                    </div>
+                <div className="max-w-sm w-full text-center space-y-10 z-10 animate-in zoom-in-95 duration-500">
+                    <div className="w-24 h-24 bg-cyan-500/10 rounded-3xl flex items-center justify-center mx-auto border border-cyan-500/20"><RefreshCcw className="h-12 w-12 text-cyan-500 animate-spin" style={{ animationDuration: '3s' }} /></div>
                     <div className="space-y-6">
-                        <h2 className="text-4xl font-headline font-black uppercase text-white tracking-tighter">Validando Aporte</h2>
-                        <p className="text-white/40 text-lg leading-relaxed font-medium">
-                            O cluster de segurança recebeu o sinal de depósito. Estamos verificando na rede da corretora a integridade da margem para o ID <span className="text-primary font-mono font-black">{myRequest?.brokerId}</span>.
-                        </p>
-                        <div className="p-8 bg-cyan-500/5 rounded-[2rem] border border-cyan-500/10 flex flex-col items-center gap-4">
-                            <div className="flex items-center gap-4">
-                                <span className="relative flex h-4 w-4">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-4 w-4 bg-cyan-500"></span>
-                                </span>
-                                <span className="text-xs font-black text-cyan-500 uppercase tracking-[0.3em] animate-pulse">SINCRONIZANDO LIQUIDEZ...</span>
-                            </div>
-                            <Progress value={45} className="h-1.5 w-48 bg-white/5" />
+                        <h2 className="text-3xl font-black uppercase text-white tracking-tighter">Validando Aporte</h2>
+                        <p className="text-white/40 text-sm font-medium">Estamos verificando na rede da corretora a integridade da margem para o ID <span className="text-primary font-mono">{myRequest?.brokerId}</span>.</p>
+                        <div className="p-6 bg-cyan-500/5 rounded-2xl border border-cyan-500/10 flex flex-col items-center gap-3">
+                            <span className="text-[0.6rem] font-black text-cyan-500 uppercase tracking-[0.3em] animate-pulse">Sincronizando...</span>
+                            <Progress value={45} className="h-1 w-32 bg-white/5" />
                         </div>
                     </div>
                 </div>
             )}
 
             {step === 'STEP_5_SUCCESS' && (
-                <div className="max-w-md w-full text-center space-y-12 z-10 animate-in fade-in zoom-in-95 duration-700">
-                    <div className="w-32 h-32 bg-green-500/20 rounded-[2.5rem] flex items-center justify-center mx-auto border border-green-500/30 shadow-[0_0_60px_rgba(34,197,94,0.3)]">
-                        <CheckCircle2 className="h-16 w-16 text-green-500" />
-                    </div>
-                    <div className="space-y-8">
-                        <div className="space-y-4">
-                            <h2 className="text-5xl font-headline font-black uppercase text-white tracking-tighter">Handshake Ativo!</h2>
-                            <p className="text-white/40 text-lg leading-relaxed font-medium">
-                                Conexão de baixa latência estabelecida. Todas as ordens da conta Master de {masterStats.traderName} estão sendo replicadas em sua conta agora.
-                            </p>
-                        </div>
-                        
-                        {masterStats.isActive && (
-                            <div className="p-8 bg-green-500/10 rounded-[2.5rem] border border-green-500/30 space-y-4 animate-in slide-in-from-top-6 duration-1000">
-                                <div className="flex items-center justify-center gap-4">
-                                    <Radio className="h-6 w-6 text-green-500 animate-pulse" />
-                                    <span className="text-sm font-black text-green-500 uppercase tracking-[0.3em]">LIVE CONNECTION</span>
-                                </div>
-                                <h4 className="text-xl font-black text-white uppercase tracking-tighter">CONTA CONECTADA, AGUARDANDO PRÓXIMO GATILHO</h4>
-                            </div>
-                        )}
-
-                        <div className="flex items-center justify-center gap-10 bg-black/40 p-8 rounded-[2rem] border border-white/5 shadow-2xl">
+                <div className="max-w-sm w-full text-center space-y-10 z-10 animate-in fade-in duration-700">
+                    <div className="w-24 h-24 bg-green-500/20 rounded-3xl flex items-center justify-center mx-auto border border-green-500/30"><CheckCircle2 className="h-12 w-12 text-green-500" /></div>
+                    <div className="space-y-6">
+                        <h2 className="text-4xl font-black uppercase text-white tracking-tighter">Handshake Ativo!</h2>
+                        <p className="text-white/40 text-base leading-relaxed font-medium">Conexão estabelecida. Todas as ordens da conta Master estão sendo replicadas agora.</p>
+                        <div className="flex items-center justify-center gap-8 bg-black/40 p-6 rounded-2xl border border-white/5">
                             <div className="flex flex-col items-center gap-1">
-                                <span className="text-[0.6rem] font-black text-white/20 uppercase tracking-widest">LATÊNCIA</span>
-                                <span className="text-2xl font-mono text-green-500 font-black tracking-tighter">12ms</span>
+                                <span className="text-[0.55rem] font-black text-white/20 uppercase tracking-widest">LATÊNCIA</span>
+                                <span className="text-xl font-mono text-green-500 font-black">12ms</span>
                             </div>
-                            <div className="h-12 w-px bg-white/10" />
+                            <div className="h-10 w-px bg-white/10" />
                             <div className="flex flex-col items-center gap-1">
-                                <span className="text-[0.6rem] font-black text-white/20 uppercase tracking-widest">STATUS</span>
-                                <span className="text-2xl font-mono text-green-500 font-black tracking-tighter">CONECTADO</span>
+                                <span className="text-[0.55rem] font-black text-white/20 uppercase tracking-widest">STATUS</span>
+                                <span className="text-xl font-mono text-green-500 font-black">STABLE</span>
                             </div>
                         </div>
                     </div>
@@ -634,56 +473,27 @@ export default function CopyPage() {
             )}
 
             {step === 'STEP_6_REJECTED' && (
-                <div className="max-w-md w-full text-center space-y-12 z-10 animate-in fade-in zoom-in-95 duration-500">
-                    <div className="w-32 h-32 bg-red-500/20 rounded-[2.5rem] flex items-center justify-center mx-auto border border-red-500/30 shadow-[0_0_50px_rgba(239,68,68,0.2)]">
-                        <Lock className="h-16 w-16 text-red-500" />
-                    </div>
-                    <div className="space-y-8">
-                        <div className="space-y-4">
-                            <h2 className="text-5xl font-headline font-black uppercase text-white tracking-tighter">ID Rejeitado</h2>
-                            <p className="text-white/40 text-lg leading-relaxed font-medium">
-                                O ID informado não está vinculado à nossa rede de sincronização master. Certifique-se de ter criado a conta pelo link oficial abaixo.
-                            </p>
-                        </div>
-                        <div className="space-y-4">
-                            <Button asChild className="w-full h-20 bg-white text-black font-black uppercase tracking-tighter text-xl rounded-2xl hover:bg-white/90">
+                <div className="max-w-sm w-full text-center space-y-10 z-10 animate-in zoom-in-95 duration-500">
+                    <div className="w-24 h-24 bg-red-500/20 rounded-3xl flex items-center justify-center mx-auto border border-red-500/30"><Lock className="h-12 w-12 text-red-500" /></div>
+                    <div className="space-y-6">
+                        <h2 className="text-3xl font-black uppercase text-white tracking-tighter">ID Rejeitado</h2>
+                        <p className="text-white/40 text-sm font-medium">O ID não está vinculado à nossa rede mestre. Certifique-se de ter criado a conta pelo link oficial.</p>
+                        <div className="space-y-3">
+                            <Button asChild className="w-full h-18 bg-white text-black font-black uppercase text-lg rounded-xl">
                                 <a href={affiliateLink} target="_blank">CRIAR CONTA OFICIAL</a>
                             </Button>
-                            <Button variant="ghost" onClick={() => setStep('STEP_2_FORM')} className="w-full h-12 text-[0.65rem] font-black text-white/20 uppercase tracking-[0.2em] hover:text-white/60">Tentar outro identificador</Button>
+                            <Button variant="ghost" onClick={() => setStep('STEP_2_FORM')} className="w-full h-10 text-[0.6rem] font-black text-white/20 uppercase tracking-[0.2em]">Tentar outro identificador</Button>
                         </div>
                     </div>
                 </div>
             )}
           </Card>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-             {[
-               { icon: ShieldCheck, title: "100% Automático", desc: "As ordens abrem sozinhas em sua conta via Handshake de baixa latência." },
-               { icon: TrendingUp, title: "Gestão Mestre", desc: "O cluster replica o risco proporcional da nossa conta profissional em tempo real." },
-               { icon: History, title: "Frequência HFT", desc: "Aproveite enquanto o sistema é gratuito para novos membros do cluster elite." },
-             ].map((b, i) => (
-                <div key={i} className="p-10 bg-white/[0.02] border border-white/5 rounded-[2.5rem] space-y-6 transform transition-transform hover:-translate-y-2 duration-300">
-                    <div className="p-4 bg-primary/10 rounded-2xl w-fit border border-primary/20"><b.icon className="h-8 w-8 text-primary" /></div>
-                    <div className="space-y-3">
-                        <h4 className="text-lg font-black uppercase tracking-tight text-white">{b.title}</h4>
-                        <p className="text-sm text-white/30 font-medium leading-relaxed uppercase tracking-wider">{b.desc}</p>
-                    </div>
-                </div>
-             ))}
-          </div>
         </div>
+
       </main>
 
-      <footer className="mt-20 pb-20 text-center space-y-10 px-8">
-          <Logo size={40} showText={false} className="mx-auto opacity-20" />
-          <div className="max-w-3xl mx-auto space-y-4">
-              <p className="text-[0.65rem] font-black uppercase tracking-[0.5em] text-white/10 leading-relaxed">
-                Terminal de Alta Frequência • Estratégia Chinesa V.2026 • Encrypt Mode Active
-              </p>
-              <p className="text-[0.6rem] font-bold uppercase tracking-[0.1em] text-white/5 max-w-2xl mx-auto leading-relaxed">
-                Aviso Legal: O Copy Trading utiliza algoritmos de espelhamento que requerem margem de garantia proporcional para operações de alta frequência. Opere com responsabilidade.
-              </p>
-          </div>
+      <footer className="h-20 snap-start flex flex-col items-center justify-center shrink-0 border-t border-white/5 bg-black/80 lg:mt-20">
+          <p className="text-[0.55rem] font-black uppercase tracking-[0.4em] text-white/10">Terminal de Alta Frequência • Estratégia Chinesa V.2026</p>
       </footer>
     </div>
   );

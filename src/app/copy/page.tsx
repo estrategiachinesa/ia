@@ -384,10 +384,6 @@ export default function CopyPage() {
         <div className="lg:col-span-8 space-y-6">
           <Card className="bg-card/40 border-white/5 shadow-2xl backdrop-blur-xl rounded-3xl p-8 min-h-[550px] flex flex-col items-center justify-center relative overflow-hidden">
             
-            <div className="absolute top-0 right-0 p-8 opacity-5">
-                <Cpu className="w-64 h-64 text-primary" />
-            </div>
-
             {step === 'STEP_1_REGISTER' && (
                 <div className="max-w-md w-full text-center space-y-8 z-10 animate-in fade-in slide-in-from-bottom-4">
                     <div className="space-y-4">
@@ -550,7 +546,7 @@ export default function CopyPage() {
             )}
 
             {step === 'STEP_7_VERIFYING_DEPOSIT' && (
-                <div className="max-w-md w-full text-center space-y-8 z-10 animate-in zoom-in-95">
+                <div className="max-md w-full text-center space-y-8 z-10 animate-in zoom-in-95">
                     <div className="w-24 h-24 bg-cyan-500/10 rounded-full flex items-center justify-center mx-auto border border-cyan-500/20">
                         <RefreshCcw className="h-12 w-12 text-cyan-500 animate-spin" style={{ animationDuration: '3s' }} />
                     </div>

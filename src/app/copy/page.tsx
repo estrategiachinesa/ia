@@ -175,8 +175,8 @@ export default function CopyPage() {
         <div className="snap-start h-[calc(100dvh-56px)] lg:h-full flex flex-col p-3 lg:p-0 lg:col-span-3">
           <Card className="bg-card/40 border border-white/10 shadow-2xl backdrop-blur-3xl rounded-[2rem] overflow-hidden flex flex-col h-full">
             <div className="h-1 bg-primary w-full" />
-            <div className="flex-grow flex flex-col justify-between p-3 lg:p-6">
-                <div className="flex flex-col items-center text-center space-y-2 lg:space-y-3">
+            <div className="flex-grow flex flex-col justify-between p-6 lg:p-6">
+                <div className="flex flex-col items-center text-center space-y-1 lg:space-y-3">
                     <div className="relative">
                         <div className="relative h-16 w-16 md:h-24 md:w-24 rounded-full border-[3px] border-white/10 overflow-hidden bg-black shadow-xl">
                             <Image src={masterStats.profilePic} alt={masterStats.traderName} fill className="object-cover" unoptimized />
@@ -204,7 +204,7 @@ export default function CopyPage() {
                     </div>
                 </div>
 
-                <div className="space-y-1.5 lg:space-y-2 my-2 lg:my-4">
+                <div className="space-y-1 lg:space-y-2 my-1 lg:my-4">
                     <div className="p-2.5 lg:p-3 bg-white/[0.02] rounded-xl border border-white/5 flex justify-between items-center">
                         <p className="text-[0.55rem] font-black text-white/50 uppercase tracking-[0.2em]">Saldo Inicial</p>
                         <p className="text-xs font-black font-mono text-white/70">{masterStats.initialBalance}</p>
@@ -222,7 +222,7 @@ export default function CopyPage() {
                     </div>
                 </div>
 
-                <div className="p-3 lg:p-4 bg-black/60 rounded-[1.5rem] border border-white/10 space-y-2 lg:space-y-3 shadow-inner">
+                <div className="p-4 lg:p-4 bg-black/60 rounded-[1.5rem] border border-white/10 space-y-2 lg:space-y-3 shadow-inner">
                     <div className="flex items-center justify-between">
                          <div className="flex items-center gap-2">
                              <Trophy className="h-3 w-3 text-primary" />
@@ -230,11 +230,11 @@ export default function CopyPage() {
                          </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
-                         <div className="flex flex-col items-center bg-white/5 p-1.5 lg:p-2 rounded-lg border border-white/5">
+                         <div className="flex flex-col items-center bg-white/5 p-2 rounded-lg border border-white/5">
                             <span className="text-lg lg:text-xl font-black text-green-500">{scoreboard.wins}</span>
                             <span className="text-[0.5rem] font-bold text-white/40 uppercase">Wins</span>
                          </div>
-                         <div className="flex flex-col items-center bg-white/5 p-1.5 lg:p-2 rounded-lg border border-white/5">
+                         <div className="flex flex-col items-center bg-white/5 p-2 rounded-lg border border-white/5">
                             <span className="text-lg lg:text-xl font-black text-red-500">{scoreboard.losses}</span>
                             <span className="text-[0.5rem] font-bold text-white/40 uppercase">Losses</span>
                          </div>

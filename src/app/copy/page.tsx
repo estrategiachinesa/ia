@@ -355,9 +355,17 @@ export default function CopyPage() {
                                 {trade.time}
                              </span>
                         </div>
-                        <div className="col-span-4 flex items-center gap-2 pl-1">
-                            <CurrencyFlags asset={trade.asset} />
-                            <span className="text-[0.85rem] font-black text-white uppercase truncate tracking-tight">{trade.asset.replace(' (OTC)', '')}</span>
+                        <div className="col-span-4 flex flex-col justify-center pl-1">
+                            <div className="flex items-center gap-2">
+                                <CurrencyFlags asset={trade.asset} />
+                                <span className="text-[0.85rem] font-black text-white uppercase truncate tracking-tight">{trade.asset.replace(' (OTC)', '')}</span>
+                            </div>
+                            <span className={cn(
+                                "text-[0.6rem] font-black uppercase tracking-widest mt-0.5",
+                                trade.direction === 'CALL' ? "text-green-500/70" : "text-red-500/70"
+                            )}>
+                                {trade.direction}
+                            </span>
                         </div>
                         <div className="col-span-5 flex flex-col items-end text-right">
                              <div className="flex items-center gap-2">
@@ -406,11 +414,11 @@ export default function CopyPage() {
                     <div className="space-y-4 pt-2">
                         <div className="space-y-2 text-left">
                             <Label className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-white/30 ml-2">Terminal ID (Exnova)</Label>
-                            <Input 
+                            <input 
                                 value={brokerIdInput} 
                                 onChange={e => setBrokerIdInput(e.target.value.replace(/\D/g, ''))} 
                                 placeholder="00000000" 
-                                className="h-14 md:h-16 bg-black/40 border-white/10 rounded-2xl font-mono text-xl tracking-[0.3em] text-center" 
+                                className="w-full h-14 md:h-16 bg-black/40 border border-white/10 rounded-2xl font-mono text-xl tracking-[0.3em] text-center text-white outline-none focus:border-primary/50 transition-all" 
                             />
                         </div>
                         <Button 

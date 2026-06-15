@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -29,7 +30,8 @@ import {
   Play,
   Pause,
   Power,
-  LogIn
+  LogIn,
+  LogOut
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,7 +47,7 @@ import { CurrencyFlags } from '@/components/app/currency-flags';
 import Image from 'next/image';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, getDocs, setDoc, doc, serverTimestamp, updateDoc, limit } from 'firebase/firestore';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 
 type ConnectionStep = 'STEP_ID_CHECK' | 'STEP_REGISTRATION' | 'STEP_LOGIN' | 'STEP_DASHBOARD' | 'STEP_UNAUTHORIZED';
@@ -136,7 +138,7 @@ export default function CopyPage() {
               const reqData = snap.docs[0].data();
               if (reqData.status === 'REGISTERED') {
                   // User already has an account
-                  setLoginData(prev => ({ ...prev, email: reqData.email || '' }));
+                  setLoginData(prev => ({ ...prev, email: '' })); // Do not pre-fill to allow manual entry
                   setStep('STEP_LOGIN');
               } else if (reqData.status === 'AUTHORIZED') {
                   setActiveRequestId(snap.docs[0].id);
@@ -157,9 +159,13 @@ export default function CopyPage() {
 
   const handleLogin = async () => {
       if (!firestore || !auth) return;
+      if (!loginData.email || !loginData.password) {
+          toast({ variant: 'destructive', title: 'Campos Vazios', description: 'Por favor, preencha seu e-mail e senha.' });
+          return;
+      }
       setIsLoggingIn(true);
       try {
-          await signInWithEmailAndPassword(auth, loginData.email, loginData.password);
+          await signInWithEmailAndPassword(auth, loginData.email.trim(), loginData.password);
           setStep('STEP_DASHBOARD');
           toast({ title: 'Bem-vindo de volta!', description: 'Conexão HFT restabelecida.' });
       } catch (e: any) {
@@ -178,11 +184,11 @@ export default function CopyPage() {
       }
       setIsRegistering(true);
       try {
-          const userCred = await createUserWithEmailAndPassword(auth, regData.email, regData.password);
+          const userCred = await createUserWithEmailAndPassword(auth, regData.email.trim(), regData.password);
           const userId = userCred.user.uid;
           
           await setDoc(doc(firestore, 'users', userId), {
-              email: regData.email,
+              email: regData.email.trim(),
               displayName: regData.name,
               telegram: regData.telegram,
               brokerId: brokerIdInput,
@@ -196,7 +202,7 @@ export default function CopyPage() {
               userId: userId,
               registeredAt: serverTimestamp(),
               name: regData.name,
-              email: regData.email,
+              email: regData.email.trim(),
               telegram: regData.telegram
           });
 
@@ -206,6 +212,15 @@ export default function CopyPage() {
           console.error(e);
           toast({ variant: 'destructive', title: 'Erro no cadastro', description: e.message || "Ocorreu um erro." });
       } finally { setIsRegistering(false); }
+  };
+
+  const handleLogout = async () => {
+      if (!auth) return;
+      await signOut(auth);
+      setStep('STEP_ID_CHECK');
+      setBrokerIdInput('');
+      setLoginData({ email: '', password: '' });
+      toast({ title: 'Conexão Encerrada', description: 'Terminal desconectado com sucesso.' });
   };
 
   if (isConfigLoading || isUserLoading) {
@@ -220,6 +235,11 @@ export default function CopyPage() {
       <header className="h-14 lg:h-16 px-6 md:px-8 flex items-center justify-between border-b border-white/5 bg-black/60 backdrop-blur-2xl shrink-0 z-50">
         <Logo size={32} />
         <div className="flex items-center gap-3">
+             {user && (
+                 <Button variant="ghost" size="sm" onClick={handleLogout} className="h-8 px-3 rounded-full border border-white/10 text-[0.6rem] font-black uppercase text-white/40 hover:text-white hover:bg-white/5">
+                    <LogOut className="h-3 w-3 mr-2" /> Sair
+                 </Button>
+             )}
              <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10">
                 <span className={cn("w-1.5 h-1.5 rounded-full", masterStats.isActive ? "bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.8)]" : "bg-red-500")} />
                 <span className="text-[0.55rem] font-black uppercase tracking-[0.2em] text-white/80">{masterStats.isActive ? "COPY ONLINE" : "Offline"}</span>
@@ -447,10 +467,15 @@ export default function CopyPage() {
 
                         <div className="space-y-4 text-left">
                             <div className="space-y-1">
-                                <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">E-mail Cadastrado</Label>
+                                <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">seu@email.com</Label>
                                 <div className="relative">
                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
-                                    <Input value={loginData.email} disabled className="h-12 bg-black/20 border-white/5 rounded-xl pl-12 text-sm opacity-50" />
+                                    <Input 
+                                        value={loginData.email} 
+                                        onChange={e => setLoginData({...loginData, email: e.target.value})}
+                                        placeholder="seu@email.com" 
+                                        className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" 
+                                    />
                                 </div>
                             </div>
                             <div className="space-y-1">

@@ -475,7 +475,7 @@ export default function CopyPage() {
 
                         <div className="space-y-4 text-left">
                             <div className="space-y-1">
-                                <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">seu@email.com</Label>
+                                <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">E-mail Cadastrado</Label>
                                 <div className="relative">
                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
                                     <Input 
@@ -597,6 +597,23 @@ export default function CopyPage() {
                                 : "A sincronização foi pausada manualmente. Nenhuma ordem do Mestre Trader será replicada na sua conta enquanto este status permanecer."
                             }
                         </p>
+
+                        {/* CHAMADA ANALISADOR IA */}
+                        <div 
+                            onClick={() => router.push('/analisador')}
+                            className="mx-4 p-3 bg-primary/5 border border-primary/20 rounded-2xl flex items-center justify-between group cursor-pointer hover:bg-primary/10 transition-all"
+                        >
+                            <div className="flex items-center gap-3 text-left">
+                                <div className="p-2 bg-primary/10 rounded-xl group-hover:scale-110 transition-transform">
+                                    <Zap className="h-4 w-4 text-primary" />
+                                </div>
+                                <div>
+                                    <h4 className="text-[0.65rem] font-black uppercase text-white">Usar Analisador IA</h4>
+                                    <p className="text-[0.55rem] font-bold text-primary/60 uppercase">Antecipe o mercado</p>
+                                </div>
+                            </div>
+                            <ArrowRight className="h-4 w-4 text-primary group-hover:translate-x-1 transition-transform" />
+                        </div>
                         
                         <div className="grid grid-cols-2 gap-4 bg-black/60 p-5 lg:p-6 rounded-[2rem] border border-white/5 mx-2 shadow-inner relative group">
                             <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-[2rem]" />

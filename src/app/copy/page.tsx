@@ -28,7 +28,8 @@ import {
   ArrowDown,
   Play,
   Pause,
-  Power
+  Power,
+  LogIn
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -44,19 +45,22 @@ import { CurrencyFlags } from '@/components/app/currency-flags';
 import Image from 'next/image';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, getDocs, setDoc, doc, serverTimestamp, updateDoc, limit } from 'firebase/firestore';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { useToast } from '@/hooks/use-toast';
 
-type ConnectionStep = 'STEP_ID_CHECK' | 'STEP_REGISTRATION' | 'STEP_DASHBOARD' | 'STEP_UNAUTHORIZED';
+type ConnectionStep = 'STEP_ID_CHECK' | 'STEP_REGISTRATION' | 'STEP_LOGIN' | 'STEP_DASHBOARD' | 'STEP_UNAUTHORIZED';
 
 export default function CopyPage() {
   const { config, isConfigLoading } = useAppConfig();
   const { firestore, auth, user, isUserLoading } = useFirebase();
   const router = useRouter();
+  const { toast } = useToast();
   
   const [brokerIdInput, setBrokerIdInput] = useState('');
   const [step, setStep] = useState<ConnectionStep>('STEP_ID_CHECK');
   const [isVerifying, setIsVerifying] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isSyncActive, setIsSyncActive] = useState(true);
   
@@ -67,6 +71,12 @@ export default function CopyPage() {
       telegram: '',
       password: '',
       confirmPassword: ''
+  });
+
+  // Login state (for registered users)
+  const [loginData, setLoginData] = useState({
+      email: '',
+      password: ''
   });
 
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
@@ -119,23 +129,51 @@ export default function CopyPage() {
           const q = query(
               collection(firestore, 'copyRequests'),
               where('brokerId', '==', brokerIdInput),
-              where('status', '==', 'AUTHORIZED'),
               limit(1)
           );
           const snap = await getDocs(q);
           if (!snap.empty) {
-              setActiveRequestId(snap.docs[0].id);
-              setStep('STEP_REGISTRATION');
+              const reqData = snap.docs[0].data();
+              if (reqData.status === 'REGISTERED') {
+                  // User already has an account
+                  setLoginData(prev => ({ ...prev, email: reqData.email || '' }));
+                  setStep('STEP_LOGIN');
+              } else if (reqData.status === 'AUTHORIZED') {
+                  setActiveRequestId(snap.docs[0].id);
+                  setStep('STEP_REGISTRATION');
+              } else {
+                  setStep('STEP_UNAUTHORIZED');
+              }
           } else {
               setStep('STEP_UNAUTHORIZED');
           }
-      } catch (e) { console.error(e); } finally { setIsVerifying(false); }
+      } catch (e) { 
+          console.error(e);
+          toast({ variant: 'destructive', title: 'Erro de conexão', description: 'Não foi possível verificar seu ID.' });
+      } finally { 
+          setIsVerifying(false); 
+      }
+  };
+
+  const handleLogin = async () => {
+      if (!firestore || !auth) return;
+      setIsLoggingIn(true);
+      try {
+          await signInWithEmailAndPassword(auth, loginData.email, loginData.password);
+          setStep('STEP_DASHBOARD');
+          toast({ title: 'Bem-vindo de volta!', description: 'Conexão HFT restabelecida.' });
+      } catch (e: any) {
+          console.error(e);
+          toast({ variant: 'destructive', title: 'Erro no login', description: 'E-mail ou senha incorretos.' });
+      } finally {
+          setIsLoggingIn(false);
+      }
   };
 
   const handleRegister = async () => {
       if (!firestore || !auth || !activeRequestId) return;
       if (regData.password !== regData.confirmPassword) {
-          alert("Senhas não coincidem.");
+          toast({ variant: 'destructive', title: 'Senhas não coincidem' });
           return;
       }
       setIsRegistering(true);
@@ -163,9 +201,10 @@ export default function CopyPage() {
           });
 
           setStep('STEP_DASHBOARD');
+          toast({ title: 'Sucesso!', description: 'Terminal ativado e pronto para operar.' });
       } catch (e: any) { 
           console.error(e);
-          alert(e.message || "Erro no cadastro.");
+          toast({ variant: 'destructive', title: 'Erro no cadastro', description: e.message || "Ocorreu um erro." });
       } finally { setIsRegistering(false); }
   };
 
@@ -391,6 +430,47 @@ export default function CopyPage() {
                             <a href={affiliateLink} target="_blank">ABRIR CONTA OFICIAL</a>
                         </Button>
                         <Button variant="ghost" onClick={() => setStep('STEP_ID_CHECK')} className="w-full h-10 text-[0.55rem] font-black uppercase tracking-[0.2em] text-white/20">Tentar outro ID</Button>
+                    </div>
+                </div>
+            )}
+
+            {step === 'STEP_LOGIN' && (
+                <div className="max-w-md w-full z-10 animate-in fade-in zoom-in-95 duration-700">
+                    <div className="bg-white/[0.03] border border-white/10 p-6 lg:p-8 rounded-[2.5rem] space-y-6 shadow-2xl">
+                        <div className="flex items-center gap-4 mb-2">
+                            <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20"><LogIn className="h-6 w-6 text-primary" /></div>
+                            <div>
+                                <h2 className="text-xl font-black uppercase text-white tracking-tighter">Login Terminal</h2>
+                                <p className="text-primary text-[0.55rem] font-black uppercase tracking-[0.3em]">ID {brokerIdInput} Detectado</p>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4 text-left">
+                            <div className="space-y-1">
+                                <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">E-mail Cadastrado</Label>
+                                <div className="relative">
+                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
+                                    <Input value={loginData.email} disabled className="h-12 bg-black/20 border-white/5 rounded-xl pl-12 text-sm opacity-50" />
+                                </div>
+                            </div>
+                            <div className="space-y-1">
+                                <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">Senha do Terminal</Label>
+                                <div className="relative">
+                                    <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
+                                    <Input type={showPassword ? "text" : "password"} value={loginData.password} onChange={e => setLoginData({...loginData, password: e.target.value})} placeholder="******" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />
+                                    <button onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/40 transition-colors">
+                                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <Button onClick={handleLogin} disabled={isLoggingIn} className="w-full h-14 bg-primary text-primary-foreground font-black uppercase text-sm rounded-xl shadow-lg hover:scale-[1.02] transition-all">
+                                {isLoggingIn ? <Loader2 className="h-5 w-5 animate-spin" /> : 'CONECTAR TERMINAL'}
+                            </Button>
+                            <Button variant="ghost" onClick={() => setStep('STEP_ID_CHECK')} className="w-full h-10 text-[0.55rem] font-black uppercase tracking-[0.2em] text-white/20">Usar outro ID</Button>
+                        </div>
                     </div>
                 </div>
             )}

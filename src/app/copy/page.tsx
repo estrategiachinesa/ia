@@ -24,7 +24,8 @@ import {
   Key,
   Eye,
   EyeOff,
-  ShieldAlert
+  ShieldAlert,
+  ArrowDown
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -266,7 +267,7 @@ export default function CopyPage() {
         </div>
 
         {/* SLIDE 2: OPERATIONS HISTORY */}
-        <div className="snap-start h-[calc(100dvh-56px)] lg:h-full flex flex-col p-4 lg:p-0 lg:col-span-4">
+        <div className="snap-start h-[calc(100dvh-56px)] lg:h-full flex flex-col p-4 lg:p-0 lg:col-span-4" id="history">
           <Card className="bg-card/30 border border-white/10 rounded-[2rem] overflow-hidden flex flex-col h-full shadow-2xl backdrop-blur-xl">
              <CardHeader className="p-4 lg:p-6 pb-3 shrink-0 border-b border-white/5 bg-white/5 flex flex-row items-center justify-between">
                 <CardTitle className="text-[0.65rem] font-black uppercase tracking-[0.4em] text-white/60 flex items-center gap-3">
@@ -446,22 +447,57 @@ export default function CopyPage() {
             )}
 
             {step === 'STEP_DASHBOARD' && (
-                <div className="max-w-md w-full text-center space-y-6 z-10 animate-in fade-in duration-700">
-                    <div className="w-16 h-16 bg-green-500/15 rounded-2xl flex items-center justify-center mx-auto border border-green-500/20 animate-bounce"><CheckCircle2 className="h-8 w-8 text-green-500" /></div>
+                <div className="max-w-md w-full text-center space-y-8 z-10 animate-in fade-in duration-700">
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-green-500/20 blur-3xl rounded-full scale-150 animate-pulse" />
+                        <div className="relative w-20 h-20 bg-green-500/15 rounded-3xl flex items-center justify-center mx-auto border border-green-500/20 shadow-2xl">
+                            <CheckCircle2 className="h-10 w-10 text-green-500 animate-bounce" />
+                        </div>
+                    </div>
+                    
                     <div className="space-y-4">
-                        <h2 className="text-2xl font-black uppercase text-white tracking-tighter">Terminal Conectado!</h2>
-                        <p className="text-white/60 text-sm leading-relaxed px-8">A sincronização foi concluída com sucesso. Todas as ordens da conta mestre serão replicadas no seu terminal ID <span className="text-primary font-mono font-bold">{user?.brokerId || brokerIdInput}</span>.</p>
-                        <div className="flex items-center justify-center gap-6 bg-black/60 p-5 rounded-[1.5rem] border border-white/5 mx-4">
-                            <div className="flex flex-col items-center">
-                                <span className="text-[0.45rem] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">LATÊNCIA</span>
-                                <span className="text-lg font-mono text-green-500 font-black">12ms</span>
-                            </div>
-                            <div className="h-8 w-px bg-white/10" />
-                            <div className="flex flex-col items-center">
-                                <span className="text-[0.45rem] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">STATUS</span>
-                                <span className="text-lg font-mono text-green-500 font-black">ACTIVE</span>
+                        <div className="space-y-2">
+                            <h2 className="text-3xl font-black uppercase text-white tracking-tighter">Terminal Conectado!</h2>
+                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full">
+                                <UserIcon className="h-3 w-3 text-primary/60" />
+                                <span className="text-[0.65rem] font-bold text-white/80 uppercase">{user?.displayName || 'Membro Ativo'}</span>
                             </div>
                         </div>
+                        
+                        <p className="text-white/60 text-sm leading-relaxed px-6">
+                            A sincronização via HFT está ativa. Todas as ordens mestres serão replicadas no seu ID <span className="text-primary font-mono font-black">{user?.brokerId || brokerIdInput}</span> em menos de 15ms.
+                        </p>
+                        
+                        <div className="grid grid-cols-2 gap-4 bg-black/60 p-6 rounded-[2rem] border border-white/5 mx-2 shadow-inner relative group">
+                            <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-[2rem]" />
+                            <div className="flex flex-col items-center border-r border-white/10 relative z-10">
+                                <span className="text-[0.45rem] font-black text-white/30 uppercase tracking-[0.2em] mb-1">LATÊNCIA MÉDIA</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xl font-mono text-green-500 font-black">12ms</span>
+                                    <Activity className="h-3 w-3 text-green-500/40 animate-pulse" />
+                                </div>
+                            </div>
+                            <div className="flex flex-col items-center relative z-10">
+                                <span className="text-[0.45rem] font-black text-white/30 uppercase tracking-[0.2em] mb-1">STATUS SYNC</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xl font-mono text-green-500 font-black">ACTIVE</span>
+                                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-3 pt-2">
+                        <Button variant="outline" className="h-14 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 font-black uppercase text-xs tracking-widest group" onClick={() => document.getElementById('history')?.scrollIntoView({ behavior: 'smooth' })}>
+                            VER HISTÓRICO DE TRADES
+                            <ArrowDown className="ml-2 h-4 w-4 group-hover:translate-y-1 transition-transform" />
+                        </Button>
+                        <Button asChild className="h-14 rounded-2xl bg-white text-black font-black uppercase text-xs tracking-widest shadow-xl hover:scale-[1.02] transition-all">
+                            <a href="https://trade.exnova.com/traderoom" target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="mr-2 h-4 w-4" />
+                                ABRIR CORRETORA
+                            </a>
+                        </Button>
                     </div>
                 </div>
             )}

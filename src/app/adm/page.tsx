@@ -1323,15 +1323,15 @@ export default function AdminDashboard() {
                     </TabsContent>
 
                     <TabsContent value="aprovados" className="space-y-4">
-                        <div className="max-h-[500px] overflow-y-auto space-y-2 pr-1">
+                        <div className="max-h-[500px] overflow-y-auto space-y-3 pr-1">
                             {copyRequests && copyRequests.filter(r => r.status === 'REGISTERED').length > 0 ? copyRequests.filter(r => r.status === 'REGISTERED').map((req) => (
                                 <div key={req.id} className="p-4 bg-white/5 border border-white/5 rounded-2xl flex flex-col gap-3 group hover:border-primary/20 transition-all">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <div className="p-2 bg-green-500/10 rounded-full"><UserIcon className="h-4 w-4 text-green-500" /></div>
                                             <div className="flex flex-col">
-                                                <span className="text-xs font-black text-white">{req.name}</span>
-                                                <span className="text-[0.6rem] font-mono opacity-40">{req.email}</span>
+                                                <span className="text-xs font-black text-white uppercase">{req.name || 'Sem Nome'}</span>
+                                                <span className="text-[0.6rem] font-mono opacity-40">{req.email || 'Sem Email'}</span>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
@@ -1354,12 +1354,21 @@ export default function AdminDashboard() {
                                             </DropdownMenu>
                                         </div>
                                     </div>
-                                    <div className="flex items-center justify-between text-[0.6rem] bg-black/20 p-2 rounded-xl border border-white/5">
-                                        <div className="flex gap-4">
-                                            <span className="font-bold opacity-40 uppercase tracking-tighter">ID: <span className="text-primary">{req.brokerId}</span></span>
-                                            <span className="font-bold opacity-40 uppercase tracking-tighter">Telegram: <span className="text-blue-400">{req.telegram || '---'}</span></span>
+                                    
+                                    <div className="grid grid-cols-2 gap-2 text-[0.6rem]">
+                                        <div className="bg-black/20 p-2 rounded-xl border border-white/5">
+                                            <p className="font-bold opacity-40 uppercase tracking-tighter mb-0.5">ID Terminal</p>
+                                            <span className="text-primary font-mono text-sm font-black">{req.brokerId}</span>
                                         </div>
-                                        <span className="font-mono opacity-20">Ativo em: {formatDate(req.registeredAt)}</span>
+                                        <div className="bg-black/20 p-2 rounded-xl border border-white/5">
+                                            <p className="font-bold opacity-40 uppercase tracking-tighter mb-0.5">Telegram</p>
+                                            <span className="text-blue-400 font-bold">{req.telegram || '---'}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between px-1">
+                                        <span className="text-[0.5rem] font-mono opacity-20 uppercase">Registrado em: {formatDate(req.registeredAt)}</span>
+                                        <span className="text-[0.5rem] font-mono opacity-20 uppercase">UUID: {req.userId?.substring(0, 8)}...</span>
                                     </div>
                                 </div>
                             )) : (
@@ -1981,4 +1990,3 @@ export default function AdminDashboard() {
     </div>
   );
 }
-

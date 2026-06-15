@@ -23,7 +23,8 @@ import {
   Mail,
   Key,
   Eye,
-  EyeOff
+  EyeOff,
+  ShieldAlert
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -150,7 +151,10 @@ export default function CopyPage() {
           await updateDoc(doc(firestore, 'copyRequests', activeRequestId), {
               status: 'REGISTERED',
               userId: userId,
-              registeredAt: serverTimestamp()
+              registeredAt: serverTimestamp(),
+              name: regData.name,
+              email: regData.email,
+              telegram: regData.telegram
           });
 
           setStep('STEP_DASHBOARD');

@@ -25,7 +25,10 @@ import {
   Eye,
   EyeOff,
   ShieldAlert,
-  ArrowDown
+  ArrowDown,
+  Play,
+  Pause,
+  Power
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -55,6 +58,7 @@ export default function CopyPage() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isSyncActive, setIsSyncActive] = useState(true);
   
   // Registration state
   const [regData, setRegData] = useState({
@@ -447,17 +451,27 @@ export default function CopyPage() {
             )}
 
             {step === 'STEP_DASHBOARD' && (
-                <div className="max-w-md w-full text-center space-y-8 z-10 animate-in fade-in duration-700">
+                <div className="max-w-md w-full text-center space-y-6 lg:space-y-8 z-10 animate-in fade-in duration-700">
                     <div className="relative">
-                        <div className="absolute inset-0 bg-green-500/20 blur-3xl rounded-full scale-150 animate-pulse" />
-                        <div className="relative w-20 h-20 bg-green-500/15 rounded-3xl flex items-center justify-center mx-auto border border-green-500/20 shadow-2xl">
-                            <CheckCircle2 className="h-10 w-10 text-green-500 animate-bounce" />
+                        <div className={cn(
+                            "absolute inset-0 blur-3xl rounded-full scale-150 transition-all duration-700",
+                            isSyncActive ? "bg-green-500/20 animate-pulse" : "bg-orange-500/10"
+                        )} />
+                        <div className={cn(
+                            "relative w-20 h-20 rounded-3xl flex items-center justify-center mx-auto border shadow-2xl transition-all duration-500",
+                            isSyncActive ? "bg-green-500/15 border-green-500/20" : "bg-orange-500/10 border-orange-500/20"
+                        )}>
+                            {isSyncActive ? (
+                                <CheckCircle2 className="h-10 w-10 text-green-500 animate-bounce" />
+                            ) : (
+                                <Pause className="h-10 w-10 text-orange-500" />
+                            )}
                         </div>
                     </div>
                     
                     <div className="space-y-4">
                         <div className="space-y-2">
-                            <h2 className="text-3xl font-black uppercase text-white tracking-tighter">Terminal Conectado!</h2>
+                            <h2 className="text-2xl lg:text-3xl font-black uppercase text-white tracking-tighter">Terminal {isSyncActive ? 'Conectado!' : 'Pausado'}</h2>
                             <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full">
                                 <UserIcon className="h-3 w-3 text-primary/60" />
                                 <span className="text-[0.65rem] font-bold text-white/80 uppercase">{user?.displayName || 'Membro Ativo'}</span>
@@ -465,39 +479,65 @@ export default function CopyPage() {
                         </div>
                         
                         <p className="text-white/60 text-sm leading-relaxed px-6">
-                            A sincronização via HFT está ativa. Todas as ordens mestres serão replicadas no seu ID <span className="text-primary font-mono font-black">{user?.brokerId || brokerIdInput}</span> em menos de 15ms.
+                            {isSyncActive 
+                                ? `A sincronização via HFT está ativa. Todas as ordens mestres serão replicadas no seu ID ${user?.brokerId || brokerIdInput} em menos de 15ms.`
+                                : "A sincronização foi pausada manualmente. Nenhuma ordem do Mestre Trader será replicada na sua conta enquanto este status permanecer."
+                            }
                         </p>
                         
-                        <div className="grid grid-cols-2 gap-4 bg-black/60 p-6 rounded-[2rem] border border-white/5 mx-2 shadow-inner relative group">
+                        <div className="grid grid-cols-2 gap-4 bg-black/60 p-5 lg:p-6 rounded-[2rem] border border-white/5 mx-2 shadow-inner relative group">
                             <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-[2rem]" />
                             <div className="flex flex-col items-center border-r border-white/10 relative z-10">
                                 <span className="text-[0.45rem] font-black text-white/30 uppercase tracking-[0.2em] mb-1">LATÊNCIA MÉDIA</span>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xl font-mono text-green-500 font-black">12ms</span>
-                                    <Activity className="h-3 w-3 text-green-500/40 animate-pulse" />
+                                    <span className={cn("text-xl font-mono font-black", isSyncActive ? "text-green-500" : "text-zinc-600")}>12ms</span>
+                                    {isSyncActive && <Activity className="h-3 w-3 text-green-500/40 animate-pulse" />}
                                 </div>
                             </div>
                             <div className="flex flex-col items-center relative z-10">
                                 <span className="text-[0.45rem] font-black text-white/30 uppercase tracking-[0.2em] mb-1">STATUS SYNC</span>
                                 <div className="flex items-center gap-2">
-                                    <span className="text-xl font-mono text-green-500 font-black">ACTIVE</span>
-                                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                    <span className={cn("text-xl font-mono font-black", isSyncActive ? "text-green-500" : "text-orange-500")}>
+                                        {isSyncActive ? 'ACTIVE' : 'PAUSED'}
+                                    </span>
+                                    <div className={cn(
+                                        "w-2 h-2 rounded-full",
+                                        isSyncActive ? "bg-green-500 animate-pulse" : "bg-orange-500"
+                                    )} />
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div className="flex flex-col gap-3 pt-2">
-                        <Button variant="outline" className="h-14 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 font-black uppercase text-xs tracking-widest group" onClick={() => document.getElementById('history')?.scrollIntoView({ behavior: 'smooth' })}>
-                            VER HISTÓRICO DE TRADES
-                            <ArrowDown className="ml-2 h-4 w-4 group-hover:translate-y-1 transition-transform" />
+                        <Button 
+                            onClick={() => setIsSyncActive(!isSyncActive)}
+                            className={cn(
+                                "h-16 rounded-2xl font-black uppercase text-sm tracking-widest shadow-xl transition-all hover:scale-[1.02] active:scale-95",
+                                isSyncActive 
+                                    ? "bg-orange-500 text-white hover:bg-orange-600" 
+                                    : "bg-green-500 text-white hover:bg-green-600"
+                            )}
+                        >
+                            {isSyncActive ? (
+                                <><Pause className="mr-2 h-5 w-5" /> PAUSAR CONEXÃO HFT</>
+                            ) : (
+                                <><Play className="mr-2 h-5 w-5" /> ATIVAR CONEXÃO HFT</>
+                            )}
                         </Button>
-                        <Button asChild className="h-14 rounded-2xl bg-white text-black font-black uppercase text-xs tracking-widest shadow-xl hover:scale-[1.02] transition-all">
-                            <a href="https://trade.exnova.com/traderoom" target="_blank" rel="noopener noreferrer">
-                                <ExternalLink className="mr-2 h-4 w-4" />
-                                ABRIR CORRETORA
-                            </a>
-                        </Button>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <Button variant="outline" className="h-12 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 font-black uppercase text-[0.65rem] tracking-widest group" onClick={() => document.getElementById('history')?.scrollIntoView({ behavior: 'smooth' })}>
+                                <ArrowDown className="mr-2 h-3.5 w-3.5 group-hover:translate-y-1 transition-transform" />
+                                HISTÓRICO DE TRADES
+                            </Button>
+                            <Button asChild className="h-12 rounded-2xl bg-white text-black font-black uppercase text-[0.65rem] tracking-widest shadow-xl hover:scale-[1.02] transition-all">
+                                <a href="https://trade.exnova.com/traderoom" target="_blank" rel="noopener noreferrer">
+                                    <ExternalLink className="mr-2 h-3.5 w-3.5" />
+                                    ABRIR CORRETORA
+                                </a>
+                            </Button>
+                        </div>
                     </div>
                 </div>
             )}

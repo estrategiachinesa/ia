@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -137,8 +136,6 @@ export default function CopyPage() {
           if (!snap.empty) {
               const reqData = snap.docs[0].data();
               if (reqData.status === 'REGISTERED') {
-                  // User already has an account
-                  setLoginData(prev => ({ ...prev, email: '' })); // Do not pre-fill to allow manual entry
                   setStep('STEP_LOGIN');
               } else if (reqData.status === 'AUTHORIZED') {
                   setActiveRequestId(snap.docs[0].id);
@@ -656,18 +653,12 @@ export default function CopyPage() {
                             )}
                         </Button>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <Button variant="outline" className="h-12 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 font-black uppercase text-[0.65rem] tracking-widest group" onClick={() => document.getElementById('history')?.scrollIntoView({ behavior: 'smooth' })}>
-                                <ArrowDown className="mr-2 h-3.5 w-3.5 group-hover:translate-y-1 transition-transform" />
-                                HISTÓRICO DE TRADES
-                            </Button>
-                            <Button asChild className="h-12 rounded-2xl bg-white text-black font-black uppercase text-[0.65rem] tracking-widest shadow-xl hover:scale-[1.02] transition-all">
-                                <a href="https://trade.exnova.com/traderoom" target="_blank" rel="noopener noreferrer">
-                                    <ExternalLink className="mr-2 h-3.5 w-3.5" />
-                                    ABRIR CORRETORA
-                                </a>
-                            </Button>
-                        </div>
+                        <Button asChild className="h-12 rounded-2xl bg-white text-black font-black uppercase text-[0.65rem] tracking-widest shadow-xl hover:scale-[1.02] transition-all">
+                            <a href="https://trade.exnova.com/traderoom" target="_blank" rel="noopener noreferrer">
+                                <ExternalLink className="mr-2 h-3.5 w-3.5" />
+                                ABRIR CORRETORA
+                            </a>
+                        </Button>
                     </div>
                 </div>
             )}

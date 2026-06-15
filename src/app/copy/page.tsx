@@ -19,7 +19,11 @@ import {
   Radio,
   ExternalLink,
   Shield,
-  X
+  X,
+  Mail,
+  Key,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,46 +38,38 @@ import { useRouter } from 'next/navigation';
 import { CurrencyFlags } from '@/components/app/currency-flags';
 import Image from 'next/image';
 import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, setDoc, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, setDoc, doc, serverTimestamp, updateDoc, limit } from 'firebase/firestore';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
 
-type ConnectionStep = 'STEP_1_REGISTER' | 'STEP_2_FORM' | 'STEP_3_PENDING' | 'STEP_4_AWAITING_DEPOSIT' | 'STEP_5_SUCCESS' | 'STEP_6_REJECTED' | 'STEP_7_VERIFYING_DEPOSIT';
+type ConnectionStep = 'STEP_ID_CHECK' | 'STEP_REGISTRATION' | 'STEP_DASHBOARD' | 'STEP_UNAUTHORIZED';
 
 export default function CopyPage() {
   const { config, isConfigLoading } = useAppConfig();
-  const { firestore } = useFirebase();
+  const { firestore, auth, user, isUserLoading } = useFirebase();
   const router = useRouter();
   
-  const [formData, setFormData] = useState({ email: '', brokerId: '' });
-  const [nameData, setNameData] = useState('');
-  const [step, setStep] = useState<ConnectionStep>('STEP_1_REGISTER');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isUpdatingName, setIsUpdatingName] = useState(false);
-  const [isConfirmingDeposit, setIsConfirmingDeposit] = useState(false);
-
-  const [savedRequestId, setSavedRequestId] = useState<string | null>(null);
+  const [brokerIdInput, setBrokerIdInput] = useState('');
+  const [step, setStep] = useState<ConnectionStep>('STEP_ID_CHECK');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
-  const requestsQuery = useMemoFirebase(() => {
-    if (!firestore || !savedRequestId) return null;
-    return collection(firestore, 'copyRequests');
-  }, [firestore, savedRequestId]);
+  // Registration state
+  const [regData, setRegData] = useState({
+      name: '',
+      email: '',
+      telegram: '',
+      password: '',
+      confirmPassword: ''
+  });
 
-  const { data: myRequests } = useCollection(requestsQuery);
-  const myRequest = useMemo(() => myRequests?.find(r => r.id === savedRequestId), [myRequests, savedRequestId]);
-
-  useEffect(() => {
-    const storedId = localStorage.getItem('copy_requestId');
-    if (storedId) setSavedRequestId(storedId);
-  }, []);
+  const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (myRequest) {
-        if (myRequest.status === 'PENDING') setStep('STEP_3_PENDING');
-        else if (myRequest.status === 'AWAITING_DEPOSIT') setStep('STEP_4_AWAITING_DEPOSIT');
-        else if (myRequest.status === 'DEPOSIT_PENDING') setStep('STEP_7_VERIFYING_DEPOSIT');
-        else if (myRequest.status === 'APPROVED') setStep('STEP_5_SUCCESS');
-        else if (myRequest.status === 'REJECTED') setStep('STEP_6_REJECTED');
-    }
-  }, [myRequest]);
+      if (!isUserLoading && user) {
+          setStep('STEP_DASHBOARD');
+      }
+  }, [user, isUserLoading]);
 
   useEffect(() => {
     if (!isConfigLoading && config?.pages?.copy === false) {
@@ -110,49 +106,63 @@ export default function CopyPage() {
 
   const affiliateLink = config?.copyAffiliateUrl || "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy";
 
-  if (isConfigLoading) {
+  const handleCheckId = async () => {
+      if (!brokerIdInput || !firestore) return;
+      setIsVerifying(true);
+      try {
+          const q = query(
+              collection(firestore, 'copyRequests'),
+              where('brokerId', '==', brokerIdInput),
+              where('status', '==', 'AUTHORIZED'),
+              limit(1)
+          );
+          const snap = await getDocs(q);
+          if (!snap.empty) {
+              setActiveRequestId(snap.docs[0].id);
+              setStep('STEP_REGISTRATION');
+          } else {
+              setStep('STEP_UNAUTHORIZED');
+          }
+      } catch (e) { console.error(e); } finally { setIsVerifying(false); }
+  };
+
+  const handleRegister = async () => {
+      if (!firestore || !auth || !activeRequestId) return;
+      if (regData.password !== regData.confirmPassword) {
+          alert("Senhas não coincidem.");
+          return;
+      }
+      setIsRegistering(true);
+      try {
+          const userCred = await createUserWithEmailAndPassword(auth, regData.email, regData.password);
+          const userId = userCred.user.uid;
+          
+          await setDoc(doc(firestore, 'users', userId), {
+              email: regData.email,
+              displayName: regData.name,
+              telegram: regData.telegram,
+              brokerId: brokerIdInput,
+              accountStatus: 'ACTIVE',
+              subscriptionStatus: 'ACTIVE',
+              createdAt: serverTimestamp()
+          });
+
+          await updateDoc(doc(firestore, 'copyRequests', activeRequestId), {
+              status: 'REGISTERED',
+              userId: userId,
+              registeredAt: serverTimestamp()
+          });
+
+          setStep('STEP_DASHBOARD');
+      } catch (e: any) { 
+          console.error(e);
+          alert(e.message || "Erro no cadastro.");
+      } finally { setIsRegistering(false); }
+  };
+
+  if (isConfigLoading || isUserLoading) {
     return <div className="flex h-screen w-full items-center justify-center bg-black"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
-
-  const handleRequestVerification = async () => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email) || !formData.email.includes('.com')) {
-        alert("Insira um e-mail válido.");
-        return;
-    }
-
-    if (formData.brokerId.length < 5 || !firestore) return;
-    
-    setIsSubmitting(true);
-    try {
-        const requestId = `req_${Date.now()}`;
-        await setDoc(doc(firestore, 'copyRequests', requestId), {
-            ...formData,
-            status: 'PENDING',
-            submittedAt: serverTimestamp()
-        });
-        localStorage.setItem('copy_requestId', requestId);
-        setSavedRequestId(requestId);
-        setStep('STEP_3_PENDING');
-    } catch (e) { console.error(e); } finally { setIsSubmitting(false); }
-  };
-
-  const handleUpdateProfile = async () => {
-      if (!nameData || !savedRequestId || !firestore) return;
-      setIsUpdatingName(true);
-      try {
-          await updateDoc(doc(firestore, 'copyRequests', savedRequestId), { name: nameData });
-      } catch (e) { console.error(e); } finally { setIsUpdatingName(false); }
-  };
-
-  const handleConfirmDeposit = async () => {
-      if (!savedRequestId || !firestore) return;
-      setIsConfirmingDeposit(true);
-      try {
-          await updateDoc(doc(firestore, 'copyRequests', savedRequestId), { status: 'DEPOSIT_PENDING' });
-          setStep('STEP_7_VERIFYING_DEPOSIT');
-      } catch (e) { console.error(e); } finally { setIsConfirmingDeposit(false); }
-  };
 
   return (
     <div className="h-[100dvh] bg-[#050505] text-foreground font-body overflow-hidden flex flex-col relative">
@@ -312,132 +322,131 @@ export default function CopyPage() {
         <div className="snap-start h-[calc(100dvh-56px)] lg:h-full flex flex-col p-4 lg:p-0 lg:col-span-5 relative">
           <Card className="bg-card/40 border border-white/10 shadow-2xl backdrop-blur-[50px] rounded-[2.5rem] p-6 lg:p-10 h-full flex flex-col items-center justify-center relative overflow-hidden">
             
-            {step === 'STEP_1_REGISTER' && (
+            {step === 'STEP_ID_CHECK' && (
                 <div className="max-w-md w-full text-center space-y-8 z-10 animate-in fade-in zoom-in-95 duration-700">
                     <div className="space-y-5">
                         <div className="flex justify-center scale-90 md:scale-110">
                             <Logo size={80} showText={false} />
                         </div>
                         <div className="space-y-2">
-                            <h2 className="text-2xl md:text-3xl font-headline font-black uppercase tracking-tighter text-white">Conexão Copy</h2>
+                            <h2 className="text-2xl md:text-3xl font-headline font-black uppercase tracking-tighter text-white">Console Copy</h2>
                             <p className="text-white/60 text-xs md:text-sm leading-relaxed font-medium px-4 max-w-sm mx-auto">
-                                Para espelhar as operações do Trader, sua conta deve obrigatoriamente estar vinculada ao nosso cluster de alta frequência.
+                                Insira o ID da sua corretora para verificar a autorização de sincronização do terminal.
                             </p>
                         </div>
                     </div>
-                    <div className="space-y-2.5 pt-2 px-2">
-                        <Button asChild className="w-full h-14 md:h-16 bg-primary text-primary-foreground font-black uppercase tracking-tighter text-base md:text-lg rounded-2xl hover:scale-[1.03] transition-all shadow-[0_15px_40px_rgba(255,0,0,0.15)]">
-                            <a href={affiliateLink} target="_blank" rel="noopener noreferrer">
-                                <ArrowRight className="mr-2 h-5 w-5" /> VINCULAR CONTA
-                            </a>
+                    <div className="space-y-4 pt-2">
+                        <div className="space-y-2 text-left">
+                            <Label className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-white/30 ml-2">Terminal ID (Exnova)</Label>
+                            <Input 
+                                value={brokerIdInput} 
+                                onChange={e => setBrokerIdInput(e.target.value.replace(/\D/g, ''))} 
+                                placeholder="00000000" 
+                                className="h-14 md:h-16 bg-black/40 border-white/10 rounded-2xl font-mono text-xl tracking-[0.3em] text-center" 
+                            />
+                        </div>
+                        <Button 
+                            onClick={handleCheckId} 
+                            disabled={brokerIdInput.length < 5 || isVerifying} 
+                            className="w-full h-14 md:h-16 bg-primary text-primary-foreground font-black uppercase tracking-tighter text-base md:text-lg rounded-2xl hover:scale-[1.03] transition-all shadow-[0_15px_40px_rgba(255,0,0,0.15)]"
+                        >
+                            {isVerifying ? <Loader2 className="h-6 w-6 animate-spin" /> : 'VERIFICAR AUTORIZAÇÃO'}
                         </Button>
-                        <Button variant="ghost" onClick={() => setStep('STEP_2_FORM')} className="w-full h-10 text-[0.6rem] font-black uppercase tracking-[0.2em] text-white/30 rounded-xl hover:bg-white/5 transition-all">
-                            JÁ POSSUO CONTA (SINCRONIZAR)
+                        <Button asChild variant="ghost" className="w-full h-10 text-[0.6rem] font-black uppercase tracking-[0.2em] text-white/30 rounded-xl hover:bg-white/5 transition-all">
+                            <a href={affiliateLink} target="_blank" rel="noopener noreferrer">ABRIR CONTA NA CORRETORA</a>
                         </Button>
                     </div>
                 </div>
             )}
 
-            {step === 'STEP_2_FORM' && (
-                <div className="max-w-sm w-full text-center space-y-6 z-10 animate-in zoom-in-95 duration-500">
-                    <div className="space-y-1.5">
-                        <div className="inline-flex p-2.5 bg-primary/10 rounded-xl border border-primary/20 mb-1">
-                             <Zap className="h-5 w-5 text-primary animate-pulse" />
-                        </div>
-                        <h2 className="text-xl font-headline font-black uppercase text-white tracking-tighter">Protocolo</h2>
-                        <p className="text-[0.55rem] text-white/50 uppercase font-black tracking-[0.3em]">Identificação de Terminal</p>
-                    </div>
-                    <div className="space-y-3.5 text-left">
-                        <div className="space-y-1">
-                            <Label className="text-[0.55rem] font-black uppercase tracking-[0.15em] text-white/30 ml-2">Canal de E-mail</Label>
-                            <Input value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="seu@email.com" className="h-12 bg-black/40 border-white/10 rounded-xl text-sm px-4" />
-                        </div>
-                        <div className="space-y-1">
-                            <Label className="text-[0.55rem] font-black uppercase tracking-[0.15em] text-white/30 ml-2">Terminal ID (Exnova)</Label>
-                            <Input value={formData.brokerId} onChange={e => setFormData({...formData, brokerId: e.target.value.replace(/\D/g, '')})} placeholder="ID do usuário" className="h-12 bg-black/40 border-white/10 rounded-xl font-mono text-base tracking-[0.2em] px-4" />
-                        </div>
-                        <div className="pt-2">
-                            <Button onClick={handleRequestVerification} disabled={!formData.email || formData.brokerId.length < 5 || isSubmitting} className="w-full h-14 bg-primary text-primary-foreground font-black uppercase text-base rounded-xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all">
-                                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'SOLICITAR SINCRONIZAÇÃO'}
-                            </Button>
-                            <Button variant="ghost" onClick={() => setStep('STEP_1_REGISTER')} className="w-full h-10 text-[0.55rem] font-black uppercase tracking-[0.2em] text-white/20 mt-1">Cancelar</Button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {step === 'STEP_3_PENDING' && (
+            {step === 'STEP_UNAUTHORIZED' && (
                 <div className="max-w-sm w-full text-center space-y-8 z-10 animate-in zoom-in-95 duration-500">
-                    <div className="relative h-24 w-24 mx-auto flex items-center justify-center">
-                        <div className="absolute inset-0 border-[2px] border-primary/10 rounded-full" />
-                        <div className="absolute inset-0 border-[2px] border-primary rounded-full border-t-transparent animate-spin" />
-                        <Radio className="h-8 w-8 text-primary animate-pulse" />
+                    <div className="w-20 h-20 bg-red-500/10 rounded-3xl flex items-center justify-center mx-auto border border-red-500/20">
+                        <ShieldAlert className="h-10 w-10 text-red-500" />
                     </div>
                     <div className="space-y-4">
-                        <h3 className="text-xl font-black uppercase text-white tracking-tighter">Validando ID</h3>
-                        <p className="text-sm text-white/50 leading-relaxed px-6">O cluster está processando o ID <span className="text-primary font-mono">{myRequest?.brokerId || formData.brokerId}</span>. A liberação ocorrerá após confirmação da rede.</p>
-                        <div className="p-3 bg-primary/10 rounded-xl border border-primary/20 mx-6">
-                            <p className="text-[0.55rem] font-black text-primary uppercase tracking-[0.3em] animate-pulse">Aguardando Autorização...</p>
+                        <h3 className="text-xl font-black uppercase text-white tracking-tighter">ID Não Autorizado</h3>
+                        <p className="text-sm text-white/50 leading-relaxed px-6">
+                            O terminal <span className="text-red-500 font-mono font-bold">{brokerIdInput}</span> não possui permissão para criação de conta.
+                        </p>
+                        <div className="p-4 bg-black/40 rounded-2xl border border-white/5 mx-2 text-left">
+                            <p className="text-[0.65rem] font-bold text-white/60 leading-relaxed">
+                                1. Certifique-se que o ID está correto.<br/>
+                                2. Sua conta deve ser criada pelo link oficial.<br/>
+                                3. Solicite a liberação manual ao suporte.
+                            </p>
                         </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Button asChild className="w-full h-12 bg-white text-black font-black uppercase text-xs rounded-xl">
+                            <a href={affiliateLink} target="_blank">ABRIR CONTA OFICIAL</a>
+                        </Button>
+                        <Button variant="ghost" onClick={() => setStep('STEP_ID_CHECK')} className="w-full h-10 text-[0.55rem] font-black uppercase tracking-[0.2em] text-white/20">Tentar outro ID</Button>
                     </div>
                 </div>
             )}
 
-            {step === 'STEP_4_AWAITING_DEPOSIT' && (
-                <div className="max-w-md w-full z-10 animate-in fade-in duration-700">
-                    {!myRequest?.name ? (
-                        <div className="bg-white/[0.03] border border-white/10 p-6 rounded-[2rem] text-center space-y-6 shadow-xl">
-                            <div className="w-14 h-14 bg-green-500/10 rounded-2xl flex items-center justify-center mx-auto border border-green-500/20"><UserCheck className="h-7 w-7 text-green-500" /></div>
-                            <div className="space-y-0.5">
-                                <h2 className="text-xl font-black uppercase text-white tracking-tighter">ID Vinculado</h2>
-                                <p className="text-primary text-[0.55rem] font-black uppercase tracking-[0.3em]">Perfil Técnico</p>
-                            </div>
-                            <div className="space-y-3 text-left">
-                                <Input value={nameData} onChange={e => setNameData(e.target.value)} placeholder="Seu nome completo" className="h-12 bg-black/50 border-white/10 rounded-xl text-base font-bold px-5" />
-                                <Button onClick={handleUpdateProfile} disabled={!nameData || isUpdatingName} className="w-full h-14 bg-white text-black font-black uppercase text-sm rounded-xl shadow-lg hover:bg-zinc-200 transition-all">
-                                    {isUpdatingName ? <Loader2 className="h-4 w-4 animate-spin" /> : 'GERAR CERTIFICADO'}
-                                </Button>
+            {step === 'STEP_REGISTRATION' && (
+                <div className="max-w-md w-full z-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    <div className="bg-white/[0.03] border border-white/10 p-6 lg:p-8 rounded-[2.5rem] space-y-6 shadow-2xl">
+                        <div className="flex items-center gap-4 mb-2">
+                            <div className="p-3 bg-green-500/10 rounded-2xl border border-green-500/20"><UserCheck className="h-6 w-6 text-green-500" /></div>
+                            <div>
+                                <h2 className="text-xl font-black uppercase text-white tracking-tighter">ID Autorizado</h2>
+                                <p className="text-primary text-[0.55rem] font-black uppercase tracking-[0.3em]">Finalize seu cadastro</p>
                             </div>
                         </div>
-                    ) : (
-                        <div className="bg-white/[0.03] border border-white/10 p-6 rounded-[2rem] text-center space-y-6 shadow-xl">
-                            <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto border border-primary/20"><ShieldCheck className="h-7 w-7 text-primary" /></div>
-                            <div className="space-y-0.5">
-                                <h2 className="text-xl font-black uppercase text-white tracking-tighter">Margem de Segurança</h2>
-                                <p className="text-primary text-[0.55rem] font-black uppercase tracking-[0.3em]">Liquidez Requerida</p>
-                            </div>
-                            <div className="p-4 bg-black/60 rounded-xl border border-white/5 text-left">
-                                <p className="text-[0.65rem] text-white/60 leading-relaxed">O algoritmo exige uma **Margem de Segurança** de <span className="text-white font-bold">R$ {(config?.copyMinLiquidity || 1000).toLocaleString('pt-BR')}</span> para espelhar as entradas.</p>
-                            </div>
-                            <div className="space-y-2.5">
-                                <Button asChild className="w-full h-14 bg-primary text-primary-foreground font-black uppercase text-sm rounded-xl shadow-lg animate-pulse">
-                                    <a href={affiliateLink} target="_blank" rel="noopener noreferrer">ATIVAR MARGEM AGORA</a>
-                                </Button>
-                                <Button variant="outline" onClick={handleConfirmDeposit} disabled={isConfirmingDeposit} className="w-full h-10 border-white/10 bg-white/[0.03] text-[0.6rem] font-black uppercase tracking-[0.2em] rounded-xl">
-                                    {isConfirmingDeposit ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-2" /> : <CheckCircle2 className="mr-2 h-3.5 w-3.5 text-green-500" />} JÁ REALIZEI O APORTE
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            )}
 
-            {step === 'STEP_7_VERIFYING_DEPOSIT' && (
-                <div className="max-w-sm w-full text-center space-y-8 z-10 animate-in zoom-in-95 duration-500">
-                    <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto border border-primary/20"><RefreshCcw className="h-8 w-8 text-primary animate-spin" style={{ animationDuration: '3s' }} /></div>
-                    <div className="space-y-4">
-                        <h2 className="text-xl font-black uppercase text-white tracking-tighter">Validando Aporte</h2>
-                        <p className="text-white/60 text-sm font-medium px-6 leading-relaxed">Sincronizando com o terminal bancário da corretora para o ID <span className="text-primary font-mono">{myRequest?.brokerId}</span>.</p>
+                        <div className="grid grid-cols-1 gap-3 text-left">
+                            <div className="space-y-1">
+                                <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">Nome Completo</Label>
+                                <div className="relative">
+                                    <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
+                                    <Input value={regData.name} onChange={e => setRegData({...regData, name: e.target.value})} placeholder="Seu Nome" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />
+                                </div>
+                            </div>
+                            <div className="space-y-1">
+                                <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">E-mail de Acesso</Label>
+                                <div className="relative">
+                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
+                                    <Input type="email" value={regData.email} onChange={e => setRegData({...regData, email: e.target.value})} placeholder="seu@email.com" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />
+                                </div>
+                            </div>
+                            <div className="space-y-1">
+                                <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">Telegram (@usuario)</Label>
+                                <div className="relative">
+                                    <Send className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
+                                    <Input value={regData.telegram} onChange={e => setRegData({...regData, telegram: e.target.value})} placeholder="@seuuser" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <div className="space-y-1">
+                                    <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">Senha</Label>
+                                    <div className="relative">
+                                        <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
+                                        <Input type={showPassword ? "text" : "password"} value={regData.password} onChange={e => setRegData({...regData, password: e.target.value})} placeholder="******" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">Repetir</Label>
+                                    <Input type={showPassword ? "text" : "password"} value={regData.confirmPassword} onChange={e => setRegData({...regData, confirmPassword: e.target.value})} placeholder="******" className="h-12 bg-black/40 border-white/10 rounded-xl text-sm" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <Button onClick={handleRegister} disabled={isRegistering} className="w-full h-14 bg-primary text-primary-foreground font-black uppercase text-sm rounded-xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all">
+                            {isRegistering ? <Loader2 className="h-5 w-5 animate-spin" /> : 'ATIVAR TERMINAL'}
+                        </Button>
                     </div>
                 </div>
             )}
 
-            {step === 'STEP_5_SUCCESS' && (
+            {step === 'STEP_DASHBOARD' && (
                 <div className="max-w-md w-full text-center space-y-6 z-10 animate-in fade-in duration-700">
                     <div className="w-16 h-16 bg-green-500/15 rounded-2xl flex items-center justify-center mx-auto border border-green-500/20 animate-bounce"><CheckCircle2 className="h-8 w-8 text-green-500" /></div>
                     <div className="space-y-4">
-                        <h2 className="text-2xl font-black uppercase text-white tracking-tighter">Terminal Ativo!</h2>
-                        <p className="text-white/60 text-sm leading-relaxed px-8">Conexão estabelecida. Todas as ordens estão sendo replicadas no seu terminal agora.</p>
+                        <h2 className="text-2xl font-black uppercase text-white tracking-tighter">Terminal Conectado!</h2>
+                        <p className="text-white/60 text-sm leading-relaxed px-8">A sincronização foi concluída com sucesso. Todas as ordens da conta mestre serão replicadas no seu terminal ID <span className="text-primary font-mono font-bold">{user?.brokerId || brokerIdInput}</span>.</p>
                         <div className="flex items-center justify-center gap-6 bg-black/60 p-5 rounded-[1.5rem] border border-white/5 mx-4">
                             <div className="flex flex-col items-center">
                                 <span className="text-[0.45rem] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">LATÊNCIA</span>
@@ -446,24 +455,8 @@ export default function CopyPage() {
                             <div className="h-8 w-px bg-white/10" />
                             <div className="flex flex-col items-center">
                                 <span className="text-[0.45rem] font-black text-white/30 uppercase tracking-[0.2em] mb-0.5">STATUS</span>
-                                <span className="text-lg font-mono text-green-500 font-black">SYNC</span>
+                                <span className="text-lg font-mono text-green-500 font-black">ACTIVE</span>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {step === 'STEP_6_REJECTED' && (
-                <div className="max-w-sm w-full text-center space-y-8 z-10 animate-in zoom-in-95 duration-500">
-                    <div className="w-16 h-16 bg-red-500/15 rounded-2xl flex items-center justify-center mx-auto border border-red-500/20"><Lock className="h-8 w-8 text-red-500" /></div>
-                    <div className="space-y-4">
-                        <h2 className="text-xl font-black uppercase text-white tracking-tighter">ID Rejeitado</h2>
-                        <p className="text-white/60 text-sm leading-relaxed px-6">O terminal <span className="text-red-500 font-mono">{myRequest?.brokerId}</span> não está vinculado à nossa rede mestre.</p>
-                        <div className="space-y-2.5 px-6">
-                            <Button asChild className="w-full h-14 bg-white text-black font-black uppercase text-sm rounded-xl shadow-lg">
-                                <a href={affiliateLink} target="_blank">CRIAR CONTA OFICIAL</a>
-                            </Button>
-                            <Button variant="ghost" onClick={() => setStep('STEP_2_FORM')} className="w-full h-10 text-[0.55rem] font-black text-white/30 uppercase tracking-[0.2em]">Tentar outro ID</Button>
                         </div>
                     </div>
                 </div>

@@ -40,7 +40,6 @@ import {
   UserCheck,
   RefreshCcw,
   StarHalf,
-  FileCode,
   Layout,
   ToggleRight,
   ExternalLink,
@@ -71,7 +70,8 @@ import {
   MessageSquareCode,
   BellRing,
   Volume2,
-  VolumeX
+  VolumeX,
+  ShieldAlert
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -260,6 +260,10 @@ export default function AdminDashboard() {
   const [tgBotToken, setTgBotToken] = useState('');
   const [tgChatId, setTgChatId] = useState('');
 
+  // Whitelist manual state
+  const [newAuthId, setNewAuthId] = useState('');
+  const [isAuthorizing, setIsAuthorizing] = useState(false);
+
   // Bot Settings state
   const [tgEnabled, setTgEnabled] = useState(true);
   const [tgNotifyWin, setTgNotifyWin] = useState(true);
@@ -303,6 +307,26 @@ export default function AdminDashboard() {
       return collection(firestore, 'copyRequests');
   }, [firestore, isAdmin]);
   const { data: copyRequests, isLoading: isCopyRequestsLoading } = useCollection(copyRequestsQuery);
+
+  const handleAuthorizeId = async () => {
+    if (!firestore || !newAuthId) return;
+    setIsAuthorizing(true);
+    try {
+        const requestId = `auth_${newAuthId}`;
+        await setDoc(doc(firestore, 'copyRequests', requestId), {
+            brokerId: newAuthId,
+            status: 'AUTHORIZED',
+            submittedAt: serverTimestamp(),
+            manualAuth: true
+        });
+        toast({ title: 'ID Autorizado com Sucesso', description: `O terminal ${newAuthId} agora pode realizar o cadastro.` });
+        setNewAuthId('');
+    } catch (e) {
+        toast({ variant: 'destructive', title: 'Erro ao autorizar' });
+    } finally {
+        setIsAuthorizing(false);
+    }
+  };
 
   const handleUpdateCopyRequest = async (requestId: string, status: string) => {
     if (!firestore) return;
@@ -1252,24 +1276,54 @@ export default function AdminDashboard() {
                 </div>
 
                 <Tabs defaultValue="pedidos" className="w-full">
-                    <TabsList className="grid w-full grid-cols-4 bg-black/40 border border-white/5 rounded-xl h-10 mb-4">
+                    <TabsList className="grid w-full grid-cols-5 bg-black/40 border border-white/5 rounded-xl h-10 mb-4">
                         <TabsTrigger value="pedidos" className="text-[0.6rem] font-black uppercase tracking-widest relative">
-                            Pedidos
-                            {copyRequests && copyRequests.filter(r => r.status === 'PENDING' || r.status === 'DEPOSIT_PENDING').length > 0 && (
-                                <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
-                                </span>
-                            )}
+                            Aprovação
                         </TabsTrigger>
+                        <TabsTrigger value="autorizar" className="text-[0.6rem] font-black uppercase tracking-widest"><UserPlus className="h-3 w-3 mr-1" /> Autorizar</TabsTrigger>
                         <TabsTrigger value="operacoes" className="text-[0.6rem] font-black uppercase tracking-widest">Operações</TabsTrigger>
-                        <TabsTrigger value="bots" className="text-[0.6rem] font-black uppercase tracking-widest"><Bot className="h-3 w-3 mr-1" /> Bots</TabsTrigger>
+                        <TabsTrigger value="bots" className="text-[0.6rem] font-black uppercase tracking-widest">Bots</TabsTrigger>
                         <TabsTrigger value="perfil" className="text-[0.6rem] font-black uppercase tracking-widest">Perfil</TabsTrigger>
                     </TabsList>
 
+                    <TabsContent value="autorizar" className="space-y-4">
+                        <div className="p-4 bg-white/5 border border-white/5 rounded-2xl space-y-4">
+                            <h3 className="text-[0.7rem] font-black uppercase tracking-widest text-primary flex items-center gap-2"><UserPlus className="h-4 w-4" /> Liberar Novo ID</h3>
+                            <div className="flex gap-2">
+                                <Input 
+                                    placeholder="ID da Corretora" 
+                                    value={newAuthId} 
+                                    onChange={(e) => setNewAuthId(e.target.value.replace(/\D/g, ''))}
+                                    className="bg-black/40 border-white/10"
+                                />
+                                <Button onClick={handleAuthorizeId} disabled={!newAuthId || isAuthorizing} className="bg-primary text-black font-bold">
+                                    {isAuthorizing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'AUTORIZAR ID'}
+                                </Button>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <h3 className="text-[0.6rem] font-black uppercase tracking-widest opacity-40">IDs Autorizados (Não Cadastrados)</h3>
+                            <div className="max-h-[300px] overflow-y-auto space-y-1">
+                                {copyRequests && copyRequests.filter(r => r.status === 'AUTHORIZED').map(req => (
+                                    <div key={req.id} className="p-3 bg-white/5 rounded-xl border border-white/5 flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <ShieldCheck className="h-4 w-4 text-primary" />
+                                            <span className="font-mono text-xs font-bold text-white">{req.brokerId}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <Badge className="bg-primary/20 text-primary text-[0.5rem] uppercase">LIBERADO</Badge>
+                                            <Button size="icon" variant="ghost" className="h-7 w-7 text-red-500/50" onClick={() => handleDeleteCopyRequest(req.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </TabsContent>
+
                     <TabsContent value="pedidos" className="space-y-4">
                         <div className="max-h-[500px] overflow-y-auto space-y-2 pr-1">
-                            {copyRequests && copyRequests.length > 0 ? copyRequests.map((req) => (
+                            {copyRequests && copyRequests.length > 0 ? copyRequests.filter(r => r.status !== 'AUTHORIZED').map((req) => (
                                 <div key={req.id} className="p-4 bg-white/5 border border-white/5 rounded-2xl flex flex-col gap-3">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
@@ -1287,7 +1341,7 @@ export default function AdminDashboard() {
                                             req.status === 'APPROVED' ? "bg-green-500" :
                                             req.status === 'REJECTED' ? "bg-red-500" : "bg-zinc-700"
                                         )}>
-                                            {req.status === 'PENDING' ? 'Validar ID' : 
+                                            {req.status === 'PENDING' ? 'Em Análise' : 
                                              req.status === 'AWAITING_DEPOSIT' ? 'Aguard. Depósito' :
                                              req.status === 'DEPOSIT_PENDING' ? 'Depósito Feito!' :
                                              req.status === 'APPROVED' ? 'Sincronizado' : 
@@ -1300,7 +1354,7 @@ export default function AdminDashboard() {
                                     </div>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                                         <Button size="sm" onClick={() => handleUpdateCopyRequest(req.id, 'AWAITING_DEPOSIT')} className="h-8 bg-cyan-600 text-white text-[0.5rem] font-black uppercase">
-                                            <UserCheck className="h-3 w-3 mr-1" /> Validar ID
+                                            <CircleDollarSign className="h-3 w-3 mr-1" /> Pedir Depósito
                                         </Button>
                                         <Button size="sm" onClick={() => handleUpdateCopyRequest(req.id, 'APPROVED')} className="h-8 bg-green-600 text-white text-[0.5rem] font-black uppercase">
                                             <Check className="h-3 w-3 mr-1" /> Liberar Sync
@@ -1309,7 +1363,7 @@ export default function AdminDashboard() {
                                             <Ban className="h-3 w-3 mr-1" /> Recusar
                                         </Button>
                                         <Button size="sm" variant="ghost" onClick={() => handleDeleteCopyRequest(req.id)} className="h-8 text-zinc-500 text-[0.5rem] font-black uppercase">
-                                            <Trash2 className="h-3 w-3 mr-1" /> Excluir
+                                            <Trash2 className="h-3.5 w-3.5 mr-1" /> Excluir
                                         </Button>
                                     </div>
                                 </div>

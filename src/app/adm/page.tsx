@@ -71,7 +71,8 @@ import {
   BellRing,
   Volume2,
   VolumeX,
-  ShieldAlert
+  ShieldAlert,
+  UserX
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -342,7 +343,7 @@ export default function AdminDashboard() {
     if (!firestore) return;
     try {
         await deleteDoc(doc(firestore, 'copyRequests', requestId));
-        toast({ title: 'Pedido Removido' });
+        toast({ title: 'Registro Removido' });
     } catch (e) {
         toast({ variant: 'destructive', title: 'Erro ao remover' });
     }
@@ -1275,10 +1276,10 @@ export default function AdminDashboard() {
                     </div>
                 </div>
 
-                <Tabs defaultValue="pedidos" className="w-full">
+                <Tabs defaultValue="aprovados" className="w-full">
                     <TabsList className="grid w-full grid-cols-5 bg-black/40 border border-white/5 rounded-xl h-10 mb-4">
-                        <TabsTrigger value="pedidos" className="text-[0.6rem] font-black uppercase tracking-widest relative">
-                            Aprovação
+                        <TabsTrigger value="aprovados" className="text-[0.6rem] font-black uppercase tracking-widest relative">
+                            Aprovados
                         </TabsTrigger>
                         <TabsTrigger value="autorizar" className="text-[0.6rem] font-black uppercase tracking-widest"><UserPlus className="h-3 w-3 mr-1" /> Autorizar</TabsTrigger>
                         <TabsTrigger value="operacoes" className="text-[0.6rem] font-black uppercase tracking-widest">Operações</TabsTrigger>
@@ -1321,54 +1322,51 @@ export default function AdminDashboard() {
                         </div>
                     </TabsContent>
 
-                    <TabsContent value="pedidos" className="space-y-4">
+                    <TabsContent value="aprovados" className="space-y-4">
                         <div className="max-h-[500px] overflow-y-auto space-y-2 pr-1">
-                            {copyRequests && copyRequests.length > 0 ? copyRequests.filter(r => r.status !== 'AUTHORIZED').map((req) => (
-                                <div key={req.id} className="p-4 bg-white/5 border border-white/5 rounded-2xl flex flex-col gap-3">
+                            {copyRequests && copyRequests.filter(r => r.status === 'REGISTERED').length > 0 ? copyRequests.filter(r => r.status === 'REGISTERED').map((req) => (
+                                <div key={req.id} className="p-4 bg-white/5 border border-white/5 rounded-2xl flex flex-col gap-3 group hover:border-primary/20 transition-all">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-primary/10 rounded-full"><UserIcon className="h-4 w-4 text-primary" /></div>
+                                            <div className="p-2 bg-green-500/10 rounded-full"><UserIcon className="h-4 w-4 text-green-500" /></div>
                                             <div className="flex flex-col">
-                                                <span className="text-xs font-black text-white">{req.name || 'Aguardando Nome...'}</span>
+                                                <span className="text-xs font-black text-white">{req.name}</span>
                                                 <span className="text-[0.6rem] font-mono opacity-40">{req.email}</span>
                                             </div>
                                         </div>
-                                        <Badge className={cn(
-                                            "text-[0.5rem] font-black uppercase",
-                                            req.status === 'PENDING' ? "bg-orange-500" :
-                                            req.status === 'AWAITING_DEPOSIT' ? "bg-cyan-500 text-black" :
-                                            req.status === 'DEPOSIT_PENDING' ? "bg-emerald-500 text-black animate-pulse" :
-                                            req.status === 'APPROVED' ? "bg-green-500" :
-                                            req.status === 'REJECTED' ? "bg-red-500" : "bg-zinc-700"
-                                        )}>
-                                            {req.status === 'PENDING' ? 'Em Análise' : 
-                                             req.status === 'AWAITING_DEPOSIT' ? 'Aguard. Depósito' :
-                                             req.status === 'DEPOSIT_PENDING' ? 'Depósito Feito!' :
-                                             req.status === 'APPROVED' ? 'Sincronizado' : 
-                                             req.status === 'REJECTED' ? 'Recusado' : req.status}
-                                        </Badge>
+                                        <div className="flex items-center gap-2">
+                                            <Badge className="text-[0.5rem] font-black uppercase bg-green-500 text-white">
+                                                SINCRONIZADO
+                                            </Badge>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-7 w-7"><MoreVertical className="h-3.5 w-3.5" /></Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end" className="bg-black/95 border-white/10">
+                                                    <DropdownMenuItem onClick={() => handleUpdateCopyRequest(req.id, 'AUTHORIZED')} className="text-xs text-orange-400">
+                                                        <RefreshCcw className="h-3.5 w-3.5 mr-2" /> Resetar para Autorizado
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator className="bg-white/5" />
+                                                    <DropdownMenuItem onClick={() => handleDeleteCopyRequest(req.id)} className="text-xs text-red-500">
+                                                        <UserX className="h-3.5 w-3.5 mr-2" /> Remover Membro
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </div>
                                     </div>
                                     <div className="flex items-center justify-between text-[0.6rem] bg-black/20 p-2 rounded-xl border border-white/5">
-                                        <span className="font-bold opacity-40">ID CORRETORA: <span className="text-primary">{req.brokerId}</span></span>
-                                        <span className="font-mono opacity-20">{formatDate(req.submittedAt)}</span>
-                                    </div>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                        <Button size="sm" onClick={() => handleUpdateCopyRequest(req.id, 'AWAITING_DEPOSIT')} className="h-8 bg-cyan-600 text-white text-[0.5rem] font-black uppercase">
-                                            <CircleDollarSign className="h-3 w-3 mr-1" /> Pedir Depósito
-                                        </Button>
-                                        <Button size="sm" onClick={() => handleUpdateCopyRequest(req.id, 'APPROVED')} className="h-8 bg-green-600 text-white text-[0.5rem] font-black uppercase">
-                                            <Check className="h-3 w-3 mr-1" /> Liberar Sync
-                                        </Button>
-                                        <Button size="sm" onClick={() => handleUpdateCopyRequest(req.id, 'REJECTED')} variant="outline" className="h-8 text-[0.5rem] font-black uppercase text-red-500">
-                                            <Ban className="h-3 w-3 mr-1" /> Recusar
-                                        </Button>
-                                        <Button size="sm" variant="ghost" onClick={() => handleDeleteCopyRequest(req.id)} className="h-8 text-zinc-500 text-[0.5rem] font-black uppercase">
-                                            <Trash2 className="h-3.5 w-3.5 mr-1" /> Excluir
-                                        </Button>
+                                        <div className="flex gap-4">
+                                            <span className="font-bold opacity-40 uppercase tracking-tighter">ID: <span className="text-primary">{req.brokerId}</span></span>
+                                            <span className="font-bold opacity-40 uppercase tracking-tighter">Telegram: <span className="text-blue-400">{req.telegram || '---'}</span></span>
+                                        </div>
+                                        <span className="font-mono opacity-20">Ativo em: {formatDate(req.registeredAt)}</span>
                                     </div>
                                 </div>
                             )) : (
-                                <p className="text-center py-12 text-[0.6rem] font-black uppercase opacity-20 tracking-widest">Nenhum pedido de conexão.</p>
+                                <div className="text-center py-16 space-y-3 opacity-20">
+                                    <Users className="h-10 w-10 mx-auto" />
+                                    <p className="text-[0.6rem] font-black uppercase tracking-widest">Nenhum terminal registrado ainda.</p>
+                                </div>
                             )}
                         </div>
                     </TabsContent>
@@ -1983,3 +1981,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+

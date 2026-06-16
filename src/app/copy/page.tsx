@@ -356,15 +356,18 @@ export default function CopyPage() {
                     <div key={trade.id} className="grid grid-cols-12 items-center p-3 bg-white/[0.02] rounded-xl border border-white/5 transition-all hover:bg-white/[0.06]">
                         <div className="col-span-3 flex flex-col justify-center">
                              <span className="text-[0.85rem] font-black text-white/80 font-mono leading-none">
+                                {trade.time}
+                             </span>
+                             <span className="text-[0.65rem] font-black text-white/20 font-mono leading-none mt-0.5">
                                 {(() => {
                                     try {
                                         const parts = trade.date.split('-');
-                                        return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}`;
-                                    } catch(e) { return '--/--' }
+                                        const day = parts[2].padStart(2, '0');
+                                        const monthIdx = parseInt(parts[1]) - 1;
+                                        const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                                        return `${day} ${months[monthIdx]}`;
+                                    } catch(e) { return '-- ---' }
                                 })()}
-                             </span>
-                             <span className="text-[0.85rem] font-black text-white/20 font-mono leading-none">
-                                {trade.time}
                              </span>
                         </div>
                         <div className="col-span-4 flex flex-col justify-center pl-1">
@@ -523,7 +526,7 @@ export default function CopyPage() {
 
                         <div className="grid grid-cols-1 gap-3 text-left">
                             <div className="space-y-1">
-                                <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">Nome Completo</Label>
+                                <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">Nome Completo</Label flash
                                 <div className="relative">
                                     <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
                                     <Input value={regData.name} onChange={e => setRegData({...regData, name: e.target.value})} placeholder="Seu Nome" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />

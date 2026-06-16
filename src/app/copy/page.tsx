@@ -237,7 +237,7 @@ export default function CopyPage() {
   }
 
   return (
-    <div className="h-[100dvh] bg-[#050505] text-foreground font-body overflow-hidden flex flex-col relative">
+    <div className="h-[100dvh] bg-[#050505] text-foreground flex flex-col relative">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at(50%,50%),_#0e0e0e_0%,_#050505_100%)]" />
       <div className="absolute inset-0 -z-10 grid-bg opacity-[0.03]" />
       
@@ -272,7 +272,7 @@ export default function CopyPage() {
                         </div>
                     </div>
                     <div className="space-y-0.5">
-                        <h3 className={cn("text-[0.55rem] font-black uppercase tracking-[0.4em] transition-colors duration-500", masterStats.isActive ? "text-green-500/70" : "text-primary/70")}>GESTOR</h3>
+                        <h3 className={cn("text-[0.65rem] font-black uppercase tracking-[0.4em] transition-colors duration-500", masterStats.isActive ? "text-green-500/70" : "text-primary/70")}>GESTOR</h3>
                         <p className="text-base lg:text-xl font-headline font-black text-white uppercase tracking-tighter">{masterStats.traderName}</p>
                     </div>
                     
@@ -295,18 +295,18 @@ export default function CopyPage() {
 
                 <div className="space-y-1 lg:space-y-2 my-1 lg:my-4">
                     <div className="p-2.5 lg:p-3 bg-white/[0.02] rounded-xl border border-white/5 flex justify-between items-center">
-                        <p className="text-[0.55rem] font-black text-white/50 uppercase tracking-[0.2em]">Saldo Inicial</p>
+                        <p className="text-[0.65rem] font-black text-white/50 uppercase tracking-[0.2em]">Saldo Inicial</p>
                         <p className="text-xs font-black font-mono text-white/70">{masterStats.initialBalance}</p>
                     </div>
                     <div className="p-3 lg:p-4 bg-white/[0.05] rounded-xl border border-white/10 flex justify-between items-center shadow-2xl">
-                        <p className="text-[0.55rem] font-black text-white/60 uppercase tracking-[0.2em]">Saldo Atual</p>
+                        <p className="text-[0.65rem] font-black text-white/60 uppercase tracking-[0.2em]">Saldo Atual</p>
                         <p className="text-base lg:text-lg font-black font-mono text-white tracking-tighter">{masterStats.balance}</p>
                     </div>
                     <div className={cn(
                         "p-3 lg:p-4 rounded-xl border flex justify-between items-center",
                         lastTradeResult < 0 ? "bg-red-500/5 border-red-500/10" : (lastTradeResult === 0 ? "bg-white/5 border-white/10" : "bg-green-500/5 border-green-500/10")
                     )}>
-                        <p className={cn("text-[0.55rem] font-black uppercase tracking-[0.2em]", lastTradeResult < 0 ? "text-red-500/80" : (lastTradeResult === 0 ? "text-white/40" : "text-green-500/80"))}>Net Profit Hoje</p>
+                        <p className={cn("text-[0.65rem] font-black uppercase tracking-[0.2em]", lastTradeResult < 0 ? "text-red-500/80" : (lastTradeResult === 0 ? "text-white/40" : "text-green-500/80"))}>Net Profit Hoje</p>
                         <p className={cn("text-base lg:text-lg font-black font-mono tracking-tighter", lastTradeResult < 0 ? "text-red-500" : (lastTradeResult === 0 ? "text-zinc-600" : "text-green-500"))}>{masterStats.profitToday}</p>
                     </div>
                 </div>
@@ -315,7 +315,7 @@ export default function CopyPage() {
                     <div className="flex items-center justify-between">
                          <div className="flex items-center gap-2">
                              <Trophy className="h-3 w-3 text-primary" />
-                             <span className="text-[0.55rem] font-black uppercase tracking-[0.2em] text-white/50">Placar Mensal</span>
+                             <span className="text-[0.65rem] font-black uppercase tracking-[0.2em] text-white/50">Placar Mensal</span>
                          </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -330,8 +330,8 @@ export default function CopyPage() {
                     </div>
                     <div className="pt-0.5">
                         <div className="flex justify-between items-end mb-1">
-                            <span className="text-[0.5rem] font-black uppercase text-white/50 tracking-[0.1em]">Assertividade IA</span>
-                            <span className="text-[0.65rem] font-black text-green-500 font-mono">{masterStats.winRate}</span>
+                            <span className="text-[0.65rem] font-black uppercase text-white/50 tracking-[0.1em]">Assertividade IA</span>
+                            <span className="text-[0.95rem] font-black text-green-500 font-mono">{masterStats.winRate}</span>
                         </div>
                         <Progress value={parseFloat(masterStats.winRate)} className="h-1 bg-white/5" indicatorClassName="bg-green-500" />
                     </div>
@@ -421,7 +421,7 @@ export default function CopyPage() {
                     </div>
                     <div className="space-y-4 pt-2">
                         <div className="space-y-2 text-left">
-                            <Label className="text-[0.6rem] font-black uppercase tracking-[0.2em] text-white/30 ml-2">Terminal ID (Exnova)</Label>
+                            <Label className="text-[0.65rem] font-black uppercase tracking-[0.2em] text-white/30 ml-2">Terminal ID (Exnova)</Label>
                             <input 
                                 value={brokerIdInput} 
                                 onChange={e => setBrokerIdInput(e.target.value.replace(/\D/g, ''))} 
@@ -437,7 +437,7 @@ export default function CopyPage() {
                             {isVerifying ? <Loader2 className="h-6 w-6 animate-spin" /> : 'VERIFICAR AUTORIZAÇÃO'}
                         </Button>
                         
-                        <Button variant="ghost" className="w-full h-10 text-[0.6rem] font-black uppercase tracking-[0.2em] text-white/30 rounded-xl hover:bg-white/5 transition-all">
+                        <Button variant="ghost" className="w-full h-10 text-[0.65rem] font-black uppercase tracking-[0.2em] text-white/30 rounded-xl hover:bg-white/5 transition-all">
                              ABRIR CONTA NA CORRETORA
                         </Button>
                     </div>
@@ -484,14 +484,14 @@ export default function CopyPage() {
 
                         <div className="space-y-4 text-left">
                             <div className="space-y-1">
-                                <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">E-mail Cadastrado</Label>
+                                <Label className="text-[0.65rem] font-black uppercase tracking-widest text-white/30 ml-2">E-mail Cadastrado</Label>
                                 <div className="relative">
                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
                                     <Input value={loginData.email} onChange={e => setLoginData({...loginData, email: e.target.value})} placeholder="seu@email.com" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />
                                 </div>
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">Senha do Terminal</Label>
+                                <Label className="text-[0.65rem] font-black uppercase tracking-widest text-white/30 ml-2">Senha do Terminal</Label>
                                 <div className="relative">
                                     <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
                                     <Input type={showPassword ? "text" : "password"} value={loginData.password} onChange={e => setLoginData({...loginData, password: e.target.value})} placeholder="******" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />
@@ -525,21 +525,21 @@ export default function CopyPage() {
 
                         <div className="grid grid-cols-1 gap-3 text-left">
                             <div className="space-y-1">
-                                <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">Nome Completo</Label>
+                                <Label className="text-[0.65rem] font-black uppercase tracking-widest text-white/30 ml-2">Nome Completo</Label>
                                 <div className="relative">
                                     <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
                                     <Input value={regData.name} onChange={e => setRegData({...regData, name: e.target.value})} placeholder="Seu Nome" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />
                                 </div>
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">E-mail de Acesso</Label>
+                                <Label className="text-[0.65rem] font-black uppercase tracking-widest text-white/30 ml-2">E-mail de Acesso</Label>
                                 <div className="relative">
                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
                                     <Input type="email" value={regData.email} onChange={e => setRegData({...regData, email: e.target.value})} placeholder="seu@email.com" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />
                                 </div>
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">Telegram (@usuario)</Label>
+                                <Label className="text-[0.65rem] font-black uppercase tracking-widest text-white/30 ml-2">Telegram (@usuario)</Label>
                                 <div className="relative">
                                     <Send className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
                                     <Input value={regData.telegram} onChange={e => setRegData({...regData, telegram: e.target.value})} placeholder="@seuuser" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />
@@ -547,14 +547,14 @@ export default function CopyPage() {
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                                 <div className="space-y-1">
-                                    <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">Senha</Label>
+                                    <Label className="text-[0.65rem] font-black uppercase tracking-widest text-white/30 ml-2">Senha</Label>
                                     <div className="relative">
                                         <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
                                         <Input type={showPassword ? "text" : "password"} value={regData.password} onChange={e => setLoginData({...loginData, password: e.target.value})} placeholder="******" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />
                                     </div>
                                 </div>
                                 <div className="space-y-1">
-                                    <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">Repetir</Label>
+                                    <Label className="text-[0.65rem] font-black uppercase tracking-widest text-white/30 ml-2">Repetir</Label>
                                     <Input type={showPassword ? "text" : "password"} value={regData.confirmPassword} onChange={e => setRegData({...regData, confirmPassword: e.target.value})} placeholder="******" className="h-12 bg-black/40 border-white/10 rounded-xl text-sm" />
                                 </div>
                             </div>
@@ -605,14 +605,14 @@ export default function CopyPage() {
                         <div className="grid grid-cols-2 gap-4 bg-black/60 p-5 lg:p-6 rounded-[2rem] border border-white/5 mx-2 shadow-inner relative group">
                             <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-[2rem]" />
                             <div className="flex flex-col items-center border-r border-white/10 relative z-10">
-                                <span className="text-[0.45rem] font-black text-white/30 uppercase tracking-[0.2em] mb-1">LATÊNCIA MÉDIA</span>
+                                <span className="text-[0.55rem] font-black text-white/30 uppercase tracking-[0.2em] mb-1">LATÊNCIA MÉDIA</span>
                                 <div className="flex items-center gap-2">
                                     <span className={cn("text-xl font-mono font-black", isSyncActive ? "text-green-500" : "text-zinc-600")}>12ms</span>
                                     {isSyncActive && <Activity className="h-3 w-3 text-green-500/40 animate-pulse" />}
                                 </div>
                             </div>
                             <div className="flex flex-col items-center relative z-10">
-                                <span className="text-[0.45rem] font-black text-white/30 uppercase tracking-[0.2em] mb-1">STATUS SYNC</span>
+                                <span className="text-[0.55rem] font-black text-white/30 uppercase tracking-[0.2em] mb-1">STATUS SYNC</span>
                                 <div className="flex items-center gap-2">
                                     <span className={cn("text-xl font-mono font-black", isSyncActive ? "text-green-500" : "text-orange-500")}>
                                         {isSyncActive ? 'ACTIVE' : 'PAUSED'}
@@ -661,7 +661,7 @@ export default function CopyPage() {
 
         {/* SLIDE 4: DISCRETE CORPORATE FOOTER (ONLY ON MOBILE SNAP SCROLL) */}
         <div className="snap-start h-[120px] lg:hidden flex flex-col items-center justify-center p-6 text-center space-y-2">
-            <div className="flex items-center justify-center gap-6 opacity-20 text-[0.45rem] font-black uppercase tracking-[0.1em]">
+            <div className="flex items-center justify-center gap-6 opacity-20 text-[0.55rem] font-black uppercase tracking-[0.1em]">
                 <div className="flex items-center gap-1.5"><Shield className="h-2.5 w-2.5" /> HFT Encrypted</div>
                 <div className="flex items-center gap-1.5"><Lock className="h-2.5 w-2.5" /> SSL Secure V.2026</div>
             </div>
@@ -675,7 +675,7 @@ export default function CopyPage() {
       {/* DESKTOP ONLY FIXED FOOTER */}
       <footer className="hidden lg:block shrink-0 py-3 px-6 border-t border-white/5 bg-black/80 backdrop-blur-md z-50">
           <div className="max-w-4xl mx-auto text-center space-y-0.5">
-              <div className="flex items-center justify-center gap-6 opacity-20 text-[0.45rem] font-black uppercase tracking-[0.1em]">
+              <div className="flex items-center justify-center gap-6 opacity-20 text-[0.55rem] font-black uppercase tracking-[0.1em]">
                   <div className="flex items-center gap-1.5"><Shield className="h-2.5 w-2.5" /> HFT Encrypted</div>
                   <div className="flex items-center gap-1.5"><Lock className="h-2.5 w-2.5" /> SSL Secure V.2026</div>
               </div>

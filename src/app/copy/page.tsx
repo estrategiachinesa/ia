@@ -133,7 +133,8 @@ export default function CopyPage() {
     return { wins, losses };
   }, [config?.copyResults]);
 
-  const affiliateLink = config?.copyAffiliateUrl || "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy";
+  // Link atualizado conforme solicitação
+  const affiliateLink = "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy";
 
   const handleCheckId = async () => {
       if (!brokerIdInput || !firestore) return;
@@ -489,7 +490,7 @@ export default function CopyPage() {
 
                         <div className="space-y-4 text-left">
                             <div className="space-y-1">
-                                <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">E-mail Cadastrado</Label>
+                                <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">seu@email.com</Label>
                                 <div className="relative">
                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
                                     <Input 

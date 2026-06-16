@@ -74,7 +74,6 @@ export default function CopyPage() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isSyncActive, setIsSyncActive] = useState(true);
-  const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
   
   // Registration state
   const [regData, setRegData] = useState({
@@ -132,9 +131,6 @@ export default function CopyPage() {
     return { wins, losses };
   }, [config?.copyResults]);
 
-  // Link atualizado conforme solicitação
-  const affiliateLink = "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy";
-
   const handleCheckId = async () => {
       if (!brokerIdInput || !firestore) return;
       setIsVerifying(true);
@@ -187,6 +183,10 @@ export default function CopyPage() {
 
   const handleRegister = async () => {
       if (!firestore || !auth || !activeRequestId) return;
+      if (!regData.name || !regData.email || !regData.password) {
+          toast({ variant: 'destructive', title: 'Campos Obrigatórios', description: 'Preencha Nome, E-mail e Senha.' });
+          return;
+      }
       if (regData.password !== regData.confirmPassword) {
           toast({ variant: 'destructive', title: 'Senhas não coincidem' });
           return;
@@ -229,6 +229,7 @@ export default function CopyPage() {
       setStep('STEP_ID_CHECK');
       setBrokerIdInput('');
       setLoginData({ email: '', password: '' });
+      setRegData({ name: '', email: '', telegram: '', password: '', confirmPassword: '' });
       toast({ title: 'Conexão Encerrada', description: 'Terminal desconectado com sucesso.' });
   };
 
@@ -242,7 +243,7 @@ export default function CopyPage() {
       <div className="absolute inset-0 -z-10 grid-bg opacity-[0.03]" />
       
       <header className="h-14 lg:h-16 px-6 md:px-8 flex items-center justify-between border-b border-white/5 bg-black/60 backdrop-blur-2xl shrink-0 z-50">
-        <Logo size={32} />
+        <Logo size={32} isPremium={masterStats.isActive} />
         <div className="flex items-center gap-3">
              {user && (
                  <Button variant="ghost" size="sm" onClick={handleLogout} className="h-8 px-3 rounded-full border border-white/10 text-[0.6rem] font-black uppercase text-white/40 hover:text-white hover:bg-white/5">
@@ -272,7 +273,7 @@ export default function CopyPage() {
                         </div>
                     </div>
                     <div className="space-y-0.5">
-                        <h3 className={cn("text-[0.65rem] font-black uppercase tracking-[0.4em] transition-colors duration-500", masterStats.isActive ? "text-green-500/70" : "text-primary/70")}>GESTOR</h3>
+                        <h3 className={cn("text-[0.7rem] font-black uppercase tracking-[0.4em] transition-colors duration-500", masterStats.isActive ? "text-green-500/70" : "text-primary/70")}>GESTOR</h3>
                         <p className="text-base lg:text-xl font-headline font-black text-white uppercase tracking-tighter">{masterStats.traderName}</p>
                     </div>
                     
@@ -330,7 +331,7 @@ export default function CopyPage() {
                     </div>
                     <div className="pt-0.5">
                         <div className="flex justify-between items-end mb-1">
-                            <span className="text-[0.65rem] font-black uppercase text-white/50 tracking-[0.1em]">Assertividade IA</span>
+                            <span className="text-[0.7rem] font-black uppercase text-white/50 tracking-[0.1em]">Assertividade IA</span>
                             <span className="text-[0.95rem] font-black text-green-500 font-mono">{masterStats.winRate}</span>
                         </div>
                         <Progress value={parseFloat(masterStats.winRate)} className="h-1 bg-white/5" indicatorClassName="bg-green-500" />
@@ -344,7 +345,7 @@ export default function CopyPage() {
         <div className="snap-start h-[calc(100dvh-56px)] lg:h-full flex flex-col p-4 lg:p-0 lg:col-span-4" id="history">
           <Card className="bg-card/30 border border-white/10 rounded-[2rem] overflow-hidden flex flex-col h-full shadow-2xl backdrop-blur-xl">
              <CardHeader className="p-4 lg:p-6 pb-3 shrink-0 border-b border-white/5 bg-white/5 flex flex-row items-center justify-between">
-                <CardTitle className="text-[0.65rem] font-black uppercase tracking-[0.4em] text-white/60 flex items-center gap-3">
+                <CardTitle className="text-[0.7rem] font-black uppercase tracking-[0.4em] text-white/60 flex items-center gap-3">
                     <Activity className="h-3.5 w-3.5 text-primary/70" />
                     Fluxo HFT Live
                 </CardTitle>
@@ -357,7 +358,7 @@ export default function CopyPage() {
                              <span className="text-[0.85rem] font-black text-white/80 font-mono leading-none">
                                 {trade.time}
                              </span>
-                             <span className="text-[0.65rem] font-black text-white/20 font-mono leading-none mt-0.5">
+                             <span className="text-[0.65rem] font-black text-white/20 font-mono leading-none mt-1">
                                 {(() => {
                                     try {
                                         const parts = trade.date.split('-');
@@ -370,9 +371,17 @@ export default function CopyPage() {
                              </span>
                         </div>
                         <div className="col-span-4 flex flex-col justify-center pl-1">
-                            <div className="flex items-center gap-2">
-                                <CurrencyFlags asset={trade.asset} />
-                                <span className="text-[0.85rem] font-black text-white uppercase truncate tracking-tight">{trade.asset.replace(' (OTC)', '')}</span>
+                            <div className="flex flex-col gap-0.5">
+                                <div className="flex items-center gap-2">
+                                    <CurrencyFlags asset={trade.asset} />
+                                    <span className="text-[0.85rem] font-black text-white uppercase truncate tracking-tight">{trade.asset.replace(' (OTC)', '')}</span>
+                                </div>
+                                <span className={cn(
+                                    "text-[0.65rem] font-black uppercase tracking-widest",
+                                    trade.direction === 'CALL' ? "text-green-500" : "text-red-500"
+                                )}>
+                                    {trade.direction}
+                                </span>
                             </div>
                         </div>
                         <div className="col-span-5 flex flex-col items-end text-right">
@@ -421,7 +430,7 @@ export default function CopyPage() {
                     </div>
                     <div className="space-y-4 pt-2">
                         <div className="space-y-2 text-left">
-                            <Label className="text-[0.65rem] font-black uppercase tracking-[0.2em] text-white/30 ml-2">Terminal ID (Exnova)</Label>
+                            <Label className="text-[0.7rem] font-black uppercase tracking-[0.2em] text-white/30 ml-2">Terminal ID (Exnova)</Label>
                             <input 
                                 value={brokerIdInput} 
                                 onChange={e => setBrokerIdInput(e.target.value.replace(/\D/g, ''))} 
@@ -437,8 +446,8 @@ export default function CopyPage() {
                             {isVerifying ? <Loader2 className="h-6 w-6 animate-spin" /> : 'VERIFICAR AUTORIZAÇÃO'}
                         </Button>
                         
-                        <Button variant="ghost" className="w-full h-10 text-[0.65rem] font-black uppercase tracking-[0.2em] text-white/30 rounded-xl hover:bg-white/5 transition-all">
-                             ABRIR CONTA NA CORRETORA
+                        <Button asChild variant="ghost" className="w-full h-10 text-[0.65rem] font-black uppercase tracking-[0.2em] text-white/30 rounded-xl hover:bg-white/5 transition-all">
+                             <a href="https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy" target="_blank" rel="noopener noreferrer">ABRIR CONTA NA CORRETORA</a>
                         </Button>
                     </div>
                 </div>
@@ -455,7 +464,7 @@ export default function CopyPage() {
                             O terminal <span className="text-red-500 font-mono font-bold">{brokerIdInput}</span> não possui permissão para criação de conta.
                         </p>
                         <div className="p-4 bg-black/40 rounded-2xl border border-white/5 mx-2 text-left">
-                            <p className="text-[0.65rem] font-bold text-white/60 leading-relaxed">
+                            <p className="text-[0.7rem] font-bold text-white/60 leading-relaxed">
                                 1. Certifique-se que o ID está correto.<br/>
                                 2. Sua conta deve ser criada pelo link oficial.<br/>
                                 3. Solicite a liberação manual ao suporte.
@@ -484,14 +493,14 @@ export default function CopyPage() {
 
                         <div className="space-y-4 text-left">
                             <div className="space-y-1">
-                                <Label className="text-[0.65rem] font-black uppercase tracking-widest text-white/30 ml-2">E-mail Cadastrado</Label>
+                                <Label className="text-[0.7rem] font-black uppercase tracking-widest text-white/30 ml-2">E-mail Cadastrado</Label>
                                 <div className="relative">
                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
                                     <Input value={loginData.email} onChange={e => setLoginData({...loginData, email: e.target.value})} placeholder="seu@email.com" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />
                                 </div>
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[0.65rem] font-black uppercase tracking-widest text-white/30 ml-2">Senha do Terminal</Label>
+                                <Label className="text-[0.7rem] font-black uppercase tracking-widest text-white/30 ml-2">Senha do Terminal</Label>
                                 <div className="relative">
                                     <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
                                     <Input type={showPassword ? "text" : "password"} value={loginData.password} onChange={e => setLoginData({...loginData, password: e.target.value})} placeholder="******" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />
@@ -525,21 +534,21 @@ export default function CopyPage() {
 
                         <div className="grid grid-cols-1 gap-3 text-left">
                             <div className="space-y-1">
-                                <Label className="text-[0.65rem] font-black uppercase tracking-widest text-white/30 ml-2">Nome Completo</Label>
+                                <Label className="text-[0.7rem] font-black uppercase tracking-widest text-white/30 ml-2">Nome Completo</Label>
                                 <div className="relative">
                                     <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
                                     <Input value={regData.name} onChange={e => setRegData({...regData, name: e.target.value})} placeholder="Seu Nome" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />
                                 </div>
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[0.65rem] font-black uppercase tracking-widest text-white/30 ml-2">E-mail de Acesso</Label>
+                                <Label className="text-[0.7rem] font-black uppercase tracking-widest text-white/30 ml-2">E-mail de Acesso</Label>
                                 <div className="relative">
                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
                                     <Input type="email" value={regData.email} onChange={e => setRegData({...regData, email: e.target.value})} placeholder="seu@email.com" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />
                                 </div>
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[0.65rem] font-black uppercase tracking-widest text-white/30 ml-2">Telegram (@usuario)</Label>
+                                <Label className="text-[0.7rem] font-black uppercase tracking-widest text-white/30 ml-2">Telegram (@usuario)</Label>
                                 <div className="relative">
                                     <Send className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
                                     <Input value={regData.telegram} onChange={e => setRegData({...regData, telegram: e.target.value})} placeholder="@seuuser" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />
@@ -547,14 +556,14 @@ export default function CopyPage() {
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                                 <div className="space-y-1">
-                                    <Label className="text-[0.65rem] font-black uppercase tracking-widest text-white/30 ml-2">Senha</Label>
+                                    <Label className="text-[0.7rem] font-black uppercase tracking-widest text-white/30 ml-2">Senha</Label>
                                     <div className="relative">
                                         <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
-                                        <Input type={showPassword ? "text" : "password"} value={regData.password} onChange={e => setLoginData({...loginData, password: e.target.value})} placeholder="******" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />
+                                        <Input type={showPassword ? "text" : "password"} value={regData.password} onChange={e => setRegData({...regData, password: e.target.value})} placeholder="******" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />
                                     </div>
                                 </div>
                                 <div className="space-y-1">
-                                    <Label className="text-[0.65rem] font-black uppercase tracking-widest text-white/30 ml-2">Repetir</Label>
+                                    <Label className="text-[0.7rem] font-black uppercase tracking-widest text-white/30 ml-2">Repetir</Label>
                                     <Input type={showPassword ? "text" : "password"} value={regData.confirmPassword} onChange={e => setRegData({...regData, confirmPassword: e.target.value})} placeholder="******" className="h-12 bg-black/40 border-white/10 rounded-xl text-sm" />
                                 </div>
                             </div>
@@ -572,16 +581,16 @@ export default function CopyPage() {
                     <div className="relative">
                         <div className={cn(
                             "absolute inset-0 blur-3xl rounded-full scale-150 transition-all duration-700",
-                            isSyncActive ? "bg-green-500/20 animate-pulse" : "bg-orange-500/10"
+                            isSyncActive ? "bg-green-500/20 animate-pulse" : "bg-red-500/10"
                         )} />
                         <div className={cn(
                             "relative w-20 h-20 rounded-3xl flex items-center justify-center mx-auto border shadow-2xl transition-all duration-500",
-                            isSyncActive ? "bg-green-500/15 border-green-500/20" : "bg-orange-500/10 border-orange-500/20"
+                            isSyncActive ? "bg-green-500/15 border-green-500/20" : "bg-red-500/10 border-red-500/20"
                         )}>
                             {isSyncActive ? (
                                 <CheckCircle2 className="h-10 w-10 text-green-500 animate-bounce" />
                             ) : (
-                                <Pause className="h-10 w-10 text-orange-500" />
+                                <Pause className="h-10 w-10 text-red-500" />
                             )}
                         </div>
                     </div>
@@ -605,21 +614,21 @@ export default function CopyPage() {
                         <div className="grid grid-cols-2 gap-4 bg-black/60 p-5 lg:p-6 rounded-[2rem] border border-white/5 mx-2 shadow-inner relative group">
                             <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-[2rem]" />
                             <div className="flex flex-col items-center border-r border-white/10 relative z-10">
-                                <span className="text-[0.55rem] font-black text-white/30 uppercase tracking-[0.2em] mb-1">LATÊNCIA MÉDIA</span>
+                                <span className="text-[0.65rem] font-black text-white/30 uppercase tracking-[0.2em] mb-1">LATÊNCIA MÉDIA</span>
                                 <div className="flex items-center gap-2">
                                     <span className={cn("text-xl font-mono font-black", isSyncActive ? "text-green-500" : "text-zinc-600")}>12ms</span>
                                     {isSyncActive && <Activity className="h-3 w-3 text-green-500/40 animate-pulse" />}
                                 </div>
                             </div>
                             <div className="flex flex-col items-center relative z-10">
-                                <span className="text-[0.55rem] font-black text-white/30 uppercase tracking-[0.2em] mb-1">STATUS SYNC</span>
+                                <span className="text-[0.65rem] font-black text-white/30 uppercase tracking-[0.2em] mb-1">STATUS SYNC</span>
                                 <div className="flex items-center gap-2">
-                                    <span className={cn("text-xl font-mono font-black", isSyncActive ? "text-green-500" : "text-orange-500")}>
+                                    <span className={cn("text-xl font-mono font-black", isSyncActive ? "text-green-500" : "text-red-500")}>
                                         {isSyncActive ? 'ACTIVE' : 'PAUSED'}
                                     </span>
                                     <div className={cn(
                                         "w-2 h-2 rounded-full",
-                                        isSyncActive ? "bg-green-500 animate-pulse" : "bg-orange-500"
+                                        isSyncActive ? "bg-green-500 animate-pulse" : "bg-red-500"
                                     )} />
                                 </div>
                             </div>
@@ -632,7 +641,7 @@ export default function CopyPage() {
                             className={cn(
                                 "h-16 rounded-2xl font-black uppercase text-sm tracking-widest shadow-xl transition-all hover:scale-[1.02] active:scale-95",
                                 isSyncActive 
-                                    ? "bg-orange-500 text-white hover:bg-orange-600" 
+                                    ? "bg-red-500 text-white hover:bg-red-600" 
                                     : "bg-green-500 text-white hover:bg-green-600"
                             )}
                         >
@@ -643,11 +652,7 @@ export default function CopyPage() {
                             )}
                         </Button>
 
-                        <Button variant="outline" className="h-12 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 font-black uppercase text-[0.65rem] tracking-widest group">
-                             HISTÓRICO DE TRADES
-                        </Button>
-
-                        <Button asChild className="h-12 rounded-2xl bg-white text-black font-black uppercase text-[0.65rem] tracking-widest shadow-xl hover:scale-[1.02] transition-all">
+                        <Button asChild className="h-12 rounded-2xl bg-white text-black font-black uppercase text-[0.7rem] tracking-widest shadow-xl hover:scale-[1.02] transition-all">
                             <a href="https://trade.exnova.com/traderoom" target="_blank" rel="noopener noreferrer">
                                 <ExternalLink className="mr-2 h-3.5 w-3.5" />
                                 ABRIR CORRETORA

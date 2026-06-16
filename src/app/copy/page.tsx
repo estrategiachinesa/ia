@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -30,7 +31,9 @@ import {
   Pause,
   Power,
   LogIn,
-  LogOut
+  LogOut,
+  MessageSquare,
+  UserPlus
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,6 +41,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter
+} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { Logo } from '@/components/logo';
 import { useAppConfig } from '@/firebase/config-provider';
@@ -64,6 +75,7 @@ export default function CopyPage() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isSyncActive, setIsSyncActive] = useState(true);
+  const [isConnectModalOpen, setIsConnectModalOpen] = useState(false);
   
   // Registration state
   const [regData, setRegData] = useState({
@@ -226,7 +238,7 @@ export default function CopyPage() {
 
   return (
     <div className="h-[100dvh] bg-[#050505] text-foreground font-body overflow-hidden flex flex-col relative">
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_50%_50%,_#0e0e0e_0%,_#050505_100%)]" />
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at(50%,50%),_#0e0e0e_0%,_#050505_100%)]" />
       <div className="absolute inset-0 -z-10 grid-bg opacity-[0.03]" />
       
       <header className="h-14 lg:h-16 px-6 md:px-8 flex items-center justify-between border-b border-white/5 bg-black/60 backdrop-blur-2xl shrink-0 z-50">
@@ -425,8 +437,13 @@ export default function CopyPage() {
                         >
                             {isVerifying ? <Loader2 className="h-6 w-6 animate-spin" /> : 'VERIFICAR AUTORIZAÇÃO'}
                         </Button>
-                        <Button asChild variant="ghost" className="w-full h-10 text-[0.6rem] font-black uppercase tracking-[0.2em] text-white/30 rounded-xl hover:bg-white/5 transition-all">
-                            <a href={affiliateLink} target="_blank" rel="noopener noreferrer">ABRIR CONTA NA CORRETORA</a>
+                        
+                        <Button 
+                            variant="ghost" 
+                            onClick={() => setIsConnectModalOpen(true)}
+                            className="w-full h-10 text-[0.6rem] font-black uppercase tracking-[0.2em] text-white/30 rounded-xl hover:bg-white/5 transition-all"
+                        >
+                            CONECTAR AO TRADER
                         </Button>
                     </div>
                 </div>
@@ -451,8 +468,8 @@ export default function CopyPage() {
                         </div>
                     </div>
                     <div className="space-y-2">
-                        <Button asChild className="w-full h-12 bg-white text-black font-black uppercase text-xs rounded-xl">
-                            <a href={affiliateLink} target="_blank">ABRIR CONTA OFICIAL</a>
+                        <Button variant="outline" onClick={() => setIsConnectModalOpen(true)} className="w-full h-12 border-white/10 text-white font-black uppercase text-xs rounded-xl">
+                            SOLICITAR AUTORIZAÇÃO
                         </Button>
                         <Button variant="ghost" onClick={() => setStep('STEP_ID_CHECK')} className="w-full h-10 text-[0.55rem] font-black uppercase tracking-[0.2em] text-white/20">Tentar outro ID</Button>
                     </div>
@@ -690,6 +707,58 @@ export default function CopyPage() {
               </p>
           </div>
       </footer>
+
+      {/* MODAL CONECTAR AO TRADER */}
+      <Dialog open={isConnectModalOpen} onOpenChange={setIsConnectModalOpen}>
+        <DialogContent className="bg-[#0a0a0a] border-white/10 max-w-sm rounded-[2rem] overflow-hidden p-0 gap-0 shadow-2xl">
+            <div className="h-1.5 bg-primary w-full" />
+            <div className="p-8 space-y-6">
+                <DialogHeader className="items-center text-center">
+                    <div className="p-4 bg-primary/10 rounded-full border border-primary/20 mb-2">
+                        <UserPlus className="h-10 w-10 text-primary" />
+                    </div>
+                    <DialogTitle className="text-2xl font-headline font-black uppercase tracking-tighter text-white">Solicitar Conexão</DialogTitle>
+                    <DialogDescription className="text-white/40 text-xs uppercase font-bold tracking-widest leading-relaxed">
+                        Siga os passos abaixo para liberar seu terminal na rede HFT.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-3">
+                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5 space-y-3">
+                        <div className="flex items-center gap-3">
+                            <div className="h-6 w-6 rounded-full bg-primary text-black flex items-center justify-center text-[0.7rem] font-black">1</div>
+                            <span className="text-[0.65rem] font-black uppercase text-white/80">Criar Conta Oficial</span>
+                        </div>
+                        <p className="text-[0.6rem] text-white/40 font-medium leading-relaxed">
+                            O terminal só aceita IDs registrados sob nossa rede de servidores.
+                        </p>
+                        <Button asChild className="w-full h-11 bg-white text-black font-black uppercase text-[0.6rem] tracking-widest rounded-xl">
+                            <a href={affiliateLink} target="_blank" rel="noopener noreferrer">ABRIR CONTA AGORA</a>
+                        </Button>
+                    </div>
+
+                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5 space-y-3">
+                        <div className="flex items-center gap-3">
+                            <div className="h-6 w-6 rounded-full bg-primary text-black flex items-center justify-center text-[0.7rem] font-black">2</div>
+                            <span className="text-[0.65rem] font-black uppercase text-white/80">Validar com Suporte</span>
+                        </div>
+                        <p className="text-[0.6rem] text-white/40 font-medium leading-relaxed">
+                            Envie o print do seu ID criado para o @trader_chines para liberação imediata.
+                        </p>
+                        <Button asChild variant="outline" className="w-full h-11 border-primary/20 bg-primary/5 text-primary font-black uppercase text-[0.6rem] tracking-widest rounded-xl hover:bg-primary hover:text-black">
+                            <a href="https://t.me/Trader_Chines" target="_blank" rel="noopener noreferrer">
+                                <MessageSquare className="h-4 w-4 mr-2" /> ENVIAR ID NO TELEGRAM
+                            </a>
+                        </Button>
+                    </div>
+                </div>
+
+                <DialogFooter>
+                    <Button variant="ghost" onClick={() => setIsConnectModalOpen(false)} className="w-full h-10 text-[0.55rem] font-black uppercase text-white/20">FECHAR JANELA</Button>
+                </DialogFooter>
+            </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

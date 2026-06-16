@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -526,7 +525,7 @@ export default function CopyPage() {
 
                         <div className="grid grid-cols-1 gap-3 text-left">
                             <div className="space-y-1">
-                                <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">Nome Completo</Label flash
+                                <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">Nome Completo</Label>
                                 <div className="relative">
                                     <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
                                     <Input value={regData.name} onChange={e => setRegData({...regData, name: e.target.value})} placeholder="Seu Nome" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />
@@ -551,7 +550,7 @@ export default function CopyPage() {
                                     <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">Senha</Label>
                                     <div className="relative">
                                         <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
-                                        <Input type={showPassword ? "text" : "password"} value={regData.password} onChange={e => setRegData({...regData, password: e.target.value})} placeholder="******" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />
+                                        <Input type={showPassword ? "text" : "password"} value={regData.password} onChange={e => setLoginData({...loginData, password: e.target.value})} placeholder="******" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />
                                     </div>
                                 </div>
                                 <div className="space-y-1">

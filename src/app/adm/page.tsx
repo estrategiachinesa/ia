@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -919,9 +920,16 @@ export default function AdminDashboard() {
 
   const mergedUsers = useMemo(() => {
     if (!rawUsers && !rawRequests) return [];
+
+    // Coleta todos os UserIDs que pertencem ao ecossistema de Copy Trade (apenas registrados)
+    // para garantir que eles NÃO apareçam na tabela geral de usuários do Analisador.
+    const copyUserIds = new Set(copyRequests?.filter(r => r.status === 'REGISTERED').map(r => r.userId).filter(Boolean) || []);
+
     const allIds = new Set([...(rawUsers?.map(u => u.id) || []), ...(rawRequests?.map(r => r.id) || [])]);
 
-    return Array.from(allIds).map(id => {
+    return Array.from(allIds)
+    .filter(id => !copyUserIds.has(id)) // EXCLUSÃO: Se o ID for do Copy, não entra na tabela geral do Analisador
+    .map(id => {
       const u = rawUsers?.find(userDoc => userDoc.id === id);
       const r = rawRequests?.find(reqDoc => reqDoc.id === id);
       const email = u?.email || r?.userEmail || (r as any).email || '---';
@@ -986,7 +994,7 @@ export default function AdminDashboard() {
       
       return sortConfig.direction === 'asc' ? (valA < valB ? -1 : 1) : (valA > valB ? -1 : 1);
     });
-  }, [rawUsers, rawRequests, searchTerm, sortConfig, activeFilter]);
+  }, [rawUsers, rawRequests, copyRequests, searchTerm, sortConfig, activeFilter]);
 
   const stats = useMemo(() => ({
     total: mergedUsers.length,

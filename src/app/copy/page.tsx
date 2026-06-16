@@ -252,7 +252,9 @@ export default function CopyPage() {
              )}
              <div className="flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/10">
                 <span className={cn("w-1.5 h-1.5 rounded-full", masterStats.isActive ? "bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.8)]" : "bg-red-500")} />
-                <span className="text-[0.55rem] font-black uppercase tracking-[0.2em] text-white/80">{masterStats.isActive ? "COPY ONLINE" : "Offline"}</span>
+                <span className={cn("text-[0.55rem] font-black uppercase tracking-[0.2em] transition-colors duration-500", masterStats.isActive ? "text-green-500" : "text-red-500")}>
+                    {masterStats.isActive ? "COPY ONLINE" : "OFFLINE"}
+                </span>
              </div>
         </div>
       </header>
@@ -262,7 +264,7 @@ export default function CopyPage() {
         {/* SLIDE 1: MASTER DASHBOARD */}
         <div className="snap-start h-[calc(100dvh-56px)] lg:h-full flex flex-col p-3 lg:p-0 lg:col-span-3">
           <Card className="bg-card/40 border border-white/10 shadow-2xl backdrop-blur-3xl rounded-[2rem] overflow-hidden flex flex-col h-full">
-            <div className="h-1 bg-primary w-full" />
+            <div className={cn("h-1 w-full transition-colors duration-1000", masterStats.isActive ? "bg-green-500" : "bg-red-500")} />
             <div className="flex-grow flex flex-col justify-between p-6 lg:p-6">
                 <div className="flex flex-col items-center text-center space-y-1 lg:space-y-3">
                     <div className="relative">
@@ -271,7 +273,7 @@ export default function CopyPage() {
                         </div>
                     </div>
                     <div className="space-y-0.5">
-                        <h3 className="text-[0.55rem] font-black uppercase tracking-[0.4em] text-primary/70">GESTOR</h3>
+                        <h3 className={cn("text-[0.55rem] font-black uppercase tracking-[0.4em] transition-colors duration-500", masterStats.isActive ? "text-green-500/70" : "text-primary/70")}>GESTOR</h3>
                         <p className="text-base lg:text-xl font-headline font-black text-white uppercase tracking-tighter">{masterStats.traderName}</p>
                     </div>
                     
@@ -370,12 +372,6 @@ export default function CopyPage() {
                                 <CurrencyFlags asset={trade.asset} />
                                 <span className="text-[0.85rem] font-black text-white uppercase truncate tracking-tight">{trade.asset.replace(' (OTC)', '')}</span>
                             </div>
-                            <span className={cn(
-                                "text-[0.6rem] font-black uppercase tracking-widest mt-0.5",
-                                trade.direction === 'CALL' ? "text-green-500/70" : "text-red-500/70"
-                            )}>
-                                {trade.direction}
-                            </span>
                         </div>
                         <div className="col-span-5 flex flex-col items-end text-right">
                              <div className="flex items-center gap-2">
@@ -439,12 +435,8 @@ export default function CopyPage() {
                             {isVerifying ? <Loader2 className="h-6 w-6 animate-spin" /> : 'VERIFICAR AUTORIZAÇÃO'}
                         </Button>
                         
-                        <Button 
-                            variant="ghost" 
-                            onClick={() => setIsConnectModalOpen(true)}
-                            className="w-full h-10 text-[0.6rem] font-black uppercase tracking-[0.2em] text-white/30 rounded-xl hover:bg-white/5 transition-all"
-                        >
-                            CONECTAR AO TRADER
+                        <Button variant="ghost" className="w-full h-10 text-[0.6rem] font-black uppercase tracking-[0.2em] text-white/30 rounded-xl hover:bg-white/5 transition-all">
+                             ABRIR CONTA NA CORRETORA
                         </Button>
                     </div>
                 </div>
@@ -469,8 +461,8 @@ export default function CopyPage() {
                         </div>
                     </div>
                     <div className="space-y-2">
-                        <Button variant="outline" onClick={() => setIsConnectModalOpen(true)} className="w-full h-12 border-white/10 text-white font-black uppercase text-xs rounded-xl">
-                            SOLICITAR AUTORIZAÇÃO
+                        <Button variant="outline" className="w-full h-12 border-white/10 text-white font-black uppercase text-xs rounded-xl">
+                            SOLICITAR SUPORTE
                         </Button>
                         <Button variant="ghost" onClick={() => setStep('STEP_ID_CHECK')} className="w-full h-10 text-[0.55rem] font-black uppercase tracking-[0.2em] text-white/20">Tentar outro ID</Button>
                     </div>
@@ -490,15 +482,10 @@ export default function CopyPage() {
 
                         <div className="space-y-4 text-left">
                             <div className="space-y-1">
-                                <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">seu@email.com</Label>
+                                <Label className="text-[0.55rem] font-black uppercase tracking-widest text-white/30 ml-2">E-mail Cadastrado</Label>
                                 <div className="relative">
                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
-                                    <Input 
-                                        value={loginData.email} 
-                                        onChange={e => setLoginData({...loginData, email: e.target.value})}
-                                        placeholder="seu@email.com" 
-                                        className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" 
-                                    />
+                                    <Input value={loginData.email} onChange={e => setLoginData({...loginData, email: e.target.value})} placeholder="seu@email.com" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />
                                 </div>
                             </div>
                             <div className="space-y-1">
@@ -612,23 +599,6 @@ export default function CopyPage() {
                                 : "A sincronização foi pausada manualmente. Nenhuma ordem do Mestre Trader será replicada na sua conta enquanto este status permanecer."
                             }
                         </p>
-
-                        {/* CHAMADA ANALISADOR IA */}
-                        <div 
-                            onClick={() => router.push('/analisador')}
-                            className="mx-4 p-3 bg-primary/5 border border-primary/20 rounded-2xl flex items-center justify-between group cursor-pointer hover:bg-primary/10 transition-all"
-                        >
-                            <div className="flex items-center gap-3 text-left">
-                                <div className="p-2 bg-primary/10 rounded-xl group-hover:scale-110 transition-transform">
-                                    <Zap className="h-4 w-4 text-primary" />
-                                </div>
-                                <div>
-                                    <h4 className="text-[0.65rem] font-black uppercase text-white">Usar Analisador IA</h4>
-                                    <p className="text-[0.55rem] font-bold text-primary/60 uppercase">Antecipe o mercado</p>
-                                </div>
-                            </div>
-                            <ArrowRight className="h-4 w-4 text-primary group-hover:translate-x-1 transition-transform" />
-                        </div>
                         
                         <div className="grid grid-cols-2 gap-4 bg-black/60 p-5 lg:p-6 rounded-[2rem] border border-white/5 mx-2 shadow-inner relative group">
                             <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-[2rem]" />
@@ -671,6 +641,10 @@ export default function CopyPage() {
                             )}
                         </Button>
 
+                        <Button variant="outline" className="h-12 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 font-black uppercase text-[0.65rem] tracking-widest group">
+                             HISTÓRICO DE TRADES
+                        </Button>
+
                         <Button asChild className="h-12 rounded-2xl bg-white text-black font-black uppercase text-[0.65rem] tracking-widest shadow-xl hover:scale-[1.02] transition-all">
                             <a href="https://trade.exnova.com/traderoom" target="_blank" rel="noopener noreferrer">
                                 <ExternalLink className="mr-2 h-3.5 w-3.5" />
@@ -708,58 +682,6 @@ export default function CopyPage() {
               </p>
           </div>
       </footer>
-
-      {/* MODAL CONECTAR AO TRADER */}
-      <Dialog open={isConnectModalOpen} onOpenChange={setIsConnectModalOpen}>
-        <DialogContent className="bg-[#0a0a0a] border-white/10 max-w-sm rounded-[2rem] overflow-hidden p-0 gap-0 shadow-2xl">
-            <div className="h-1.5 bg-primary w-full" />
-            <div className="p-8 space-y-6">
-                <DialogHeader className="items-center text-center">
-                    <div className="p-4 bg-primary/10 rounded-full border border-primary/20 mb-2">
-                        <UserPlus className="h-10 w-10 text-primary" />
-                    </div>
-                    <DialogTitle className="text-2xl font-headline font-black uppercase tracking-tighter text-white">Solicitar Conexão</DialogTitle>
-                    <DialogDescription className="text-white/40 text-xs uppercase font-bold tracking-widest leading-relaxed">
-                        Siga os passos abaixo para liberar seu terminal na rede HFT.
-                    </DialogDescription>
-                </DialogHeader>
-
-                <div className="space-y-3">
-                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5 space-y-3">
-                        <div className="flex items-center gap-3">
-                            <div className="h-6 w-6 rounded-full bg-primary text-black flex items-center justify-center text-[0.7rem] font-black">1</div>
-                            <span className="text-[0.65rem] font-black uppercase text-white/80">Criar Conta Oficial</span>
-                        </div>
-                        <p className="text-[0.6rem] text-white/40 font-medium leading-relaxed">
-                            O terminal só aceita IDs registrados sob nossa rede de servidores.
-                        </p>
-                        <Button asChild className="w-full h-11 bg-white text-black font-black uppercase text-[0.6rem] tracking-widest rounded-xl">
-                            <a href={affiliateLink} target="_blank" rel="noopener noreferrer">ABRIR CONTA AGORA</a>
-                        </Button>
-                    </div>
-
-                    <div className="p-4 bg-white/5 rounded-2xl border border-white/5 space-y-3">
-                        <div className="flex items-center gap-3">
-                            <div className="h-6 w-6 rounded-full bg-primary text-black flex items-center justify-center text-[0.7rem] font-black">2</div>
-                            <span className="text-[0.65rem] font-black uppercase text-white/80">Validar com Suporte</span>
-                        </div>
-                        <p className="text-[0.6rem] text-white/40 font-medium leading-relaxed">
-                            Envie o print do seu ID criado para o @trader_chines para liberação imediata.
-                        </p>
-                        <Button asChild variant="outline" className="w-full h-11 border-primary/20 bg-primary/5 text-primary font-black uppercase text-[0.6rem] tracking-widest rounded-xl hover:bg-primary hover:text-black">
-                            <a href="https://t.me/Trader_Chines" target="_blank" rel="noopener noreferrer">
-                                <MessageSquare className="h-4 w-4 mr-2" /> ENVIAR ID NO TELEGRAM
-                            </a>
-                        </Button>
-                    </div>
-                </div>
-
-                <DialogFooter>
-                    <Button variant="ghost" onClick={() => setIsConnectModalOpen(false)} className="w-full h-10 text-[0.55rem] font-black uppercase text-white/20">FECHAR JANELA</Button>
-                </DialogFooter>
-            </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

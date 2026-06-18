@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -59,7 +58,7 @@ import {
   ArrowDownCircle,
   Trophy,
   Calendar,
-  Image as ImageIcon,
+  ImageIcon,
   Instagram,
   Send,
   MessageSquare,
@@ -312,6 +311,12 @@ export default function AdminDashboard() {
 
   const handleAuthorizeId = async () => {
     if (!firestore || !newAuthId) return;
+    
+    if (newAuthId.length < 8) {
+        toast({ variant: 'destructive', title: 'ID muito curto', description: 'O ID da corretora deve ter no mínimo 8 números.' });
+        return;
+    }
+
     setIsAuthorizing(true);
     try {
         const requestId = `auth_${newAuthId}`;
@@ -1305,7 +1310,7 @@ export default function AdminDashboard() {
                                     onChange={(e) => setNewAuthId(e.target.value.replace(/\D/g, ''))}
                                     className="bg-black/40 border-white/10"
                                 />
-                                <Button onClick={handleAuthorizeId} disabled={!newAuthId || isAuthorizing} className="bg-primary text-black font-bold">
+                                <Button onClick={handleAuthorizeId} disabled={newAuthId.length < 8 || isAuthorizing} className="bg-primary text-black font-bold">
                                     {isAuthorizing ? <Loader2 className="h-4 w-4 animate-spin" /> : 'AUTORIZAR ID'}
                                 </Button>
                             </div>

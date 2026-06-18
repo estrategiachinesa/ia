@@ -133,6 +133,12 @@ export default function CopyPage() {
 
   const handleCheckId = async () => {
       if (!brokerIdInput || !firestore) return;
+      
+      if (brokerIdInput.length < 8) {
+          toast({ variant: 'destructive', title: 'ID muito curto', description: 'O ID da corretora deve ter no mínimo 8 números.' });
+          return;
+      }
+
       setIsVerifying(true);
       try {
           const q = query(
@@ -185,6 +191,10 @@ export default function CopyPage() {
       if (!firestore || !auth || !activeRequestId) return;
       if (!regData.name || !regData.email || !regData.password) {
           toast({ variant: 'destructive', title: 'Campos Obrigatórios', description: 'Preencha Nome, E-mail e Senha.' });
+          return;
+      }
+      if (regData.password.length < 8) {
+          toast({ variant: 'destructive', title: 'Senha muito curta', description: 'A senha do terminal deve ter no mínimo 8 números/caracteres.' });
           return;
       }
       if (regData.password !== regData.confirmPassword) {
@@ -296,18 +306,18 @@ export default function CopyPage() {
 
                 <div className="space-y-1 lg:space-y-2 my-3">
                     <div className="p-2.5 lg:p-2.5 bg-white/[0.02] rounded-xl border border-white/5 flex justify-between items-center">
-                        <p className="text-[0.6rem] font-black text-white/50 uppercase tracking-[0.2em]">Saldo Inicial</p>
+                        <p className="text-[0.65rem] font-black text-white/50 uppercase tracking-[0.2em]">Saldo Inicial</p>
                         <p className="text-[0.65rem] font-black font-mono text-white/70">{masterStats.initialBalance}</p>
                     </div>
                     <div className="p-3 lg:p-3.5 bg-white/[0.05] rounded-xl border border-white/10 flex justify-between items-center shadow-2xl">
-                        <p className="text-[0.6rem] font-black text-white/60 uppercase tracking-[0.2em]">Saldo Atual</p>
+                        <p className="text-[0.65rem] font-black text-white/60 uppercase tracking-[0.2em]">Saldo Atual</p>
                         <p className="text-base lg:text-lg font-black font-mono text-white tracking-tighter">{masterStats.balance}</p>
                     </div>
                     <div className={cn(
                         "p-3 lg:p-3.5 rounded-xl border flex justify-between items-center",
                         lastTradeResult < 0 ? "bg-red-500/5 border-red-500/10" : (lastTradeResult === 0 ? "bg-white/5 border-white/10" : "bg-green-500/5 border-green-500/10")
                     )}>
-                        <p className={cn("text-[0.6rem] font-black uppercase tracking-[0.2em]", lastTradeResult < 0 ? "text-red-500/80" : (lastTradeResult === 0 ? "text-white/40" : "text-green-500/80"))}>Net Profit Hoje</p>
+                        <p className={cn("text-[0.65rem] font-black uppercase tracking-[0.2em]", lastTradeResult < 0 ? "text-red-500/80" : (lastTradeResult === 0 ? "text-white/40" : "text-green-500/80"))}>Net Profit Hoje</p>
                         <p className={cn("text-base lg:text-lg font-black font-mono tracking-tighter", lastTradeResult < 0 ? "text-red-500" : (lastTradeResult === 0 ? "text-zinc-600" : "text-green-500"))}>{masterStats.profitToday}</p>
                     </div>
                 </div>
@@ -440,7 +450,7 @@ export default function CopyPage() {
                         </div>
                         <Button 
                             onClick={handleCheckId} 
-                            disabled={brokerIdInput.length < 5 || isVerifying} 
+                            disabled={brokerIdInput.length < 8 || isVerifying} 
                             className="w-full h-14 md:h-16 bg-primary text-primary-foreground font-black uppercase tracking-tighter text-base md:text-lg rounded-2xl hover:scale-[1.03] transition-all shadow-[0_15px_40px_rgba(255,0,0,0.15)]"
                         >
                             {isVerifying ? <Loader2 className="h-6 w-6 animate-spin" /> : 'VERIFICAR AUTORIZAÇÃO'}

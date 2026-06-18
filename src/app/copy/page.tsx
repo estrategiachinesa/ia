@@ -238,7 +238,7 @@ export default function CopyPage() {
   }
 
   return (
-    <div className="h-[100dvh] bg-[#050505] text-foreground flex flex-col relative">
+    <div className="h-[100dvh] bg-[#050505] text-foreground flex flex-col relative overflow-hidden">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at(50%,50%),_#0e0e0e_0%,_#050505_100%)]" />
       <div className="absolute inset-0 -z-10 grid-bg opacity-[0.03]" />
       
@@ -259,22 +259,22 @@ export default function CopyPage() {
         </div>
       </header>
 
-      <main className="flex-grow overflow-y-auto snap-y snap-mandatory lg:overflow-hidden lg:snap-none lg:grid lg:grid-cols-12 lg:gap-6 lg:p-6 lg:max-w-[1600px] lg:mx-auto w-full no-scrollbar">
+      <main className="flex-grow overflow-y-auto lg:overflow-hidden lg:grid lg:grid-cols-12 lg:gap-4 lg:p-4 lg:max-w-[1600px] lg:mx-auto w-full no-scrollbar">
         
         {/* SLIDE 1: MASTER DASHBOARD */}
-        <div className="snap-start h-[calc(100dvh-56px)] lg:h-full flex flex-col p-3 lg:p-0 lg:col-span-3">
+        <div className="lg:h-full flex flex-col p-3 lg:p-0 lg:col-span-3 min-h-0">
           <Card className="bg-card/40 border border-white/10 shadow-2xl backdrop-blur-3xl rounded-[2rem] overflow-hidden flex flex-col h-full">
             <div className={cn("h-1 w-full transition-colors duration-1000", masterStats.isActive ? "bg-green-500" : "bg-red-500")} />
-            <div className="flex-grow flex flex-col justify-between p-6 lg:p-6">
+            <div className="flex-grow flex flex-col justify-between p-5 lg:p-6">
                 <div className="flex flex-col items-center text-center space-y-1 lg:space-y-3">
                     <div className="relative">
-                        <div className="relative h-16 w-16 md:h-24 md:w-24 rounded-full border-[3px] border-white/10 overflow-hidden bg-black shadow-xl">
+                        <div className="relative h-16 w-16 md:h-20 md:w-20 rounded-full border-[3px] border-white/10 overflow-hidden bg-black shadow-xl">
                             <Image src={masterStats.profilePic} alt={masterStats.traderName} fill className="object-cover" unoptimized />
                         </div>
                     </div>
                     <div className="space-y-0.5">
                         <h3 className={cn("text-[0.7rem] font-black uppercase tracking-[0.4em] transition-colors duration-500", masterStats.isActive ? "text-green-500/70" : "text-primary/70")}>GESTOR</h3>
-                        <p className="text-base lg:text-xl font-headline font-black text-white uppercase tracking-tighter">{masterStats.traderName}</p>
+                        <p className="text-base lg:text-lg font-headline font-black text-white uppercase tracking-tighter">{masterStats.traderName}</p>
                     </div>
                     
                     <div className="flex items-center gap-1.5 lg:gap-2">
@@ -294,25 +294,25 @@ export default function CopyPage() {
                     </div>
                 </div>
 
-                <div className="space-y-1 lg:space-y-2 my-1 lg:my-4">
-                    <div className="p-2.5 lg:p-3 bg-white/[0.02] rounded-xl border border-white/5 flex justify-between items-center">
-                        <p className="text-[0.65rem] font-black text-white/50 uppercase tracking-[0.2em]">Saldo Inicial</p>
-                        <p className="text-xs font-black font-mono text-white/70">{masterStats.initialBalance}</p>
+                <div className="space-y-1 lg:space-y-2 my-3">
+                    <div className="p-2.5 lg:p-2.5 bg-white/[0.02] rounded-xl border border-white/5 flex justify-between items-center">
+                        <p className="text-[0.6rem] font-black text-white/50 uppercase tracking-[0.2em]">Saldo Inicial</p>
+                        <p className="text-[0.65rem] font-black font-mono text-white/70">{masterStats.initialBalance}</p>
                     </div>
-                    <div className="p-3 lg:p-4 bg-white/[0.05] rounded-xl border border-white/10 flex justify-between items-center shadow-2xl">
-                        <p className="text-[0.65rem] font-black text-white/60 uppercase tracking-[0.2em]">Saldo Atual</p>
+                    <div className="p-3 lg:p-3.5 bg-white/[0.05] rounded-xl border border-white/10 flex justify-between items-center shadow-2xl">
+                        <p className="text-[0.6rem] font-black text-white/60 uppercase tracking-[0.2em]">Saldo Atual</p>
                         <p className="text-base lg:text-lg font-black font-mono text-white tracking-tighter">{masterStats.balance}</p>
                     </div>
                     <div className={cn(
-                        "p-3 lg:p-4 rounded-xl border flex justify-between items-center",
+                        "p-3 lg:p-3.5 rounded-xl border flex justify-between items-center",
                         lastTradeResult < 0 ? "bg-red-500/5 border-red-500/10" : (lastTradeResult === 0 ? "bg-white/5 border-white/10" : "bg-green-500/5 border-green-500/10")
                     )}>
-                        <p className={cn("text-[0.65rem] font-black uppercase tracking-[0.2em]", lastTradeResult < 0 ? "text-red-500/80" : (lastTradeResult === 0 ? "text-white/40" : "text-green-500/80"))}>Net Profit Hoje</p>
+                        <p className={cn("text-[0.6rem] font-black uppercase tracking-[0.2em]", lastTradeResult < 0 ? "text-red-500/80" : (lastTradeResult === 0 ? "text-white/40" : "text-green-500/80"))}>Net Profit Hoje</p>
                         <p className={cn("text-base lg:text-lg font-black font-mono tracking-tighter", lastTradeResult < 0 ? "text-red-500" : (lastTradeResult === 0 ? "text-zinc-600" : "text-green-500"))}>{masterStats.profitToday}</p>
                     </div>
                 </div>
 
-                <div className="p-4 lg:p-4 bg-black/60 rounded-[1.5rem] border border-white/10 space-y-2 lg:space-y-3 shadow-inner">
+                <div className="p-4 lg:p-4 bg-black/60 rounded-[1.5rem] border border-white/10 space-y-2 lg:space-y-3 shadow-inner mt-auto">
                     <div className="flex items-center justify-between">
                          <div className="flex items-center gap-2">
                              <Trophy className="h-3 w-3 text-primary" />
@@ -331,7 +331,7 @@ export default function CopyPage() {
                     </div>
                     <div className="pt-0.5">
                         <div className="flex justify-between items-end mb-1">
-                            <span className="text-[0.7rem] font-black uppercase text-white/50 tracking-[0.1em]">Assertividade IA</span>
+                            <span className="text-[0.65rem] font-black uppercase text-white/50 tracking-[0.1em]">Assertividade IA</span>
                             <span className="text-[0.95rem] font-black text-green-500 font-mono">{masterStats.winRate}</span>
                         </div>
                         <Progress value={parseFloat(masterStats.winRate)} className="h-1 bg-white/5" indicatorClassName="bg-green-500" />
@@ -342,7 +342,7 @@ export default function CopyPage() {
         </div>
 
         {/* SLIDE 2: OPERATIONS HISTORY */}
-        <div className="snap-start h-[calc(100dvh-56px)] lg:h-full flex flex-col p-4 lg:p-0 lg:col-span-4" id="history">
+        <div className="lg:h-full flex flex-col p-4 lg:p-0 lg:col-span-4 min-h-0" id="history">
           <Card className="bg-card/30 border border-white/10 rounded-[2rem] overflow-hidden flex flex-col h-full shadow-2xl backdrop-blur-xl">
              <CardHeader className="p-4 lg:p-6 pb-3 shrink-0 border-b border-white/5 bg-white/5 flex flex-row items-center justify-between">
                 <CardTitle className="text-[0.7rem] font-black uppercase tracking-[0.4em] text-white/60 flex items-center gap-3">
@@ -412,7 +412,7 @@ export default function CopyPage() {
         </div>
 
         {/* SLIDE 3: SYNC CONSOLE */}
-        <div className="snap-start h-[calc(100dvh-56px)] lg:h-full flex flex-col p-4 lg:p-0 lg:col-span-5 relative">
+        <div className="lg:h-full flex flex-col p-4 lg:p-0 lg:col-span-5 relative min-h-0">
           <Card className="bg-card/40 border border-white/10 shadow-2xl backdrop-blur-[50px] rounded-[2.5rem] p-6 lg:p-10 h-full flex flex-col items-center justify-center relative overflow-hidden">
             
             {step === 'STEP_ID_CHECK' && (
@@ -584,46 +584,46 @@ export default function CopyPage() {
                             isSyncActive ? "bg-green-500/20 animate-pulse" : "bg-red-500/10"
                         )} />
                         <div className={cn(
-                            "relative w-20 h-20 rounded-3xl flex items-center justify-center mx-auto border shadow-2xl transition-all duration-500",
+                            "relative w-16 h-16 md:w-20 md:h-20 rounded-3xl flex items-center justify-center mx-auto border shadow-2xl transition-all duration-500",
                             isSyncActive ? "bg-green-500/15 border-green-500/20" : "bg-red-500/10 border-red-500/20"
                         )}>
                             {isSyncActive ? (
-                                <CheckCircle2 className="h-10 w-10 text-green-500 animate-bounce" />
+                                <CheckCircle2 className="h-8 w-8 md:h-10 md:w-10 text-green-500 animate-bounce" />
                             ) : (
-                                <Pause className="h-10 w-10 text-red-500" />
+                                <Pause className="h-8 w-8 md:h-10 md:w-10 text-red-500" />
                             )}
                         </div>
                     </div>
                     
                     <div className="space-y-4">
                         <div className="space-y-2">
-                            <h2 className="text-2xl lg:text-3xl font-black uppercase text-white tracking-tighter">Terminal {isSyncActive ? 'Conectado!' : 'Pausado'}</h2>
+                            <h2 className="text-xl lg:text-3xl font-black uppercase text-white tracking-tighter">Terminal {isSyncActive ? 'Conectado!' : 'Pausado'}</h2>
                             <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full">
                                 <UserIcon className="h-3 w-3 text-primary/60" />
-                                <span className="text-[0.65rem] font-bold text-white/80 uppercase">{user?.displayName || 'Membro Ativo'}</span>
+                                <span className="text-[0.6rem] font-bold text-white/80 uppercase">{user?.displayName || 'Membro Ativo'}</span>
                             </div>
                         </div>
                         
-                        <p className="text-white/60 text-sm leading-relaxed px-6">
+                        <p className="text-white/60 text-[0.8rem] leading-relaxed px-6 max-w-sm mx-auto">
                             {isSyncActive 
                                 ? `A sincronização via HFT está ativa. Todas as ordens mestres serão replicadas no seu ID ${user?.brokerId || brokerIdInput} em menos de 15ms.`
                                 : "A sincronização foi pausada manualmente. Nenhuma ordem do Mestre Trader será replicada na sua conta enquanto este status permanecer."
                             }
                         </p>
                         
-                        <div className="grid grid-cols-2 gap-4 bg-black/60 p-5 lg:p-6 rounded-[2rem] border border-white/5 mx-2 shadow-inner relative group">
+                        <div className="grid grid-cols-2 gap-4 bg-black/60 p-4 lg:p-6 rounded-[2rem] border border-white/5 mx-2 shadow-inner relative group">
                             <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-[2rem]" />
                             <div className="flex flex-col items-center border-r border-white/10 relative z-10">
-                                <span className="text-[0.65rem] font-black text-white/30 uppercase tracking-[0.2em] mb-1">LATÊNCIA MÉDIA</span>
+                                <span className="text-[0.6rem] font-black text-white/30 uppercase tracking-[0.2em] mb-1">LATÊNCIA MÉDIA</span>
                                 <div className="flex items-center gap-2">
-                                    <span className={cn("text-xl font-mono font-black", isSyncActive ? "text-green-500" : "text-zinc-600")}>12ms</span>
+                                    <span className={cn("text-lg md:text-xl font-mono font-black", isSyncActive ? "text-green-500" : "text-zinc-600")}>12ms</span>
                                     {isSyncActive && <Activity className="h-3 w-3 text-green-500/40 animate-pulse" />}
                                 </div>
                             </div>
                             <div className="flex flex-col items-center relative z-10">
-                                <span className="text-[0.65rem] font-black text-white/30 uppercase tracking-[0.2em] mb-1">STATUS SYNC</span>
+                                <span className="text-[0.6rem] font-black text-white/30 uppercase tracking-[0.2em] mb-1">STATUS SYNC</span>
                                 <div className="flex items-center gap-2">
-                                    <span className={cn("text-xl font-mono font-black", isSyncActive ? "text-green-500" : "text-red-500")}>
+                                    <span className={cn("text-lg md:text-xl font-mono font-black", isSyncActive ? "text-green-500" : "text-red-500")}>
                                         {isSyncActive ? 'ACTIVE' : 'PAUSED'}
                                     </span>
                                     <div className={cn(
@@ -635,24 +635,24 @@ export default function CopyPage() {
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-3 pt-2">
+                    <div className="flex flex-col gap-2 pt-2 px-4">
                         <Button 
                             onClick={() => setIsSyncActive(!isSyncActive)}
                             className={cn(
-                                "h-16 rounded-2xl font-black uppercase text-sm tracking-widest shadow-xl transition-all hover:scale-[1.02] active:scale-95",
+                                "h-14 md:h-16 rounded-2xl font-black uppercase text-xs md:text-sm tracking-widest shadow-xl transition-all hover:scale-[1.02] active:scale-95",
                                 isSyncActive 
                                     ? "bg-red-500 text-white hover:bg-red-600" 
                                     : "bg-green-500 text-white hover:bg-green-600"
                             )}
                         >
                             {isSyncActive ? (
-                                <><Pause className="mr-2 h-5 w-5" /> PAUSAR CONEXÃO HFT</>
+                                <><Pause className="mr-2 h-4 w-4 md:h-5 md:w-5" /> PAUSAR CONEXÃO HFT</>
                             ) : (
-                                <><Play className="mr-2 h-5 w-5" /> ATIVAR CONEXÃO HFT</>
+                                <><Play className="mr-2 h-4 w-4 md:h-5 md:w-5" /> ATIVAR CONEXÃO HFT</>
                             )}
                         </Button>
 
-                        <Button asChild className="h-12 rounded-2xl bg-white text-black font-black uppercase text-[0.7rem] tracking-widest shadow-xl hover:scale-[1.02] transition-all">
+                        <Button asChild className="h-10 md:h-12 rounded-2xl bg-white text-black font-black uppercase text-[0.6rem] md:text-[0.7rem] tracking-widest shadow-xl hover:scale-[1.02] transition-all">
                             <a href="https://trade.exnova.com/traderoom" target="_blank" rel="noopener noreferrer">
                                 <ExternalLink className="mr-2 h-3.5 w-3.5" />
                                 ABRIR CORRETORA
@@ -664,27 +664,16 @@ export default function CopyPage() {
           </Card>
         </div>
 
-        {/* SLIDE 4: DISCRETE CORPORATE FOOTER (ONLY ON MOBILE SNAP SCROLL) */}
-        <div className="snap-start h-[120px] lg:hidden flex flex-col items-center justify-center p-6 text-center space-y-2">
-            <div className="flex items-center justify-center gap-6 opacity-20 text-[0.55rem] font-black uppercase tracking-[0.1em]">
-                <div className="flex items-center gap-1.5"><Shield className="h-2.5 w-2.5" /> HFT Encrypted</div>
-                <div className="flex items-center gap-1.5"><Lock className="h-2.5 w-2.5" /> SSL Secure V.2026</div>
-            </div>
-            <p className="text-[0.45rem] font-bold uppercase tracking-tight text-white/10 leading-tight">
-                AVISO: Trading envolve riscos. Sem garantia de lucros. Responsabilidade exclusiva do usuário. Opere com consciência.
-            </p>
-        </div>
-
       </main>
 
-      {/* DESKTOP ONLY FIXED FOOTER */}
-      <footer className="hidden lg:block shrink-0 py-3 px-6 border-t border-white/5 bg-black/80 backdrop-blur-md z-50">
+      {/* FIXED FOOTER */}
+      <footer className="shrink-0 py-2.5 px-6 border-t border-white/5 bg-black/80 backdrop-blur-md z-50">
           <div className="max-w-4xl mx-auto text-center space-y-0.5">
               <div className="flex items-center justify-center gap-6 opacity-20 text-[0.55rem] font-black uppercase tracking-[0.1em]">
                   <div className="flex items-center gap-1.5"><Shield className="h-2.5 w-2.5" /> HFT Encrypted</div>
                   <div className="flex items-center gap-1.5"><Lock className="h-2.5 w-2.5" /> SSL Secure V.2026</div>
               </div>
-              <p className="text-[0.45rem] font-bold uppercase tracking-tight text-white/10 leading-tight">
+              <p className="text-[0.4rem] md:text-[0.45rem] font-bold uppercase tracking-tight text-white/10 leading-tight">
                   AVISO: Trading envolve riscos. Sem garantia de lucros. Responsabilidade exclusiva do usuário. Opere com consciência.
               </p>
           </div>

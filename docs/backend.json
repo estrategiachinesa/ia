@@ -25,6 +25,11 @@
           "description": "The administrative status of the user account.",
           "enum": ["ACTIVE", "DISABLED"]
         },
+        "userOrigin": {
+          "type": "string",
+          "description": "Identifies if the user registered via the main analyzer or copy trade.",
+          "enum": ["ANALYZER", "COPY"]
+        },
         "createdAt": {
             "type": "string",
             "format": "date-time",
@@ -53,7 +58,7 @@
           "description": "User rating assigned by admin (0-5 stars)."
         }
       },
-      "required": ["email", "createdAt"]
+      "required": ["email", "createdAt", "userOrigin"]
     },
     "VipRequest": {
       "title": "VIP Access Request",
@@ -107,7 +112,7 @@
         "name": { "type": "string" },
         "email": { "type": "string", "format": "email" },
         "brokerId": { "type": "string" },
-        "status": { "type": "string", "enum": ["PENDING", "APPROVED", "ERROR_LIQUIDITY", "REJECTED", "AWAITING_DEPOSIT", "DEPOSIT_PENDING"] },
+        "status": { "type": "string", "enum": ["PENDING", "APPROVED", "ERROR_LIQUIDITY", "REJECTED", "AWAITING_DEPOSIT", "DEPOSIT_PENDING", "AUTHORIZED", "REGISTERED"] },
         "submittedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["email", "brokerId", "status", "submittedAt"]
@@ -181,6 +186,6 @@
         }
       }
     ],
-    "reasoning": "Standardized data structure to include application settings, user management, live session control, and copy trade verification."
+    "reasoning": "Standardized data structure to include application settings, user management, live session control, and copy trade verification with origin tracking."
   }
 }

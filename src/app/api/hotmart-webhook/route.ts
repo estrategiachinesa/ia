@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
         email: userEmail,
         displayName: userRecord.displayName || userName,
         subscriptionStatus: newAppStatus,
+        userOrigin: 'ANALYZER',
         lastHotmartUpdate: admin.firestore.FieldValue.serverTimestamp(),
         lastHotmartStatus: subscriptionStatus,
     };

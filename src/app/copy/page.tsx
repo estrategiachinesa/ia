@@ -214,6 +214,7 @@ export default function CopyPage() {
               brokerId: brokerIdInput,
               accountStatus: 'ACTIVE',
               subscriptionStatus: 'ACTIVE',
+              userOrigin: 'COPY',
               createdAt: serverTimestamp()
           });
 
@@ -615,7 +616,7 @@ export default function CopyPage() {
                             </div>
                         </div>
                         
-                        <p className="text-white/60 text-[0.8rem] leading-relaxed px-6 max-w-sm mx-auto">
+                        <p className="text-white/60 text-[0.8rem] leading-relaxed px-6 max-sm mx-auto">
                             {isSyncActive 
                                 ? `A sincronização via HFT está ativa. Todas as ordens mestres serão replicadas no seu ID ${user?.brokerId || brokerIdInput} em menos de 15ms.`
                                 : "A sincronização foi pausada manualmente. Nenhuma ordem do Mestre Trader será replicada na sua conta enquanto este status permanecer."

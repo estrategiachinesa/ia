@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -115,7 +116,8 @@ export default function RegisterPage() {
             createdAt: serverTimestamp(),
             termsAccepted: true,
             termsAcceptedAt: serverTimestamp(),
-            accountStatus: 'ACTIVE'
+            accountStatus: 'ACTIVE',
+            userOrigin: 'ANALYZER'
         };
 
         setDocumentNonBlocking(userDocRef, userProfileData, { merge: true });

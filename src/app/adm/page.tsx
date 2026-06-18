@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -926,14 +927,9 @@ export default function AdminDashboard() {
   const mergedUsers = useMemo(() => {
     if (!rawUsers && !rawRequests) return [];
 
-    // Coleta todos os UserIDs que pertencem ao ecossistema de Copy Trade (apenas registrados)
-    // para garantir que eles NÃO apareçam na tabela geral de usuários do Analisador.
-    const copyUserIds = new Set(copyRequests?.filter(r => r.status === 'REGISTERED').map(r => r.userId).filter(Boolean) || []);
-
     const allIds = new Set([...(rawUsers?.map(u => u.id) || []), ...(rawRequests?.map(r => r.id) || [])]);
 
     return Array.from(allIds)
-    .filter(id => !copyUserIds.has(id)) // EXCLUSÃO: Se o ID for do Copy, não entra na tabela geral do Analisador
     .map(id => {
       const u = rawUsers?.find(userDoc => userDoc.id === id);
       const r = rawRequests?.find(reqDoc => reqDoc.id === id);
@@ -959,10 +955,14 @@ export default function AdminDashboard() {
         isPending: vipStatus === 'PENDING',
         isDepositPending: vipStatus === 'DEPOSIT_PENDING',
         isAwaitingDeposit: vipStatus === 'AWAITING_DEPOSIT',
-        isRejected: vipStatus === 'REJECTED', isNew, daysSince: diffDays, isGhost: !u
+        isRejected: vipStatus === 'REJECTED', isNew, daysSince: diffDays, isGhost: !u,
+        userOrigin: u?.userOrigin || 'ANALYZER'
       };
     })
     .filter(u => {
+      // FILTRO: Exclui usuários que vieram do Copy Trade da lista geral de membros do Analisador
+      if (u.userOrigin === 'COPY') return false;
+
       const search = searchTerm.toLowerCase();
       const matchesSearch = !searchTerm || (u.email?.toLowerCase().includes(search) || u.brokerId?.toLowerCase().includes(search) || u.id.toLowerCase().includes(search));
       if (!matchesSearch) return false;
@@ -999,7 +999,7 @@ export default function AdminDashboard() {
       
       return sortConfig.direction === 'asc' ? (valA < valB ? -1 : 1) : (valA > valB ? -1 : 1);
     });
-  }, [rawUsers, rawRequests, copyRequests, searchTerm, sortConfig, activeFilter]);
+  }, [rawUsers, rawRequests, searchTerm, sortConfig, activeFilter]);
 
   const stats = useMemo(() => ({
     total: mergedUsers.length,

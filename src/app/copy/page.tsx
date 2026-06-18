@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -193,8 +194,8 @@ export default function CopyPage() {
           toast({ variant: 'destructive', title: 'Campos Obrigatórios', description: 'Preencha Nome, E-mail e Senha.' });
           return;
       }
-      if (regData.password.length < 8) {
-          toast({ variant: 'destructive', title: 'Senha muito curta', description: 'A senha do terminal deve ter no mínimo 8 números/caracteres.' });
+      if (regData.password.length < 6) {
+          toast({ variant: 'destructive', title: 'Senha muito curta', description: 'A senha do terminal deve ter no mínimo 6 caracteres.' });
           return;
       }
       if (regData.password !== regData.confirmPassword) {
@@ -464,7 +465,7 @@ export default function CopyPage() {
             )}
 
             {step === 'STEP_UNAUTHORIZED' && (
-                <div className="max-w-sm w-full text-center space-y-8 z-10 animate-in zoom-in-95 duration-500">
+                <div className="max-sm w-full text-center space-y-8 z-10 animate-in zoom-in-95 duration-500">
                     <div className="w-20 h-20 bg-red-500/10 rounded-3xl flex items-center justify-center mx-auto border border-red-500/20">
                         <ShieldAlert className="h-10 w-10 text-red-500" />
                     </div>

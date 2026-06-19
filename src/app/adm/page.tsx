@@ -283,7 +283,7 @@ export default function AdminDashboard() {
   const [tgMsgDeposit, setTgMsgDeposit] = useState('💰 *MARGEM DE SEGURANÇA ATIVADA!*\n\nO sistema detectou um novo aporte de capital. Mais uma conta sincronizada com o Master Trader com sucesso!\n\n✅ Sincronização: *LIBERADA*\n🎯 Operações: *ATIVAS*\n\n🔗 [CONECTAR MEU ID TAMBÉM]({{url}})');
 
   // Local trade states for launching results
-  const [tradeAsset, setTradeAsset] = useState('EUR/USD');
+  const [tradeAsset, setTradeAsset] = useState('EUR/JPY');
   const [tradeDirection, setTradeDirection] = useState<'CALL' | 'PUT'>('CALL');
   const [tradeValue, setTradeValue] = useState(100);
   const [tradePayout, setTradePayout] = useState(87);

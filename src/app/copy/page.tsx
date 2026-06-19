@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -77,10 +78,8 @@ export default function CopyPage() {
   const [isSyncActive, setIsSyncActive] = useState(true);
   const [isInstructionsModalOpen, setIsInstructionsModalOpen] = useState(false);
   
-  // Terminal session state (Independent from Firebase Auth)
   const [terminalSession, setTerminalSession] = useState<any>(null);
 
-  // Registration state
   const [regData, setRegData] = useState({
       name: '',
       email: '',
@@ -89,14 +88,12 @@ export default function CopyPage() {
       confirmPassword: ''
   });
 
-  // Login state
   const [loginData, setLoginData] = useState({
       password: ''
   });
 
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
 
-  // Check local session on mount
   useEffect(() => {
     const savedSession = localStorage.getItem('copy_terminal_session');
     if (savedSession) {
@@ -287,7 +284,6 @@ export default function CopyPage() {
 
       <main className="flex-grow overflow-y-auto lg:overflow-hidden lg:grid lg:grid-cols-12 lg:gap-4 lg:p-4 lg:max-w-[1600px] lg:mx-auto w-full no-scrollbar">
         
-        {/* SLIDE 1: MASTER DASHBOARD */}
         <div className="lg:h-full flex flex-col p-3 lg:p-0 lg:col-span-3 min-h-0">
           <Card className="bg-card/40 border border-white/10 shadow-2xl backdrop-blur-3xl rounded-[2rem] overflow-hidden flex flex-col h-full">
             <div className={cn("h-1 w-full transition-colors duration-1000", masterStats.isActive ? "bg-green-500" : "bg-red-500")} />
@@ -367,7 +363,6 @@ export default function CopyPage() {
           </Card>
         </div>
 
-        {/* SLIDE 2: OPERATIONS HISTORY */}
         <div className="lg:h-full flex flex-col p-4 lg:p-0 lg:col-span-4 min-h-0" id="history">
           <Card className="bg-card/30 border border-white/10 rounded-[2rem] overflow-hidden flex flex-col h-full shadow-2xl backdrop-blur-xl">
              <CardHeader className="p-4 lg:p-6 pb-3 shrink-0 border-b border-white/5 bg-white/5 flex flex-row items-center justify-between">
@@ -437,7 +432,6 @@ export default function CopyPage() {
           </Card>
         </div>
 
-        {/* SLIDE 3: SYNC CONSOLE */}
         <div className="lg:h-full flex flex-col p-4 lg:p-0 lg:col-span-5 relative min-h-0">
           <Card className="bg-card/40 border border-white/10 shadow-2xl backdrop-blur-[50px] rounded-[2.5rem] p-6 lg:p-10 h-full flex flex-col items-center justify-center relative overflow-hidden">
             
@@ -689,62 +683,60 @@ export default function CopyPage() {
 
       </main>
 
-      {/* MODAL DE INSTRUÇÕES REFINADO */}
       <Dialog open={isInstructionsModalOpen} onOpenChange={setIsInstructionsModalOpen}>
           <DialogContent className="bg-[#050505] border border-white/10 max-w-sm rounded-[2.5rem] p-0 overflow-hidden shadow-[0_0_80px_rgba(0,0,0,0.8)]">
               <div className="relative p-6 lg:p-8 space-y-8">
-                  {/* Background Header Glow */}
-                  <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/10 to-transparent -z-10" />
+                  <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/20 to-transparent -z-10" />
                   
                   <div className="text-center space-y-3 pt-2">
-                      <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-2xl border border-primary/20 mb-2 shadow-2xl">
-                          <ShieldCheck className="h-8 w-8 text-primary" />
+                      <div className="inline-flex items-center justify-center p-4 bg-primary/10 rounded-2xl border border-primary/20 mb-2 shadow-2xl">
+                          <ShieldCheck className="h-10 w-10 text-primary" />
                       </div>
-                      <DialogTitle className="text-2xl font-headline font-black uppercase tracking-tighter text-white">Cluster de Elite</DialogTitle>
+                      <DialogTitle className="text-3xl font-headline font-black uppercase tracking-tighter text-white leading-none">
+                        COPY TRADE<br/>
+                        <span className="text-primary">ESTRATEGIA CHINESA</span>
+                      </DialogTitle>
                       <DialogDescription className="text-[0.65rem] font-bold text-white/30 uppercase tracking-[0.3em]">
                           Protocolo de Sincronização HFT
                       </DialogDescription>
                   </div>
 
-                  <div className="relative space-y-6">
-                      {/* Timeline Line */}
+                  <div className="relative space-y-8">
                       <div className="absolute left-6 top-8 bottom-8 w-px bg-gradient-to-b from-primary/50 via-white/5 to-white/5" />
 
-                      {/* Step 1 */}
                       <div className="relative flex items-start gap-5 group">
                           <div className="h-12 w-12 rounded-2xl bg-black border border-primary/30 flex items-center justify-center shrink-0 z-10 shadow-2xl transition-all group-hover:border-primary group-hover:scale-110">
                               <span className="text-sm font-black text-primary font-mono">01</span>
                           </div>
                           <div className="pt-1 space-y-1">
-                              <h4 className="text-[0.75rem] font-black uppercase text-white tracking-widest">Nova Conta Oficial</h4>
-                              <p className="text-[0.65rem] font-bold text-white/40 leading-tight">
-                                  Crie sua conta pelo link abaixo para vincular o ID ao nosso gateway de ordens.
+                              <h4 className="text-sm font-black uppercase text-white tracking-widest">Nova Conta Oficial</h4>
+                              <p className="text-xs font-bold text-white/50 leading-snug">
+                                  Crie sua conta pelo link abaixo para vincular o ID ao nosso copy trade.
                               </p>
                           </div>
                       </div>
 
-                      {/* Step 2 */}
                       <div className="relative flex items-start gap-5 group">
                           <div className="h-12 w-12 rounded-2xl bg-black border border-white/10 flex items-center justify-center shrink-0 z-10 shadow-2xl transition-all group-hover:border-primary group-hover:scale-110">
                               <span className="text-sm font-black text-white/40 font-mono group-hover:text-primary">02</span>
                           </div>
                           <div className="pt-1 space-y-1">
-                              <h4 className="text-[0.75rem] font-black uppercase text-white tracking-widest">Ativação do Terminal</h4>
-                              <p className="text-[0.65rem] font-bold text-white/40 leading-tight">
-                                  Envie o ID gerado no Telegram para liberação manual do sinal HFT no cluster.
+                              <h4 className="text-sm font-black uppercase text-white tracking-widest">Ativação do Copy</h4>
+                              <p className="text-xs font-bold text-white/50 leading-snug">
+                                  Envie o ID gerado no Telegram para liberação do seu cadastro.
                               </p>
                           </div>
                       </div>
                   </div>
 
                   <div className="flex flex-col gap-3 pt-2">
-                      <Button asChild className="w-full h-14 bg-primary text-primary-foreground font-black uppercase tracking-tighter rounded-2xl shadow-xl hover:scale-[1.02] transition-all">
+                      <Button asChild className="w-full h-14 bg-primary text-primary-foreground font-black uppercase tracking-tighter text-sm rounded-2xl shadow-xl hover:scale-[1.02] transition-all">
                           <a href={config?.exnovaOpenUrl || "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy"} target="_blank" rel="noopener noreferrer">
                               <ArrowUpRight className="mr-2 h-4 w-4" />
                               1. ABRIR CONTA OFICIAL
                           </a>
                       </Button>
-                      <Button asChild variant="outline" className="w-full h-12 font-black uppercase tracking-tighter border-white/10 bg-white/5 rounded-2xl hover:bg-white/10 transition-all">
+                      <Button asChild variant="outline" className="w-full h-12 font-black uppercase tracking-tighter text-[0.7rem] border-white/10 bg-white/5 rounded-2xl hover:bg-white/10 transition-all">
                           <a href={masterStats.telegram} target="_blank" rel="noopener noreferrer">
                               <Send className="mr-2 h-4 w-4" />
                               2. ENVIAR ID NO TELEGRAM
@@ -760,7 +752,6 @@ export default function CopyPage() {
           </DialogContent>
       </Dialog>
 
-      {/* FIXED FOOTER */}
       <footer className="shrink-0 py-2.5 px-6 border-t border-white/5 bg-black/80 backdrop-blur-md z-50">
           <div className="max-w-4xl mx-auto text-center space-y-0.5">
               <div className="flex items-center justify-center gap-6 opacity-20 text-[0.55rem] font-black uppercase tracking-[0.1em]">

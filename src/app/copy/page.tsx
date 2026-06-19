@@ -55,16 +55,15 @@ import { useAppConfig } from '@/firebase/config-provider';
 import { useRouter } from 'next/navigation';
 import { CurrencyFlags } from '@/components/app/currency-flags';
 import Image from 'next/image';
-import { useFirebase, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirebase } from '@/firebase';
 import { collection, query, where, getDocs, setDoc, doc, serverTimestamp, updateDoc, limit } from 'firebase/firestore';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 
 type ConnectionStep = 'STEP_ID_CHECK' | 'STEP_REGISTRATION' | 'STEP_LOGIN' | 'STEP_DASHBOARD' | 'STEP_UNAUTHORIZED';
 
 export default function CopyPage() {
   const { config, isConfigLoading } = useAppConfig();
-  const { firestore, auth, user, isUserLoading } = useFirebase();
+  const { firestore } = useFirebase();
   const router = useRouter();
   const { toast } = useToast();
   
@@ -76,6 +75,9 @@ export default function CopyPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSyncActive, setIsSyncActive] = useState(true);
   
+  // Terminal session state (Independent from Firebase Auth)
+  const [terminalSession, setTerminalSession] = useState<any>(null);
+
   // Registration state
   const [regData, setRegData] = useState({
       name: '',
@@ -85,19 +87,26 @@ export default function CopyPage() {
       confirmPassword: ''
   });
 
-  // Login state (for registered users)
+  // Login state
   const [loginData, setLoginData] = useState({
-      email: '',
       password: ''
   });
 
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
 
+  // Check local session on mount
   useEffect(() => {
-      if (!isUserLoading && user) {
-          setStep('STEP_DASHBOARD');
-      }
-  }, [user, isUserLoading]);
+    const savedSession = localStorage.getItem('copy_terminal_session');
+    if (savedSession) {
+        try {
+            const data = JSON.parse(savedSession);
+            setTerminalSession(data);
+            setStep('STEP_DASHBOARD');
+        } catch (e) {
+            localStorage.removeItem('copy_terminal_session');
+        }
+    }
+  }, []);
 
   useEffect(() => {
     if (!isConfigLoading && config?.pages?.copy === false) {
@@ -149,11 +158,13 @@ export default function CopyPage() {
           );
           const snap = await getDocs(q);
           if (!snap.empty) {
-              const reqData = snap.docs[0].data();
+              const docSnap = snap.docs[0];
+              const reqData = docSnap.data();
+              setActiveRequestId(docSnap.id);
+              
               if (reqData.status === 'REGISTERED') {
                   setStep('STEP_LOGIN');
               } else if (reqData.status === 'AUTHORIZED') {
-                  setActiveRequestId(snap.docs[0].id);
                   setStep('STEP_REGISTRATION');
               } else {
                   setStep('STEP_UNAUTHORIZED');
@@ -163,39 +174,50 @@ export default function CopyPage() {
           }
       } catch (e) { 
           console.error(e);
-          toast({ variant: 'destructive', title: 'Erro de conexão', description: 'Não foi possível verificar seu ID.' });
+          toast({ variant: 'destructive', title: 'Erro de conexão' });
       } finally { 
           setIsVerifying(false); 
       }
   };
 
   const handleLogin = async () => {
-      if (!firestore || !auth) return;
-      if (!loginData.email || !loginData.password) {
-          toast({ variant: 'destructive', title: 'Campos Vazios', description: 'Por favor, preencha seu e-mail e senha.' });
+      if (!firestore || !activeRequestId) return;
+      if (!loginData.password) {
+          toast({ variant: 'destructive', title: 'Senha Obrigatória' });
           return;
       }
       setIsLoggingIn(true);
       try {
-          await signInWithEmailAndPassword(auth, loginData.email.trim(), loginData.password);
-          setStep('STEP_DASHBOARD');
-          toast({ title: 'Bem-vindo de volta!', description: 'Conexão HFT restabelecida.' });
-      } catch (e: any) {
-          console.error(e);
-          toast({ variant: 'destructive', title: 'Erro no login', description: 'E-mail ou senha incorretos.' });
+          const docRef = doc(firestore, 'copyRequests', activeRequestId);
+          const snap = await getDocs(query(collection(firestore, 'copyRequests'), where('brokerId', '==', brokerIdInput), limit(1)));
+          
+          if (!snap.empty) {
+              const data = snap.docs[0].data();
+              if (data.password === loginData.password) {
+                  const session = { id: docRef.id, brokerId: brokerIdInput, name: data.name };
+                  setTerminalSession(session);
+                  localStorage.setItem('copy_terminal_session', JSON.stringify(session));
+                  setStep('STEP_DASHBOARD');
+                  toast({ title: 'Terminal Conectado', description: 'Sincronização HFT ativa.' });
+              } else {
+                  toast({ variant: 'destructive', title: 'Senha Incorreta' });
+              }
+          }
+      } catch (e) {
+          toast({ variant: 'destructive', title: 'Erro no login' });
       } finally {
           setIsLoggingIn(false);
       }
   };
 
   const handleRegister = async () => {
-      if (!firestore || !auth || !activeRequestId) return;
+      if (!firestore || !activeRequestId) return;
       if (!regData.name || !regData.email || !regData.password) {
-          toast({ variant: 'destructive', title: 'Campos Obrigatórios', description: 'Preencha Nome, E-mail e Senha.' });
+          toast({ variant: 'destructive', title: 'Campos Obrigatórios' });
           return;
       }
       if (regData.password.length < 6) {
-          toast({ variant: 'destructive', title: 'Senha muito curta', description: 'A senha do terminal deve ter no mínimo 6 caracteres.' });
+          toast({ variant: 'destructive', title: 'Senha muito curta (mín. 6)' });
           return;
       }
       if (regData.password !== regData.confirmPassword) {
@@ -204,48 +226,38 @@ export default function CopyPage() {
       }
       setIsRegistering(true);
       try {
-          const userCred = await createUserWithEmailAndPassword(auth, regData.email.trim(), regData.password);
-          const userId = userCred.user.uid;
-          
-          await setDoc(doc(firestore, 'users', userId), {
-              email: regData.email.trim(),
-              displayName: regData.name,
-              telegram: regData.telegram,
-              brokerId: brokerIdInput,
-              accountStatus: 'ACTIVE',
-              subscriptionStatus: 'ACTIVE',
-              userOrigin: 'COPY',
-              createdAt: serverTimestamp()
-          });
-
-          await updateDoc(doc(firestore, 'copyRequests', activeRequestId), {
+          const updateData = {
               status: 'REGISTERED',
-              userId: userId,
               registeredAt: serverTimestamp(),
               name: regData.name,
               email: regData.email.trim(),
-              telegram: regData.telegram
-          });
+              telegram: regData.telegram,
+              password: regData.password // Storing password directly in Firestore for non-Auth lead management
+          };
 
+          await updateDoc(doc(firestore, 'copyRequests', activeRequestId), updateData);
+
+          const session = { id: activeRequestId, brokerId: brokerIdInput, name: regData.name };
+          setTerminalSession(session);
+          localStorage.setItem('copy_terminal_session', JSON.stringify(session));
           setStep('STEP_DASHBOARD');
-          toast({ title: 'Sucesso!', description: 'Terminal ativado e pronto para operar.' });
+          toast({ title: 'Terminal Ativado!' });
       } catch (e: any) { 
-          console.error(e);
-          toast({ variant: 'destructive', title: 'Erro no cadastro', description: e.message || "Ocorreu um erro." });
+          toast({ variant: 'destructive', title: 'Erro no cadastro' });
       } finally { setIsRegistering(false); }
   };
 
-  const handleLogout = async () => {
-      if (!auth) return;
-      await signOut(auth);
+  const handleLogout = () => {
+      localStorage.removeItem('copy_terminal_session');
+      setTerminalSession(null);
       setStep('STEP_ID_CHECK');
       setBrokerIdInput('');
-      setLoginData({ email: '', password: '' });
+      setLoginData({ password: '' });
       setRegData({ name: '', email: '', telegram: '', password: '', confirmPassword: '' });
-      toast({ title: 'Conexão Encerrada', description: 'Terminal desconectado com sucesso.' });
+      toast({ title: 'Terminal Desconectado' });
   };
 
-  if (isConfigLoading || isUserLoading) {
+  if (isConfigLoading) {
     return <div className="flex h-screen w-full items-center justify-center bg-black"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
@@ -257,7 +269,7 @@ export default function CopyPage() {
       <header className="h-14 lg:h-16 px-6 md:px-8 flex items-center justify-between border-b border-white/5 bg-black/60 backdrop-blur-2xl shrink-0 z-50">
         <Logo size={32} isPremium={masterStats.isActive} />
         <div className="flex items-center gap-3">
-             {user && (
+             {terminalSession && (
                  <Button variant="ghost" size="sm" onClick={handleLogout} className="h-8 px-3 rounded-full border border-white/10 text-[0.6rem] font-black uppercase text-white/40 hover:text-white hover:bg-white/5">
                     <LogOut className="h-3 w-3 mr-2" /> Sair
                  </Button>
@@ -435,7 +447,7 @@ export default function CopyPage() {
                         </div>
                         <div className="space-y-2">
                             <h2 className="text-2xl md:text-3xl font-headline font-black uppercase tracking-tighter text-white">Console Copy</h2>
-                            <p className="text-white/60 text-xs md:text-sm leading-relaxed font-medium px-4 max-w-sm mx-auto">
+                            <p className="text-white/60 text-xs md:text-sm leading-relaxed font-medium px-4 max-sm mx-auto">
                                 Insira o ID da sua corretora para verificar a autorização de sincronização do terminal.
                             </p>
                         </div>
@@ -505,13 +517,6 @@ export default function CopyPage() {
 
                         <div className="space-y-4 text-left">
                             <div className="space-y-1">
-                                <Label className="text-[0.7rem] font-black uppercase tracking-widest text-white/30 ml-2">E-mail Cadastrado</Label>
-                                <div className="relative">
-                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
-                                    <Input value={loginData.email} onChange={e => setLoginData({...loginData, email: e.target.value})} placeholder="seu@email.com" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />
-                                </div>
-                            </div>
-                            <div className="space-y-1">
                                 <Label className="text-[0.7rem] font-black uppercase tracking-widest text-white/30 ml-2">Senha do Terminal</Label>
                                 <div className="relative">
                                     <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
@@ -553,7 +558,7 @@ export default function CopyPage() {
                                 </div>
                             </div>
                             <div className="space-y-1">
-                                <Label className="text-[0.7rem] font-black uppercase tracking-widest text-white/30 ml-2">E-mail de Acesso</Label>
+                                <Label className="text-[0.7rem] font-black uppercase tracking-widest text-white/30 ml-2">E-mail de Notificação</Label>
                                 <div className="relative">
                                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
                                     <Input type="email" value={regData.email} onChange={e => setRegData({...regData, email: e.target.value})} placeholder="seu@email.com" className="h-12 bg-black/40 border-white/10 rounded-xl pl-12 text-sm" />
@@ -612,13 +617,13 @@ export default function CopyPage() {
                             <h2 className="text-xl lg:text-3xl font-black uppercase text-white tracking-tighter">Terminal {isSyncActive ? 'Conectado!' : 'Pausado'}</h2>
                             <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full">
                                 <UserIcon className="h-3 w-3 text-primary/60" />
-                                <span className="text-[0.6rem] font-bold text-white/80 uppercase">{user?.displayName || 'Membro Ativo'}</span>
+                                <span className="text-[0.6rem] font-bold text-white/80 uppercase">{terminalSession?.name || 'Membro Ativo'}</span>
                             </div>
                         </div>
                         
                         <p className="text-white/60 text-[0.8rem] leading-relaxed px-6 max-sm mx-auto">
                             {isSyncActive 
-                                ? `A sincronização via HFT está ativa. Todas as ordens mestres serão replicadas no seu ID ${user?.brokerId || brokerIdInput} em menos de 15ms.`
+                                ? `A sincronização via HFT está ativa. Todas as ordens mestres serão replicadas no seu ID ${terminalSession?.brokerId} em menos de 15ms.`
                                 : "A sincronização foi pausada manualmente. Nenhuma ordem do Mestre Trader será replicada na sua conta enquanto este status permanecer."
                             }
                         </p>

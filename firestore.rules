@@ -39,7 +39,8 @@ service cloud.firestore {
     }
 
     /**
-     * Rules for Copy Trade requests.
+     * Rules for Copy Trade requests (Firestore-based Login).
+     * Permite leitura e escrita pública para permitir login via brokerId e password sem Auth global.
      */
     match /copyRequests/{requestId} {
       allow read: if true;

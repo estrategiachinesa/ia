@@ -32,7 +32,9 @@ import {
   LogIn,
   LogOut,
   MessageSquare,
-  UserPlus
+  UserPlus,
+  ArrowUpRight,
+  Info
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -331,7 +333,7 @@ export default function CopyPage() {
                         "p-3 lg:p-3.5 rounded-xl border flex justify-between items-center",
                         lastTradeResult < 0 ? "bg-red-500/5 border-red-500/10" : (lastTradeResult === 0 ? "bg-white/5 border-white/10" : "bg-green-500/5 border-green-500/10")
                     )}>
-                        <p className={cn("text-[0.65rem] font-black uppercase tracking-[0.2em]", lastTradeResult < 0 ? "text-red-500/80" : (lastTradeResult === 0 ? "text-white/40" : "text-green-500/80"))}>Net Profit Hoje</p>
+                        <p className={cn("text-[0.65rem] font-black uppercase tracking-[0.2em]", lastTradeResult < 0 ? "text-red-500/80" : (lastTradeResult === 0 ? "text-white/40" : "text-green-500/80"))}>Lucro de Hoje</p>
                         <p className={cn("text-base lg:text-lg font-black font-mono tracking-tighter", lastTradeResult < 0 ? "text-red-500" : (lastTradeResult === 0 ? "text-zinc-600" : "text-green-500"))}>{masterStats.profitToday}</p>
                     </div>
                 </div>
@@ -687,51 +689,74 @@ export default function CopyPage() {
 
       </main>
 
-      {/* MODAL DE INSTRUÇÕES */}
+      {/* MODAL DE INSTRUÇÕES REFINADO */}
       <Dialog open={isInstructionsModalOpen} onOpenChange={setIsInstructionsModalOpen}>
-          <DialogContent className="bg-[#0a0a0a] border-white/10 max-w-sm rounded-[2rem] overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
-              <DialogHeader className="text-center items-center pt-4">
-                  <div className="bg-primary/10 p-4 rounded-full mb-2">
-                      <UserPlus className="h-8 w-8 text-primary" />
+          <DialogContent className="bg-[#050505] border border-white/10 max-w-sm rounded-[2.5rem] p-0 overflow-hidden shadow-[0_0_80px_rgba(0,0,0,0.8)]">
+              <div className="relative p-6 lg:p-8 space-y-8">
+                  {/* Background Header Glow */}
+                  <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-primary/10 to-transparent -z-10" />
+                  
+                  <div className="text-center space-y-3 pt-2">
+                      <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-2xl border border-primary/20 mb-2 shadow-2xl">
+                          <ShieldCheck className="h-8 w-8 text-primary" />
+                      </div>
+                      <DialogTitle className="text-2xl font-headline font-black uppercase tracking-tighter text-white">Cluster de Elite</DialogTitle>
+                      <DialogDescription className="text-[0.65rem] font-bold text-white/30 uppercase tracking-[0.3em]">
+                          Protocolo de Sincronização HFT
+                      </DialogDescription>
                   </div>
-                  <DialogTitle className="text-2xl font-headline font-black uppercase tracking-tighter text-white">Cluster de Elite</DialogTitle>
-                  <DialogDescription className="text-[0.7rem] font-bold text-white/40 uppercase tracking-widest">
-                      Siga os passos para conexão
-                  </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-3 py-4">
-                  <div className="flex items-start gap-4 p-4 bg-white/5 rounded-2xl border border-white/5">
-                      <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-black text-white shrink-0">1</div>
-                      <div className="space-y-1">
-                          <p className="text-[0.65rem] font-black uppercase text-primary tracking-widest">Nova Conta</p>
-                          <p className="text-[0.7rem] font-bold text-white/70 leading-tight">
-                              Crie sua conta na corretora pelo link oficial para vincular ao servidor HFT.
-                          </p>
+
+                  <div className="relative space-y-6">
+                      {/* Timeline Line */}
+                      <div className="absolute left-6 top-8 bottom-8 w-px bg-gradient-to-b from-primary/50 via-white/5 to-white/5" />
+
+                      {/* Step 1 */}
+                      <div className="relative flex items-start gap-5 group">
+                          <div className="h-12 w-12 rounded-2xl bg-black border border-primary/30 flex items-center justify-center shrink-0 z-10 shadow-2xl transition-all group-hover:border-primary group-hover:scale-110">
+                              <span className="text-sm font-black text-primary font-mono">01</span>
+                          </div>
+                          <div className="pt-1 space-y-1">
+                              <h4 className="text-[0.75rem] font-black uppercase text-white tracking-widest">Nova Conta Oficial</h4>
+                              <p className="text-[0.65rem] font-bold text-white/40 leading-tight">
+                                  Crie sua conta pelo link abaixo para vincular o ID ao nosso gateway de ordens.
+                              </p>
+                          </div>
+                      </div>
+
+                      {/* Step 2 */}
+                      <div className="relative flex items-start gap-5 group">
+                          <div className="h-12 w-12 rounded-2xl bg-black border border-white/10 flex items-center justify-center shrink-0 z-10 shadow-2xl transition-all group-hover:border-primary group-hover:scale-110">
+                              <span className="text-sm font-black text-white/40 font-mono group-hover:text-primary">02</span>
+                          </div>
+                          <div className="pt-1 space-y-1">
+                              <h4 className="text-[0.75rem] font-black uppercase text-white tracking-widest">Ativação do Terminal</h4>
+                              <p className="text-[0.65rem] font-bold text-white/40 leading-tight">
+                                  Envie o ID gerado no Telegram para liberação manual do sinal HFT no cluster.
+                              </p>
+                          </div>
                       </div>
                   </div>
-                  <div className="flex items-start gap-4 p-4 bg-white/5 rounded-2xl border border-white/5">
-                      <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-black text-white shrink-0">2</div>
-                      <div className="space-y-1">
-                          <p className="text-[0.65rem] font-black uppercase text-primary tracking-widest">Validar ID</p>
-                          <p className="text-[0.7rem] font-bold text-white/70 leading-tight">
-                              Envie o seu ID de usuário para o analista no Telegram para liberação manual.
-                          </p>
-                      </div>
+
+                  <div className="flex flex-col gap-3 pt-2">
+                      <Button asChild className="w-full h-14 bg-primary text-primary-foreground font-black uppercase tracking-tighter rounded-2xl shadow-xl hover:scale-[1.02] transition-all">
+                          <a href={config?.exnovaOpenUrl || "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy"} target="_blank" rel="noopener noreferrer">
+                              <ArrowUpRight className="mr-2 h-4 w-4" />
+                              1. ABRIR CONTA OFICIAL
+                          </a>
+                      </Button>
+                      <Button asChild variant="outline" className="w-full h-12 font-black uppercase tracking-tighter border-white/10 bg-white/5 rounded-2xl hover:bg-white/10 transition-all">
+                          <a href={masterStats.telegram} target="_blank" rel="noopener noreferrer">
+                              <Send className="mr-2 h-4 w-4" />
+                              2. ENVIAR ID NO TELEGRAM
+                          </a>
+                      </Button>
+                  </div>
+
+                  <div className="flex items-center justify-center gap-2 pt-2 opacity-20">
+                      <Info className="h-3 w-3" />
+                      <span className="text-[0.5rem] font-black uppercase tracking-widest">Processamento imediato após validação</span>
                   </div>
               </div>
-              <DialogFooter className="flex flex-col gap-2 sm:flex-col sm:space-x-0 pt-2">
-                  <Button asChild className="w-full h-14 bg-white text-black font-black uppercase tracking-tighter rounded-xl hover:bg-white/90">
-                      <a href={config?.exnovaOpenUrl || "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy"} target="_blank" rel="noopener noreferrer">
-                          1. CRIAR CONTA OFICIAL
-                      </a>
-                  </Button>
-                  <Button asChild variant="outline" className="w-full h-12 font-black uppercase tracking-tighter border-white/10 rounded-xl hover:bg-white/5">
-                      <a href={masterStats.telegram} target="_blank" rel="noopener noreferrer">
-                          2. ENVIAR ID (@trader_chines)
-                      </a>
-                  </Button>
-              </DialogFooter>
           </DialogContent>
       </Dialog>
 

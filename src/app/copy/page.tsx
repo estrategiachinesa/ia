@@ -35,7 +35,9 @@ import {
   MessageSquare,
   UserPlus,
   ArrowUpRight,
-  Info
+  Info,
+  Bot,
+  Sparkles
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -256,6 +258,29 @@ export default function CopyPage() {
       toast({ title: 'Terminal Desconectado' });
   };
 
+  const AnalyzerCTA = () => (
+      <div 
+          onClick={() => router.push('/vip')}
+          className="w-full bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 border border-primary/20 rounded-2xl p-4 flex items-center justify-between cursor-pointer hover:border-primary/40 transition-all group overflow-hidden relative shadow-2xl"
+      >
+          <div className="absolute top-0 right-0 p-1 opacity-10 group-hover:opacity-20 transition-opacity">
+              <Sparkles className="h-10 w-10 text-primary" />
+          </div>
+          <div className="flex items-center gap-3 relative z-10">
+              <div className="p-2 bg-primary/20 rounded-lg group-hover:scale-110 transition-transform shadow-inner">
+                  <Bot className="h-5 w-5 text-primary" />
+              </div>
+              <div className="text-left">
+                  <p className="text-[0.6rem] font-black text-primary uppercase tracking-[0.2em] mb-0.5">Tecnologia Proprietária</p>
+                  <p className="text-[0.7rem] md:text-xs font-bold text-white/80 leading-tight">Resultados gerados pela IA da Estratégia Chinesa</p>
+              </div>
+          </div>
+          <div className="bg-primary/20 p-1.5 rounded-full group-hover:bg-primary group-hover:text-black transition-all">
+              <ArrowRight className="h-3 w-3 md:h-4 md:w-4" />
+          </div>
+      </div>
+  );
+
   if (isConfigLoading) {
     return <div className="flex h-screen w-full items-center justify-center bg-black"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
@@ -436,7 +461,7 @@ export default function CopyPage() {
           <Card className="bg-card/40 border border-white/10 shadow-2xl backdrop-blur-[50px] rounded-[2.5rem] p-6 lg:p-10 h-full flex flex-col items-center justify-center relative overflow-hidden">
             
             {step === 'STEP_ID_CHECK' && (
-                <div className="max-w-md w-full text-center space-y-8 z-10 animate-in fade-in zoom-in-95 duration-700">
+                <div className="max-w-md w-full text-center space-y-6 z-10 animate-in fade-in zoom-in-95 duration-700">
                     <div className="space-y-5">
                         <div className="flex justify-center scale-90 md:scale-110">
                             <Logo size={80} showText={false} />
@@ -448,6 +473,9 @@ export default function CopyPage() {
                             </p>
                         </div>
                     </div>
+
+                    <AnalyzerCTA />
+
                     <div className="space-y-4 pt-2">
                         <div className="space-y-2 text-left">
                             <Label className="text-[0.7rem] font-black uppercase tracking-[0.2em] text-white/30 ml-2">Terminal ID (Exnova)</Label>
@@ -620,6 +648,8 @@ export default function CopyPage() {
                                 <span className="text-[0.6rem] font-bold text-white/80 uppercase">{terminalSession?.name || 'Membro Ativo'}</span>
                             </div>
                         </div>
+
+                        <AnalyzerCTA />
                         
                         <p className="text-white/60 text-[0.8rem] leading-relaxed px-6 max-sm mx-auto">
                             {isSyncActive 

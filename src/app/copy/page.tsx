@@ -73,6 +73,7 @@ export default function CopyPage() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isSyncActive, setIsSyncActive] = useState(true);
+  const [isInstructionsModalOpen, setIsInstructionsModalOpen] = useState(false);
   
   // Terminal session state (Independent from Firebase Auth)
   const [terminalSession, setTerminalSession] = useState<any>(null);
@@ -121,10 +122,10 @@ export default function CopyPage() {
 
   const masterStats = {
     traderName: config?.copyTraderName || "Trader Chines",
-    profilePic: config?.copyProfilePicUrl || "https://picsum.photos/seed/trader/200/200",
+    profilePic: config?.copyProfilePicUrl || "https://64.media.tumblr.com/0a29dad9d6f04fe39aca48bdf61b5557/a07313c3fc2b7863-a1/s1280x1920/3cfd53145ec0d969f9d236011f0a0234e188b87e.pnj",
     instagram: config?.copyInstagramUrl || "#",
     tiktok: config?.copyTikTokUrl || "#",
-    telegram: config?.copyTelegramUrl || "#",
+    telegram: config?.copyTelegramUrl || "https://t.me/Trader_Chines",
     balance: (config?.copyMasterBalance ?? 245892.10).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
     initialBalance: (config?.copyInitialBalance ?? 240000.00).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
     profitToday: (lastTradeResult >= 0 ? '+ ' : '') + (lastTradeResult).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
@@ -231,7 +232,7 @@ export default function CopyPage() {
               name: regData.name,
               email: regData.email.trim(),
               telegram: regData.telegram,
-              password: regData.password // Storing password directly in Firestore for non-Auth lead management
+              password: regData.password 
           };
 
           await updateDoc(doc(firestore, 'copyRequests', activeRequestId), updateData);
@@ -330,7 +331,7 @@ export default function CopyPage() {
                         "p-3 lg:p-3.5 rounded-xl border flex justify-between items-center",
                         lastTradeResult < 0 ? "bg-red-500/5 border-red-500/10" : (lastTradeResult === 0 ? "bg-white/5 border-white/10" : "bg-green-500/5 border-green-500/10")
                     )}>
-                        <p className={cn("text-[0.65rem] font-black uppercase tracking-[0.2em]", lastTradeResult < 0 ? "text-red-500/80" : (lastTradeResult === 0 ? "text-white/40" : "text-green-500/80"))}>Lucro de Hoje</p>
+                        <p className={cn("text-[0.65rem] font-black uppercase tracking-[0.2em]", lastTradeResult < 0 ? "text-red-500/80" : (lastTradeResult === 0 ? "text-white/40" : "text-green-500/80"))}>Net Profit Hoje</p>
                         <p className={cn("text-base lg:text-lg font-black font-mono tracking-tighter", lastTradeResult < 0 ? "text-red-500" : (lastTradeResult === 0 ? "text-zinc-600" : "text-green-500"))}>{masterStats.profitToday}</p>
                     </div>
                 </div>
@@ -469,8 +470,12 @@ export default function CopyPage() {
                             {isVerifying ? <Loader2 className="h-6 w-6 animate-spin" /> : 'VERIFICAR AUTORIZAÇÃO'}
                         </Button>
                         
-                        <Button asChild variant="ghost" className="w-full h-10 text-[0.65rem] font-black uppercase tracking-[0.2em] text-white/30 rounded-xl hover:bg-white/5 transition-all">
-                             <a href="https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy" target="_blank" rel="noopener noreferrer">ABRIR CONTA NA CORRETORA</a>
+                        <Button 
+                            variant="ghost" 
+                            onClick={() => setIsInstructionsModalOpen(true)}
+                            className="w-full h-10 text-[0.65rem] font-black uppercase tracking-[0.2em] text-white/30 rounded-xl hover:bg-white/5 transition-all"
+                        >
+                            SE CADASTRAR AO COPY
                         </Button>
                     </div>
                 </div>
@@ -495,8 +500,8 @@ export default function CopyPage() {
                         </div>
                     </div>
                     <div className="space-y-2">
-                        <Button variant="outline" className="w-full h-12 border-white/10 text-white font-black uppercase text-xs rounded-xl">
-                            SOLICITAR SUPORTE
+                        <Button variant="outline" className="w-full h-12 border-white/10 text-white font-black uppercase text-xs rounded-xl" asChild>
+                            <a href="https://t.me/Trader_Chines" target="_blank">SOLICITAR SUPORTE</a>
                         </Button>
                         <Button variant="ghost" onClick={() => setStep('STEP_ID_CHECK')} className="w-full h-10 text-[0.55rem] font-black uppercase tracking-[0.2em] text-white/20">Tentar outro ID</Button>
                     </div>
@@ -585,7 +590,7 @@ export default function CopyPage() {
                             </div>
                         </div>
 
-                        <Button onClick={handleRegister} disabled={isRegistering} className="w-full h-14 bg-primary text-primary-foreground font-black uppercase text-sm rounded-xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all">
+                        <Button onClick={handleRegister} disabled={isRegistering} className="w-full h-14 bg-primary text-primary-foreground font-black uppercase text-sm rounded-xl shadow-lg hover:scale-[1.02] transition-all">
                             {isRegistering ? <Loader2 className="h-5 w-5 animate-spin" /> : 'ATIVAR TERMINAL'}
                         </Button>
                     </div>
@@ -681,6 +686,54 @@ export default function CopyPage() {
         </div>
 
       </main>
+
+      {/* MODAL DE INSTRUÇÕES */}
+      <Dialog open={isInstructionsModalOpen} onOpenChange={setIsInstructionsModalOpen}>
+          <DialogContent className="bg-[#0a0a0a] border-white/10 max-w-sm rounded-[2rem] overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+              <DialogHeader className="text-center items-center pt-4">
+                  <div className="bg-primary/10 p-4 rounded-full mb-2">
+                      <UserPlus className="h-8 w-8 text-primary" />
+                  </div>
+                  <DialogTitle className="text-2xl font-headline font-black uppercase tracking-tighter text-white">Cluster de Elite</DialogTitle>
+                  <DialogDescription className="text-[0.7rem] font-bold text-white/40 uppercase tracking-widest">
+                      Siga os passos para conexão
+                  </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3 py-4">
+                  <div className="flex items-start gap-4 p-4 bg-white/5 rounded-2xl border border-white/5">
+                      <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-black text-white shrink-0">1</div>
+                      <div className="space-y-1">
+                          <p className="text-[0.65rem] font-black uppercase text-primary tracking-widest">Nova Conta</p>
+                          <p className="text-[0.7rem] font-bold text-white/70 leading-tight">
+                              Crie sua conta na corretora pelo link oficial para vincular ao servidor HFT.
+                          </p>
+                      </div>
+                  </div>
+                  <div className="flex items-start gap-4 p-4 bg-white/5 rounded-2xl border border-white/5">
+                      <div className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-black text-white shrink-0">2</div>
+                      <div className="space-y-1">
+                          <p className="text-[0.65rem] font-black uppercase text-primary tracking-widest">Validar ID</p>
+                          <p className="text-[0.7rem] font-bold text-white/70 leading-tight">
+                              Envie o seu ID de usuário para o analista no Telegram para liberação manual.
+                          </p>
+                      </div>
+                  </div>
+              </div>
+              <DialogFooter className="flex flex-col gap-2 sm:flex-col sm:space-x-0 pt-2">
+                  <Button asChild className="w-full h-14 bg-white text-black font-black uppercase tracking-tighter rounded-xl hover:bg-white/90">
+                      <a href={config?.exnovaOpenUrl || "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy"} target="_blank" rel="noopener noreferrer">
+                          1. CRIAR CONTA OFICIAL
+                      </a>
+                  </Button>
+                  <Button asChild variant="outline" className="w-full h-12 font-black uppercase tracking-tighter border-white/10 rounded-xl hover:bg-white/5">
+                      <a href={masterStats.telegram} target="_blank" rel="noopener noreferrer">
+                          2. ENVIAR ID (@trader_chines)
+                      </a>
+                  </Button>
+              </DialogFooter>
+          </DialogContent>
+      </Dialog>
 
       {/* FIXED FOOTER */}
       <footer className="shrink-0 py-2.5 px-6 border-t border-white/5 bg-black/80 backdrop-blur-md z-50">

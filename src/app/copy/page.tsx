@@ -683,6 +683,18 @@ export default function CopyPage() {
 
       </main>
 
+      <footer className="shrink-0 py-2.5 px-6 border-t border-white/5 bg-black/80 backdrop-blur-md z-50">
+          <div className="max-w-4xl mx-auto text-center space-y-0.5">
+              <div className="flex items-center justify-center gap-6 opacity-20 text-[0.55rem] font-black uppercase tracking-[0.1em]">
+                  <div className="flex items-center gap-1.5"><Shield className="h-2.5 w-2.5" /> HFT Encrypted</div>
+                  <div className="flex items-center gap-1.5"><Lock className="h-2.5 w-2.5" /> SSL Secure V.2026</div>
+              </div>
+              <p className="text-[0.4rem] md:text-[0.45rem] font-bold uppercase tracking-tight text-white/10 leading-tight">
+                  AVISO: Trading envolve riscos. Sem garantia de lucros. Responsabilidade exclusiva do usuário. Opere com consciência.
+              </p>
+          </div>
+      </footer>
+
       <Dialog open={isInstructionsModalOpen} onOpenChange={setIsInstructionsModalOpen}>
           <DialogContent className="bg-[#050505] border border-white/10 max-w-sm rounded-[2.5rem] p-0 overflow-hidden shadow-[0_0_80px_rgba(0,0,0,0.8)]">
               <div className="relative p-6 lg:p-8 space-y-8">
@@ -731,7 +743,7 @@ export default function CopyPage() {
 
                   <div className="flex flex-col gap-3 pt-2">
                       <Button asChild className="w-full h-14 bg-primary text-primary-foreground font-black uppercase tracking-tighter text-sm rounded-2xl shadow-xl hover:scale-[1.02] transition-all">
-                          <a href={config?.exnovaOpenUrl || "https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy"} target="_blank" rel="noopener noreferrer">
+                          <a href="https://exnova.com/lp/start-trading/?aff=198544&aff_model=revenue&afftrack=copy" target="_blank" rel="noopener noreferrer">
                               <ArrowUpRight className="mr-2 h-4 w-4" />
                               1. ABRIR CONTA OFICIAL
                           </a>
@@ -751,18 +763,6 @@ export default function CopyPage() {
               </div>
           </DialogContent>
       </Dialog>
-
-      <footer className="shrink-0 py-2.5 px-6 border-t border-white/5 bg-black/80 backdrop-blur-md z-50">
-          <div className="max-w-4xl mx-auto text-center space-y-0.5">
-              <div className="flex items-center justify-center gap-6 opacity-20 text-[0.55rem] font-black uppercase tracking-[0.1em]">
-                  <div className="flex items-center gap-1.5"><Shield className="h-2.5 w-2.5" /> HFT Encrypted</div>
-                  <div className="flex items-center gap-1.5"><Lock className="h-2.5 w-2.5" /> SSL Secure V.2026</div>
-              </div>
-              <p className="text-[0.4rem] md:text-[0.45rem] font-bold uppercase tracking-tight text-white/10 leading-tight">
-                  AVISO: Trading envolve riscos. Sem garantia de lucros. Responsabilidade exclusiva do usuário. Opere com consciência.
-              </p>
-          </div>
-      </footer>
     </div>
   );
 }

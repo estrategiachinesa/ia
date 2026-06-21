@@ -114,10 +114,9 @@ export default function CopyPage() {
     }
   }, [config, isConfigLoading, router]);
 
-  const lastTradeResult = useMemo(() => {
+  const totalProfit = useMemo(() => {
     const results = config?.copyResults || [];
-    if (results.length === 0) return 0;
-    return results[0].netChange;
+    return results.reduce((acc: number, curr: any) => acc + curr.netChange, 0);
   }, [config?.copyResults]);
 
   const masterStats = {
@@ -128,7 +127,7 @@ export default function CopyPage() {
     telegram: config?.copyTelegramUrl || "https://t.me/Trader_Chines",
     balance: (config?.copyMasterBalance ?? 245892.10).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
     initialBalance: (config?.copyInitialBalance ?? 240000.00).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
-    profitToday: (lastTradeResult >= 0 ? '+ ' : '') + (lastTradeResult).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+    profitTotal: (totalProfit >= 0 ? '+ ' : '') + (totalProfit).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
     winRate: config?.copyMasterWinRate || "0%",
     results: config?.copyResults || [],
     isActive: config?.copyIsActive ?? true
@@ -351,10 +350,10 @@ export default function CopyPage() {
                     </div>
                     <div className={cn(
                         "p-3 lg:p-3.5 rounded-xl border flex justify-between items-center",
-                        lastTradeResult < 0 ? "bg-red-500/5 border-red-500/10" : (lastTradeResult === 0 ? "bg-white/5 border-white/10" : "bg-green-500/5 border-green-500/10")
+                        totalProfit < 0 ? "bg-red-500/5 border-red-500/10" : (totalProfit === 0 ? "bg-white/5 border-white/10" : "bg-green-500/5 border-green-500/10")
                     )}>
-                        <p className={cn("text-[0.65rem] font-black uppercase tracking-[0.2em]", lastTradeResult < 0 ? "text-red-500/80" : (lastTradeResult === 0 ? "text-white/40" : "text-green-500/80"))}>Lucro de Hoje</p>
-                        <p className={cn("text-base lg:text-lg font-black font-mono tracking-tighter", lastTradeResult < 0 ? "text-red-500" : (lastTradeResult === 0 ? "text-zinc-600" : "text-green-500"))}>{masterStats.profitToday}</p>
+                        <p className={cn("text-[0.65rem] font-black uppercase tracking-[0.2em]", totalProfit < 0 ? "text-red-500/80" : (totalProfit === 0 ? "text-white/40" : "text-green-500/80"))}>Lucro Total</p>
+                        <p className={cn("text-base lg:text-lg font-black font-mono tracking-tighter", totalProfit < 0 ? "text-red-500" : (totalProfit === 0 ? "text-zinc-600" : "text-green-500"))}>{masterStats.profitTotal}</p>
                     </div>
                 </div>
 

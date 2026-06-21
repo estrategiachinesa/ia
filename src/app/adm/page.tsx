@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -701,6 +700,14 @@ export default function AdminDashboard() {
               toast({ variant: 'destructive', title: 'Erro ao remover' });
           }
       }
+  };
+
+  const masterStats = {
+      balance: copyBalance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+      initialBalance: copyInitialBalance.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+      profitTotal: (currentProfit >= 0 ? '+ ' : '') + (currentProfit).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+      winRate: winRate,
+      isActive: copyIsActive
   };
 
   const handleSaveTime = async () => {
@@ -1468,19 +1475,12 @@ export default function AdminDashboard() {
                                         </Button>
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
-                                    <div className="flex flex-col">
-                                        <span className="text-[0.6rem] font-black uppercase opacity-40">Placar Acumulado</span>
-                                        <div className="flex items-center gap-3">
-                                            <span className="text-sm font-black text-green-500">{scoreboard.wins}W</span>
-                                            <span className="text-xs font-black opacity-20">-</span>
-                                            <span className="text-sm font-black text-red-500">{scoreboard.losses}L</span>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <span className="text-[0.6rem] font-black uppercase opacity-40">Assertividade</span>
-                                        <p className="text-sm font-black text-primary">{winRate}</p>
-                                    </div>
+                                <div className={cn(
+                                    "p-3 lg:p-3.5 rounded-xl border flex justify-between items-center",
+                                    currentProfit < 0 ? "bg-red-500/5 border-red-500/10" : (currentProfit === 0 ? "bg-white/5 border-white/10" : "bg-green-500/5 border-green-500/10")
+                                )}>
+                                    <p className={cn("text-[0.65rem] font-black uppercase tracking-[0.2em]", currentProfit < 0 ? "text-red-500/80" : (currentProfit === 0 ? "text-white/40" : "text-green-500/80"))}>Lucro Total</p>
+                                    <p className={cn("text-base lg:text-lg font-black font-mono tracking-tighter", currentProfit < 0 ? "text-red-500" : (currentProfit === 0 ? "text-zinc-600" : "text-green-500"))}>{masterStats.profitTotal}</p>
                                 </div>
                             </div>
 

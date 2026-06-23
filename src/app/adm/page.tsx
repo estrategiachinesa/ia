@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -72,7 +73,8 @@ import {
   Volume2,
   VolumeX,
   ShieldAlert,
-  UserX
+  UserX,
+  Wallet
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -342,6 +344,16 @@ export default function AdminDashboard() {
         toast({ title: 'Status do Pedido Atualizado' });
     } catch (e) {
         toast({ variant: 'destructive', title: 'Erro ao atualizar' });
+    }
+  };
+
+  const handleToggleCopyBalance = async (requestId: string, current: boolean | undefined) => {
+    if (!firestore) return;
+    try {
+        await setDoc(doc(firestore, 'copyRequests', requestId), { hasBalance: !current, updatedAt: serverTimestamp() }, { merge: true });
+        toast({ title: `Status Saldo: ${!current ? 'Com Saldo' : 'Sem Saldo'}` });
+    } catch (e) {
+        toast({ variant: 'destructive', title: 'Erro ao atualizar saldo' });
     }
   };
 
@@ -1355,6 +1367,12 @@ export default function AdminDashboard() {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-2 bg-black/20 px-3 py-1.5 rounded-full border border-white/5">
+                                                <span className={cn("text-[0.6rem] font-black uppercase", req.hasBalance ? "text-green-500" : "text-red-500")}>
+                                                    {req.hasBalance ? "(COM SALDO)" : "(SEM SALDO)"}
+                                                </span>
+                                                <Switch checked={req.hasBalance || false} onCheckedChange={() => handleToggleCopyBalance(req.id, req.hasBalance)} className="scale-50 origin-right" />
+                                            </div>
                                             <Badge className="text-[0.5rem] font-black uppercase bg-green-500 text-white">
                                                 SINCRONIZADO
                                             </Badge>

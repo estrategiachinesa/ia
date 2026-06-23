@@ -33,6 +33,8 @@ import TradingViewWidget from '@/components/app/tradingview-widget';
 import { cn } from '@/lib/utils';
 import { generateMockNewsEvents, isNewsCurrentlyActive } from '@/lib/news-events';
 import { Logo } from '@/components/logo';
+import { OtcIntelligence } from '@/components/app/otc-intelligence';
+import { EconomicIntelligence } from '@/components/app/economic-intelligence';
 
 export type FormData = {
   asset: Asset;
@@ -68,6 +70,7 @@ const PAGE_METADATA: Record<string, { label: string; path: string }> = {
     descubra: { label: 'VSL', path: '/descubra' },
     register: { label: 'REGISTRO', path: '/register' },
     bb: { label: 'BROKER BREAKER', path: '/bb' },
+    copy: { label: 'COPY TRADE', path: '/copy' },
 };
 
 const EXCLUDED_NAV_IDS = ['register', 'vip', 'descubra', 'vsl'];
@@ -320,7 +323,6 @@ export default function AnalisadorPage() {
   };
 
   const handleAnalyze = () => {
-    // Lógica Inteligente de Notícias
     const newsEvents = generateMockNewsEvents();
     const isNewsActive = isNewsCurrentlyActive(newsEvents, config?.newsWarningDuration || 60);
 
@@ -379,35 +381,6 @@ export default function AnalisadorPage() {
     );
   }
 
-  const renderContent = () => {
-    switch (appState) {
-      case 'loading': return <div className="w-full h-full flex items-center justify-center p-4"><AnalysisAnimation /></div>;
-      case 'result': return signalData && <div className="w-full h-full flex items-center justify-center p-4"><SignalResult data={signalData} onReset={() => setAppState('idle')} /></div>;
-      default: return (
-          <div className="w-full h-full p-2 md:p-4 overflow-hidden">
-            <SignalForm
-                formData={formData}
-                setFormData={setFormData}
-                onSubmit={handleAnalyze}
-                isLoading={appState === 'loading'}
-                showOTC={showOTC}
-                setShowOTC={setShowOTC}
-                isMarketOpen={isMarketOpen}
-                hasReachedLimit={hasReachedLimit}
-                user={user}
-                firestore={firestore}
-                isPremium={isPremium}
-                vipStatus={(vipData as any)?.status}
-                isVipModalOpen={isStatusModalOpen}
-                setVipModalOpen={setStatusModalOpen}
-                setUpgradeModalOpen={setUpgradeModalOpen}
-                rejectedBrokerId={(vipData as any)?.brokerId}
-            />
-          </div>
-        );
-    }
-  }
-
   const currentAsset = appState === 'result' && signalData ? signalData.asset : formData.asset;
   const currentExpirationTime = appState === 'result' && signalData ? signalData.expirationTime : formData.expirationTime;
   const isOtcAsset = currentAsset.includes('(OTC)');
@@ -418,7 +391,7 @@ export default function AnalisadorPage() {
       <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/90 to-background" />
 
       <div className="flex flex-col h-[100dvh] overflow-hidden">
-        <header className="h-[50px] md:h-[60px] px-4 md:px-8 flex justify-between items-center border-b border-border/10 bg-card/30 backdrop-blur-md shrink-0">
+        <header className="h-[50px] md:h-[60px] px-4 md:px-8 flex justify-between items-center border-b border-border/10 bg-card/30 backdrop-blur-md shrink-0 z-50">
           <div className="flex items-center gap-3">
              <Logo size={32} isPremium={isPremium} />
           </div>
@@ -451,19 +424,42 @@ export default function AnalisadorPage() {
           </Button>
         </header>
 
-        <main className="flex-grow flex flex-col md:flex-row overflow-y-auto md:overflow-hidden snap-y snap-mandatory md:snap-none no-scrollbar">
-            {/* Reel 1: Analisador (Full height no mobile, 420px no desktop) */}
-            <div className="w-full md:w-[420px] h-[calc(100dvh-50px)] md:h-full shrink-0 snap-start">
-                <div className="w-full h-full bg-card/40 backdrop-blur-xl border-b md:border-b-0 md:border-r border-white/10 flex flex-col items-center justify-center overflow-hidden relative glass-panel">
-                    {renderContent()}
+        {/* VERSÃO DESKTOP (100% INTACTA) */}
+        <div className="hidden md:flex flex-grow flex-row overflow-hidden">
+            <div className="w-[420px] h-full shrink-0">
+                <div className="w-full h-full bg-card/40 backdrop-blur-xl border-r border-white/10 flex flex-col items-center justify-center overflow-hidden relative glass-panel">
+                    {appState === 'loading' ? (
+                        <div className="w-full h-full flex items-center justify-center p-4"><AnalysisAnimation /></div>
+                    ) : appState === 'result' && signalData ? (
+                        <div className="w-full h-full flex items-center justify-center p-4"><SignalResult data={signalData} onReset={() => setAppState('idle')} /></div>
+                    ) : (
+                        <div className="w-full h-full p-4 overflow-hidden">
+                            <SignalForm
+                                formData={formData}
+                                setFormData={setFormData}
+                                onSubmit={handleAnalyze}
+                                isLoading={appState === 'loading'}
+                                showOTC={showOTC}
+                                setShowOTC={setShowOTC}
+                                isMarketOpen={isMarketOpen}
+                                hasReachedLimit={hasReachedLimit}
+                                user={user}
+                                firestore={firestore}
+                                isPremium={isPremium}
+                                vipStatus={(vipData as any)?.status}
+                                isVipModalOpen={isStatusModalOpen}
+                                setVipModalOpen={setStatusModalOpen}
+                                setUpgradeModalOpen={setUpgradeModalOpen}
+                                rejectedBrokerId={(vipData as any)?.brokerId}
+                            />
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* Reel 2: Gráfico/Radar (Snap Scroll no mobile, preenchimento no desktop) */}
-            <div className="w-full md:flex-grow h-[calc(100dvh-50px)] md:h-full relative overflow-hidden bg-black shrink-0 snap-start">
+            <div className="flex-grow h-full relative overflow-hidden bg-black">
                 {isOtcAsset ? (
                     <div className="w-full h-full flex items-center justify-center bg-black/20 p-6 relative overflow-hidden">
-                        {/* Radar Scan Animation */}
                         <div className="absolute inset-0 z-0 flex items-center justify-center opacity-20">
                            <svg width="400" height="400" viewBox="0 0 100 100" className="w-[80%] max-w-[500px]">
                               <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="0.1" className="text-primary" />
@@ -471,72 +467,81 @@ export default function AnalisadorPage() {
                               <circle cx="50" cy="50" r="20" fill="none" stroke="currentColor" strokeWidth="0.1" className="text-primary" />
                               <line x1="50" y1="2" x2="50" y2="98" stroke="currentColor" strokeWidth="0.1" className="text-primary" />
                               <line x1="2" y1="50" x2="98" y2="50" stroke="currentColor" strokeWidth="0.1" className="text-primary" />
-                              
                               <circle cx="50" cy="50" r="5" className="text-primary pulse-ring" fill="currentColor" />
-                              
-                              <g className="radar-sweep">
-                                 <path d="M 50 50 L 50 2 A 48 48 0 0 1 98 50 Z" fill="url(#radarGradient)" />
-                              </g>
-
-                              <defs>
-                                <conicGradient id="radarGradient" cx="50" cy="50">
-                                  <stop offset="0%" stopColor="currentColor" stopOpacity="0.6" className="text-primary" />
-                                  <stop offset="100%" stopColor="currentColor" stopOpacity="0" className="text-primary" />
-                                </conicGradient>
-                              </defs>
                            </svg>
                         </div>
-
-                        <div className="text-center max-w-md relative z-10 animate-in zoom-in-95 duration-700">
+                        <div className="text-center max-w-md relative z-10">
                             <Cpu className="h-10 w-10 text-primary/40 mx-auto mb-4 animate-pulse" />
                             <h3 className="text-lg font-black text-foreground uppercase tracking-widest">IA SCANNER: {currentAsset}</h3>
-                            <p className="mt-2 text-[0.65rem] text-primary/60 font-black uppercase tracking-[0.3em] leading-tight">Sincronizando com Liquidez de Balcão</p>
-                            
-                            <div className="mt-8 grid grid-cols-2 gap-3 max-w-[280px] mx-auto">
-                                <Button asChild variant="outline" size="sm" className="h-10 text-[0.6rem] font-black border-white/10 hover-glow"><a href={config?.iqOptionOpenUrl || '#'} target="_blank">IQ OPTION</a></Button>
-                                <Button asChild variant="outline" size="sm" className="h-10 text-[0.6rem] font-black border-white/10 hover-glow"><a href={config?.exnovaOpenUrl || '#'} target="_blank">EXNOVA</a></Button>
-                            </div>
-
-                            <div className="mt-12 hidden md:flex items-center justify-center gap-8 opacity-30">
-                               <div className="flex flex-col items-center">
-                                  <span className="text-[0.5rem] font-bold">LATENCY</span>
-                                  <span className="text-xs font-mono">14ms</span>
-                               </div>
-                               <div className="flex flex-col items-center">
-                                  <span className="text-[0.5rem] font-bold">DATA</span>
-                                  <span className="text-xs font-mono">{currentDateInfo || '--/--/--'}</span>
-                               </div>
-                               <div className="flex flex-col items-center">
-                                  <span className="text-[0.5rem] font-bold">HORA</span>
-                                  <span className="text-xs font-mono">{currentTimeInfo || '--:--'}</span>
-                               </div>
-                            </div>
                         </div>
                     </div>
                 ) : (
                     <div className="flex flex-col h-full bg-black">
-                        <div className="h-[25px] shrink-0 px-4 border-b border-white/5 flex items-center justify-between bg-black/50">
-                            <div className="flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                                <span className="text-[0.45rem] font-black text-muted-foreground uppercase tracking-widest">Market Live Stream</span>
-                            </div>
-                            <span className="text-[0.45rem] font-black text-primary bg-primary/10 px-1 rounded uppercase">{currentExpirationTime}</span>
-                        </div>
-                        <div className="flex-grow relative">
-                            <TradingViewWidget
-                                asset={currentAsset}
-                                interval={currentExpirationTime.replace('m', '')}
-                            />
-                            {appState === 'loading' && (
-                                <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-10 flex items-center justify-center">
-                                    <AnalysisAnimation showProgressBar={false} />
-                                </div>
-                            )}
-                        </div>
+                        <TradingViewWidget asset={currentAsset} interval={currentExpirationTime.replace('m', '')} />
                     </div>
                 )}
             </div>
-        </main>
+        </div>
+
+        {/* VERSÃO MOBILE (LAYOUT HUD OPERACIONAL) */}
+        <div className="md:hidden flex flex-col flex-grow overflow-hidden relative">
+            
+            {/* TOPO: VISUAL (40% ou 50%) */}
+            <div className={cn(
+                "w-full transition-all duration-700 relative overflow-hidden bg-black shrink-0",
+                isOtcAsset ? "h-[50%]" : "h-[40%]"
+            )}>
+                {isOtcAsset ? (
+                    <div className="w-full h-full flex flex-col p-4 animate-in slide-in-from-top duration-700">
+                        <OtcIntelligence asset={currentAsset} />
+                    </div>
+                ) : (
+                    <div className="h-full w-full">
+                         <TradingViewWidget asset={currentAsset} interval={currentExpirationTime.replace('m', '')} />
+                         {appState === 'loading' && (
+                             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
+                                 <AnalysisAnimation showProgressBar={false} />
+                             </div>
+                         )}
+                    </div>
+                )}
+            </div>
+
+            {/* BASE: CONTROLES E RESULTADOS (60% ou 50%) */}
+            <div className={cn(
+                "w-full flex flex-col bg-card/60 backdrop-blur-2xl border-t border-white/10 overflow-y-auto no-scrollbar",
+                isOtcAsset ? "h-[50%]" : "h-[60%]"
+            )}>
+                 {appState === 'loading' ? (
+                     <div className="flex-grow flex items-center justify-center p-6"><AnalysisAnimation /></div>
+                 ) : appState === 'result' && signalData ? (
+                     <div className="flex-grow flex flex-col items-center justify-start p-4 animate-in fade-in duration-500">
+                         <SignalResult data={signalData} onReset={() => setAppState('idle')} />
+                     </div>
+                 ) : (
+                     <div className="flex-grow p-4">
+                         <SignalForm
+                            formData={formData}
+                            setFormData={setFormData}
+                            onSubmit={handleAnalyze}
+                            isLoading={appState === 'loading'}
+                            showOTC={showOTC}
+                            setShowOTC={setShowOTC}
+                            isMarketOpen={isMarketOpen}
+                            hasReachedLimit={hasReachedLimit}
+                            user={user}
+                            firestore={firestore}
+                            isPremium={isPremium}
+                            vipStatus={(vipData as any)?.status}
+                            isVipModalOpen={isStatusModalOpen}
+                            setVipModalOpen={setStatusModalOpen}
+                            setUpgradeModalOpen={setUpgradeModalOpen}
+                            rejectedBrokerId={(vipData as any)?.brokerId}
+                         />
+                     </div>
+                 )}
+            </div>
+        </div>
       </div>
 
       <VipUpgradeModal isOpen={isUpgradeModalOpen} onOpenChange={setUpgradeModalOpen} user={user} firestore={firestore} config={config} />

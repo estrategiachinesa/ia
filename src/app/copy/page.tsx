@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -36,7 +37,8 @@ import {
   ArrowUpRight,
   Info,
   Bot,
-  Sparkles
+  Sparkles,
+  Wallet
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -78,6 +80,7 @@ export default function CopyPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSyncActive, setIsSyncActive] = useState(true);
   const [isInstructionsModalOpen, setIsInstructionsModalOpen] = useState(false);
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   
   const [terminalSession, setTerminalSession] = useState<any>(null);
 
@@ -231,7 +234,8 @@ export default function CopyPage() {
               name: regData.name,
               email: regData.email.trim(),
               telegram: regData.telegram,
-              password: regData.password 
+              password: regData.password,
+              hasBalance: false
           };
 
           await updateDoc(doc(firestore, 'copyRequests', activeRequestId), updateData);
@@ -240,6 +244,7 @@ export default function CopyPage() {
           setTerminalSession(session);
           localStorage.setItem('copy_terminal_session', JSON.stringify(session));
           setStep('STEP_DASHBOARD');
+          setIsDepositModalOpen(true);
           toast({ title: 'Terminal Ativado!' });
       } catch (e: any) { 
           toast({ variant: 'destructive', title: 'Erro no cadastro' });
@@ -360,7 +365,7 @@ export default function CopyPage() {
                 <div className="p-4 lg:p-4 bg-black/60 rounded-[1.5rem] border border-white/10 space-y-2 lg:space-y-3 shadow-inner mt-auto">
                     <div className="flex items-center justify-between">
                          <div className="flex items-center gap-2">
-                             <Trophy className="h-3 w-3 text-primary" />
+                             <Trophy className="h-3.5 w-3.5 text-primary" />
                              <span className="text-[0.65rem] font-black uppercase tracking-[0.2em] text-white/50">Placar Mensal</span>
                          </div>
                     </div>
@@ -788,6 +793,33 @@ export default function CopyPage() {
                       <Info className="h-3 w-3" />
                       <span className="text-[0.5rem] font-black uppercase tracking-widest">Processamento imediato após validação</span>
                   </div>
+              </div>
+          </DialogContent>
+      </Dialog>
+
+      <Dialog open={isDepositModalOpen} onOpenChange={setIsDepositModalOpen}>
+          <DialogContent className="bg-[#0a0a0a] border-white/10 max-w-sm rounded-[2rem] p-6 lg:p-8">
+              <div className="text-center space-y-6">
+                  <div className="p-4 bg-primary/10 rounded-2xl border border-primary/20 w-fit mx-auto shadow-2xl">
+                      <Wallet className="h-10 w-10 text-primary" />
+                  </div>
+                  <DialogHeader>
+                      <DialogTitle className="text-2xl font-headline font-black uppercase tracking-tighter text-white">Quase lá!</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                      <p className="text-sm text-white/70 leading-relaxed">
+                          Para sincronizar ao trader, você precisa fazer um depósito de no mínimo <span className="text-primary font-bold">{masterStats.initialBalance}</span> ou o valor ideal que é <span className="text-green-500 font-bold">{masterStats.balance}</span>.
+                      </p>
+                      <div className="p-3 bg-white/5 border border-white/10 rounded-xl">
+                          <p className="text-[0.65rem] font-bold text-white/40 uppercase">Se já fez o depósito, envie o comprovante ao suporte no Telegram.</p>
+                      </div>
+                  </div>
+                  <DialogFooter className="flex flex-col gap-2 sm:flex-col sm:space-x-0 pt-2">
+                      <Button asChild className="w-full h-12 bg-primary text-black font-black uppercase rounded-xl">
+                          <a href={masterStats.telegram} target="_blank">IR PARA SUPORTE</a>
+                      </Button>
+                      <Button variant="ghost" onClick={() => setIsDepositModalOpen(false)} className="w-full text-white/30 font-bold uppercase text-[0.6rem]">Entendido</Button>
+                  </DialogFooter>
               </div>
           </DialogContent>
       </Dialog>

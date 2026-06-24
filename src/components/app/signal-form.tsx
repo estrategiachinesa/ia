@@ -134,7 +134,7 @@ export function SignalForm({
     <div className="w-full h-full flex flex-col justify-start p-0 overflow-hidden text-center bg-transparent">
       <div className="flex flex-col flex-grow overflow-hidden px-4 md:px-6">
         
-        {/* SELETORES (AGORA NO TOPO NO MOBILE) */}
+        {/* SELETORES (TOPO NO MOBILE) */}
         <div className="flex flex-col gap-3 py-4 shrink-0">
           {/* ATIVO */}
           <div className="space-y-1.5">
@@ -188,7 +188,7 @@ export function SignalForm({
           </div>
         </div>
 
-        {/* BOTÃO PRINCIPAL (MEIO) */}
+        {/* BOTÃO PRINCIPAL */}
         <div className="w-full space-y-2 pb-4 shrink-0">
             <Button
                 size="lg"
@@ -210,7 +210,7 @@ export function SignalForm({
             )}
         </div>
 
-        {/* STATUS E INTEL (BASE NO MOBILE) */}
+        {/* STATUS E INTEL */}
         <div className="space-y-4 pb-10 flex-grow">
             {!isMarketOpen && !showOTC && nextOpenText && (
                 <div className="p-2.5 bg-red-600/10 border border-red-500/20 rounded-xl flex items-center justify-between px-4 animate-in fade-in duration-700">
@@ -230,17 +230,14 @@ export function SignalForm({
                 </Alert>
             )}
 
-            {/* INTEL PANEL (DINÂMICO) - OCULTO NO MOBILE SE OTC ATIVO (POIS JÁ ESTÁ NO TOPO 50/50) */}
-            <div className={cn("hidden md:block")}>
+            <div className="hidden md:block">
                 {showOTC ? <OtcIntelligence asset={formData.asset} /> : <EconomicIntelligence asset={formData.asset} />}
             </div>
             
-            {/* NO MOBILE, SÓ EXIBE NOTÍCIAS SE NÃO FOR OTC */}
             <div className="md:hidden h-[180px]">
                 {!isOtcAsset && <EconomicIntelligence asset={formData.asset} />}
             </div>
 
-            {/* BOTÕES CORRETORA */}
             <div className="grid grid-cols-2 gap-2 mt-auto">
                 <Button asChild variant="ghost" size="sm" className="h-10 text-[0.6rem] font-black uppercase tracking-widest border border-white/5 bg-white/5 rounded-xl hover-glow">
                     <a href={config?.iqOptionOpenUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1.5"><ExternalLink className="h-3 w-3" /> IQ Option</a>

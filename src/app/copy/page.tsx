@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -113,7 +112,6 @@ export default function CopyPage() {
     }
   }, []);
 
-  // Monitor terminal data in real-time when logged in
   useEffect(() => {
       if (terminalSession?.id && firestore) {
           const unsub = onSnapshot(doc(firestore, 'copyRequests', terminalSession.id), (snap) => {
@@ -204,13 +202,12 @@ export default function CopyPage() {
       }
       setIsLoggingIn(true);
       try {
-          const docRef = doc(firestore, 'copyRequests', activeRequestId);
           const snap = await getDocs(query(collection(firestore, 'copyRequests'), where('brokerId', '==', brokerIdInput), limit(1)));
           
           if (!snap.empty) {
               const data = snap.docs[0].data();
               if (data.password === loginData.password) {
-                  const session = { id: docRef.id, brokerId: brokerIdInput, name: data.name };
+                  const session = { id: activeRequestId, brokerId: brokerIdInput, name: data.name };
                   setTerminalSession(session);
                   localStorage.setItem('copy_terminal_session', JSON.stringify(session));
                   setStep('STEP_DASHBOARD');

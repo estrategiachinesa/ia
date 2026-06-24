@@ -114,14 +114,9 @@ export function SignalResult({ data, onReset }: SignalResultProps) {
       <div className="px-4 pb-2 animate-in slide-in-from-bottom-4 duration-1000 delay-300">
         <Button 
           onClick={onReset} 
-          className={cn(
-              "w-full h-14 rounded-2xl text-xs font-black uppercase tracking-[0.2em] transition-all shadow-2xl",
-              data.operationStatus === 'finished' 
-                ? "bg-primary text-primary-foreground hover:scale-[1.02] shadow-primary/20" 
-                : "bg-white/5 text-white/20 border border-white/5"
-          )}
+          className="w-full h-14 rounded-2xl text-xs font-black uppercase tracking-[0.2em] bg-primary text-primary-foreground hover:scale-[1.02] shadow-2xl shadow-primary/20 transition-all"
         >
-            <RefreshCw className={cn("mr-2 h-4 w-4", data.operationStatus !== 'finished' && "animate-spin")} />
+            <RefreshCw className="mr-2 h-4 w-4" />
             NOVA ANÁLISE
         </Button>
       </div>

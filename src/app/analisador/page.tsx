@@ -33,7 +33,6 @@ import { cn } from '@/lib/utils';
 import { generateMockNewsEvents, isNewsCurrentlyActive } from '@/lib/news-events';
 import { Logo } from '@/components/logo';
 import { OtcIntelligence } from '@/components/app/otc-intelligence';
-import { EconomicIntelligence } from '@/components/app/economic-intelligence';
 
 export type FormData = {
   asset: Asset;
@@ -92,11 +91,6 @@ export default function AnalisadorPage() {
   const [isUpgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [isNewsWarningModalOpen, setIsNewsWarningModalOpen] = useState(false);
 
-  const [currentDateInfo, setCurrentDateInfo] = useState('');
-  const [currentTimeInfo, setCurrentTimeInfo] = useState('');
-  
-  const { toast } = useToast();
-  const [hasAgreedToNewsWarning, setHasAgreedToNewsWarning] = useState(false);
   const usageStorageKey = user ? `signalUsage_${user.uid}` : null;
 
   const vipRequestRef = useMemoFirebase(() => {
@@ -251,17 +245,6 @@ export default function AnalisadorPage() {
     }
     return () => clearInterval(timer);
   }, [appState, signalData?.operationStatus]);
-
-  useEffect(() => {
-    const updateDateTime = () => {
-      const now = new Date();
-      setCurrentDateInfo(now.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }));
-      setCurrentTimeInfo(now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + ' BRT');
-    };
-    updateDateTime();
-    const interval = setInterval(updateDateTime, 10000);
-    return () => clearInterval(interval);
-  }, []);
 
  const proceedWithAnalysis = async () => {
     setIsNewsWarningModalOpen(false);

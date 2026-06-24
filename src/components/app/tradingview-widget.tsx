@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useRef } from 'react';
@@ -91,9 +90,9 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset, interval }
             "mainSeriesProperties.showPriceLine": true,
         },
         studies_overrides: {
-            "Bollinger Bands.Upper.color": "#FF0000", // Superior Vermelha
-            "Bollinger Bands.Lower.color": "#22C55E", // Inferior Verde
-            "Bollinger Bands.Basis.color": "#FFFFFF", // Central Branca
+            "Bollinger Bands.Upper.color": "#FF0000", 
+            "Bollinger Bands.Lower.color": "#22C55E", 
+            "Bollinger Bands.Basis.color": "#FFFFFF", 
             "Bollinger Bands.Upper.linewidth": 2,
             "Bollinger Bands.Lower.linewidth": 2,
             "Bollinger Bands.Background.transparency": 95,
@@ -101,16 +100,29 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({ asset, interval }
       });
     };
 
-    if (document.getElementById('tradingview-widget-script')) {
+    const handleScriptLoad = () => {
+      // Pequeno atraso para garantir que o objeto TradingView esteja disponível no window
       if ((window as any).TradingView) {
         createWidget();
+      } else {
+        const checkInterval = setInterval(() => {
+          if ((window as any).TradingView) {
+            createWidget();
+            clearInterval(checkInterval);
+          }
+        }, 100);
+        setTimeout(() => clearInterval(checkInterval), 5000);
       }
+    };
+
+    if (document.getElementById('tradingview-widget-script')) {
+       handleScriptLoad();
     } else {
       const script = document.createElement('script');
       script.id = 'tradingview-widget-script';
       script.src = 'https://s3.tradingview.com/tv.js';
       script.async = true;
-      script.onload = createWidget;
+      script.onload = handleScriptLoad;
       document.head.appendChild(script);
     }
     

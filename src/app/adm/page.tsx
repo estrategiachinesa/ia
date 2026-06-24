@@ -410,7 +410,6 @@ export default function AdminDashboard() {
             setTgBotToken(data.tgBotToken || '');
             setTgChatId(data.tgChatId || '');
 
-            // Bot Configs
             setTgEnabled(data.tgEnabled ?? true);
             setTgNotifyWin(data.tgNotifyWin ?? true);
             setTgNotifyLoss(data.tgNotifyLoss ?? true);
@@ -558,7 +557,6 @@ export default function AdminDashboard() {
               tgMsgDeposit
           }, { merge: true });
 
-          // Notificações de Status Telegram
           if (tgNotifyStatus && copyIsActive !== prevCopyIsActive) {
               if (copyIsActive) {
                   const msg = tgMsgActive.replace('{{url}}', `${window.location.origin}/copy`);
@@ -978,7 +976,6 @@ export default function AdminDashboard() {
       };
     })
     .filter(u => {
-      // FILTRO: Exclui usuários que vieram do Copy Trade da lista geral de membros do Analisador
       if (u.userOrigin === 'COPY') return false;
 
       const search = searchTerm.toLowerCase();
@@ -1237,7 +1234,7 @@ export default function AdminDashboard() {
                 </div>
             </Card>
 
-            {/* HORÁRIOS DO MERCADO (VISUAL) */}
+            {/* HORÁRIOS DO MERCADO */}
             <Card className="bg-card/40 border-white/5 p-6 rounded-2xl lg:col-span-2">
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
                     <div className="flex items-center gap-2">
@@ -1422,7 +1419,7 @@ export default function AdminDashboard() {
                             <div className="space-y-4">
                                 <div className="p-4 bg-white/5 border border-white/5 rounded-xl space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-primary/70 flex items-center gap-1.5"><Zap className="h-3 w-3" /> {editingTradeId ? 'Editar Operação' : 'Lançar Operação'}</h3>
+                                        <h3 className="text-[0.65rem] font-black uppercase tracking-widest text-primary/70 flex items-center gap-1.5"><Zap className="h-3.5 w-3.5" /> {editingTradeId ? 'Editar Operação' : 'Lançar Operação'}</h3>
                                         {editingTradeId && <Button variant="ghost" size="sm" onClick={() => setEditingTradeId(null)} className="h-6 text-[0.5rem] font-black uppercase text-red-500">Cancelar</Button>}
                                     </div>
                                     <div className="grid grid-cols-2 gap-2">
@@ -1557,7 +1554,6 @@ export default function AdminDashboard() {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* CONFIGURAÇÕES TÉCNICAS */}
                             <div className="space-y-4">
                                 <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-4">
                                     <h4 className="text-[0.65rem] font-black uppercase tracking-widest text-primary/70 flex items-center gap-2"><Key className="h-3 w-3" /> Credenciais Bot</h4>
@@ -1592,7 +1588,6 @@ export default function AdminDashboard() {
                                 </div>
                             </div>
 
-                            {/* CUSTOMIZAÇÃO DE TEXTO */}
                             <div className="space-y-4">
                                 <div className="p-4 bg-black/40 rounded-2xl border border-white/5 space-y-4">
                                     <h4 className="text-[0.65rem] font-black uppercase tracking-widest text-primary/70 flex items-center gap-2"><MessageSquareCode className="h-3 w-3" /> Templates de Mensagens</h4>

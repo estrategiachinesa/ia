@@ -1528,7 +1528,7 @@ export default function AdminDashboard() {
                                             <div className="flex items-center gap-2">
                                                 <span className={cn(
                                                     "text-[0.6rem] font-black", 
-                                                    res.netChange > 0 ? "text-green-500" : (res.netChange < 0 ? "text-red-500" : "text-zinc-500")
+                                                    res.netChange > 0 ? "text-green-500" : (res.netChange < 0 ? "text-red-500" : "text-white/30")
                                                 )}>
                                                     {res.netChange > 0 ? '+' : ''}{res.netChange.toFixed(2)}
                                                 </span>

@@ -38,7 +38,8 @@ import {
   Info,
   Bot,
   Sparkles,
-  Wallet
+  Wallet,
+  AlertTriangle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -60,8 +61,8 @@ import { useAppConfig } from '@/firebase/config-provider';
 import { useRouter } from 'next/navigation';
 import { CurrencyFlags } from '@/components/app/currency-flags';
 import Image from 'next/image';
-import { useFirebase } from '@/firebase';
-import { collection, query, where, getDocs, setDoc, doc, serverTimestamp, updateDoc, limit } from 'firebase/firestore';
+import { useFirebase, useDoc, useMemoFirebase } from '@/firebase';
+import { collection, query, where, getDocs, setDoc, doc, serverTimestamp, updateDoc, limit, onSnapshot } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 type ConnectionStep = 'STEP_ID_CHECK' | 'STEP_REGISTRATION' | 'STEP_LOGIN' | 'STEP_DASHBOARD' | 'STEP_UNAUTHORIZED';
@@ -83,6 +84,7 @@ export default function CopyPage() {
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   
   const [terminalSession, setTerminalSession] = useState<any>(null);
+  const [serverTerminalData, setServerTerminalData] = useState<any>(null);
 
   const [regData, setRegData] = useState({
       name: '',
@@ -110,6 +112,18 @@ export default function CopyPage() {
         }
     }
   }, []);
+
+  // Monitor terminal data in real-time when logged in
+  useEffect(() => {
+      if (terminalSession?.id && firestore) {
+          const unsub = onSnapshot(doc(firestore, 'copyRequests', terminalSession.id), (snap) => {
+              if (snap.exists()) {
+                  setServerTerminalData(snap.data());
+              }
+          });
+          return () => unsub();
+      }
+  }, [terminalSession?.id, firestore]);
 
   useEffect(() => {
     if (!isConfigLoading && config?.pages?.copy === false) {
@@ -254,6 +268,7 @@ export default function CopyPage() {
   const handleLogout = () => {
       localStorage.removeItem('copy_terminal_session');
       setTerminalSession(null);
+      setServerTerminalData(null);
       setStep('STEP_ID_CHECK');
       setBrokerIdInput('');
       setLoginData({ password: '' });
@@ -629,13 +644,13 @@ export default function CopyPage() {
                     <div className="relative">
                         <div className={cn(
                             "absolute inset-0 blur-3xl rounded-full scale-150 transition-all duration-700",
-                            isSyncActive ? "bg-green-500/20 animate-pulse" : "bg-red-500/10"
+                            isSyncActive && serverTerminalData?.hasBalance !== false ? "bg-green-500/20 animate-pulse" : "bg-red-500/10"
                         )} />
                         <div className={cn(
                             "relative w-16 h-16 md:w-20 md:h-20 rounded-3xl flex items-center justify-center mx-auto border shadow-2xl transition-all duration-500",
-                            isSyncActive ? "bg-green-500/15 border-green-500/20" : "bg-red-500/10 border-red-500/20"
+                            isSyncActive && serverTerminalData?.hasBalance !== false ? "bg-green-500/15 border-green-500/20" : "bg-red-500/10 border-red-500/20"
                         )}>
-                            {isSyncActive ? (
+                            {isSyncActive && serverTerminalData?.hasBalance !== false ? (
                                 <CheckCircle2 className="h-8 w-8 md:h-10 md:w-10 text-green-500 animate-bounce" />
                             ) : (
                                 <Pause className="h-8 w-8 md:h-10 md:w-10 text-red-500" />
@@ -645,19 +660,29 @@ export default function CopyPage() {
                     
                     <div className="space-y-4">
                         <div className="space-y-2">
-                            <h2 className="text-xl lg:text-3xl font-black uppercase text-white tracking-tighter">Terminal {isSyncActive ? 'Conectado!' : 'Pausado'}</h2>
+                            <h2 className="text-xl lg:text-3xl font-black uppercase text-white tracking-tighter">Terminal {isSyncActive && serverTerminalData?.hasBalance !== false ? 'Conectado!' : 'Pausado'}</h2>
                             <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full">
                                 <UserIcon className="h-3 w-3 text-primary/60" />
                                 <span className="text-[0.6rem] font-bold text-white/80 uppercase">{terminalSession?.name || 'Membro Ativo'}</span>
                             </div>
                         </div>
 
+                        {serverTerminalData?.hasBalance === false && (
+                            <div className="mx-4 p-3 bg-red-600/10 border border-red-500/20 rounded-2xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
+                                <AlertTriangle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+                                <div className="text-left">
+                                    <p className="text-[0.65rem] font-black uppercase text-red-500">Sincronização Interrompida</p>
+                                    <p className="text-[0.6rem] font-bold text-white/60 leading-tight">O sistema detectou que sua conta está sem margem operacional. Faça um depósito para reativar o Copy HFT.</p>
+                                </div>
+                            </div>
+                        )}
+
                         <AnalyzerCTA />
                         
                         <p className="text-white/60 text-[0.8rem] leading-relaxed px-6 max-sm mx-auto">
-                            {isSyncActive 
+                            {isSyncActive && serverTerminalData?.hasBalance !== false
                                 ? `A sincronização via HFT está ativa. Todas as ordens mestres serão replicadas no seu ID ${terminalSession?.brokerId} em menos de 15ms.`
-                                : "A sincronização foi pausada manualmente. Nenhuma ordem do Mestre Trader será replicada na sua conta enquanto este status permanecer."
+                                : "A sincronização foi pausada. Nenhuma ordem do Mestre Trader será replicada na sua conta enquanto este status permanecer."
                             }
                         </p>
                         
@@ -666,19 +691,19 @@ export default function CopyPage() {
                             <div className="flex flex-col items-center border-r border-white/10 relative z-10">
                                 <span className="text-[0.6rem] font-black text-white/30 uppercase tracking-[0.2em] mb-1">LATÊNCIA MÉDIA</span>
                                 <div className="flex items-center gap-2">
-                                    <span className={cn("text-lg md:text-xl font-mono font-black", isSyncActive ? "text-green-500" : "text-zinc-600")}>12ms</span>
-                                    {isSyncActive && <Activity className="h-3 w-3 text-green-500/40 animate-pulse" />}
+                                    <span className={cn("text-lg md:text-xl font-mono font-black", isSyncActive && serverTerminalData?.hasBalance !== false ? "text-green-500" : "text-zinc-600")}>12ms</span>
+                                    {isSyncActive && serverTerminalData?.hasBalance !== false && <Activity className="h-3 w-3 text-green-500/40 animate-pulse" />}
                                 </div>
                             </div>
                             <div className="flex flex-col items-center relative z-10">
                                 <span className="text-[0.6rem] font-black text-white/30 uppercase tracking-[0.2em] mb-1">STATUS SYNC</span>
                                 <div className="flex items-center gap-2">
-                                    <span className={cn("text-lg md:text-xl font-mono font-black", isSyncActive ? "text-green-500" : "text-red-500")}>
-                                        {isSyncActive ? 'ACTIVE' : 'PAUSED'}
+                                    <span className={cn("text-lg md:text-xl font-mono font-black", isSyncActive && serverTerminalData?.hasBalance !== false ? "text-green-500" : "text-red-500")}>
+                                        {isSyncActive && serverTerminalData?.hasBalance !== false ? 'ACTIVE' : 'PAUSED'}
                                     </span>
                                     <div className={cn(
                                         "w-2 h-2 rounded-full",
-                                        isSyncActive ? "bg-green-500 animate-pulse" : "bg-red-500"
+                                        isSyncActive && serverTerminalData?.hasBalance !== false ? "bg-green-500 animate-pulse" : "bg-red-500"
                                     )} />
                                 </div>
                             </div>
@@ -690,12 +715,12 @@ export default function CopyPage() {
                             onClick={() => setIsSyncActive(!isSyncActive)}
                             className={cn(
                                 "h-14 md:h-16 rounded-2xl font-black uppercase text-xs md:text-sm tracking-widest shadow-xl transition-all hover:scale-[1.02] active:scale-95",
-                                isSyncActive 
+                                isSyncActive && serverTerminalData?.hasBalance !== false
                                     ? "bg-red-500 text-white hover:bg-red-600" 
                                     : "bg-green-500 text-white hover:bg-green-600"
                             )}
                         >
-                            {isSyncActive ? (
+                            {isSyncActive && serverTerminalData?.hasBalance !== false ? (
                                 <><Pause className="mr-2 h-4 w-4 md:h-5 md:w-5" /> PAUSAR CONEXÃO HFT</>
                             ) : (
                                 <><Play className="mr-2 h-4 w-4 md:h-5 md:w-5" /> ATIVAR CONEXÃO HFT</>

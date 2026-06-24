@@ -57,7 +57,7 @@ export function SignalResult({ data, onReset }: SignalResultProps) {
 
 
   return (
-    <div className="w-full max-w-sm space-y-6 text-center">
+    <div className="w-full max-w-sm space-y-4 md:space-y-6 text-center">
       <Card
         className={cn(
           'border-white/5 bg-black/40 backdrop-blur-2xl rounded-[2rem] overflow-hidden shadow-2xl',
@@ -68,40 +68,40 @@ export function SignalResult({ data, onReset }: SignalResultProps) {
             "h-1 w-full",
             isCall ? "bg-green-500" : "bg-red-500"
         )} />
-        <CardHeader className="pt-6 pb-4">
-          <CardTitle className="text-[0.6rem] font-black uppercase tracking-[0.4em] opacity-30">
+        <CardHeader className="pt-4 pb-2 md:pt-6 md:pb-4">
+          <CardTitle className="text-[0.55rem] md:text-[0.6rem] font-black uppercase tracking-[0.4em] opacity-30">
             Sinal Gerado
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 px-6 pb-8">
-          <div className="space-y-3">
-              <div className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
-                <span className="text-[0.55rem] font-black text-white/30 uppercase">Ativo</span>
-                <span className="font-black text-sm flex items-center gap-2">
+        <CardContent className="space-y-3 md:space-y-4 px-4 md:px-6 pb-6 md:pb-8">
+          <div className="space-y-2 md:space-y-3">
+              <div className="flex justify-between items-center bg-white/5 p-2.5 md:p-3 rounded-xl border border-white/5">
+                <span className="text-[0.5rem] md:text-[0.55rem] font-black text-white/30 uppercase">Ativo</span>
+                <span className="font-black text-xs md:text-sm flex items-center gap-2">
                     <CurrencyFlags asset={data.asset} />
                     {data.asset.replace(' (OTC)', '')}
                 </span>
               </div>
-              <div className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
-                <span className="text-[0.55rem] font-black text-white/30 uppercase">Tempo</span>
-                <span className="font-black text-sm uppercase">{data.expirationTime}</span>
+              <div className="flex justify-between items-center bg-white/5 p-2.5 md:p-3 rounded-xl border border-white/5">
+                <span className="text-[0.5rem] md:text-[0.55rem] font-black text-white/30 uppercase">Tempo</span>
+                <span className="font-black text-xs md:text-sm uppercase">{data.expirationTime}</span>
               </div>
-              <div className="flex justify-between items-center bg-white/5 p-3 rounded-xl border border-white/5">
-                <span className="text-[0.55rem] font-black text-white/30 uppercase">Entrada</span>
-                <span className="font-black text-sm font-mono">{data.targetTime}</span>
+              <div className="flex justify-between items-center bg-white/5 p-2.5 md:p-3 rounded-xl border border-white/5">
+                <span className="text-[0.5rem] md:text-[0.55rem] font-black text-white/30 uppercase">Entrada</span>
+                <span className="font-black text-xs md:text-sm font-mono">{data.targetTime}</span>
               </div>
           </div>
           
           <div
             className={cn(
-                "flex flex-col items-center justify-center p-5 rounded-2xl border shadow-inner transition-all duration-700",
+                "flex flex-col items-center justify-center p-4 md:p-5 rounded-2xl border shadow-inner transition-all duration-700",
                 isCall 
                     ? "bg-green-500/10 border-green-500/20 text-green-500" 
                     : "bg-red-500/10 border-red-500/20 text-red-500"
             )}
           >
             <span className="text-[0.5rem] font-black uppercase tracking-[0.4em] mb-1 opacity-60">Ação Sugerida</span>
-            <span className="text-2xl font-black uppercase tracking-tighter">
+            <span className="text-xl md:text-2xl font-black uppercase tracking-tighter">
               {data.signal}
             </span>
           </div>
@@ -112,7 +112,7 @@ export function SignalResult({ data, onReset }: SignalResultProps) {
         </CardContent>
       </Card>
 
-      <div className="px-4 pb-4 animate-in slide-in-from-bottom-4 duration-1000 delay-300">
+      <div className="px-4 pb-2 animate-in slide-in-from-bottom-4 duration-1000 delay-300">
         <Button 
           onClick={onReset} 
           className={cn(

@@ -89,7 +89,7 @@ export function OtcIntelligence({ asset }: { asset: string }) {
   }, [confidenceVal, isExcellentWindow]);
 
   return (
-    <div className="w-full h-[170px] md:h-[220px] flex flex-col bg-black/40 border border-white/5 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in duration-700">
+    <div className="w-full h-full flex flex-col bg-black/40 border border-white/5 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in duration-700">
       <div className="px-4 py-2 bg-white/5 border-b border-white/5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Cpu className="h-3.5 w-3.5 text-primary animate-pulse" />

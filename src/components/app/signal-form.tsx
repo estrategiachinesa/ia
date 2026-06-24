@@ -69,6 +69,8 @@ export function SignalForm({
   const [nextOpenText, setNextOpenText] = useState('');
   const [isMarketOpen, setIsMarketOpen] = useState(initialMarketOpen);
 
+  const isOtcAsset = formData.asset.includes('(OTC)');
+
   const assets = showOTC 
     ? allAssets.filter(a => a.includes('(OTC)')) 
     : allAssets.filter(a => !a.includes('(OTC)'));
@@ -127,16 +129,13 @@ export function SignalForm({
   }, [showOTC, formData.asset, config?.marketSchedules]);
 
   const buttonDisabled = isLoading || (!isMarketOpen && !showOTC) || (hasReachedLimit && !waitingMessage && !isPremium);
-  
-  // CORREÇÃO: Definindo a variável isOtcAsset
-  const isOtcAsset = formData.asset.includes('(OTC)');
 
   return (
     <div className="w-full h-full flex flex-col justify-start p-0 overflow-hidden text-center bg-transparent">
       <div className="flex flex-col flex-grow overflow-hidden px-4 md:px-6">
         
         {/* SELETORES (AGORA NO TOPO NO MOBILE) */}
-        <div className="flex flex-col gap-4 py-4 shrink-0">
+        <div className="flex flex-col gap-3 py-4 shrink-0">
           {/* ATIVO */}
           <div className="space-y-1.5">
             <div className="flex justify-between items-center px-1">
@@ -212,7 +211,7 @@ export function SignalForm({
         </div>
 
         {/* STATUS E INTEL (BASE NO MOBILE) */}
-        <div className="space-y-4 pb-10">
+        <div className="space-y-4 pb-10 flex-grow">
             {!isMarketOpen && !showOTC && nextOpenText && (
                 <div className="p-2.5 bg-red-600/10 border border-red-500/20 rounded-xl flex items-center justify-between px-4 animate-in fade-in duration-700">
                     <div className="flex items-center gap-2">
@@ -237,12 +236,12 @@ export function SignalForm({
             </div>
             
             {/* NO MOBILE, SÓ EXIBE NOTÍCIAS SE NÃO FOR OTC */}
-            <div className="md:hidden">
+            <div className="md:hidden h-[180px]">
                 {!isOtcAsset && <EconomicIntelligence asset={formData.asset} />}
             </div>
 
             {/* BOTÕES CORRETORA */}
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2 mt-auto">
                 <Button asChild variant="ghost" size="sm" className="h-10 text-[0.6rem] font-black uppercase tracking-widest border border-white/5 bg-white/5 rounded-xl hover-glow">
                     <a href={config?.iqOptionOpenUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1.5"><ExternalLink className="h-3 w-3" /> IQ Option</a>
                 </Button>

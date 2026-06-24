@@ -496,7 +496,7 @@ export default function AnalisadorPage() {
                             <OtcIntelligence asset={currentAsset} />
                         </div>
                     ) : (
-                        <div className="h-full w-full relative">
+                        <div className="h-full w-full relative flex flex-col">
                             <div className="h-[25px] shrink-0 px-4 border-b border-white/5 flex items-center justify-between bg-black/50 absolute top-0 left-0 w-full z-20">
                                 <div className="flex items-center gap-2">
                                     <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
@@ -504,7 +504,9 @@ export default function AnalisadorPage() {
                                 </div>
                                 <span className="text-[0.45rem] font-black text-primary bg-primary/10 px-1 rounded uppercase">{currentExpirationTime}</span>
                             </div>
-                            <TradingViewWidget asset={currentAsset} interval={currentExpirationTime.replace('m', '')} />
+                            <div className="flex-grow h-full pt-[25px]">
+                                <TradingViewWidget asset={currentAsset} interval={currentExpirationTime.replace('m', '')} />
+                            </div>
                             {appState === 'loading' && (
                                 <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-30 flex items-center justify-center">
                                     <AnalysisAnimation showProgressBar={false} />

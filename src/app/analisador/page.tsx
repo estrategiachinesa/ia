@@ -90,6 +90,10 @@ export default function AnalisadorPage() {
   const [isStatusModalOpen, setStatusModalOpen] = useState(false);
   const [isUpgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [isNewsWarningModalOpen, setIsNewsWarningModalOpen] = useState(false);
+  
+  const [hasAgreedToNewsWarning, setHasAgreedToNewsWarning] = useState(false);
+  const [currentDateInfo, setCurrentDateInfo] = useState('');
+  const [currentTimeInfo, setCurrentTimeInfo] = useState('');
 
   const usageStorageKey = user ? `signalUsage_${user.uid}` : null;
 
@@ -246,6 +250,17 @@ export default function AnalisadorPage() {
     return () => clearInterval(timer);
   }, [appState, signalData?.operationStatus]);
 
+  useEffect(() => {
+    const updateDateTime = () => {
+      const now = new Date();
+      setCurrentDateInfo(now.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }));
+      setCurrentTimeInfo(now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + ' BRT');
+    };
+    updateDateTime();
+    const interval = setInterval(updateDateTime, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
  const proceedWithAnalysis = async () => {
     setIsNewsWarningModalOpen(false);
 
@@ -370,7 +385,7 @@ export default function AnalisadorPage() {
   return (
     <>
       <div className="fixed inset-0 -z-20 h-full w-full grid-bg" />
-      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/90 to-background" />
+      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/80 to-background" />
 
       <div className="flex flex-col h-[100dvh] overflow-hidden">
         <header className="h-[50px] md:h-[60px] px-4 md:px-8 flex justify-between items-center border-b border-border/10 bg-card/30 backdrop-blur-md shrink-0 z-50">

@@ -48,7 +48,7 @@ type SignalFormProps = {
   rejectedBrokerId?: string;
 };
 
-const allAssets: Asset[] = ['EUR/JPY', 'EUR/JPY (OTC)', 'EUR/USD', 'EUR/USD (OTC)'];
+const allAssets: Asset[] = ['EUR/JPY', 'EUR/JPY (OTC)', 'EUR/JPY', 'EUR/USD', 'EUR/USD (OTC)'];
 
 export function SignalForm({
   formData,

@@ -1431,7 +1431,9 @@ export default function AdminDashboard() {
                                                 </SelectTrigger>
                                                 <SelectContent className="bg-black border-white/10">
                                                     <SelectItem value="EUR/USD" className="text-xs">EUR/USD</SelectItem>
+                                                    <SelectItem value="EUR/USD (OTC)" className="text-xs">EUR/USD (OTC)</SelectItem>
                                                     <SelectItem value="EUR/JPY" className="text-xs">EUR/JPY</SelectItem>
+                                                    <SelectItem value="EUR/JPY (OTC)" className="text-xs">EUR/JPY (OTC)</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </div>

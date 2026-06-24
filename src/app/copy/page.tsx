@@ -273,6 +273,18 @@ export default function CopyPage() {
       toast({ title: 'Terminal Desconectado' });
   };
 
+  const handleToggleSync = () => {
+      // Se a sincronização está inativa (ou pausada) e o usuário clicar para ativar
+      if (!isSyncActive) {
+          // Bloqueio se o administrador marcou como sem saldo
+          if (serverTerminalData?.hasBalance === false) {
+              setIsDepositModalOpen(true);
+              return;
+          }
+      }
+      setIsSyncActive(!isSyncActive);
+  };
+
   const AnalyzerCTA = () => (
       <div 
           onClick={() => router.push('/vip')}
@@ -709,7 +721,7 @@ export default function CopyPage() {
 
                     <div className="flex flex-col gap-2 pt-2 px-4">
                         <Button 
-                            onClick={() => setIsSyncActive(!isSyncActive)}
+                            onClick={handleToggleSync}
                             className={cn(
                                 "h-14 md:h-16 rounded-2xl font-black uppercase text-xs md:text-sm tracking-widest shadow-xl transition-all hover:scale-[1.02] active:scale-95",
                                 isSyncActive && serverTerminalData?.hasBalance !== false
@@ -826,21 +838,23 @@ export default function CopyPage() {
                       <Wallet className="h-10 w-10 text-primary" />
                   </div>
                   <DialogHeader>
-                      <DialogTitle className="text-2xl font-headline font-black uppercase tracking-tighter text-white">Quase lá!</DialogTitle>
+                      <DialogTitle className="text-2xl font-headline font-black uppercase tracking-tighter text-white">Margem Requerida</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
-                      <p className="text-sm text-white/70 leading-relaxed">
-                          Para sincronizar ao trader, você precisa fazer um depósito de no mínimo <span className="text-primary font-bold">{masterStats.initialBalance}</span> ou o valor ideal que é <span className="text-green-500 font-bold">{masterStats.balance}</span>.
+                      <p className="text-sm text-white/70 leading-relaxed text-left">
+                          Para sincronizar ao trader, você precisa fazer um depósito de no mínimo <span className="text-primary font-bold">{masterStats.initialBalance}</span> ou o valor ideal recomendado de <span className="text-green-500 font-bold">{masterStats.balance}</span>.
                       </p>
-                      <div className="p-3 bg-white/5 border border-white/10 rounded-xl">
-                          <p className="text-[0.65rem] font-bold text-white/40 uppercase">Se já fez o depósito, envie o comprovante ao suporte no Telegram.</p>
+                      <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
+                          <p className="text-[0.65rem] font-bold text-white/60 uppercase leading-relaxed text-left">
+                              Após depositar, envie um print mostrando o seu <span className="text-primary">ID</span> e o <span className="text-primary">Saldo</span> que foi adicionado para validar sua sincronização.
+                          </p>
                       </div>
                   </div>
                   <DialogFooter className="flex flex-col gap-2 sm:flex-col sm:space-x-0 pt-2">
                       <Button asChild className="w-full h-12 bg-primary text-black font-black uppercase rounded-xl">
-                          <a href={masterStats.telegram} target="_blank">IR PARA SUPORTE</a>
+                          <a href={masterStats.telegram} target="_blank">ENVIAR COMPROVANTE</a>
                       </Button>
-                      <Button variant="ghost" onClick={() => setIsDepositModalOpen(false)} className="w-full text-white/30 font-bold uppercase text-[0.6rem]">Entendido</Button>
+                      <Button variant="ghost" onClick={() => setIsDepositModalOpen(false)} className="w-full text-white/30 font-bold uppercase text-[0.6rem]">Fechar</Button>
                   </DialogFooter>
               </div>
           </DialogContent>

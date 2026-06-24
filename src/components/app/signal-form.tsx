@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -128,6 +127,9 @@ export function SignalForm({
   }, [showOTC, formData.asset, config?.marketSchedules]);
 
   const buttonDisabled = isLoading || (!isMarketOpen && !showOTC) || (hasReachedLimit && !waitingMessage && !isPremium);
+  
+  // CORREÇÃO: Definindo a variável isOtcAsset
+  const isOtcAsset = formData.asset.includes('(OTC)');
 
   return (
     <div className="w-full h-full flex flex-col justify-start p-0 overflow-hidden text-center bg-transparent">
@@ -230,13 +232,13 @@ export function SignalForm({
             )}
 
             {/* INTEL PANEL (DINÂMICO) - OCULTO NO MOBILE SE OTC ATIVO (POIS JÁ ESTÁ NO TOPO 50/50) */}
-            <div className={cn("hidden md:block", isOtcAsset && "md:block")}>
+            <div className={cn("hidden md:block")}>
                 {showOTC ? <OtcIntelligence asset={formData.asset} /> : <EconomicIntelligence asset={formData.asset} />}
             </div>
             
             {/* NO MOBILE, SÓ EXIBE NOTÍCIAS SE NÃO FOR OTC */}
             <div className="md:hidden">
-                {!showOTC && <EconomicIntelligence asset={formData.asset} />}
+                {!isOtcAsset && <EconomicIntelligence asset={formData.asset} />}
             </div>
 
             {/* BOTÕES CORRETORA */}
@@ -245,7 +247,7 @@ export function SignalForm({
                     <a href={config?.iqOptionOpenUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1.5"><ExternalLink className="h-3 w-3" /> IQ Option</a>
                 </Button>
                 <Button asChild variant="ghost" size="sm" className="h-10 text-[0.6rem] font-black uppercase tracking-widest border border-white/5 bg-white/5 rounded-xl hover-glow">
-                    <a href={config?.exnovaOpenUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1.5"><ExternalLink className="h-3 w-3" /> Exnova</a>
+                    <a href={config?.exnovaOpenUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1.5"><ExternalLink className="h-3.5 w-3.5" /> Exnova</a>
                 </Button>
             </div>
         </div>

@@ -222,6 +222,17 @@ export default function AnalisadorPage() {
   }, [formData.asset, lastMarketOpen, showOTC, config?.marketSchedules]);
 
   useEffect(() => {
+    const updateDateTime = () => {
+      const now = new Date();
+      setCurrentDateInfo(now.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }));
+      setCurrentTimeInfo(now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + ' BRT');
+    };
+    updateDateTime();
+    const interval = setInterval(updateDateTime, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
     let timer: NodeJS.Timeout | undefined;
     if (appState === 'result' && signalData) {
       const updateCountdowns = () => {
@@ -249,17 +260,6 @@ export default function AnalisadorPage() {
     }
     return () => clearInterval(timer);
   }, [appState, signalData?.operationStatus]);
-
-  useEffect(() => {
-    const updateDateTime = () => {
-      const now = new Date();
-      setCurrentDateInfo(now.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' }));
-      setCurrentTimeInfo(now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + ' BRT');
-    };
-    updateDateTime();
-    const interval = setInterval(updateDateTime, 10000);
-    return () => clearInterval(interval);
-  }, []);
 
  const proceedWithAnalysis = async () => {
     setIsNewsWarningModalOpen(false);
@@ -385,7 +385,7 @@ export default function AnalisadorPage() {
   return (
     <>
       <div className="fixed inset-0 -z-20 h-full w-full grid-bg" />
-      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/80 to-background" />
+      <div className="fixed inset-0 -z-10 bg-gradient-to-br from-background via-background/90 to-background" />
 
       <div className="flex flex-col h-[100dvh] overflow-hidden">
         <header className="h-[50px] md:h-[60px] px-4 md:px-8 flex justify-between items-center border-b border-border/10 bg-card/30 backdrop-blur-md shrink-0 z-50">
@@ -481,7 +481,7 @@ export default function AnalisadorPage() {
                 </div>
             </div>
 
-            {/* VERSÃO MOBILE (LAYOUT HUD 40/60 e 50/50) */}
+            {/* VERSÃO MOBILE (LAYOUT HUD 40/60 e 50/50 - SEM SCROLL) */}
             <div className="md:hidden flex flex-col h-full overflow-hidden relative">
                 
                 {/* TOPO: VISUAL (GRÁFICO OU IA METRICS) */}
@@ -516,17 +516,17 @@ export default function AnalisadorPage() {
 
                 {/* BASE: CONTROLES E RESULTADOS */}
                 <div className={cn(
-                    "w-full flex flex-col bg-card/60 backdrop-blur-2xl overflow-y-auto no-scrollbar z-0",
+                    "w-full flex flex-col bg-card/60 backdrop-blur-2xl overflow-hidden z-0",
                     isOtcAsset ? "h-[50%]" : "h-[60%]"
                 )}>
                     {appState === 'loading' ? (
                         <div className="flex-grow flex items-center justify-center p-6"><AnalysisAnimation /></div>
                     ) : appState === 'result' && signalData ? (
-                        <div className="flex-grow flex flex-col items-center justify-start p-4 pt-2 animate-in fade-in duration-500">
+                        <div className="flex-grow flex flex-col items-center justify-start p-4 pt-2 animate-in fade-in duration-500 overflow-y-auto no-scrollbar">
                             <SignalResult data={signalData} onReset={() => setAppState('idle')} />
                         </div>
                     ) : (
-                        <div className="flex-grow p-0">
+                        <div className="flex-grow p-0 overflow-hidden">
                             <SignalForm
                                 formData={formData}
                                 setFormData={setFormData}

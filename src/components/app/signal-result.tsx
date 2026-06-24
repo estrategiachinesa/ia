@@ -15,6 +15,7 @@ type SignalResultProps = {
 
 export function SignalResult({ data, onReset }: SignalResultProps) {
   const isCall = data.signal.includes('CALL');
+  const isFinished = data.operationStatus === 'finished';
   
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
@@ -67,33 +68,33 @@ export function SignalResult({ data, onReset }: SignalResultProps) {
             "h-1 w-full",
             isCall ? "bg-green-500" : "bg-red-500"
         )} />
-        <CardHeader className="pt-4 pb-2 md:pt-6 md:pb-4">
+        <CardHeader className="pt-4 pb-1">
           <CardTitle className="text-[0.55rem] md:text-[0.6rem] font-black uppercase tracking-[0.4em] opacity-30">
             Sinal Gerado
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3 md:space-y-4 px-4 md:px-6 pb-6 md:pb-8">
-          <div className="space-y-2 md:space-y-3">
-              <div className="flex justify-between items-center bg-white/5 p-2.5 md:p-3 rounded-xl border border-white/5">
+        <CardContent className="space-y-2.5 md:space-y-4 px-4 md:px-6 pb-6 md:pb-8">
+          <div className="space-y-1.5 md:space-y-3">
+              <div className="flex justify-between items-center bg-white/5 p-2 md:p-3 rounded-xl border border-white/5">
                 <span className="text-[0.5rem] md:text-[0.55rem] font-black text-white/30 uppercase">Ativo</span>
-                <span className="font-black text-xs md:text-sm flex items-center gap-2">
+                <span className="font-black text-[0.7rem] md:text-sm flex items-center gap-2">
                     <CurrencyFlags asset={data.asset} />
                     {data.asset.replace(' (OTC)', '')}
                 </span>
               </div>
-              <div className="flex justify-between items-center bg-white/5 p-2.5 md:p-3 rounded-xl border border-white/5">
+              <div className="flex justify-between items-center bg-white/5 p-2 md:p-3 rounded-xl border border-white/5">
                 <span className="text-[0.5rem] md:text-[0.55rem] font-black text-white/30 uppercase">Tempo</span>
-                <span className="font-black text-xs md:text-sm uppercase">{data.expirationTime}</span>
+                <span className="font-black text-[0.7rem] md:text-sm uppercase">{data.expirationTime}</span>
               </div>
-              <div className="flex justify-between items-center bg-white/5 p-2.5 md:p-3 rounded-xl border border-white/5">
+              <div className="flex justify-between items-center bg-white/5 p-2 md:p-3 rounded-xl border border-white/5">
                 <span className="text-[0.5rem] md:text-[0.55rem] font-black text-white/30 uppercase">Entrada</span>
-                <span className="font-black text-xs md:text-sm font-mono">{data.targetTime}</span>
+                <span className="font-black text-[0.7rem] md:text-sm font-mono">{data.targetTime}</span>
               </div>
           </div>
           
           <div
             className={cn(
-                "flex flex-col items-center justify-center p-4 md:p-5 rounded-2xl border shadow-inner transition-all duration-700",
+                "flex flex-col items-center justify-center p-3 md:p-5 rounded-2xl border shadow-inner transition-all duration-700",
                 isCall 
                     ? "bg-green-500/10 border-green-500/20 text-green-500" 
                     : "bg-red-500/10 border-red-500/20 text-red-500"
@@ -105,21 +106,24 @@ export function SignalResult({ data, onReset }: SignalResultProps) {
             </span>
           </div>
 
-          <div className="pt-2">
+          <div className="pt-1">
              {renderStatus()}
           </div>
         </CardContent>
       </Card>
 
-      <div className="px-4 pb-2 animate-in slide-in-from-bottom-4 duration-1000 delay-300">
-        <Button 
-          onClick={onReset} 
-          className="w-full h-14 rounded-2xl text-xs font-black uppercase tracking-[0.2em] bg-primary text-primary-foreground hover:scale-[1.02] shadow-2xl shadow-primary/20 transition-all"
-        >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            NOVA ANÁLISE
-        </Button>
-      </div>
+      {/* Botão NOVA ANÁLISE - Exibido apenas após finalizar */}
+      {isFinished && (
+          <div className="px-4 pb-2 animate-in slide-in-from-bottom-4 duration-1000">
+            <Button 
+              onClick={onReset} 
+              className="w-full h-14 rounded-2xl text-xs font-black uppercase tracking-[0.2em] bg-primary text-primary-foreground hover:scale-[1.02] shadow-2xl shadow-primary/20 transition-all"
+            >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                NOVA ANÁLISE
+            </Button>
+          </div>
+      )}
     </div>
   );
 }

@@ -48,7 +48,8 @@ type SignalFormProps = {
   rejectedBrokerId?: string;
 };
 
-const allAssets: Asset[] = ['EUR/JPY', 'EUR/JPY (OTC)', 'EUR/JPY', 'EUR/USD', 'EUR/USD (OTC)'];
+// Corrigido: Removido EUR/JPY duplicado
+const allAssets: Asset[] = ['EUR/JPY', 'EUR/JPY (OTC)', 'EUR/USD', 'EUR/USD (OTC)'];
 
 export function SignalForm({
   formData,
@@ -132,34 +133,37 @@ export function SignalForm({
 
   return (
     <div className="w-full h-full flex flex-col justify-start p-0 overflow-hidden text-center bg-transparent">
-      <div className="flex flex-col flex-grow overflow-hidden px-4 md:px-6">
+      <div className="flex flex-col h-full overflow-hidden px-4 md:px-6">
         
-        {/* SELETORES (TOPO NO MOBILE) */}
-        <div className="flex flex-col gap-3 py-4 shrink-0">
+        {/* SELETORES (TOPO NO MOBILE) - MAIS COMPACTOS NO OTC */}
+        <div className={cn(
+            "flex flex-col shrink-0",
+            isOtcAsset ? "gap-1.5 py-2" : "gap-3 py-4"
+        )}>
           {/* ATIVO */}
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <div className="flex justify-between items-center px-1">
               <Label className="text-[0.6rem] font-black text-muted-foreground uppercase tracking-[0.2em] opacity-50">Ativo:</Label>
               <div className="flex items-center space-x-1.5 bg-black/40 px-2 py-0.5 rounded-full border border-white/5">
-                <Label htmlFor="otc-switch" className="text-[0.55rem] font-black text-muted-foreground uppercase">OTC</Label>
-                <Switch id="otc-switch" checked={showOTC} onCheckedChange={setShowOTC} disabled={isLoading} className="scale-[0.55] origin-right" />
+                <Label htmlFor="otc-switch" className="text-[0.5rem] font-black text-muted-foreground uppercase">OTC</Label>
+                <Switch id="otc-switch" checked={showOTC} onCheckedChange={setShowOTC} disabled={isLoading} className="scale-[0.5] origin-right" />
               </div>
             </div>
             <Select value={formData.asset} onValueChange={(value) => setFormData({ ...formData, asset: value as Asset })} disabled={isLoading}>
-              <SelectTrigger className="h-11 md:h-14 rounded-xl bg-white/5 border-white/10 hover-glow transition-all duration-300">
+              <SelectTrigger className="h-10 md:h-14 rounded-xl bg-white/5 border-white/10 hover-glow transition-all duration-300">
                 <SelectValue asChild>
                   <div className="flex items-center justify-center gap-3 w-full">
                     <CurrencyFlags asset={formData.asset} />
-                    <span className="font-black tracking-tight text-sm md:text-base uppercase">{formData.asset}</span>
+                    <span className="font-black tracking-tight text-xs md:text-base uppercase">{formData.asset}</span>
                   </div>
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="rounded-xl border-white/10 bg-black/95 backdrop-blur-2xl">
                 {assets.map(asset => (
-                  <SelectItem key={asset} value={asset} className="rounded-lg focus:bg-primary focus:text-primary-foreground py-3 transition-colors">
+                  <SelectItem key={asset} value={asset} className="rounded-lg focus:bg-primary focus:text-primary-foreground py-2 transition-colors">
                     <div className="flex items-center gap-3 w-full justify-center text-center">
                         <CurrencyFlags asset={asset} />
-                        <span className="font-black text-sm uppercase">{asset}</span>
+                        <span className="font-black text-xs uppercase">{asset}</span>
                     </div>
                   </SelectItem>
                 ))}
@@ -168,35 +172,38 @@ export function SignalForm({
           </div>
 
           {/* EXPIRAÇÃO */}
-          <div className="space-y-1.5">
+          <div className="space-y-1">
             <Label className="text-[0.6rem] font-black text-muted-foreground uppercase tracking-[0.2em] opacity-50 block text-left ml-1">Tempo:</Label>
             <Select value={formData.expirationTime} onValueChange={(value) => setFormData({ ...formData, expirationTime: value as ExpirationTime })} disabled={isLoading}>
-              <SelectTrigger className="h-11 md:h-14 rounded-xl bg-white/5 border-white/10 hover-glow transition-all duration-300">
+              <SelectTrigger className="h-10 md:h-14 rounded-xl bg-white/5 border-white/10 hover-glow transition-all duration-300">
                 <SelectValue asChild>
                   <div className="flex items-center justify-center w-full">
-                    <span className="font-black text-sm md:text-base uppercase tracking-[0.1em]">
+                    <span className="font-black text-xs md:text-base uppercase tracking-[0.1em]">
                         {formData.expirationTime === '1m' ? '1 MINUTO' : '5 MINUTOS'}
                     </span>
                   </div>
                 </SelectValue>
               </SelectTrigger>
               <SelectContent className="rounded-xl border-white/10 bg-black/95 backdrop-blur-2xl">
-                <SelectItem value="1m" className="rounded-lg font-black py-3 text-sm uppercase text-center focus:bg-primary focus:text-primary-foreground transition-colors">1 MINUTO</SelectItem>
-                <SelectItem value="5m" className="rounded-lg font-black py-3 text-sm uppercase text-center focus:bg-primary focus:text-primary-foreground transition-colors">5 MINUTOS</SelectItem>
+                <SelectItem value="1m" className="rounded-lg font-black py-2 text-xs uppercase text-center focus:bg-primary focus:text-primary-foreground transition-colors">1 MINUTO</SelectItem>
+                <SelectItem value="5m" className="rounded-lg font-black py-2 text-xs uppercase text-center focus:bg-primary focus:text-primary-foreground transition-colors">5 MINUTOS</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
 
         {/* BOTÃO PRINCIPAL */}
-        <div className="w-full space-y-2 pb-4 shrink-0">
+        <div className="w-full space-y-1 pb-2 shrink-0">
             <Button
                 size="lg"
-                className="w-full h-14 md:h-16 text-base md:text-lg font-black bg-primary text-primary-foreground shadow-2xl shadow-primary/20 rounded-xl uppercase tracking-tighter hover:scale-[1.02] active:scale-95 transition-all duration-300 shine-effect"
+                className={cn(
+                    "w-full rounded-xl uppercase tracking-tighter hover:scale-[1.02] active:scale-95 transition-all duration-300 shine-effect",
+                    isOtcAsset ? "h-12 md:h-16 text-sm md:text-lg" : "h-14 md:h-16 text-base md:text-lg"
+                )}
                 onClick={onSubmit}
                 disabled={buttonDisabled}
             >
-                {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : (!isMarketOpen && !showOTC) ? <Lock className="mr-2 h-5 w-5" /> : (hasReachedLimit && !isPremium) || waitingMessage ? <Timer className="mr-2 h-5 w-5" /> : <BarChart className="mr-2 h-5 w-5" />}
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 md:h-5 md:w-5 animate-spin" /> : (!isMarketOpen && !showOTC) ? <Lock className="mr-2 h-4 w-4 md:h-5 md:w-5" /> : (hasReachedLimit && !isPremium) || waitingMessage ? <Timer className="mr-2 h-4 w-4 md:h-5 md:w-5" /> : <BarChart className="mr-2 h-4 w-4 md:h-5 md:w-5" />}
                 {isLoading ? 'ANALISANDO...' : (!isMarketOpen && !showOTC) ? 'MERCADO FECHADO' : (hasReachedLimit && !isPremium) || waitingMessage ? 'EM FILA DE ESPERA' : 'ANALISAR AGORA'}
             </Button>
             {!isPremium && (
@@ -204,27 +211,27 @@ export function SignalForm({
                 if (vipStatus) setVipModalOpen(true);
                 else setUpgradeModalOpen(true);
                 }}>
-                    <Crown className="h-3 w-3 mr-1.5 animate-pulse" />
-                    <span className="text-[0.65rem] font-black uppercase tracking-[0.15em]">DESBLOQUEAR ACESSO PREMIUM</span>
+                    <Crown className="h-3 w-3 mr-1 animate-pulse" />
+                    <span className="text-[0.6rem] font-black uppercase tracking-[0.1em]">ACESSAR PREMIUM</span>
                 </Button>
             )}
         </div>
 
-        {/* STATUS E INTEL */}
-        <div className="space-y-4 pb-10 flex-grow">
+        {/* STATUS E INTEL - ESPAÇO OTIMIZADO */}
+        <div className="flex flex-col flex-grow justify-end pb-4 space-y-3">
             {!isMarketOpen && !showOTC && nextOpenText && (
-                <div className="p-2.5 bg-red-600/10 border border-red-500/20 rounded-xl flex items-center justify-between px-4 animate-in fade-in duration-700">
+                <div className="p-2 bg-red-600/10 border border-red-500/20 rounded-xl flex items-center justify-between px-4 animate-in fade-in duration-700">
                     <div className="flex items-center gap-2">
-                        <Circle className="h-2 w-2 fill-red-500 text-red-500 animate-pulse" />
-                        <span className="text-[0.65rem] font-black text-red-500 uppercase">Mercado fechado</span>
+                        <Circle className="h-1.5 w-1.5 fill-red-500 text-red-500 animate-pulse" />
+                        <span className="text-[0.55rem] font-black text-red-500 uppercase">Fechado</span>
                     </div>
-                    <span className="text-xs text-white font-mono font-black">{nextOpenText}</span>
+                    <span className="text-[0.65rem] text-white font-mono font-black">{nextOpenText}</span>
                 </div>
             )}
 
             {waitingMessage && (
-                <Alert className="text-center bg-primary/5 border-primary/20 py-2.5 rounded-xl">
-                    <AlertDescription className="text-[0.65rem] font-black text-primary/80 uppercase flex items-center justify-center gap-2">
+                <Alert className="text-center bg-primary/5 border-primary/20 py-2 rounded-xl">
+                    <AlertDescription className="text-[0.6rem] font-black text-primary/80 uppercase flex items-center justify-center gap-2">
                     <Radio className="h-3 w-3 animate-pulse" /> {waitingMessage}
                     </AlertDescription>
                 </Alert>
@@ -234,15 +241,19 @@ export function SignalForm({
                 {showOTC ? <OtcIntelligence asset={formData.asset} /> : <EconomicIntelligence asset={formData.asset} />}
             </div>
             
-            <div className="md:hidden h-[180px]">
-                {!isOtcAsset && <EconomicIntelligence asset={formData.asset} />}
+            <div className="md:hidden">
+                {!isOtcAsset && (
+                    <div className="h-[140px]">
+                        <EconomicIntelligence asset={formData.asset} />
+                    </div>
+                )}
             </div>
 
             <div className="grid grid-cols-2 gap-2 mt-auto">
-                <Button asChild variant="ghost" size="sm" className="h-10 text-[0.6rem] font-black uppercase tracking-widest border border-white/5 bg-white/5 rounded-xl hover-glow">
+                <Button asChild variant="ghost" size="sm" className="h-9 md:h-10 text-[0.55rem] md:text-[0.6rem] font-black uppercase tracking-widest border border-white/5 bg-white/5 rounded-xl hover-glow">
                     <a href={config?.iqOptionOpenUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1.5"><ExternalLink className="h-3 w-3" /> IQ Option</a>
                 </Button>
-                <Button asChild variant="ghost" size="sm" className="h-10 text-[0.6rem] font-black uppercase tracking-widest border border-white/5 bg-white/5 rounded-xl hover-glow">
+                <Button asChild variant="ghost" size="sm" className="h-9 md:h-10 text-[0.55rem] md:text-[0.6rem] font-black uppercase tracking-widest border border-white/5 bg-white/5 rounded-xl hover-glow">
                     <a href={config?.exnovaOpenUrl || '#'} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1.5"><ExternalLink className="h-3.5 w-3.5" /> Exnova</a>
                 </Button>
             </div>

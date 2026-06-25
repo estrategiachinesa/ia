@@ -522,7 +522,7 @@ export default function AnalisadorPage() {
                     {appState === 'loading' ? (
                         <div className="flex-grow flex items-center justify-center p-6"><AnalysisAnimation /></div>
                     ) : appState === 'result' && signalData ? (
-                        <div className="flex-grow flex flex-col items-center justify-start p-4 pt-2 animate-in fade-in duration-500 overflow-y-auto no-scrollbar">
+                        <div className="flex-grow flex flex-col items-center justify-start p-4 pt-2 animate-in fade-in duration-500 overflow-hidden">
                             <SignalResult data={signalData} onReset={() => setAppState('idle')} />
                         </div>
                     ) : (

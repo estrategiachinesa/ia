@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   Loader2, 
   TrendingUp, 
@@ -100,6 +100,16 @@ export default function CopyPage() {
 
   const [activeRequestId, setActiveRequestId] = useState<string | null>(null);
 
+  const handleLogout = useCallback(() => {
+      localStorage.removeItem('copy_terminal_session');
+      setTerminalSession(null);
+      setServerTerminalData(null);
+      setStep('STEP_ID_CHECK');
+      setBrokerIdInput('');
+      setLoginData({ password: '' });
+      setRegData({ name: '', email: '', telegram: '', password: '', confirmPassword: '' });
+  }, []);
+
   useEffect(() => {
     const savedSession = localStorage.getItem('copy_terminal_session');
     if (savedSession) {
@@ -118,11 +128,19 @@ export default function CopyPage() {
           const unsub = onSnapshot(doc(firestore, 'copyRequests', terminalSession.id), (snap) => {
               if (snap.exists()) {
                   setServerTerminalData(snap.data());
+              } else {
+                  // O terminal foi removido pelo administrador no painel
+                  handleLogout();
+                  toast({ 
+                      variant: 'destructive', 
+                      title: 'Terminal Desconectado', 
+                      description: 'Sua conexão foi encerrada pelo administrador.' 
+                  });
               }
           });
           return () => unsub();
       }
-  }, [terminalSession?.id, firestore]);
+  }, [terminalSession?.id, firestore, handleLogout, toast]);
 
   useEffect(() => {
     if (!isConfigLoading && config?.pages?.copy === false) {
@@ -263,19 +281,7 @@ export default function CopyPage() {
       } finally { setIsRegistering(false); }
   };
 
-  const handleLogout = () => {
-      localStorage.removeItem('copy_terminal_session');
-      setTerminalSession(null);
-      setServerTerminalData(null);
-      setStep('STEP_ID_CHECK');
-      setBrokerIdInput('');
-      setLoginData({ password: '' });
-      setRegData({ name: '', email: '', telegram: '', password: '', confirmPassword: '' });
-      toast({ title: 'Terminal Desconectado' });
-  };
-
   const handleToggleSync = () => {
-      // Abre o pop-up no primeiro clique OU se estiver tentando ativar sem saldo
       if (!hasInteracted || (!isSyncActive && serverTerminalData?.hasBalance === false)) {
           setIsDepositModalOpen(true);
           setHasInteracted(true);
@@ -320,7 +326,7 @@ export default function CopyPage() {
         <Logo size={32} isPremium={masterStats.isActive} />
         <div className="flex items-center gap-3">
              {terminalSession && (
-                 <Button variant="ghost" size="sm" onClick={handleLogout} className="h-8 px-3 rounded-full border border-white/10 text-[0.6rem] font-black uppercase text-white/40 hover:text-white hover:bg-white/5">
+                 <Button variant="ghost" size="sm" onClick={() => { handleLogout(); toast({ title: 'Terminal Desconectado' }); }} className="h-8 px-3 rounded-full border border-white/10 text-[0.6rem] font-black uppercase text-white/40 hover:text-white hover:bg-white/5">
                     <LogOut className="h-3 w-3 mr-2" /> Sair
                  </Button>
              )}

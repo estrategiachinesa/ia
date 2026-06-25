@@ -79,6 +79,7 @@ export default function CopyPage() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isSyncActive, setIsSyncActive] = useState(true);
+  const [hasInteracted, setHasInteracted] = useState(false);
   const [isInstructionsModalOpen, setIsInstructionsModalOpen] = useState(false);
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   
@@ -274,11 +275,11 @@ export default function CopyPage() {
   };
 
   const handleToggleSync = () => {
-      if (!isSyncActive) {
-          if (serverTerminalData?.hasBalance === false) {
-              setIsDepositModalOpen(true);
-              return;
-          }
+      // Abre o pop-up no primeiro clique OU se estiver tentando ativar sem saldo
+      if (!hasInteracted || (!isSyncActive && serverTerminalData?.hasBalance === false)) {
+          setIsDepositModalOpen(true);
+          setHasInteracted(true);
+          return;
       }
       setIsSyncActive(!isSyncActive);
   };

@@ -274,9 +274,7 @@ export default function CopyPage() {
   };
 
   const handleToggleSync = () => {
-      // Se a sincronização está inativa (ou pausada) e o usuário clicar para ativar
       if (!isSyncActive) {
-          // Bloqueio se o administrador marcou como sem saldo
           if (serverTerminalData?.hasBalance === false) {
               setIsDepositModalOpen(true);
               return;
@@ -431,7 +429,7 @@ export default function CopyPage() {
                              <span className="text-[0.85rem] font-black text-white/80 font-mono leading-none">
                                 {trade.time}
                              </span>
-                             <span className="text-[0.65rem] font-black text-white/20 font-mono leading-none mt-1">
+                             <span className="text-[0.75rem] font-black text-white/20 font-mono leading-none mt-1">
                                 {(() => {
                                     try {
                                         const parts = trade.date.split('-');

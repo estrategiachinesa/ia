@@ -58,7 +58,7 @@ export default function VipPage() {
         </div>
 
         <div className="mb-8 md:mb-12">
-            <VipVslPlayer videoId="8RebjHIi7Ok" />
+            <VipVslPlayer videoId={config?.vipVslId || "8RebjHIi7Ok"} />
         </div>
 
         <Card className="bg-background/50 backdrop-blur-sm border-border/50 shadow-2xl shadow-primary/10">

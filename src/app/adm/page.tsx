@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -158,7 +159,6 @@ const DEFAULT_PAGE_LIST: PageConfigItem[] = [
     { id: 'vip', label: 'PÁGINA VIP', path: '/vip', enabled: true },
     { id: 'descubra', label: 'VSL', path: '/descubra', enabled: true },
     { id: 'register', label: 'REGISTRO', path: '/register', enabled: true },
-    { id: 'bb', label: 'BROKER BREAKER', path: '/bb', enabled: true },
     { id: 'copy', label: 'COPY TRADE', path: '/copy', enabled: true },
 ];
 
@@ -233,6 +233,10 @@ export default function AdminDashboard() {
   const [signalLimit, setSignalLimit] = useState(3);
   const [newsWarningDuration, setNewsWarningDuration] = useState(60);
   const [otcExcellentFrequency, setOtcExcellentFrequency] = useState(4);
+
+  // VIP Page Configs
+  const [vipVslId, setVipVslId] = useState('8RebjHIi7Ok');
+  const [vipPrice, setVipPrice] = useState('R$ 197');
   
   const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
@@ -383,6 +387,7 @@ export default function AdminDashboard() {
         const pagesSnap = await getDoc(doc(firestore, 'appConfig', 'pages'));
         const timeSnap = await getDoc(doc(firestore, 'appConfig', 'time'));
         const copySnap = await getDoc(doc(firestore, 'appConfig', 'copy'));
+        const offerSnap = await getDoc(doc(firestore, 'appConfig', 'offer'));
 
         if (regSnap.exists()) setRegSecret(regSnap.data().registrationSecret || '');
         if (remoteSnap.exists()) {
@@ -393,6 +398,11 @@ export default function AdminDashboard() {
         if (limitSnap.exists()) setSignalLimit(limitSnap.data().hourlySignalLimit || 3);
         if (linksSnap.exists()) setSupportLink(linksSnap.data().supportUrl || '');
         
+        if (offerSnap.exists()) {
+            setVipPrice(offerSnap.data().price || 'R$ 197');
+            setVipVslId(offerSnap.data().vipVslId || '8RebjHIi7Ok');
+        }
+
         if (copySnap.exists()) {
             const data = copySnap.data();
             setCopyBalance(Number(data.copyMasterBalance) || 245892.10);
@@ -484,7 +494,8 @@ export default function AdminDashboard() {
             otcExcellentFrequency: otcExcellentFrequency
         }, { merge: true }),
         setDoc(doc(firestore, 'appConfig', 'limitation'), { hourlySignalLimit: signalLimit }, { merge: true }),
-        setDoc(doc(firestore, 'appConfig', 'links'), { supportUrl: supportLink.trim() }, { merge: true })
+        setDoc(doc(firestore, 'appConfig', 'links'), { supportUrl: supportLink.trim() }, { merge: true }),
+        setDoc(doc(firestore, 'appConfig', 'offer'), { price: vipPrice.trim(), vipVslId: vipVslId.trim() }, { merge: true })
       ]);
       toast({ title: 'Configurações Salvas' });
     } catch (e) { toast({ variant: 'destructive', title: 'Erro ao Salvar' }); }
@@ -1099,7 +1110,7 @@ export default function AdminDashboard() {
                                       onChange={(e) => updateSlot(target, day, idx, 'end', e.target.value)}
                                       className="h-7 w-[75px] bg-transparent border-none text-[0.7rem] p-0 text-center font-mono"
                                   />
-                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500/50 hover:text-red-500" onClick={() => removeSlot(target, day, idx)}>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500/50 hover:text-red-500" onClick={() => removeSlot(target, day, index)}>
                                       <Trash2 className="h-3.5 w-3.5" />
                                   </Button>
                               </div>
@@ -1799,6 +1810,40 @@ export default function AdminDashboard() {
                             </div>
                         </div>
                     ))}
+                </div>
+            </Card>
+
+            {/* CONFIGURAÇÃO PÁGINA VIP (VENDAS) */}
+            <Card className="bg-card/40 border-white/5 p-6 rounded-2xl lg:col-span-1">
+                <div className="flex items-center gap-2 mb-6">
+                    <Crown className="h-5 w-5 text-primary" />
+                    <h2 className="text-sm font-black uppercase tracking-widest">Página VIP (Vendas)</h2>
+                </div>
+                
+                <div className="space-y-4">
+                    <div className="space-y-1.5">
+                        <Label className="text-[0.6rem] font-bold uppercase opacity-60">ID do Vídeo VSL (YouTube)</Label>
+                        <Input 
+                            value={vipVslId} 
+                            onChange={(e) => setVipVslId(e.target.value)} 
+                            placeholder="Ex: 8RebjHIi7Ok" 
+                            className="bg-white/5 border-white/10 h-10 text-xs" 
+                        />
+                    </div>
+
+                    <div className="space-y-1.5">
+                        <Label className="text-[0.6rem] font-bold uppercase opacity-60">Preço Vitalício</Label>
+                        <Input 
+                            value={vipPrice} 
+                            onChange={(e) => setVipPrice(e.target.value)} 
+                            placeholder="Ex: R$ 197" 
+                            className="bg-white/5 border-white/10 h-10 text-xs" 
+                        />
+                    </div>
+                    
+                    <p className="text-[0.5rem] text-muted-foreground uppercase font-medium leading-tight">
+                        * O ID do vídeo é o código após "v=" na URL do YouTube. O preço será atualizado em todas as versões da página VIP.
+                    </p>
                 </div>
             </Card>
         </div>

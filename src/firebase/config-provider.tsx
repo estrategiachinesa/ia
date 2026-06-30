@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, ReactNode, useState, useEffect, Suspense, useCallback } from 'react';
@@ -23,6 +24,7 @@ export interface AppConfig {
   invertSignal: boolean;
   registrationSecret: string;
   price: string;
+  vipVslId?: string;
   afiliados: { [key: string]: string };
   vipMinWait: number;
   vipMaxWait: number;
@@ -51,7 +53,6 @@ export interface AppConfig {
     vip?: boolean;
     descubra?: boolean;
     register?: boolean;
-    bb?: boolean;
     copy?: boolean;
   };
   // Detalhamento por página
@@ -93,6 +94,7 @@ const defaultConfig: AppConfig = {
     otcExcellentFrequency: 4,
     registrationSecret: "chines_2026",
     price: "R$ 197",
+    vipVslId: "8RebjHIi7Ok",
     visitCount: 0,
     checkoutClickCount: 0,
     copyMasterBalance: 245892.10,
@@ -109,7 +111,6 @@ const defaultConfig: AppConfig = {
         vip: true,
         descubra: true,
         register: true,
-        bb: true,
         copy: true
     },
     afiliados: {
